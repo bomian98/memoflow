@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/log_sanitizer.dart';
 import '../../core/memoflow_palette.dart';
 import '../../data/ai/ai_settings_models.dart';
+import '../../data/logs/log_manager.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import 'ai_insight_models.dart';
@@ -31,14 +33,21 @@ class _AiInsightPromptEditorScreenState
   late final TextEditingController _promptController;
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
+  late final Listenable _editorInputsListenable;
   var _didLoadInitialValue = false;
-  var _didSeedPromptTemplate = false;
   var _saving = false;
   var _selectedIconKey = QuickPromptIconCatalog.defaultKey;
 
   bool get _isCustomMode => widget.customTemplateMode;
   bool get _isCreatingCustomTemplate =>
       _isCustomMode && (widget.templateId?.trim().isEmpty ?? true);
+
+  void _logEvent(String event, {Map<String, Object?> context = const {}}) {
+    LogManager.instance.info(
+      'AI Summary Prompt Editor: $event',
+      context: context,
+    );
+  }
 
   bool get _canSave {
     if (_isCustomMode) {
@@ -52,9 +61,14 @@ class _AiInsightPromptEditorScreenState
   @override
   void initState() {
     super.initState();
-    _promptController = TextEditingController()..addListener(_refresh);
-    _titleController = TextEditingController()..addListener(_refresh);
-    _descriptionController = TextEditingController()..addListener(_refresh);
+    _promptController = TextEditingController();
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _editorInputsListenable = Listenable.merge(<Listenable>[
+      _promptController,
+      _titleController,
+      _descriptionController,
+    ]);
   }
 
   @override
@@ -70,47 +84,45 @@ class _AiInsightPromptEditorScreenState
           ? QuickPromptIconCatalog.defaultKey
           : template.iconKey;
       _didLoadInitialValue = true;
+      _logEvent(
+        'initialized_custom',
+        context: <String, Object?>{
+          'template_id': widget.templateId?.trim() ?? '',
+          'title_length': template.title.trim().length,
+          'description_length': template.description.trim().length,
+          'prompt_length': template.promptTemplate.trim().length,
+          'prompt_fingerprint': LogSanitizer.fingerprint(
+            template.promptTemplate.trim(),
+          ),
+          'icon_key': _selectedIconKey,
+        },
+      );
       return;
     }
 
-    if (!_didSeedPromptTemplate) {
-      _didSeedPromptTemplate = true;
-      final defaultTemplate = defaultInsightPromptTemplate(
-        context,
-        widget.insightId,
-      );
-      Future.microtask(() async {
-        await ref
-            .read(aiSettingsProvider.notifier)
-            .ensureInsightPromptTemplateInitialized(
-              widget.insightId.storageKey,
-              defaultTemplate,
-            );
-      });
-    }
     if (_didLoadInitialValue) {
       return;
     }
     _promptController.text = _templateFromSettings();
     _didLoadInitialValue = true;
+    _logEvent(
+      'initialized_built_in',
+      context: <String, Object?>{
+        'insight_id': widget.insightId.storageKey,
+        'prompt_length': _promptController.text.trim().length,
+        'prompt_fingerprint': LogSanitizer.fingerprint(
+          _promptController.text.trim(),
+        ),
+      },
+    );
   }
 
   @override
   void dispose() {
-    _promptController
-      ..removeListener(_refresh)
-      ..dispose();
-    _titleController
-      ..removeListener(_refresh)
-      ..dispose();
-    _descriptionController
-      ..removeListener(_refresh)
-      ..dispose();
+    _promptController.dispose();
+    _titleController.dispose();
+    _descriptionController.dispose();
     super.dispose();
-  }
-
-  void _refresh() {
-    if (mounted) setState(() {});
   }
 
   String _templateFromSettings() {
@@ -134,6 +146,21 @@ class _AiInsightPromptEditorScreenState
 
   Future<void> _save() async {
     if (_saving || !_canSave) return;
+    _logEvent(
+      'save_start',
+      context: <String, Object?>{
+        'mode': _isCustomMode ? 'custom' : 'built_in',
+        'template_id': widget.templateId?.trim() ?? '',
+        'insight_id': widget.insightId.storageKey,
+        'title_length': _titleController.text.trim().length,
+        'description_length': _descriptionController.text.trim().length,
+        'prompt_length': _promptController.text.trim().length,
+        'prompt_fingerprint': LogSanitizer.fingerprint(
+          _promptController.text.trim(),
+        ),
+        'icon_key': _selectedIconKey,
+      },
+    );
     setState(() => _saving = true);
     if (_isCustomMode) {
       final template = AiCustomInsightTemplate(
@@ -161,17 +188,31 @@ class _AiInsightPromptEditorScreenState
           );
     }
     if (!mounted) return;
+    _logEvent(
+      'save_complete',
+      context: <String, Object?>{
+        'mode': _isCustomMode ? 'custom' : 'built_in',
+        'template_id': widget.templateId?.trim() ?? '',
+        'insight_id': widget.insightId.storageKey,
+      },
+    );
     Navigator.of(context).pop(true);
   }
 
   void _restoreDefaultPlaceholder() {
     final template = defaultInsightPromptTemplate(context, widget.insightId);
-    setState(() {
-      _promptController.text = template;
-      _promptController.selection = TextSelection.collapsed(
-        offset: _promptController.text.length,
-      );
-    });
+    _logEvent(
+      'restore_default',
+      context: <String, Object?>{
+        'insight_id': widget.insightId.storageKey,
+        'template_length': template.trim().length,
+        'template_fingerprint': LogSanitizer.fingerprint(template.trim()),
+      },
+    );
+    _promptController.text = template;
+    _promptController.selection = TextSelection.collapsed(
+      offset: _promptController.text.length,
+    );
   }
 
   String _pageTitle() {
@@ -254,12 +295,6 @@ class _AiInsightPromptEditorScreenState
     final textMuted = textMain.withValues(alpha: isDark ? 0.66 : 0.58);
 
     if (_isCustomMode) {
-      final titleText = _titleController.text.trim().isEmpty
-          ? definitionForInsight(AiInsightId.customTemplate).title(context)
-          : _titleController.text.trim();
-      final descriptionText = _descriptionController.text.trim().isEmpty
-          ? _customDescription()
-          : _descriptionController.text.trim();
       return Scaffold(
         backgroundColor: background,
         appBar: AppBar(
@@ -273,55 +308,71 @@ class _AiInsightPromptEditorScreenState
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: card,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: border),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: MemoFlowPalette.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        QuickPromptIconCatalog.resolve(_selectedIconKey),
-                        color: MemoFlowPalette.primary,
-                      ),
+              AnimatedBuilder(
+                animation: _editorInputsListenable,
+                builder: (context, _) {
+                  final titleText = _titleController.text.trim().isEmpty
+                      ? definitionForInsight(
+                          AiInsightId.customTemplate,
+                        ).title(context)
+                      : _titleController.text.trim();
+                  final descriptionText =
+                      _descriptionController.text.trim().isEmpty
+                      ? _customDescription()
+                      : _descriptionController.text.trim();
+                  return Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: card,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: border),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            titleText,
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              color: textMain,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: MemoFlowPalette.primary.withValues(
+                              alpha: 0.12,
                             ),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            descriptionText,
-                            style: TextStyle(
-                              fontSize: 13,
-                              height: 1.5,
-                              color: textMuted,
-                            ),
+                          child: Icon(
+                            QuickPromptIconCatalog.resolve(_selectedIconKey),
+                            color: MemoFlowPalette.primary,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                titleText,
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: textMain,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                descriptionText,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  height: 1.5,
+                                  color: textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               _EditorFieldCard(
@@ -407,32 +458,36 @@ class _AiInsightPromptEditorScreenState
               SizedBox(
                 width: double.infinity,
                 height: 54,
-                child: FilledButton(
-                  onPressed: _saving || !_canSave ? null : _save,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: MemoFlowPalette.primary,
-                    disabledBackgroundColor: MemoFlowPalette.primary.withValues(
-                      alpha: 0.35,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: _saving
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          context.t.strings.common.save,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
+                child: AnimatedBuilder(
+                  animation: _editorInputsListenable,
+                  builder: (context, _) {
+                    return FilledButton(
+                      onPressed: _saving || !_canSave ? null : _save,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: MemoFlowPalette.primary,
+                        disabledBackgroundColor: MemoFlowPalette.primary
+                            .withValues(alpha: 0.35),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
+                      ),
+                      child: _saving
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              context.t.strings.common.save,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -538,32 +593,36 @@ class _AiInsightPromptEditorScreenState
               SizedBox(
                 width: double.infinity,
                 height: 54,
-                child: FilledButton(
-                  onPressed: _saving || !_canSave ? null : _save,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: MemoFlowPalette.primary,
-                    disabledBackgroundColor: MemoFlowPalette.primary.withValues(
-                      alpha: 0.35,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: _saving
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          context.t.strings.common.save,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
+                child: AnimatedBuilder(
+                  animation: _editorInputsListenable,
+                  builder: (context, _) {
+                    return FilledButton(
+                      onPressed: _saving || !_canSave ? null : _save,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: MemoFlowPalette.primary,
+                        disabledBackgroundColor: MemoFlowPalette.primary
+                            .withValues(alpha: 0.35),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
+                      ),
+                      child: _saving
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              context.t.strings.common.save,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                    );
+                  },
                 ),
               ),
             ],

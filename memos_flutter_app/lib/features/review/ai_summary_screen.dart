@@ -14,6 +14,7 @@ import 'package:window_manager/window_manager.dart';
 import '../../core/app_localization.dart';
 import '../../core/desktop_window_controls.dart';
 import '../../core/drawer_navigation.dart';
+import '../../core/log_sanitizer.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/platform_layout.dart';
 import '../../core/top_toast.dart';
@@ -23,6 +24,7 @@ import '../../data/ai/ai_analysis_models.dart';
 import '../../data/ai/ai_provider_models.dart';
 import '../../data/ai/ai_route_config.dart';
 import '../../data/ai/ai_settings_models.dart';
+import '../../data/logs/log_manager.dart';
 import '../../data/models/local_memo.dart';
 import '../../state/memos/memo_mutation_service.dart';
 import '../home/app_drawer.dart';
@@ -78,6 +80,10 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
   var _referencesExpanded = false;
   var _analysisProgress = 0.0;
   DateTimeRange? _reportRangeOverride;
+
+  void _logEvent(String event, {Map<String, Object?> context = const {}}) {
+    LogManager.instance.info('AI Summary: $event', context: context);
+  }
 
   @override
   void initState() {
@@ -171,10 +177,12 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
   }
 
   Future<void> _openAiSettings() async {
+    _logEvent('open_ai_settings');
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => const AiSettingsScreen()),
     );
     if (!mounted) return;
+    _logEvent('return_from_ai_settings');
     setState(() {});
   }
 
@@ -203,6 +211,10 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
 
   Future<void> _openInsightSettings(AiInsightDefinition definition) async {
     if (_isLoading) return;
+    _logEvent(
+      'open_built_in_settings',
+      context: <String, Object?>{'insight_id': definition.id.storageKey},
+    );
     final result = await showDialog<AiInsightSettingsResult>(
       context: context,
       barrierDismissible: true,
@@ -217,18 +229,41 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
         ),
       ),
     );
-    if (!mounted || result == null) return;
+    if (!mounted) return;
+    _logEvent(
+      'return_from_built_in_settings',
+      context: <String, Object?>{
+        'insight_id': definition.id.storageKey,
+        'confirmed': result != null,
+      },
+    );
+    if (result == null) return;
     await _runAnalysis(result);
   }
 
   Future<void> _openCustomTemplateEditor({String? templateId}) async {
-    await Navigator.of(context).push<bool>(
+    final normalizedTemplateId = templateId?.trim() ?? '';
+    _logEvent(
+      'open_custom_template_editor',
+      context: <String, Object?>{
+        'template_id': normalizedTemplateId,
+        'mode': normalizedTemplateId.isEmpty ? 'create' : 'edit',
+      },
+    );
+    final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) =>
             AiInsightPromptEditorScreen.custom(templateId: templateId),
       ),
     );
     if (!mounted) return;
+    _logEvent(
+      'return_from_custom_template_editor',
+      context: <String, Object?>{
+        'template_id': normalizedTemplateId,
+        'saved': saved == true,
+      },
+    );
     setState(() {});
   }
 
@@ -245,6 +280,12 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     final settings = ref.read(aiSettingsProvider);
     if (settings.customInsightTemplates.length >=
         AiSettings.maxCustomInsightTemplateCount) {
+      _logEvent(
+        'custom_template_limit_reached',
+        context: <String, Object?>{
+          'custom_template_count': settings.customInsightTemplates.length,
+        },
+      );
       _showCustomTemplateLimitToast();
       return;
     }
@@ -255,6 +296,16 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     AiCustomInsightTemplate customTemplate,
   ) async {
     if (_isLoading) return;
+    _logEvent(
+      'open_custom_template_settings',
+      context: <String, Object?>{
+        'template_id': customTemplate.templateId.trim(),
+        'configured': customTemplate.isConfigured,
+        'title_fingerprint': LogSanitizer.fingerprint(
+          customTemplate.title.trim(),
+        ),
+      },
+    );
     if (!customTemplate.isConfigured) {
       await _openCustomTemplateEditor(templateId: customTemplate.templateId);
       return;
@@ -274,7 +325,15 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
         ),
       ),
     );
-    if (!mounted || result == null) return;
+    if (!mounted) return;
+    _logEvent(
+      'return_from_custom_template_settings',
+      context: <String, Object?>{
+        'template_id': customTemplate.templateId.trim(),
+        'confirmed': result != null,
+      },
+    );
+    if (result == null) return;
     await _runAnalysis(result, titleOverride: customTemplate.title);
   }
 

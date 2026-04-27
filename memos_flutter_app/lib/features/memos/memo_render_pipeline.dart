@@ -59,7 +59,12 @@ class MemoRenderPipeline {
 
     final cachedHtml = cacheKey == null ? null : _cache.get(cacheKey);
     final html =
-        cachedHtml ?? _buildMemoHtml(tagged, highlightQuery: highlightQuery);
+        cachedHtml ??
+        _buildMemoHtml(
+          tagged,
+          highlightQuery: highlightQuery,
+          renderImages: renderImages,
+        );
     if (cacheKey != null && cachedHtml == null) {
       _cache.set(cacheKey, html);
     }
@@ -124,11 +129,29 @@ class _LruCache<K, V> {
   }
 }
 
-String _buildMemoHtml(String text, {String? highlightQuery}) {
+String _buildMemoHtml(
+  String text, {
+  required bool renderImages,
+  String? highlightQuery,
+}) {
   final rawHtml = _renderMarkdownToHtml(text);
   final escapedCodeBlocks = _escapeCodeBlocks(rawHtml);
   final sanitized = sanitizeMemoHtml(escapedCodeBlocks);
-  return _applySearchHighlights(sanitized, highlightQuery: highlightQuery);
+  final normalizedHtml = renderImages
+      ? sanitized
+      : _stripHtmlImagesFromRenderedHtml(sanitized);
+  return _applySearchHighlights(normalizedHtml, highlightQuery: highlightQuery);
+}
+
+String _stripHtmlImagesFromRenderedHtml(String html) {
+  if (!html.contains('<img')) return html;
+  final fragment = html_parser.parseFragment(html);
+  final images = fragment.querySelectorAll('img');
+  if (images.isEmpty) return html;
+  for (final image in images) {
+    image.remove();
+  }
+  return fragment.outerHtml;
 }
 
 String _applySearchHighlights(String html, {String? highlightQuery}) {

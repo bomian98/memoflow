@@ -112,6 +112,16 @@ String _memoRenderCacheKey(
       '${language.name}';
 }
 
+String _memoCardMarkdownCacheKey({
+  required String cacheKeyBase,
+  required String highlightKey,
+  required String source,
+  required bool renderImages,
+}) {
+  final renderFlag = renderImages ? 1 : 0;
+  return '$cacheKeyBase|md|source=$source|renderImages=$renderFlag|searchhl=v2|hl=$highlightKey';
+}
+
 void invalidateMemoRenderCacheForUid(String memoUid) {
   final trimmed = memoUid.trim();
   if (trimmed.isEmpty) return;
@@ -651,12 +661,21 @@ class MemoListCardState extends State<MemoListCard> {
       _scheduleFloatingGeometryPublish();
     }
     final showCollapsed = showToggle && !_expanded;
+    final showExpandedBody = _expanded;
     final renderExpandedArticleBody =
-        widget.useExpandedArticleBody && _expanded;
-    final displayText = renderExpandedArticleBody
+        widget.useExpandedArticleBody && showExpandedBody;
+    final displayText = showExpandedBody
         ? contentText
         : (showCollapsed ? preview.text : previewText);
-    final markdownCacheKey = '$cacheKey|md|searchhl=v2|hl=$highlightKey';
+    final markdownSource = showExpandedBody
+        ? 'body'
+        : (showCollapsed ? 'previewCollapsed' : 'previewFull');
+    final markdownCacheKey = _memoCardMarkdownCacheKey(
+      cacheKeyBase: cacheKey,
+      highlightKey: highlightKey,
+      source: markdownSource,
+      renderImages: renderExpandedArticleBody,
+    );
     final showProgress = !hasAudio && taskStats.total > 0;
     final progress = showProgress ? taskStats.checked / taskStats.total : 0.0;
     final audioDurationText = _parseVoiceDuration(contentText) ?? '00:00';

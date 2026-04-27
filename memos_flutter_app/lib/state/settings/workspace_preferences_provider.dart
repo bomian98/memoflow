@@ -260,8 +260,18 @@ class WorkspacePreferencesController
     );
   }
 
-  void setAiSummaryAllowPrivateMemos(bool value) =>
-      _setAndPersist(state.copyWith(aiSummaryAllowPrivateMemos: value));
+  void setAiSummaryAllowPrivateMemos(bool value) {
+    LogManager.instance.info(
+      'AI summary workspace preference changed',
+      context: <String, Object?>{
+        'field': 'ai_summary_allow_private_memos',
+        'previous': state.aiSummaryAllowPrivateMemos,
+        'next': value,
+      },
+    );
+    _setAndPersist(state.copyWith(aiSummaryAllowPrivateMemos: value));
+  }
+
   void setMemoToolbarPreferences(MemoToolbarPreferences value) =>
       _setAndPersist(state.copyWith(memoToolbarPreferences: value));
   void resetMemoToolbarPreferences() => _setAndPersist(

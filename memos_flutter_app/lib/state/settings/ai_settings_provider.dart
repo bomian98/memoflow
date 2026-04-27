@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/log_sanitizer.dart';
 import '../../core/uid.dart';
 import '../../data/ai/ai_settings_log.dart';
 import '../../data/logs/log_manager.dart';
@@ -88,6 +89,18 @@ class AiSettingsController extends StateNotifier<AiSettings> {
 
   Future<void> setAll(AiSettings next, {bool triggerSync = true}) async {
     final normalized = AiSettingsMigration.normalize(next);
+    LogManager.instance.info(
+      'AI settings persist',
+      context: <String, Object?>{
+        'trigger_sync': triggerSync,
+        'service_count': normalized.services.length,
+        'route_count': normalized.taskRouteBindings.length,
+        'quick_prompt_count': normalized.quickPrompts.length,
+        'analysis_template_count': normalized.analysisPromptTemplates.length,
+        'custom_insight_template_count':
+            normalized.customInsightTemplates.length,
+      },
+    );
     _localRevision += 1;
     state = normalized;
     await _repo.write(normalized);
@@ -560,22 +573,47 @@ class AiSettingsController extends StateNotifier<AiSettings> {
     }
     final existing =
         state.analysisPromptTemplates[normalizedInsightId]?.trim() ?? '';
+    LogManager.instance.info(
+      'AI settings ensure insight prompt template',
+      context: <String, Object?>{
+        'insight_id': normalizedInsightId,
+        'has_existing_template': existing.isNotEmpty,
+        'incoming_template_length': normalizedTemplate.length,
+        'incoming_template_fingerprint': LogSanitizer.fingerprint(
+          normalizedTemplate,
+        ),
+      },
+    );
     if (existing.isNotEmpty) {
       return;
     }
-    await setInsightPromptTemplate(normalizedInsightId, normalizedTemplate);
+    await setInsightPromptTemplate(
+      normalizedInsightId,
+      normalizedTemplate,
+      triggerSync: false,
+    );
   }
 
   Future<void> setInsightPromptTemplate(
     String insightId,
-    String template,
-  ) async {
+    String template, {
+    bool triggerSync = true,
+  }) async {
     final normalizedInsightId = insightId.trim();
     if (normalizedInsightId.isEmpty) return;
+    final normalizedTemplate = template.trim();
+    LogManager.instance.info(
+      'AI settings set insight prompt template',
+      context: <String, Object?>{
+        'insight_id': normalizedInsightId,
+        'template_length': normalizedTemplate.length,
+        'template_fingerprint': LogSanitizer.fingerprint(normalizedTemplate),
+        'trigger_sync': triggerSync,
+      },
+    );
     final nextTemplates = Map<String, String>.from(
       state.analysisPromptTemplates,
     );
-    final normalizedTemplate = template.trim();
     if (normalizedTemplate.isEmpty) {
       nextTemplates.remove(normalizedInsightId);
     } else {
@@ -587,6 +625,7 @@ class AiSettingsController extends StateNotifier<AiSettings> {
           nextTemplates,
         ),
       ),
+      triggerSync: triggerSync,
     );
   }
 
@@ -597,6 +636,21 @@ class AiSettingsController extends StateNotifier<AiSettings> {
   Future<void> addCustomInsightTemplate(
     AiCustomInsightTemplate template,
   ) async {
+    LogManager.instance.info(
+      'AI settings add custom insight template',
+      context: <String, Object?>{
+        'template_id': template.templateId.trim(),
+        'title_fingerprint': LogSanitizer.fingerprint(template.title.trim()),
+        'title_length': template.title.trim().length,
+        'description_length': template.description.trim().length,
+        'prompt_length': template.promptTemplate.trim().length,
+        'prompt_fingerprint': LogSanitizer.fingerprint(
+          template.promptTemplate.trim(),
+        ),
+        'icon_key': template.iconKey.trim(),
+        'custom_template_count_before': state.customInsightTemplates.length,
+      },
+    );
     if (state.customInsightTemplates.length >=
         AiSettings.maxCustomInsightTemplateCount) {
       return;
@@ -624,6 +678,20 @@ class AiSettingsController extends StateNotifier<AiSettings> {
   ) async {
     final normalizedTemplateId = templateId.trim();
     if (normalizedTemplateId.isEmpty) return;
+    LogManager.instance.info(
+      'AI settings update custom insight template',
+      context: <String, Object?>{
+        'template_id': normalizedTemplateId,
+        'title_fingerprint': LogSanitizer.fingerprint(template.title.trim()),
+        'title_length': template.title.trim().length,
+        'description_length': template.description.trim().length,
+        'prompt_length': template.promptTemplate.trim().length,
+        'prompt_fingerprint': LogSanitizer.fingerprint(
+          template.promptTemplate.trim(),
+        ),
+        'icon_key': template.iconKey.trim(),
+      },
+    );
     final nextTemplates = state.customInsightTemplates
         .map((item) {
           if (item.templateId.trim() != normalizedTemplateId) {
@@ -647,6 +715,13 @@ class AiSettingsController extends StateNotifier<AiSettings> {
   Future<void> deleteCustomInsightTemplate(String templateId) async {
     final normalizedTemplateId = templateId.trim();
     if (normalizedTemplateId.isEmpty) return;
+    LogManager.instance.info(
+      'AI settings delete custom insight template',
+      context: <String, Object?>{
+        'template_id': normalizedTemplateId,
+        'custom_template_count_before': state.customInsightTemplates.length,
+      },
+    );
     final nextTemplates = state.customInsightTemplates
         .where((item) => item.templateId.trim() != normalizedTemplateId)
         .toList(growable: false);

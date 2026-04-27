@@ -293,7 +293,7 @@ void main() {
       expect(markdown.data.trimRight(), endsWith('...'));
 
       await tester.tap(find.text('Expand'));
-      await tester.pumpAndSettle();
+      await _pumpTestFrames(tester);
 
       expect(find.byType(MemoMediaGrid), findsNothing);
       markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
@@ -303,6 +303,64 @@ void main() {
         contains('<img src="https://example.com/clip.jpg">'),
       );
       expect(markdown.data, contains('Detailed body paragraph.'));
+    },
+  );
+
+  testWidgets(
+    'MemoListCard expands normal memo cards from preview text to full body content',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(900, 2200));
+
+      final content =
+          '# Heading\n\n'
+          'Intro paragraph before the inline image.\n\n'
+          '<img src="https://example.com/raw-body.jpg">\n\n'
+          '${List<String>.generate(8, (index) => 'Expanded body paragraph $index with enough text to keep the preview truncated.').join('\n\n')}\n\n'
+          'Tail marker visible after expand.';
+      final memo = _buildMemo(content: content);
+      final memoCardKey = GlobalKey<MemoListCardState>();
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memo: memo,
+          memoCardKey: memoCardKey,
+          wrapInScrollView: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      var markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.renderImages, isFalse);
+      expect(markdown.data, isNot(contains('<img')));
+      expect(markdown.data.trimRight(), endsWith('...'));
+      expect(
+        find.textContaining(
+          'Tail marker visible after expand.',
+          findRichText: true,
+        ),
+        findsNothing,
+      );
+      expect(find.text('Expand'), findsOneWidget);
+
+      memoCardKey.currentState!.debugExpandForTest();
+      await tester.pumpAndSettle();
+
+      markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.renderImages, isFalse);
+      expect(
+        markdown.data,
+        contains('<img src="https://example.com/raw-body.jpg">'),
+      );
+      expect(markdown.data, contains('Tail marker visible after expand.'));
+      expect(
+        find.textContaining(
+          'Tail marker visible after expand.',
+          findRichText: true,
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Collapse'), findsOneWidget);
     },
   );
 
@@ -326,13 +384,18 @@ void main() {
       );
       await _pumpTestFrames(tester);
 
-      expect(publishedGeometries.whereType<MemoFloatingCollapseGeometry>(), isEmpty);
+      expect(
+        publishedGeometries.whereType<MemoFloatingCollapseGeometry>(),
+        isEmpty,
+      );
 
       await tester.tap(find.text('Expand'));
       await _pumpTestFrames(tester);
 
       expect(
-        publishedGeometries.whereType<MemoFloatingCollapseGeometry>().isNotEmpty,
+        publishedGeometries
+            .whereType<MemoFloatingCollapseGeometry>()
+            .isNotEmpty,
         isTrue,
       );
 
@@ -367,7 +430,9 @@ void main() {
       await _pumpTestFrames(tester);
 
       expect(
-        publishedGeometries.whereType<MemoFloatingCollapseGeometry>().isNotEmpty,
+        publishedGeometries
+            .whereType<MemoFloatingCollapseGeometry>()
+            .isNotEmpty,
         isTrue,
       );
 
@@ -428,49 +493,53 @@ Widget _buildHarness({
         locale: AppLocale.en.flutterLocale,
         supportedLocales: AppLocaleUtils.supportedLocales,
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: Scaffold(body: Builder(builder: (context) {
-          Widget body = Center(
-            child: SizedBox(
-              width: 420,
-              child: MemosListMemoCardContainer(
-                memoCardKey: memoCardKey ?? GlobalKey<MemoListCardState>(),
-                memo: memo,
-                heroTag: removing ? null : (heroTag ?? memo.uid),
-                prefs: prefs,
-                outboxStatus: outboxStatus,
-                tagColors: TagColorLookup(const []),
-                removing: removing,
-                searching: false,
-                windowsHeaderSearchExpanded: false,
-                selectedQuickSearchKind: null,
-                searchQuery: '',
-                playingMemoUid: playingMemoUid,
-                audioPlaying: true,
-                audioLoading: false,
-                audioPositionListenable: ValueNotifier<Duration>(
-                  const Duration(seconds: 1),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              Widget body = Center(
+                child: SizedBox(
+                  width: 420,
+                  child: MemosListMemoCardContainer(
+                    memoCardKey: memoCardKey ?? GlobalKey<MemoListCardState>(),
+                    memo: memo,
+                    heroTag: removing ? null : (heroTag ?? memo.uid),
+                    prefs: prefs,
+                    outboxStatus: outboxStatus,
+                    tagColors: TagColorLookup(const []),
+                    removing: removing,
+                    searching: false,
+                    windowsHeaderSearchExpanded: false,
+                    selectedQuickSearchKind: null,
+                    searchQuery: '',
+                    playingMemoUid: playingMemoUid,
+                    audioPlaying: true,
+                    audioLoading: false,
+                    audioPositionListenable: ValueNotifier<Duration>(
+                      const Duration(seconds: 1),
+                    ),
+                    audioDurationListenable: ValueNotifier<Duration?>(
+                      const Duration(seconds: 5),
+                    ),
+                    onAudioSeek: (_) {},
+                    onAudioTap: () {},
+                    onSyncStatusTap: (_) {},
+                    onToggleTask: onToggleTask ?? (_) {},
+                    onTap: onTap ?? () {},
+                    onDoubleTap: () {},
+                    onLongPress: () {},
+                    onFloatingGeometryChanged:
+                        onFloatingGeometryChanged ?? (_) {},
+                    onAction: onAction ?? (_) {},
+                  ),
                 ),
-                audioDurationListenable: ValueNotifier<Duration?>(
-                  const Duration(seconds: 5),
-                ),
-                onAudioSeek: (_) {},
-                onAudioTap: () {},
-                onSyncStatusTap: (_) {},
-                onToggleTask: onToggleTask ?? (_) {},
-                onTap: onTap ?? () {},
-                onDoubleTap: () {},
-                onLongPress: () {},
-                onFloatingGeometryChanged:
-                    onFloatingGeometryChanged ?? (_) {},
-                onAction: onAction ?? (_) {},
-              ),
-            ),
-          );
-          if (wrapInScrollView) {
-            body = SingleChildScrollView(child: body);
-          }
-          return body;
-        })),
+              );
+              if (wrapInScrollView) {
+                body = SingleChildScrollView(child: body);
+              }
+              return body;
+            },
+          ),
+        ),
       ),
     ),
   );
@@ -479,7 +548,8 @@ Widget _buildHarness({
 String _buildLongMemoContent() {
   return List<String>.generate(
     320,
-    (index) => 'Long memo paragraph $index with enough words to keep the '
+    (index) =>
+        'Long memo paragraph $index with enough words to keep the '
         'expanded article body tall for floating collapse coverage.',
   ).join('\n\n');
 }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/log_sanitizer.dart';
 import '../../core/memoflow_palette.dart';
 import '../../data/ai/ai_analysis_models.dart';
 import '../../data/ai/ai_provider_models.dart';
 import '../../data/ai/ai_route_config.dart';
 import '../../data/ai/ai_settings_models.dart';
+import '../../data/logs/log_manager.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
@@ -50,7 +52,6 @@ class _AiInsightSettingsSheetState
   var _allowPublic = true;
   late bool _allowPrivate;
   var _allowProtected = false;
-  var _didSeedPromptTemplate = false;
 
   bool get _isCustomTemplateMode =>
       widget.customTemplate != null || widget.customTemplateMode;
@@ -79,27 +80,21 @@ class _AiInsightSettingsSheetState
     _allowPrivate = ref
         .read(currentWorkspacePreferencesProvider)
         .aiSummaryAllowPrivateMemos;
+    LogManager.instance.info(
+      'AI Summary Settings: sheet_open',
+      context: <String, Object?>{
+        'insight_id': widget.definition.id.storageKey,
+        'custom_mode': _isCustomTemplateMode,
+        'template_id': widget.customTemplate?.templateId.trim() ?? '',
+        'analysis_loading': widget.analysisLoading,
+        'allow_private_initial': _allowPrivate,
+      },
+    );
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_isCustomTemplateMode || _didSeedPromptTemplate) {
-      return;
-    }
-    _didSeedPromptTemplate = true;
-    final defaultTemplate = defaultInsightPromptTemplate(
-      context,
-      widget.definition.id,
-    );
-    Future.microtask(() async {
-      await ref
-          .read(aiSettingsProvider.notifier)
-          .ensureInsightPromptTemplateInitialized(
-            widget.definition.id.storageKey,
-            defaultTemplate,
-          );
-    });
   }
 
   String get _promptTemplate {
@@ -192,6 +187,15 @@ class _AiInsightSettingsSheetState
 
   void _toggleAllowPrivate(bool value) {
     setState(() => _allowPrivate = value);
+    LogManager.instance.info(
+      'AI Summary Settings: toggle_allow_private',
+      context: <String, Object?>{
+        'insight_id': widget.definition.id.storageKey,
+        'custom_mode': _isCustomTemplateMode,
+        'template_id': widget.customTemplate?.templateId.trim() ?? '',
+        'next': value,
+      },
+    );
     ref
         .read(currentWorkspacePreferencesProvider.notifier)
         .setAiSummaryAllowPrivateMemos(value);
@@ -202,7 +206,15 @@ class _AiInsightSettingsSheetState
   }
 
   Future<void> _openPromptEditor() async {
-    await Navigator.of(context).push<bool>(
+    LogManager.instance.info(
+      'AI Summary Settings: open_prompt_editor',
+      context: <String, Object?>{
+        'insight_id': widget.definition.id.storageKey,
+        'custom_mode': _isCustomTemplateMode,
+        'template_id': _resolvedCustomTemplate?.templateId.trim() ?? '',
+      },
+    );
+    final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => _isCustomTemplateMode
             ? AiInsightPromptEditorScreen.custom(
@@ -212,19 +224,71 @@ class _AiInsightSettingsSheetState
       ),
     );
     if (!mounted) return;
+    LogManager.instance.info(
+      'AI Summary Settings: return_from_prompt_editor',
+      context: <String, Object?>{
+        'insight_id': widget.definition.id.storageKey,
+        'custom_mode': _isCustomTemplateMode,
+        'template_id': _resolvedCustomTemplate?.templateId.trim() ?? '',
+        'saved': saved == true,
+      },
+    );
     setState(() {});
   }
 
   Future<void> _openAiSettings() async {
+    LogManager.instance.info(
+      'AI Summary Settings: open_ai_settings',
+      context: <String, Object?>{
+        'insight_id': widget.definition.id.storageKey,
+        'custom_mode': _isCustomTemplateMode,
+      },
+    );
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => const AiSettingsScreen()),
     );
     if (!mounted) return;
+    LogManager.instance.info(
+      'AI Summary Settings: return_from_ai_settings',
+      context: <String, Object?>{
+        'insight_id': widget.definition.id.storageKey,
+        'custom_mode': _isCustomTemplateMode,
+      },
+    );
     setState(() {});
   }
 
   void _startAnalysis() {
-    if (!_canStartAnalysis) return;
+    if (!_canStartAnalysis) {
+      LogManager.instance.info(
+        'AI Summary Settings: start_analysis_blocked',
+        context: <String, Object?>{
+          'insight_id': widget.definition.id.storageKey,
+          'custom_mode': _isCustomTemplateMode,
+          'template_id': _resolvedCustomTemplate?.templateId.trim() ?? '',
+          'allow_public': _allowPublic,
+          'allow_private': _allowPrivate,
+          'allow_protected': _allowProtected,
+          'prompt_length': _promptTemplate.trim().length,
+        },
+      );
+      return;
+    }
+    LogManager.instance.info(
+      'AI Summary Settings: start_analysis',
+      context: <String, Object?>{
+        'insight_id': widget.definition.id.storageKey,
+        'custom_mode': _isCustomTemplateMode,
+        'template_id': _resolvedCustomTemplate?.templateId.trim() ?? '',
+        'range': _range.name,
+        'custom_range_present': _customRange != null,
+        'allow_public': _allowPublic,
+        'allow_private': _allowPrivate,
+        'allow_protected': _allowProtected,
+        'prompt_length': _promptTemplate.trim().length,
+        'prompt_fingerprint': LogSanitizer.fingerprint(_promptTemplate.trim()),
+      },
+    );
     Navigator.of(context).pop(
       AiInsightSettingsResult(
         insightId: widget.definition.id,

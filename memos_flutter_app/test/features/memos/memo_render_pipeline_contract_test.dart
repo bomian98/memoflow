@@ -51,6 +51,20 @@ void main() {
     );
   });
 
+  test('renderImages false strips html img tags from rendered output', () {
+    const content =
+        'before\n\n'
+        '<img src="https://example.com/a.png" alt="a">\n\n'
+        'after';
+
+    final artifact = pipeline.build(data: content, renderImages: false);
+
+    expect(artifact.content, contains('before'));
+    expect(artifact.content, contains('after'));
+    expect(artifact.content, isNot(contains('<img')));
+    expect(artifact.content, isNot(contains('https://example.com/a.png')));
+  });
+
   test(
     'preprocessor preserves explicit blank lines with html placeholders',
     () {
