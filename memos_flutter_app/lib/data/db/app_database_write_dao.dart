@@ -2293,6 +2293,7 @@ WHERE id = ?
       content: content,
       tags: tagsText,
     );
+    await _db.markMemoSearchEntryDirty(executor, rowId: rowId, memoUid: uid);
 
     await _db.updateMemoTagsMapping(
       executor,
@@ -2413,6 +2414,11 @@ WHERE id = ?
     );
     if (rowId != null && rowId > 0) {
       await _db.deleteMemoFtsEntry(executor, rowId: rowId);
+      await _db.deleteMemoSearchIndexEntry(
+        executor,
+        rowId: rowId,
+        memoUid: normalizedUid,
+      );
     }
     await _db.applyMemoCacheDeltaPayload(executor, before: before, after: null);
   }
@@ -2447,6 +2453,11 @@ WHERE id = ?
       content: (memoRows.first['content'] as String?) ?? '',
       tags: (memoRows.first['tags'] as String?) ?? '',
     );
+    await _db.markMemoSearchEntryDirty(
+      executor,
+      rowId: rowId,
+      memoUid: memoUid,
+    );
   }
 
   Future<void> _deleteMemoClipCard(
@@ -2478,6 +2489,11 @@ WHERE id = ?
       memoUid: normalizedUid,
       content: (memoRows.first['content'] as String?) ?? '',
       tags: (memoRows.first['tags'] as String?) ?? '',
+    );
+    await _db.markMemoSearchEntryDirty(
+      executor,
+      rowId: rowId,
+      memoUid: normalizedUid,
     );
   }
 

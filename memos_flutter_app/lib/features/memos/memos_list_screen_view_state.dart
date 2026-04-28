@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/memo_search_matcher.dart';
 import '../../core/platform_layout.dart';
 import '../../core/tag_colors.dart';
 import '../../data/models/memo_template_settings.dart';
@@ -142,7 +143,7 @@ MemosListScreenQueryState buildMemosListScreenQueryState({
   final shortcutFilter = selectedShortcut?.filter ?? '';
   final useShortcutFilter = shortcutFilter.trim().isNotEmpty;
   final useQuickSearch = !useShortcutFilter && selectedQuickSearchKind != null;
-  final trimmedSearchQuery = searchQuery.trim();
+  final trimmedSearchQuery = MemoSearchMatcher.normalizeQuery(searchQuery);
   final useRemoteSearch =
       !useShortcutFilter && !useQuickSearch && trimmedSearchQuery.isNotEmpty;
   final sourceKind = useShortcutFilter
