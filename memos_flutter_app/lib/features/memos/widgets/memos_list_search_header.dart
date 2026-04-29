@@ -158,7 +158,7 @@ class MemosListTopSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasQuery = controller.text.trim().isNotEmpty;
-    final suffixIconWidth = hasQuery ? 72.0 : 40.0;
+    final suffixIconWidth = hasQuery ? 80.0 : 40.0;
 
     Widget buildSearchActionButton({
       required String tooltip,
