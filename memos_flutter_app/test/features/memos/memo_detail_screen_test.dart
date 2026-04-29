@@ -16,6 +16,7 @@ import 'package:memos_flutter_app/data/models/memo_relation.dart';
 import 'package:memos_flutter_app/features/memos/memo_detail_screen.dart';
 import 'package:memos_flutter_app/features/memos/memo_hero_flight.dart';
 import 'package:memos_flutter_app/features/memos/memo_markdown.dart';
+import 'package:memos_flutter_app/features/share/share_inline_image_content.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
@@ -64,6 +65,50 @@ void main() {
       memoDetailMarkdownCacheKey(memoA, renderImages: false),
       isNot(equals(memoDetailMarkdownCacheKey(memoB, renderImages: false))),
     );
+  });
+
+  testWidgets('detail content passes image auth context to markdown', (
+    tester,
+  ) async {
+    final baseUrl = Uri.parse('http://192.168.13.13:45230');
+    const authHeader = 'Bearer detail-token';
+    const inlineImageSrc = '/file/attachments/att-1/image.png';
+    final content = [
+      'Article body',
+      '<img src="$inlineImageSrc" alt="inline">',
+      buildThirdPartyShareMemoMarker(),
+    ].join('\n');
+    final memo = _buildMemo(content: content);
+    final resolvedData = buildMemoDocumentResolvedData(
+      memo: memo,
+      appLanguage: AppLanguage.en,
+      clipCard: null,
+      baseUrl: baseUrl,
+      authHeader: authHeader,
+      rebaseAbsoluteFileUrlForV024: true,
+      attachAuthForSameOriginAbsolute: true,
+      richContentEnabled: true,
+    );
+
+    await tester.pumpWidget(
+      _buildPrimaryContentTestApp(resolvedData: resolvedData),
+    );
+
+    final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+    expect(markdown.baseUrl, baseUrl);
+    expect(markdown.authHeader, authHeader);
+    expect(markdown.rebaseAbsoluteFileUrlForV024, isTrue);
+    expect(markdown.attachAuthForSameOriginAbsolute, isTrue);
+    expect(markdown.renderImages, isTrue);
+
+    final request = resolveMemoMarkdownRemoteImageRequest(
+      rawSrc: inlineImageSrc,
+      baseUrl: markdown.baseUrl,
+      authHeader: markdown.authHeader,
+      rebaseAbsoluteFileUrlForV024: markdown.rebaseAbsoluteFileUrlForV024,
+      attachAuthForSameOriginAbsolute: markdown.attachAuthForSameOriginAbsolute,
+    );
+    expect(request?.headers, {'Authorization': authHeader});
   });
 
   testWidgets('detail body enables double tap edit for normal memos', (
@@ -137,6 +182,35 @@ Widget _buildTestApp({required LocalMemo memo}) {
         supportedLocales: AppLocaleUtils.supportedLocales,
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         home: _DetailRouteLauncher(memo: memo),
+      ),
+    ),
+  );
+}
+
+Widget _buildPrimaryContentTestApp({
+  required MemoDocumentResolvedData resolvedData,
+}) {
+  LocaleSettings.setLocale(AppLocale.en);
+  return ProviderScope(
+    overrides: [
+      appSessionProvider.overrideWith((ref) => _TestSessionController()),
+      appPreferencesProvider.overrideWith(
+        (ref) => _TestAppPreferencesController(ref),
+      ),
+      tagColorLookupProvider.overrideWith((ref) => TagColorLookup(const [])),
+      memoRelationsProvider.overrideWith(
+        (ref, memoUid) =>
+            Stream<List<MemoRelation>>.value(const <MemoRelation>[]),
+      ),
+    ],
+    child: TranslationProvider(
+      child: MaterialApp(
+        locale: AppLocale.en.flutterLocale,
+        supportedLocales: AppLocaleUtils.supportedLocales,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        home: Scaffold(
+          body: MemoDocumentPrimaryContent(resolvedData: resolvedData),
+        ),
       ),
     ),
   );

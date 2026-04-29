@@ -133,10 +133,11 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
   required bool attachAuthForSameOriginAbsolute,
   required bool richContentEnabled,
 }) {
-  final clipParts = clipCard == null ? null : parseMemoClipMarkdown(memo.content);
+  final clipParts = clipCard == null
+      ? null
+      : parseMemoClipMarkdown(memo.content);
   final renderInlineImages = contentHasThirdPartyShareMarker(memo.content);
-  final effectiveRenderInlineImages =
-      renderInlineImages && richContentEnabled;
+  final effectiveRenderInlineImages = renderInlineImages && richContentEnabled;
   final displayContentText = clipCard == null
       ? memo.content
       : stripMemoClipTitle(
@@ -869,8 +870,7 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
       showSupplementarySections: _routeSettled,
       shouldShowEngagement: shouldShowEngagement,
       audioHandle: MemoDocumentAudioHandle(
-        isPlayingForUrl: (url) =>
-            _player.playing && _currentAudioUrl == url,
+        isPlayingForUrl: (url) => _player.playing && _currentAudioUrl == url,
         playerStateStream: _player.playerStateStream,
         onTogglePlayAudio: _togglePlayAudio,
       ),
@@ -1157,9 +1157,15 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
       markdownArtifact: resolvedData.markdownArtifact,
       markdownSelectable: markdownSelectable && resolvedData.richContentEnabled,
       renderImages: resolvedData.effectiveRenderInlineImages,
+      baseUrl: resolvedData.baseUrl,
+      authHeader: resolvedData.authHeader,
+      rebaseAbsoluteFileUrlForV024: resolvedData.rebaseAbsoluteFileUrlForV024,
+      attachAuthForSameOriginAbsolute:
+          resolvedData.attachAuthForSameOriginAbsolute,
       tagColors: tagColors,
       imagePreviewItems: resolvedData.imagePreviewItems,
-      onOpenImagePreview: (request) => ImagePreviewLauncher.open(context, request),
+      onOpenImagePreview: (request) =>
+          ImagePreviewLauncher.open(context, request),
       onToggleTask: onToggleTask,
     );
 
@@ -1176,10 +1182,7 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
                 : () async {
                     final uri = Uri.tryParse(clipCard.sourceUrl.trim());
                     if (uri == null) return;
-                    await launchUrl(
-                      uri,
-                      mode: LaunchMode.externalApplication,
-                    );
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
                   },
           ),
           const SizedBox(height: 16),
@@ -1231,7 +1234,9 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
                     TextButton.icon(
                       onPressed: () {
                         unawaited(
-                          ref.read(syncCoordinatorProvider.notifier).requestSync(
+                          ref
+                              .read(syncCoordinatorProvider.notifier)
+                              .requestSync(
                                 const SyncRequest(
                                   kind: SyncRequestKind.memos,
                                   reason: SyncRequestReason.manual,
@@ -2889,6 +2894,10 @@ class _CollapsibleText extends StatefulWidget {
     this.markdownArtifact,
     this.markdownSelectable = true,
     this.renderImages = false,
+    this.baseUrl,
+    this.authHeader,
+    this.rebaseAbsoluteFileUrlForV024 = false,
+    this.attachAuthForSameOriginAbsolute = false,
     this.tagColors,
     this.imagePreviewItems,
     this.onOpenImagePreview,
@@ -2904,6 +2913,10 @@ class _CollapsibleText extends StatefulWidget {
   final MemoRenderArtifact? markdownArtifact;
   final bool markdownSelectable;
   final bool renderImages;
+  final Uri? baseUrl;
+  final String? authHeader;
+  final bool rebaseAbsoluteFileUrlForV024;
+  final bool attachAuthForSameOriginAbsolute;
   final TagColorLookup? tagColors;
   final List<ImagePreviewItem>? imagePreviewItems;
   final Future<void> Function(ImagePreviewOpenRequest request)?
@@ -2975,6 +2988,11 @@ class _CollapsibleTextState extends State<_CollapsibleText> {
           selectable: widget.markdownSelectable && !showCollapsed,
           blockSpacing: 8,
           renderImages: widget.renderImages && !showCollapsed,
+          baseUrl: widget.baseUrl,
+          authHeader: widget.authHeader,
+          rebaseAbsoluteFileUrlForV024: widget.rebaseAbsoluteFileUrlForV024,
+          attachAuthForSameOriginAbsolute:
+              widget.attachAuthForSameOriginAbsolute,
           tagColors: widget.tagColors,
           imagePreviewItems: widget.imagePreviewItems,
           onOpenImagePreview: widget.onOpenImagePreview,
