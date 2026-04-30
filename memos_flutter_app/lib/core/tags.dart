@@ -1,7 +1,7 @@
 const int _maxTagLength = 100;
-final RegExp _tagRuneRe = RegExp(r'[\p{L}\p{N}\p{S}]', unicode: true);
+final RegExp _tagRuneRe = RegExp(r'[\p{L}\p{N}\p{S}\p{M}]', unicode: true);
 final RegExp _tagInlinePattern = RegExp(
-  r'#(?!#|\s)([\p{L}\p{N}\p{S}_/\-]{1,100})',
+  r'#(?!#|\s)([\p{L}\p{N}\p{S}\p{M}_/\-&\u200D]{1,100})',
   unicode: true,
 );
 final List<RegExp> _protectedInlineTagPatterns = <RegExp>[
@@ -38,7 +38,11 @@ class _ProtectedRange {
 }
 
 bool _isValidTagRune(int rune) {
-  if (rune == 0x5F || rune == 0x2D || rune == 0x2F) {
+  if (rune == 0x5F ||
+      rune == 0x2D ||
+      rune == 0x2F ||
+      rune == 0x26 ||
+      rune == 0x200D) {
     return true;
   }
   return _tagRuneRe.hasMatch(String.fromCharCode(rune));
@@ -76,19 +80,9 @@ List<String> extractTags(String content) {
   final tags = <String>{};
   if (content.isEmpty) return const [];
 
-  final lines = content.split('\n');
-  int? firstLine;
-  int? lastLine;
-  for (var i = 0; i < lines.length; i++) {
-    if (lines[i].trim().isEmpty) continue;
-    firstLine ??= i;
-    lastLine = i;
-  }
-  if (firstLine == null || lastLine == null) return const [];
-
-  _extractTagsFromLine(lines[firstLine], tags);
-  if (lastLine != firstLine) {
-    _extractTagsFromLine(lines[lastLine], tags);
+  for (final line in content.split('\n')) {
+    if (line.trim().isEmpty) continue;
+    _extractTagsFromLine(line, tags);
   }
 
   final list = tags.toList(growable: false);

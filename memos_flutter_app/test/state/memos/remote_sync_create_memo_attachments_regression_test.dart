@@ -36,6 +36,78 @@ void main() {
   });
 
   test(
+    'RemoteSyncController persists v0.27 backend-compatible tags into local tag tables',
+    () async {
+      const memoUid = 'remote-tags-1';
+      const ampersandTag = 'science&tech';
+      const emojiTag = 'watch\u{1F441}\uFE0F';
+      final server = await _RemoteSyncTagCompatibilityServer.start(
+        memos: const <Map<String, Object?>>[
+          <String, Object?>{
+            'name': 'memos/$memoUid',
+            'creator': 'users/demo',
+            'content': 'Backend payload tags should be preserved.',
+            'visibility': 'PRIVATE',
+            'pinned': false,
+            'state': 'NORMAL',
+            'createTime': '2026-03-13T18:00:00Z',
+            'updateTime': '2026-03-13T18:00:00Z',
+            'tags': <String>[ampersandTag, emojiTag],
+            'attachments': <Object>[],
+          },
+        ],
+      );
+      final dbName = uniqueDbName('remote_sync_v027_tags');
+      final db = AppDatabase(dbName: dbName);
+      addTearDown(() async {
+        await db.close();
+        await server.close();
+        await deleteTestDatabase(dbName);
+      });
+
+      await _runTagCompatibilitySync(server: server, db: db);
+
+      await _expectLocalTag(db, memoUid: memoUid, tag: ampersandTag);
+      await _expectLocalTag(db, memoUid: memoUid, tag: emojiTag);
+    },
+  );
+
+  test(
+    'RemoteSyncController extracts middle-line tags when v0.27 payload tags are empty',
+    () async {
+      const memoUid = 'remote-tags-2';
+      const middleTag = 'middle-tag';
+      final server = await _RemoteSyncTagCompatibilityServer.start(
+        memos: const <Map<String, Object?>>[
+          <String, Object?>{
+            'name': 'memos/$memoUid',
+            'creator': 'users/demo',
+            'content': 'first line\nmiddle line #middle-tag\nlast line',
+            'visibility': 'PRIVATE',
+            'pinned': false,
+            'state': 'NORMAL',
+            'createTime': '2026-03-13T18:00:00Z',
+            'updateTime': '2026-03-13T18:00:00Z',
+            'tags': <String>[],
+            'attachments': <Object>[],
+          },
+        ],
+      );
+      final dbName = uniqueDbName('remote_sync_v027_middle_tag');
+      final db = AppDatabase(dbName: dbName);
+      addTearDown(() async {
+        await db.close();
+        await server.close();
+        await deleteTestDatabase(dbName);
+      });
+
+      await _runTagCompatibilitySync(server: server, db: db);
+
+      await _expectLocalTag(db, memoUid: memoUid, tag: middleTag);
+    },
+  );
+
+  test(
     'RemoteSyncController keeps memo pending for update_memo when attachment tasks remain',
     () async {
       final server = await _RemoteSyncAttachmentRegressionServer.start();
@@ -1066,10 +1138,10 @@ void main() {
       expect(result, isA<MemoSyncSuccess>());
       final patchRequest = server.requests.singleWhere(
         (request) =>
-            request.method == 'PATCH' &&
-            request.path == '/api/v1/memos/memo-1',
+            request.method == 'PATCH' && request.path == '/api/v1/memos/memo-1',
       );
-      final rewrittenContent = patchRequest.jsonBody?['content'] as String? ?? '';
+      final rewrittenContent =
+          patchRequest.jsonBody?['content'] as String? ?? '';
       expect(rewrittenContent, contains(sourceUrl));
       expect(rewrittenContent, isNot(contains(localUrl)));
     },
@@ -1162,7 +1234,8 @@ void main() {
         (request) =>
             request.method == 'POST' && request.path == '/api/v1/memos',
       );
-      final rewrittenContent = createRequest.jsonBody?['content'] as String? ?? '';
+      final rewrittenContent =
+          createRequest.jsonBody?['content'] as String? ?? '';
       expect(rewrittenContent, contains(remoteUrl));
       expect(rewrittenContent, isNot(contains(sourceUrl)));
       expect(rewrittenContent, isNot(contains(localUrl)));
@@ -1173,7 +1246,9 @@ void main() {
     'RemoteSyncController rewrites syncCurrentLocalMemoContent after inline upload',
     () async {
       final server = await _RemoteSyncAttachmentRegressionServer.start();
-      final dbName = uniqueDbName('remote_sync_inline_upload_rewrites_sync_current');
+      final dbName = uniqueDbName(
+        'remote_sync_inline_upload_rewrites_sync_current',
+      );
       final db = AppDatabase(dbName: dbName);
       final api = MemoApiFacade.authenticated(
         baseUrl: server.baseUrl,
@@ -1262,10 +1337,10 @@ void main() {
       expect(result, isA<MemoSyncSuccess>());
       final patchRequest = server.requests.lastWhere(
         (request) =>
-            request.method == 'PATCH' &&
-            request.path == '/api/v1/memos/memo-1',
+            request.method == 'PATCH' && request.path == '/api/v1/memos/memo-1',
       );
-      final rewrittenContent = patchRequest.jsonBody?['content'] as String? ?? '';
+      final rewrittenContent =
+          patchRequest.jsonBody?['content'] as String? ?? '';
       expect(rewrittenContent, contains(sourceUrl));
       expect(rewrittenContent, isNot(contains(contentLocalUrl)));
       expect(rewrittenContent, isNot(contains(payloadLocalUrl)));
@@ -1336,6 +1411,128 @@ void main() {
       expect(deleteMemoIndex, greaterThan(deleteAttachmentIndex));
     },
   );
+}
+
+Future<void> _runTagCompatibilitySync({
+  required _RemoteSyncTagCompatibilityServer server,
+  required AppDatabase db,
+}) async {
+  final api = MemoApiFacade.authenticated(
+    baseUrl: server.baseUrl,
+    personalAccessToken: 'test-pat',
+    version: MemoApiVersion.v027,
+  );
+  final controller = RemoteSyncController(
+    db: db,
+    api: api,
+    currentUserName: 'users/demo',
+    syncStatusTracker: SyncStatusTracker(),
+    syncQueueProgressTracker: SyncQueueProgressTracker(),
+    imageBedRepository: _FakeImageBedSettingsRepository(),
+    attachmentPreprocessor: _PassThroughAttachmentPreprocessor(),
+  );
+  addTearDown(controller.dispose);
+
+  await HttpOverrides.runWithHttpOverrides(
+    () => controller.syncNow(),
+    _PassthroughHttpOverrides(),
+  );
+}
+
+Future<void> _expectLocalTag(
+  AppDatabase db, {
+  required String memoUid,
+  required String tag,
+}) async {
+  int readInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value.trim()) ?? 0;
+    return 0;
+  }
+
+  final memo = await db.getMemoByUid(memoUid);
+  expect(memo, isNotNull);
+  final tagsText = (memo?['tags'] as String?) ?? '';
+  expect(tagsText.split(' '), contains(tag));
+
+  final sqlite = await db.db;
+  final tagRows = await sqlite.query(
+    'tags',
+    where: 'path = ?',
+    whereArgs: <Object?>[tag],
+  );
+  expect(tagRows, hasLength(1));
+  final tagId = readInt(tagRows.single['id']);
+  expect(tagId, greaterThan(0));
+
+  final linkRows = await sqlite.query(
+    'memo_tags',
+    where: 'memo_uid = ? AND tag_id = ?',
+    whereArgs: <Object?>[memoUid, tagId],
+  );
+  expect(linkRows, hasLength(1));
+
+  final statsRows = await sqlite.query(
+    'tag_stats_cache',
+    where: 'tag = ?',
+    whereArgs: <Object?>[tag],
+  );
+  expect(statsRows, hasLength(1));
+  expect(readInt(statsRows.single['memo_count']), 1);
+}
+
+class _RemoteSyncTagCompatibilityServer {
+  _RemoteSyncTagCompatibilityServer._(this._server, {required this.memos});
+
+  final HttpServer _server;
+  final List<Map<String, Object?>> memos;
+
+  Uri get baseUrl =>
+      Uri.parse('http://${_server.address.host}:${_server.port}/');
+
+  static Future<_RemoteSyncTagCompatibilityServer> start({
+    required List<Map<String, Object?>> memos,
+  }) async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final harness = _RemoteSyncTagCompatibilityServer._(server, memos: memos);
+    server.listen(harness._handle);
+    return harness;
+  }
+
+  Future<void> close() => _server.close(force: true);
+
+  Future<void> _handle(HttpRequest request) async {
+    if (request.method == 'GET' && request.uri.path == '/api/v1/auth/me') {
+      await _writeJson(request.response, <String, Object?>{
+        'user': <String, Object?>{
+          'name': 'users/demo',
+          'username': 'demo',
+          'displayName': 'Demo User',
+          'avatarUrl': '',
+          'description': '',
+        },
+      });
+      return;
+    }
+
+    if (request.method == 'GET' && request.uri.path == '/api/v1/memos') {
+      final state = (request.uri.queryParameters['state'] ?? 'NORMAL')
+          .trim()
+          .toUpperCase();
+      await _writeJson(request.response, <String, Object?>{
+        'memos': state == 'ARCHIVED' ? const <Object>[] : memos,
+        'nextPageToken': '',
+      });
+      return;
+    }
+
+    await _writeJson(request.response, <String, Object?>{
+      'error': 'Unhandled test route',
+      'method': request.method,
+      'path': request.uri.path,
+    }, statusCode: HttpStatus.notFound);
+  }
 }
 
 class _PassthroughHttpOverrides extends HttpOverrides {}

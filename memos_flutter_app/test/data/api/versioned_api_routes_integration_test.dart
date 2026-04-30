@@ -15,6 +15,8 @@ const Set<String> _allCurrentUserEndpoints = <String>{
   'GET /api/v1/users/me',
   'GET /api/user/me',
 };
+const String _v027AmpersandTag = 'science&tech';
+const String _v027EmojiTag = 'watch\u{1F441}\uFE0F';
 
 void main() {
   group('MemoApiFacade versioned route compatibility', () {
@@ -42,6 +44,12 @@ void main() {
           );
           expect(memos, hasLength(1));
           expect(memos.first.uid, '101');
+          if (version == MemoApiVersion.v027) {
+            expect(memos.first.tags, const <String>[
+              _v027AmpersandTag,
+              _v027EmojiTag,
+            ]);
+          }
 
           final expected = _expectedRoutes(version);
           final currentUserRequest = harness.findRequest(
@@ -308,7 +316,9 @@ Object _listMemosPayload(MemoApiVersion version) {
         'state': 'NORMAL',
         'createTime': '2024-01-01T00:00:00Z',
         'updateTime': '2024-01-01T00:01:00Z',
-        'tags': const <String>[],
+        'tags': version == MemoApiVersion.v027
+            ? const <String>[_v027AmpersandTag, _v027EmojiTag]
+            : const <String>[],
         'attachments': const <Object>[],
       },
     ],
