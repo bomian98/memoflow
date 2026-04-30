@@ -28,6 +28,7 @@ import '../../core/memoflow_palette.dart';
 import '../../core/platform_layout.dart';
 import '../../core/sync_error_presenter.dart';
 import '../../core/top_toast.dart';
+import '../../data/ai/ai_semantic_memo_search_service.dart';
 import '../../data/logs/log_manager.dart';
 import '../../data/models/app_preferences.dart';
 import '../../data/models/compose_draft.dart';
@@ -249,6 +250,15 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   MemosListFloatingCollapseController get debugFloatingCollapseController =>
       _floatingCollapseController;
 
+  @visibleForTesting
+  TextEditingController get debugSearchController => _searchController;
+
+  @visibleForTesting
+  bool get debugAiSearchActive => _aiSearchActive;
+
+  @visibleForTesting
+  void debugStartAiSearch() => _startAiSearch();
+
   TextEditingController get _searchController =>
       _headerController.searchController;
   FocusNode get _searchFocusNode => _headerController.searchFocusNode;
@@ -256,6 +266,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   String? get _selectedShortcutId => _headerController.selectedShortcutId;
   QuickSearchKind? get _selectedQuickSearchKind =>
       _headerController.selectedQuickSearchKind;
+  bool get _aiSearchActive => _headerController.aiSearchActive;
   AdvancedSearchFilters get _advancedSearchFilters =>
       _headerController.advancedSearchFilters;
   String? get _activeTagFilter => _headerController.activeTagFilter;
@@ -1204,6 +1215,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
             required resolvedTag,
             required useShortcutFilter,
             required useQuickSearch,
+            required useAiSearch,
             required useRemoteSearch,
             required startTimeSec,
             required endTimeSecExclusive,
@@ -1221,6 +1233,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
                   resolvedTag: resolvedTag,
                   useShortcutFilter: useShortcutFilter,
                   useQuickSearch: useQuickSearch,
+                  useAiSearch: useAiSearch,
                   useRemoteSearch: useRemoteSearch,
                   startTimeSec: startTimeSec,
                   endTimeSecExclusive: endTimeSecExclusive,
@@ -2251,6 +2264,120 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     );
   }
 
+  void _startAiSearch() {
+    final query = _searchController.text.trim();
+    if (query.isEmpty || _aiSearchActive) return;
+    unawaited(_startAiSearchWithPreflight(query));
+  }
+
+  Future<void> _startAiSearchWithPreflight(String query) async {
+    final aiSearchQuery = _buildAiSearchPreflightQuery(query);
+    if (aiSearchQuery == null) return;
+    AiSemanticMemoSearchIndexPreflight preflight;
+    try {
+      preflight = await ref.read(
+        aiSearchIndexPreflightProvider(aiSearchQuery).future,
+      );
+    } on AiSemanticMemoSearchConfigurationException {
+      _activateAiSearch(query);
+      return;
+    } catch (error, stackTrace) {
+      _logManager.warn(
+        'AI search index preflight failed; continuing with AI search flow',
+        error: error,
+        stackTrace: stackTrace,
+        context: <String, Object?>{'queryLength': query.length},
+      );
+      _activateAiSearch(query);
+      return;
+    }
+    if (!mounted || _searchController.text.trim() != query) return;
+    if (preflight.needsIndexing) {
+      final confirmed = await _confirmAiSearchIndexing(preflight);
+      if (!confirmed || !mounted || _searchController.text.trim() != query) {
+        return;
+      }
+    }
+    _activateAiSearch(query);
+  }
+
+  AiSearchMemosQuery? _buildAiSearchPreflightQuery(String query) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return null;
+    final dayRange = _aiSearchDayRangeSeconds(widget.dayFilter);
+    return (
+      searchQuery: trimmed,
+      state: widget.state,
+      tag: _activeTagFilter,
+      startTimeSec: dayRange?.startSec,
+      endTimeSecExclusive: dayRange?.endSecExclusive,
+      advancedFilters: _advancedSearchFilters,
+      pageSize: _pageSize,
+    );
+  }
+
+  ({int startSec, int endSecExclusive})? _aiSearchDayRangeSeconds(
+    DateTime? day,
+  ) {
+    if (day == null) return null;
+    final localDay = DateTime(day.year, day.month, day.day);
+    final nextDay = localDay.add(const Duration(days: 1));
+    return (
+      startSec: localDay.toUtc().millisecondsSinceEpoch ~/ 1000,
+      endSecExclusive: nextDay.toUtc().millisecondsSinceEpoch ~/ 1000,
+    );
+  }
+
+  Future<bool> _confirmAiSearchIndexing(
+    AiSemanticMemoSearchIndexPreflight preflight,
+  ) async {
+    final legacy = context.t.strings.legacy;
+    final message = preflight.usesRemoteBackend
+        ? legacy.msg_ai_search_index_confirm_remote_message
+        : legacy.msg_ai_search_index_confirm_local_message;
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(legacy.msg_ai_search_index_confirm_title),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(message),
+                const SizedBox(height: 12),
+                Text(
+                  legacy.msg_ai_search_index_confirm_token_estimate(
+                    count: preflight.estimatedTokenCount,
+                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(legacy.msg_cancel_2),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(legacy.msg_ai_search_index_confirm_continue),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  void _activateAiSearch(String query) {
+    if (!mounted || _searchController.text.trim() != query) return;
+    ref.read(searchHistoryProvider.notifier).add(query);
+    _headerController.startAiSearch();
+  }
+
+  void _stopAiSearch() {
+    _headerController.stopAiSearch();
+  }
+
   Future<void> _openAdvancedSearchSheet() async {
     final result = await AdvancedSearchSheet.show(
       context,
@@ -2552,8 +2679,10 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   Future<void> _handleRefresh({
     required bool useShortcutFilter,
     required bool useQuickSearch,
+    required bool useAiSearch,
     required ShortcutMemosQuery? shortcutQuery,
     required QuickSearchMemosQuery? quickSearchQuery,
+    required AiSearchMemosQuery? aiSearchQuery,
   }) async {
     final initialContext = context;
     final scanner = ref.read(localLibraryScannerProvider);
@@ -2603,6 +2732,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       ref.invalidate(shortcutMemosProvider(shortcutQuery));
     } else if (useQuickSearch && quickSearchQuery != null) {
       ref.invalidate(quickSearchMemosProvider(quickSearchQuery));
+    } else if (useAiSearch && aiSearchQuery != null) {
+      ref.invalidate(aiSearchMemosProvider(aiSearchQuery));
     }
   }
 
@@ -2756,6 +2887,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       shortcuts: shortcuts,
       selectedShortcutId: _selectedShortcutId,
       selectedQuickSearchKind: _selectedQuickSearchKind,
+      aiSearchActive: _aiSearchActive,
       resolvedTag: _activeTagFilter,
       advancedFilters: _advancedSearchFilters,
       searching: _searching,
@@ -2776,11 +2908,13 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     final resolvedTag = queryState.resolvedTag;
     final useShortcutFilter = queryState.useShortcutFilter;
     final useQuickSearch = queryState.useQuickSearch;
+    final useAiSearch = queryState.useAiSearch;
     final useRemoteSearch = queryState.useRemoteSearch;
     final shortcutFilter = queryState.shortcutFilter;
     final selectedQuickSearchKind = queryState.selectedQuickSearchKind;
     final shortcutQuery = queryState.shortcutQuery;
     final quickSearchQuery = queryState.quickSearchQuery;
+    final aiSearchQuery = queryState.aiSearchQuery;
     final queryKey = queryState.queryKey;
 
     final previousQueryKey = _paginationKey;
@@ -2818,6 +2952,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       ),
       MemosListMemoSourceKind.quickSearch => ref.watch(
         quickSearchMemosProvider(quickSearchQuery!),
+      ),
+      MemosListMemoSourceKind.aiSearch => ref.watch(
+        aiSearchMemosProvider(aiSearchQuery!),
       ),
       MemosListMemoSourceKind.remoteSearch => ref.watch(
         remoteSearchMemosProvider(queryState.baseQuery),
@@ -2894,6 +3031,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         !useRemoteSearch &&
         !useShortcutFilter &&
         !useQuickSearch &&
+        !useAiSearch &&
         widget.state == 'NORMAL' &&
         searchQuery.trim().isEmpty &&
         (resolvedTag == null || resolvedTag.trim().isEmpty) &&
@@ -2916,7 +3054,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       final listSignature =
           '${widget.state}|${resolvedTag ?? ''}|${searchQuery.trim()}|${shortcutFilter.trim()}|'
           '${useShortcutFilter ? 1 : 0}|${selectedQuickSearchKind?.name ?? ''}|'
-          '${useQuickSearch ? 1 : 0}|${queryState.startTimeSec ?? ''}|${queryState.endTimeSecExclusive ?? ''}|'
+          '${useQuickSearch ? 1 : 0}|${useAiSearch ? 1 : 0}|${queryState.startTimeSec ?? ''}|${queryState.endTimeSecExclusive ?? ''}|'
           '${queryState.enableHomeSort ? _sortOption.name : 'default'}|'
           '${queryState.advancedFilters.signature}';
       _animatedListController.syncAnimatedMemos(
@@ -3057,6 +3195,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       visibleMemos: visibleMemos,
       useShortcutFilter: useShortcutFilter,
       useQuickSearch: useQuickSearch,
+      useAiSearch: useAiSearch,
       useRemoteSearch: useRemoteSearch,
       shortcutFilter: shortcutFilter,
       quickSearchKind: selectedQuickSearchKind,
@@ -3079,6 +3218,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       resolvedTag: resolvedTag,
       useShortcutFilter: useShortcutFilter,
       useQuickSearch: useQuickSearch,
+      useAiSearch: useAiSearch,
       useRemoteSearch: useRemoteSearch,
       startTimeSec: queryState.startTimeSec,
       endTimeSecExclusive: queryState.endTimeSecExclusive,
@@ -3634,8 +3774,10 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         onRefresh: () => _handleRefresh(
           useShortcutFilter: useShortcutFilter,
           useQuickSearch: useQuickSearch,
+          useAiSearch: useAiSearch,
           shortcutQuery: shortcutQuery,
           quickSearchQuery: quickSearchQuery,
+          aiSearchQuery: aiSearchQuery,
         ),
         onScrollNotification: _handleViewportScrollNotification,
         onPointerSignal: _handleViewportPointerSignal,
@@ -3645,6 +3787,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         onOpenSearch: _openSearch,
         onToggleWindowsHeaderSearch: _toggleWindowsHeaderSearch,
         onToggleQuickSearchKind: _headerController.toggleQuickSearchKind,
+        onStartAiSearch: _startAiSearch,
+        onStopAiSearch: _stopAiSearch,
         onDismissGuide: () {
           if (activeListGuideId == null) return;
           _markSceneGuideSeen(activeListGuideId);

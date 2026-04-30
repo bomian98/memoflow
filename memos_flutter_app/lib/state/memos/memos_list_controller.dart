@@ -14,6 +14,7 @@ class MemosListController {
     required String? resolvedTag,
     required bool useShortcutFilter,
     required bool useQuickSearch,
+    required bool useAiSearch,
     required bool useRemoteSearch,
     required int? startTimeSec,
     required int? endTimeSecExclusive,
@@ -95,6 +96,7 @@ class MemosListController {
                 'shortcutFilterLength': normalizedShortcutFilter.length,
               },
               'useQuickSearch': useQuickSearch,
+              'useAiSearch': useAiSearch,
               if (quickSearchKind != null)
                 'quickSearchKind': quickSearchKind.name,
               'useRemoteSearch': useRemoteSearch,
@@ -132,13 +134,15 @@ class MemosListController {
     required int nowSec,
     required List<String> tags,
   }) async {
-    await _ref.read(memoMutationServiceProvider).createQuickInputMemo(
-      uid: uid,
-      content: content,
-      visibility: visibility,
-      nowSec: nowSec,
-      tags: tags,
-    );
+    await _ref
+        .read(memoMutationServiceProvider)
+        .createQuickInputMemo(
+          uid: uid,
+          content: content,
+          visibility: visibility,
+          nowSec: nowSec,
+          tags: tags,
+        );
   }
 
   Future<int> retryOutboxErrors({required String memoUid}) async {
@@ -158,25 +162,25 @@ class MemosListController {
     required List<Map<String, dynamic>> relations,
     required List<MemoComposerPendingAttachment> pendingAttachments,
   }) async {
-    await _ref.read(memoMutationServiceProvider).createInlineComposeMemo(
-      uid: uid,
-      content: content,
-      visibility: visibility,
-      nowSec: nowSec,
-      tags: tags,
-      attachments: attachments,
-      location: location,
-      relations: relations,
-      pendingAttachments: pendingAttachments,
-    );
+    await _ref
+        .read(memoMutationServiceProvider)
+        .createInlineComposeMemo(
+          uid: uid,
+          content: content,
+          visibility: visibility,
+          nowSec: nowSec,
+          tags: tags,
+          attachments: attachments,
+          location: location,
+          relations: relations,
+          pendingAttachments: pendingAttachments,
+        );
   }
 
   Future<void> updateMemo(LocalMemo memo, {bool? pinned, String? state}) async {
-    await _ref.read(memoMutationServiceProvider).updateMemo(
-      memo,
-      pinned: pinned,
-      state: state,
-    );
+    await _ref
+        .read(memoMutationServiceProvider)
+        .updateMemo(memo, pinned: pinned, state: state);
   }
 
   Future<void> updateMemoContent(
@@ -184,11 +188,13 @@ class MemosListController {
     String content, {
     bool preserveUpdateTime = false,
   }) async {
-    await _ref.read(memoMutationServiceProvider).updateMemoContent(
-      memo,
-      content,
-      preserveUpdateTime: preserveUpdateTime,
-    );
+    await _ref
+        .read(memoMutationServiceProvider)
+        .updateMemoContent(
+          memo,
+          content,
+          preserveUpdateTime: preserveUpdateTime,
+        );
   }
 
   Future<void> deleteMemo(
@@ -222,10 +228,9 @@ class MemosListController {
         try {
           final api = _ref.read(memosApiProvider);
           final remote = await api.getMemo(memoUid: uid);
-          await _ref.read(memoMutationServiceProvider).cacheRemoteMemoForOpen(
-            remoteMemo: remote,
-            fallbackUid: uid,
-          );
+          await _ref
+              .read(memoMutationServiceProvider)
+              .cacheRemoteMemoForOpen(remoteMemo: remote, fallbackUid: uid);
           final remoteUid = remote.uid.isNotEmpty ? remote.uid : uid;
           final refreshed = await db.getMemoByUid(remoteUid);
           if (refreshed != null) {

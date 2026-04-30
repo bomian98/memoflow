@@ -88,7 +88,53 @@ void main() {
 
     expect(state.sourceKind, MemosListMemoSourceKind.remoteSearch);
     expect(state.useRemoteSearch, isTrue);
+    expect(state.useAiSearch, isFalse);
+    expect(state.canOfferAiSearch, isTrue);
     expect(state.baseQuery.pageSize, 40);
+  });
+
+  test('AI search source is only used after explicit activation', () {
+    final keywordState = buildMemosListScreenQueryState(
+      searchQuery: 'alpha',
+      filterDay: null,
+      state: 'NORMAL',
+      pageSize: 40,
+      shortcuts: const <Shortcut>[],
+      selectedShortcutId: null,
+      selectedQuickSearchKind: null,
+      aiSearchActive: false,
+      resolvedTag: null,
+      advancedFilters: AdvancedSearchFilters.empty,
+      searching: true,
+      showDrawer: true,
+    );
+    final aiState = buildMemosListScreenQueryState(
+      searchQuery: 'alpha',
+      filterDay: null,
+      state: 'NORMAL',
+      pageSize: 40,
+      shortcuts: const <Shortcut>[],
+      selectedShortcutId: null,
+      selectedQuickSearchKind: null,
+      aiSearchActive: true,
+      resolvedTag: null,
+      advancedFilters: AdvancedSearchFilters.empty,
+      searching: true,
+      showDrawer: true,
+    );
+
+    expect(keywordState.sourceKind, MemosListMemoSourceKind.remoteSearch);
+    expect(keywordState.useRemoteSearch, isTrue);
+    expect(keywordState.canOfferAiSearch, isTrue);
+    expect(keywordState.aiSearchQuery, isNull);
+
+    expect(aiState.sourceKind, MemosListMemoSourceKind.aiSearch);
+    expect(aiState.useAiSearch, isTrue);
+    expect(aiState.useRemoteSearch, isFalse);
+    expect(aiState.canOfferAiSearch, isFalse);
+    expect(aiState.aiSearchQuery?.searchQuery, 'alpha');
+    expect(aiState.enableHomeSort, isFalse);
+    expect(aiState.queryKey, isNot(keywordState.queryKey));
   });
 
   test('stream source is used when no higher-priority query mode applies', () {

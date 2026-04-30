@@ -6,9 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/data/ai/ai_analysis_models.dart';
 import 'package:memos_flutter_app/data/ai/ai_analysis_repository.dart';
 import 'package:memos_flutter_app/data/ai/ai_analysis_service.dart';
+import 'package:memos_flutter_app/data/ai/ai_memo_indexing.dart';
+import 'package:memos_flutter_app/data/ai/ai_semantic_memo_search_service.dart';
 import 'package:memos_flutter_app/data/ai/ai_task_runtime.dart';
 import 'package:memos_flutter_app/data/db/app_database.dart';
 import 'package:memos_flutter_app/data/models/app_preferences.dart';
+import 'package:memos_flutter_app/data/models/memo_location.dart';
 import 'package:memos_flutter_app/data/repositories/ai_settings_repository.dart';
 
 import '../../test_support.dart';
@@ -208,13 +211,13 @@ void main() {
 
   test('looksLikeGeneratedAiSummaryMemo detects saved letter memos', () {
     expect(
-      looksLikeGeneratedAiSummaryMemo(
+      AiMemoIndexing.looksLikeGeneratedAiSummaryMemo(
         '# Letter Back\n2026-02-01 — 2026-03-12\n\nThis letter drew on these note fragments:\n- "A quoted line"',
       ),
       isTrue,
     );
     expect(
-      looksLikeGeneratedAiSummaryMemo(
+      AiMemoIndexing.looksLikeGeneratedAiSummaryMemo(
         'Met a friend for coffee and took a long walk today.',
       ),
       isFalse,
@@ -440,4 +443,524 @@ void main() {
       expect(runtime.embedCalls, 0);
     },
   );
+
+  test(
+    'semantic memo search ranks matching chunks and respects result limit',
+    () async {
+      final harness = await _SemanticSearchHarness.create(
+        dbNamePrefix: 'semantic_search_rank',
+      );
+      addTearDown(harness.dispose);
+
+      await harness.insertMemo(
+        uid: 'memo-chicken',
+        content: 'Dinner idea: dapanji big plate chicken with potatoes.',
+        tags: const <String>['food'],
+        createTimeSec: _utcSec(2026, 3, 2),
+      );
+      await harness.insertMemo(
+        uid: 'memo-breakfast',
+        content: 'Breakfast was congee, eggs, and warm soy milk.',
+        tags: const <String>['food'],
+        createTimeSec: _utcSec(2026, 3, 3),
+      );
+      await harness.insertMemo(
+        uid: 'memo-deadline',
+        content: 'The project deadline moved after the planning meeting.',
+        tags: const <String>['work'],
+        createTimeSec: _utcSec(2026, 3, 4),
+      );
+
+      final result = await harness.semanticService.search(
+        settings: _semanticSearchSettings,
+        query: 'what to eat',
+        state: 'NORMAL',
+        tag: 'food',
+        startTimeSec: _utcSec(2026, 3, 1),
+        endTimeSecExclusive: _utcSec(2026, 3, 5),
+        limit: 1,
+      );
+
+      expect(result.readyChunkCount, greaterThan(0));
+      expect(result.scoredChunkCount, greaterThan(0));
+      expect(result.hits.map((hit) => hit.memo.uid), <String>['memo-chicken']);
+      expect(result.hits.single.score, greaterThan(0.99));
+    },
+  );
+
+  test(
+    'semantic memo search reports missing embedding configuration',
+    () async {
+      final harness = await _SemanticSearchHarness.create(
+        dbNamePrefix: 'semantic_search_missing_config',
+      );
+      addTearDown(harness.dispose);
+
+      await expectLater(
+        harness.semanticService.search(
+          settings: AiSettings.defaultsFor(AppLanguage.en),
+          query: 'what to eat',
+          state: 'NORMAL',
+          tag: null,
+        ),
+        throwsA(isA<AiSemanticMemoSearchConfigurationException>()),
+      );
+    },
+  );
+
+  test(
+    'semantic memo search preflight estimates first index work without writes',
+    () async {
+      final harness = await _SemanticSearchHarness.create(
+        dbNamePrefix: 'semantic_search_preflight_first_index',
+      );
+      addTearDown(harness.dispose);
+
+      await harness.insertMemo(
+        uid: 'memo-chicken',
+        content: 'Dinner idea: dapanji big plate chicken with potatoes.',
+        tags: const <String>['food'],
+        createTimeSec: _utcSec(2026, 3, 2),
+      );
+
+      var embedCalls = 0;
+      final service = harness.buildSemanticService(
+        embedText: (_, input) async {
+          embedCalls += 1;
+          return _semanticVector(input);
+        },
+      );
+
+      final preflight = await service.estimateIndexWorkForSearchScope(
+        settings: _semanticSearchSettings,
+        query: 'what to eat',
+        state: 'NORMAL',
+        tag: null,
+      );
+
+      expect(preflight.needsIndexing, isTrue);
+      expect(preflight.usesRemoteBackend, isTrue);
+      expect(preflight.memoCount, 1);
+      expect(preflight.chunkCount, greaterThan(0));
+      expect(preflight.estimatedTokenCount, greaterThan(0));
+      expect(preflight.profileKey, 'test-embedding');
+      expect(preflight.model, 'test-embedding-model');
+      expect(embedCalls, 0);
+      expect(
+        await harness.repository.listPendingIndexJobs(
+          embeddingProfileKey: 'test-embedding',
+        ),
+        isEmpty,
+      );
+      expect(
+        await harness.repository.listSemanticSearchCandidateChunkRows(
+          includePublic: true,
+          includePrivate: true,
+          includeProtected: false,
+          baseUrl: _semanticEmbeddingProfile.baseUrl,
+          model: _semanticEmbeddingProfile.model,
+        ),
+        isEmpty,
+      );
+    },
+  );
+
+  test('semantic memo search preflight skips fresh indexes', () async {
+    final harness = await _SemanticSearchHarness.create(
+      dbNamePrefix: 'semantic_search_preflight_fresh',
+    );
+    addTearDown(harness.dispose);
+
+    await harness.insertMemo(
+      uid: 'memo-chicken',
+      content: 'Dinner idea: dapanji big plate chicken with potatoes.',
+      tags: const <String>['food'],
+      createTimeSec: _utcSec(2026, 3, 2),
+    );
+    final result = await harness.semanticService.search(
+      settings: _semanticSearchSettings,
+      query: 'what to eat',
+      state: 'NORMAL',
+      tag: null,
+    );
+    expect(result.hits, isNotEmpty);
+
+    final preflight = await harness.semanticService
+        .estimateIndexWorkForSearchScope(
+          settings: _semanticSearchSettings,
+          query: 'what to eat',
+          state: 'NORMAL',
+          tag: null,
+        );
+
+    expect(preflight.needsIndexing, isFalse);
+    expect(preflight.memoCount, 0);
+    expect(preflight.chunkCount, 0);
+    expect(preflight.estimatedTokenCount, 0);
+  });
+
+  test('semantic memo search preflight detects stale indexes', () async {
+    final harness = await _SemanticSearchHarness.create(
+      dbNamePrefix: 'semantic_search_preflight_stale',
+    );
+    addTearDown(harness.dispose);
+
+    await harness.insertMemo(
+      uid: 'memo-chicken',
+      content: 'Dinner idea: dapanji big plate chicken with potatoes.',
+      tags: const <String>['food'],
+      createTimeSec: _utcSec(2026, 3, 2),
+    );
+    final result = await harness.semanticService.search(
+      settings: _semanticSearchSettings,
+      query: 'what to eat',
+      state: 'NORMAL',
+      tag: null,
+    );
+    expect(result.hits, isNotEmpty);
+    await harness.insertMemo(
+      uid: 'memo-chicken',
+      content: 'Updated dinner idea: dapanji big plate chicken with noodles.',
+      tags: const <String>['food'],
+      createTimeSec: _utcSec(2026, 3, 2),
+    );
+
+    final preflight = await harness.semanticService
+        .estimateIndexWorkForSearchScope(
+          settings: _semanticSearchSettings,
+          query: 'what to eat',
+          state: 'NORMAL',
+          tag: null,
+        );
+
+    expect(preflight.needsIndexing, isTrue);
+    expect(preflight.memoCount, 1);
+    expect(preflight.chunkCount, greaterThan(0));
+    expect(preflight.estimatedTokenCount, greaterThan(0));
+  });
+
+  test(
+    'semantic memo search preflight excludes policy and visibility misses',
+    () async {
+      final harness = await _SemanticSearchHarness.create(
+        dbNamePrefix: 'semantic_search_preflight_filters',
+      );
+      addTearDown(harness.dispose);
+
+      await harness.insertMemo(
+        uid: 'memo-policy-blocked',
+        content: 'Dinner idea: dapanji big plate chicken with potatoes.',
+        tags: const <String>['food'],
+        createTimeSec: _utcSec(2026, 3, 2),
+      );
+      await harness.repository.upsertMemoPolicy(
+        memoUid: 'memo-policy-blocked',
+        allowAi: false,
+      );
+      await harness.insertMemo(
+        uid: 'memo-public',
+        content: 'Breakfast was congee, eggs, and warm soy milk.',
+        tags: const <String>['food'],
+        visibility: 'PUBLIC',
+        createTimeSec: _utcSec(2026, 3, 3),
+      );
+      await harness.insertMemo(
+        uid: 'memo-protected',
+        content: 'Dinner idea: chicken noodles.',
+        tags: const <String>['food'],
+        visibility: 'PROTECTED',
+        createTimeSec: _utcSec(2026, 3, 4),
+      );
+
+      final preflight = await harness.semanticService
+          .estimateIndexWorkForSearchScope(
+            settings: _semanticSearchSettings,
+            query: 'what to eat',
+            state: 'NORMAL',
+            tag: null,
+            includePublic: false,
+            includePrivate: true,
+            includeProtected: false,
+          );
+
+      expect(preflight.needsIndexing, isFalse);
+      expect(preflight.memoCount, 0);
+      expect(preflight.chunkCount, 0);
+      expect(preflight.estimatedTokenCount, 0);
+    },
+  );
+
+  test(
+    'semantic memo search preflight reports missing embedding configuration',
+    () async {
+      final harness = await _SemanticSearchHarness.create(
+        dbNamePrefix: 'semantic_search_preflight_missing_config',
+      );
+      addTearDown(harness.dispose);
+
+      await expectLater(
+        harness.semanticService.estimateIndexWorkForSearchScope(
+          settings: AiSettings.defaultsFor(AppLanguage.en),
+          query: 'what to eat',
+          state: 'NORMAL',
+          tag: null,
+        ),
+        throwsA(isA<AiSemanticMemoSearchConfigurationException>()),
+      );
+    },
+  );
+
+  test(
+    'semantic memo search propagates query embedding provider errors',
+    () async {
+      final harness = await _SemanticSearchHarness.create(
+        dbNamePrefix: 'semantic_search_provider_error',
+      );
+      addTearDown(harness.dispose);
+
+      await harness.insertMemo(
+        uid: 'memo-chicken',
+        content: 'Dinner idea: dapanji big plate chicken with potatoes.',
+        tags: const <String>['food'],
+        createTimeSec: _utcSec(2026, 3, 2),
+      );
+
+      final warmResult = await harness.semanticService.search(
+        settings: _semanticSearchSettings,
+        query: 'what to eat',
+        state: 'NORMAL',
+        tag: null,
+        limit: 10,
+      );
+      expect(warmResult.hits, isNotEmpty);
+
+      final failingService = harness.buildSemanticService(
+        embedText: (_, input) async {
+          if (input == 'what to eat') {
+            throw StateError('embedding provider unavailable');
+          }
+          return _semanticVector(input);
+        },
+      );
+
+      await expectLater(
+        failingService.search(
+          settings: _semanticSearchSettings,
+          query: 'what to eat',
+          state: 'NORMAL',
+          tag: null,
+        ),
+        throwsA(
+          predicate<Object>(
+            (error) =>
+                error.toString().contains('embedding provider unavailable'),
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'semantic memo search returns empty results when vectors do not match',
+    () async {
+      final harness = await _SemanticSearchHarness.create(
+        dbNamePrefix: 'semantic_search_no_match',
+      );
+      addTearDown(harness.dispose);
+
+      await harness.insertMemo(
+        uid: 'memo-workout',
+        content: 'Workout notes: interval running and stretching.',
+        tags: const <String>['health'],
+        createTimeSec: _utcSec(2026, 3, 2),
+      );
+
+      final result = await harness.semanticService.search(
+        settings: _semanticSearchSettings,
+        query: 'what to eat',
+        state: 'NORMAL',
+        tag: null,
+      );
+
+      expect(result.readyChunkCount, greaterThan(0));
+      expect(result.scoredChunkCount, 0);
+      expect(result.hits, isEmpty);
+    },
+  );
+
+  test(
+    'semantic memo search excludes policy-blocked, archived, tag, and date misses',
+    () async {
+      final harness = await _SemanticSearchHarness.create(
+        dbNamePrefix: 'semantic_search_filters',
+      );
+      addTearDown(harness.dispose);
+
+      await harness.insertMemo(
+        uid: 'memo-eligible',
+        content: 'Dinner idea: dapanji big plate chicken with potatoes.',
+        tags: const <String>['food'],
+        createTimeSec: _utcSec(2026, 3, 2),
+        relationCount: 1,
+      );
+      await harness.insertMemo(
+        uid: 'memo-policy-blocked',
+        content: 'Breakfast was congee, eggs, and warm soy milk.',
+        tags: const <String>['food'],
+        createTimeSec: _utcSec(2026, 3, 2),
+      );
+      await harness.repository.upsertMemoPolicy(
+        memoUid: 'memo-policy-blocked',
+        allowAi: false,
+      );
+      await harness.insertMemo(
+        uid: 'memo-archived',
+        content: 'Dinner idea: chicken noodles.',
+        tags: const <String>['food'],
+        state: 'ARCHIVED',
+        createTimeSec: _utcSec(2026, 3, 2),
+      );
+      await harness.insertMemo(
+        uid: 'memo-wrong-tag',
+        content: 'Dinner idea: chicken soup.',
+        tags: const <String>['travel'],
+        createTimeSec: _utcSec(2026, 3, 2),
+      );
+      await harness.insertMemo(
+        uid: 'memo-out-of-range',
+        content: 'Dinner idea: chicken sandwich.',
+        tags: const <String>['food'],
+        createTimeSec: _utcSec(2026, 2, 20),
+      );
+
+      final result = await harness.semanticService.search(
+        settings: _semanticSearchSettings,
+        query: 'what to eat',
+        state: 'NORMAL',
+        tag: 'food',
+        startTimeSec: _utcSec(2026, 3, 1),
+        endTimeSecExclusive: _utcSec(2026, 3, 5),
+        limit: 20,
+      );
+
+      expect(result.hits.map((hit) => hit.memo.uid), <String>['memo-eligible']);
+    },
+  );
+}
+
+const _semanticEmbeddingProfile = AiEmbeddingProfile(
+  profileKey: 'test-embedding',
+  displayName: 'Test Embedding',
+  backendKind: AiBackendKind.remoteApi,
+  providerKind: AiProviderKind.openAiCompatible,
+  baseUrl: 'https://example.com/v1',
+  apiKey: 'test-key',
+  model: 'test-embedding-model',
+  enabled: true,
+);
+
+final _semanticSearchSettings = AiSettings.defaultsFor(AppLanguage.en).copyWith(
+  embeddingProfiles: const <AiEmbeddingProfile>[_semanticEmbeddingProfile],
+  selectedEmbeddingProfileKey: 'test-embedding',
+);
+
+class _SemanticSearchHarness {
+  _SemanticSearchHarness({
+    required this.support,
+    required this.dbName,
+    required this.db,
+    required this.repository,
+  }) : semanticService = AiSemanticMemoSearchService(
+         repository: repository,
+         embedText: (_, input) async => _semanticVector(input),
+       );
+
+  final TestSupport support;
+  final String dbName;
+  final AppDatabase db;
+  final AiAnalysisRepository repository;
+  final AiSemanticMemoSearchService semanticService;
+
+  static Future<_SemanticSearchHarness> create({
+    required String dbNamePrefix,
+  }) async {
+    final support = await initializeTestSupport();
+    final dbName = uniqueDbName(dbNamePrefix);
+    final db = AppDatabase(dbName: dbName);
+    await db.db;
+    return _SemanticSearchHarness(
+      support: support,
+      dbName: dbName,
+      db: db,
+      repository: AiAnalysisRepository(db),
+    );
+  }
+
+  AiSemanticMemoSearchService buildSemanticService({
+    required AiSemanticTextEmbedder embedText,
+  }) {
+    return AiSemanticMemoSearchService(
+      repository: repository,
+      embedText: embedText,
+    );
+  }
+
+  Future<void> insertMemo({
+    required String uid,
+    required String content,
+    required List<String> tags,
+    required int createTimeSec,
+    String visibility = 'PRIVATE',
+    String state = 'NORMAL',
+    int relationCount = 0,
+    MemoLocation? location,
+  }) {
+    return db.upsertMemo(
+      uid: uid,
+      content: content,
+      visibility: visibility,
+      pinned: false,
+      state: state,
+      createTimeSec: createTimeSec,
+      updateTimeSec: createTimeSec,
+      tags: tags,
+      attachments: const <Map<String, dynamic>>[],
+      location: location,
+      relationCount: relationCount,
+      syncState: 0,
+    );
+  }
+
+  Future<void> dispose() async {
+    await db.close();
+    await deleteTestDatabase(dbName);
+    await support.dispose();
+  }
+}
+
+List<double> _semanticVector(String input) {
+  final normalized = input.toLowerCase();
+  if (normalized.contains('what to eat') || normalized.contains('eat')) {
+    return const <double>[1, 0, 0];
+  }
+  if (normalized.contains('dapanji') ||
+      normalized.contains('big plate chicken')) {
+    return const <double>[1, 0, 0];
+  }
+  if (normalized.contains('breakfast') || normalized.contains('congee')) {
+    return const <double>[0.8, 0.2, 0];
+  }
+  if (normalized.contains('dinner') ||
+      normalized.contains('chicken') ||
+      normalized.contains('noodles')) {
+    return const <double>[0.75, 0.25, 0];
+  }
+  if (normalized.contains('deadline') || normalized.contains('meeting')) {
+    return const <double>[0, 1, 0];
+  }
+  return const <double>[0, 0, 1];
+}
+
+int _utcSec(int year, int month, int day) {
+  return DateTime.utc(year, month, day).millisecondsSinceEpoch ~/ 1000;
 }

@@ -122,6 +122,114 @@ final quickSearchMemosProvider =
       );
     });
 
+final aiSemanticMemoSearchServiceProvider =
+    Provider<AiSemanticMemoSearchService>((ref) {
+      return AiSemanticMemoSearchService(
+        repository: AiAnalysisRepository(
+          ref.watch(databaseProvider),
+          writeGateway: ref.watch(desktopDbWriteGatewayProvider),
+        ),
+        runtime: AiTaskRuntime(registry: ref.watch(aiProviderRegistryProvider)),
+        readCurrentSettings: () => ref.read(aiSettingsProvider),
+      );
+    });
+
+final aiSearchIndexPreflightProvider =
+    FutureProvider.family<
+      AiSemanticMemoSearchIndexPreflight,
+      AiSearchMemosQuery
+    >((ref, query) async {
+      final normalizedSearch = MemoSearchMatcher.normalizeQuery(
+        query.searchQuery,
+      );
+      if (normalizedSearch.isEmpty) {
+        return AiSemanticMemoSearchIndexPreflight.empty;
+      }
+      final service = ref.watch(aiSemanticMemoSearchServiceProvider);
+      final settings = ref.watch(aiSettingsProvider);
+      return service.estimateIndexWorkForSearchScope(
+        settings: settings,
+        query: normalizedSearch,
+        state: query.state,
+        tag: query.tag,
+        startTimeSec: query.startTimeSec,
+        endTimeSecExclusive: query.endTimeSecExclusive,
+      );
+    });
+
+final aiSearchMemosProvider =
+    FutureProvider.family<List<LocalMemo>, AiSearchMemosQuery>((
+      ref,
+      query,
+    ) async {
+      final service = ref.watch(aiSemanticMemoSearchServiceProvider);
+      final settings = ref.watch(aiSettingsProvider);
+      final logManager = ref.watch(logManagerProvider);
+      final pageSize = query.pageSize > 0 ? query.pageSize : 200;
+      final normalizedSearch = MemoSearchMatcher.normalizeQuery(
+        query.searchQuery,
+      );
+      if (normalizedSearch.isEmpty) return const <LocalMemo>[];
+
+      try {
+        final result = await service.search(
+          settings: settings,
+          query: normalizedSearch,
+          state: query.state,
+          tag: query.tag,
+          startTimeSec: query.startTimeSec,
+          endTimeSecExclusive: query.endTimeSecExclusive,
+          limit: pageSize * 3,
+        );
+        final filtered = filterAiSearchHitsForMemoList(
+          result.hits,
+          advancedFilters: query.advancedFilters,
+          pageSize: pageSize,
+        );
+        logManager.info(
+          'AI search flow completed',
+          context: <String, Object?>{
+            'queryLength': normalizedSearch.length,
+            'readyChunks': result.readyChunkCount,
+            'scoredChunks': result.scoredChunkCount,
+            'rawHitCount': result.hits.length,
+            'resultCount': filtered.length,
+          },
+        );
+        return filtered;
+      } catch (error, stackTrace) {
+        logManager.warn(
+          'AI search flow failed',
+          error: error,
+          stackTrace: stackTrace,
+          context: <String, Object?>{
+            'queryLength': normalizedSearch.length,
+            'state': query.state,
+            'tag': query.tag,
+          },
+        );
+        rethrow;
+      }
+    });
+
+List<LocalMemo> filterAiSearchHitsForMemoList(
+  Iterable<AiSemanticMemoSearchHit> hits, {
+  required AdvancedSearchFilters advancedFilters,
+  required int pageSize,
+}) {
+  final normalizedFilters = advancedFilters.normalized();
+  final normalizedPageSize = pageSize > 0 ? pageSize : null;
+  final filtered = <LocalMemo>[];
+  for (final hit in hits) {
+    if (!normalizedFilters.matches(hit.memo)) continue;
+    filtered.add(hit.memo);
+    if (normalizedPageSize != null && filtered.length >= normalizedPageSize) {
+      break;
+    }
+  }
+  return filtered;
+}
+
 List<LocalMemo> _applyAdvancedFiltersToRows(
   Iterable<Map<String, dynamic>> rows,
   AdvancedSearchFilters advancedFilters, {

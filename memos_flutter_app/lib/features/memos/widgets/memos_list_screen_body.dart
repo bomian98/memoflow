@@ -6,6 +6,7 @@ import '../../../core/app_motion.dart';
 import '../../../core/memoflow_palette.dart';
 import '../../../core/platform_layout.dart';
 import '../../../core/scene_micro_guide_widgets.dart';
+import '../../../data/ai/ai_semantic_memo_search_service.dart';
 import '../../../data/models/local_memo.dart';
 import '../../../data/repositories/scene_micro_guide_repository.dart';
 import '../../../i18n/strings.g.dart';
@@ -129,6 +130,8 @@ class MemosListScreenBody extends StatelessWidget {
     required this.onOpenSearch,
     required this.onToggleWindowsHeaderSearch,
     required this.onToggleQuickSearchKind,
+    required this.onStartAiSearch,
+    required this.onStopAiSearch,
     required this.onDismissGuide,
     required this.onViewportLayoutChanged,
     required this.onCollapseFloatingMemo,
@@ -176,6 +179,8 @@ class MemosListScreenBody extends StatelessWidget {
   final VoidCallback onOpenSearch;
   final VoidCallback onToggleWindowsHeaderSearch;
   final ValueChanged<QuickSearchKind> onToggleQuickSearchKind;
+  final VoidCallback onStartAiSearch;
+  final VoidCallback onStopAiSearch;
   final VoidCallback onDismissGuide;
   final VoidCallback onViewportLayoutChanged;
   final VoidCallback onCollapseFloatingMemo;
@@ -196,38 +201,24 @@ class MemosListScreenBody extends StatelessWidget {
       context,
       AppMotion.medium,
     );
+    final query = data.viewState.query;
     final statusChild = data.viewState.query.showSearchLanding
         ? null
         : data.memosError != null
-        ? Center(
-            child: Text(
-              context.t.strings.legacy.msg_failed_load_3(
-                memosError: data.memosError ?? '',
-              ),
-            ),
-          )
+        ? _buildErrorStatus(context, data.memosError!, query.useAiSearch)
         : (data.memosLoading && data.visibleMemos.isEmpty)
-        ? const Center(child: CircularProgressIndicator())
+        ? _buildLoadingStatus(context, query.useAiSearch)
         : (data.visibleMemos.isEmpty)
-        ? Padding(
-            padding: const EdgeInsets.only(top: 140),
-            child: Center(
-              child: Text(
-                data.searching
-                    ? context.t.strings.legacy.msg_no_results_found
-                    : context.t.strings.legacy.msg_no_content_yet,
-              ),
-            ),
-          )
+        ? _buildEmptyStatus(context, data)
         : null;
     final statusKey = data.viewState.query.showSearchLanding
         ? null
         : data.memosError != null
-        ? 'error'
+        ? (query.useAiSearch ? 'ai-error' : 'error')
         : (data.memosLoading && data.visibleMemos.isEmpty)
-        ? 'loading'
+        ? (query.useAiSearch ? 'ai-loading' : 'loading')
         : (data.visibleMemos.isEmpty)
-        ? 'empty'
+        ? (query.useAiSearch ? 'ai-empty' : 'empty')
         : null;
     final memoListBody = NotificationListener<SizeChangedLayoutNotification>(
       onNotification: (_) {
@@ -482,7 +473,12 @@ class MemosListScreenBody extends StatelessWidget {
                         )
                       else if (data.viewState.query.showSearchLanding)
                         SliverToBoxAdapter(child: searchLandingChild)
-                      else
+                      else ...[
+                        if (data.viewState.query.useAiSearch &&
+                            data.visibleMemos.isNotEmpty)
+                          SliverToBoxAdapter(
+                            child: _buildAiResultsLabel(context),
+                          ),
                         SliverPadding(
                           padding: EdgeInsets.fromLTRB(
                             16,
@@ -497,6 +493,12 @@ class MemosListScreenBody extends StatelessWidget {
                             itemBuilder: animatedItemBuilder,
                           ),
                         ),
+                        if (data.viewState.query.canOfferAiSearch &&
+                            data.visibleMemos.isNotEmpty)
+                          SliverToBoxAdapter(
+                            child: _buildAiSearchBottomAction(context),
+                          ),
+                      ],
                       if (data.showLoadMoreHint)
                         SliverToBoxAdapter(
                           child: Padding(
@@ -737,6 +739,195 @@ class MemosListScreenBody extends StatelessWidget {
       body: scaffoldBody,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: floatingActionButton,
+    );
+  }
+
+  Widget _buildLoadingStatus(BuildContext context, bool aiSearchActive) {
+    if (!aiSearchActive) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final legacy = context.t.strings.legacy;
+    return _buildStatusCard(
+      context,
+      icon: Icons.auto_awesome_outlined,
+      title: legacy.msg_ai_search_loading_title,
+      message: legacy.msg_ai_search_loading_message,
+      action: const CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildErrorStatus(
+    BuildContext context,
+    Object error,
+    bool aiSearchActive,
+  ) {
+    if (!aiSearchActive) {
+      return Center(
+        child: Text(
+          context.t.strings.legacy.msg_failed_load_3(memosError: error),
+        ),
+      );
+    }
+    final needsConfig = error is AiSemanticMemoSearchConfigurationException;
+    final legacy = context.t.strings.legacy;
+    return _buildStatusCard(
+      context,
+      icon: needsConfig ? Icons.tune_outlined : Icons.error_outline,
+      title: needsConfig
+          ? legacy.msg_ai_search_needs_embedding_model
+          : legacy.msg_ai_search_failed,
+      message: needsConfig
+          ? legacy.msg_ai_search_configure_embedding_model
+          : error.toString(),
+      action: OutlinedButton.icon(
+        onPressed: onStopAiSearch,
+        icon: const Icon(Icons.search, size: 18),
+        label: Text(legacy.msg_ai_search_back_to_keyword_search),
+      ),
+    );
+  }
+
+  Widget _buildEmptyStatus(
+    BuildContext context,
+    MemosListScreenBodyData bodyData,
+  ) {
+    final query = bodyData.viewState.query;
+    final legacy = context.t.strings.legacy;
+    if (query.useAiSearch) {
+      return _buildStatusCard(
+        context,
+        icon: Icons.auto_awesome_outlined,
+        title: legacy.msg_ai_search_no_matches,
+        message: legacy.msg_ai_search_keyword_available,
+        action: OutlinedButton.icon(
+          onPressed: onStopAiSearch,
+          icon: const Icon(Icons.search, size: 18),
+          label: Text(legacy.msg_ai_search_back_to_keyword_search),
+        ),
+      );
+    }
+    if (query.canOfferAiSearch) {
+      return _buildStatusCard(
+        context,
+        icon: Icons.search_off_outlined,
+        title: legacy.msg_no_results_found,
+        message: legacy.msg_ai_search_try_related_memos,
+        action: FilledButton.icon(
+          onPressed: onStartAiSearch,
+          icon: const Icon(Icons.auto_awesome, size: 18),
+          label: Text(legacy.msg_ai_search_use_ai_search),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 140),
+      child: Center(
+        child: Text(
+          bodyData.searching
+              ? context.t.strings.legacy.msg_no_results_found
+              : context.t.strings.legacy.msg_no_content_yet,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiResultsLabel(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: colorScheme.primary.withValues(alpha: 0.16),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                size: 18,
+                color: colorScheme.onPrimaryContainer,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.t.strings.legacy.msg_ai_search_results_label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onStopAiSearch,
+                child: Text(context.t.strings.legacy.msg_ai_search_keyword),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiSearchBottomAction(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 140),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: onStartAiSearch,
+          icon: const Icon(Icons.auto_awesome, size: 18),
+          label: Text(
+            context.t.strings.legacy.msg_ai_search_use_for_related_memos,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String message,
+    required Widget action,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 116, left: 24, right: 24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 34, color: colorScheme.primary),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 18),
+              action,
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

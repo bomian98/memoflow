@@ -68,3 +68,13 @@ typedef QuickSearchMemosQuery = ({
   AdvancedSearchFilters advancedFilters,
   int pageSize,
 });
+
+typedef AiSearchMemosQuery = ({
+  String searchQuery,
+  String state,
+  String? tag,
+  int? startTimeSec,
+  int? endTimeSecExclusive,
+  AdvancedSearchFilters advancedFilters,
+  int pageSize,
+});

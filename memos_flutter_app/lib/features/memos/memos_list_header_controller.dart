@@ -36,6 +36,7 @@ class MemosListHeaderController extends ChangeNotifier {
     String? initialTag,
     String? initialShortcutId,
     QuickSearchKind? initialQuickSearchKind,
+    bool initialAiSearchActive = false,
     AdvancedSearchFilters initialAdvancedSearchFilters =
         AdvancedSearchFilters.empty,
     MemosListSortOption initialSortOption = MemosListSortOption.createDesc,
@@ -43,13 +44,14 @@ class MemosListHeaderController extends ChangeNotifier {
     bool initialWindowsHeaderSearchExpanded = false,
   }) : _searchController = searchController ?? TextEditingController(),
        _ownsSearchController = searchController == null,
-        _searchFocusNode = searchFocusNode ?? FocusNode(),
+       _searchFocusNode = searchFocusNode ?? FocusNode(),
        _ownsSearchFocusNode = searchFocusNode == null,
-        _searching = initialSearching,
-        _selectedShortcutId = initialShortcutId,
-        _selectedQuickSearchKind = initialQuickSearchKind,
-        _advancedSearchFilters = initialAdvancedSearchFilters.normalized(),
-        _activeTagFilter = normalizeTag(initialTag),
+       _searching = initialSearching,
+       _selectedShortcutId = initialShortcutId,
+       _selectedQuickSearchKind = initialQuickSearchKind,
+       _aiSearchActive = initialAiSearchActive,
+       _advancedSearchFilters = initialAdvancedSearchFilters.normalized(),
+       _activeTagFilter = normalizeTag(initialTag),
        _sortOption = initialSortOption,
        _windowsHeaderSearchExpanded = initialWindowsHeaderSearchExpanded {
     _searchController.addListener(_handleSearchTextChanged);
@@ -63,6 +65,7 @@ class MemosListHeaderController extends ChangeNotifier {
   bool _searching;
   String? _selectedShortcutId;
   QuickSearchKind? _selectedQuickSearchKind;
+  bool _aiSearchActive;
   AdvancedSearchFilters _advancedSearchFilters;
   String? _activeTagFilter;
   MemosListSortOption _sortOption;
@@ -73,6 +76,7 @@ class MemosListHeaderController extends ChangeNotifier {
   bool get searching => _searching;
   String? get selectedShortcutId => _selectedShortcutId;
   QuickSearchKind? get selectedQuickSearchKind => _selectedQuickSearchKind;
+  bool get aiSearchActive => _aiSearchActive;
   AdvancedSearchFilters get advancedSearchFilters => _advancedSearchFilters;
   String? get activeTagFilter => _activeTagFilter;
   MemosListSortOption get sortOption => _sortOption;
@@ -108,12 +112,14 @@ class MemosListHeaderController extends ChangeNotifier {
     if (clearQuickSearch) {
       _selectedQuickSearchKind = null;
     }
+    _aiSearchActive = false;
     notifyListeners();
   }
 
   void clearSelectedShortcut() {
     if (_selectedShortcutId == null) return;
     _selectedShortcutId = null;
+    _aiSearchActive = false;
     notifyListeners();
   }
 
@@ -174,6 +180,7 @@ class MemosListHeaderController extends ChangeNotifier {
     }
     _windowsHeaderSearchExpanded = false;
     _selectedQuickSearchKind = null;
+    _aiSearchActive = false;
     if (clearQuery) {
       _advancedSearchFilters = AdvancedSearchFilters.empty;
     }
@@ -195,6 +202,7 @@ class MemosListHeaderController extends ChangeNotifier {
     _searching = false;
     _windowsHeaderSearchExpanded = false;
     _selectedQuickSearchKind = null;
+    _aiSearchActive = false;
     _advancedSearchFilters = AdvancedSearchFilters.empty;
     notifyListeners();
   }
@@ -213,6 +221,7 @@ class MemosListHeaderController extends ChangeNotifier {
     required void Function(String query) addHistory,
   }) {
     final trimmed = query.trim();
+    _aiSearchActive = false;
     _searchController.text = trimmed;
     _searchController.selection = TextSelection.fromPosition(
       TextPosition(offset: _searchController.text.length),
@@ -225,6 +234,21 @@ class MemosListHeaderController extends ChangeNotifier {
     final next = _selectedQuickSearchKind == kind ? null : kind;
     if (_selectedQuickSearchKind == next) return;
     _selectedQuickSearchKind = next;
+    _aiSearchActive = false;
+    notifyListeners();
+  }
+
+  void startAiSearch() {
+    final trimmed = _searchController.text.trim();
+    if (trimmed.isEmpty || _aiSearchActive) return;
+    _aiSearchActive = true;
+    _selectedQuickSearchKind = null;
+    notifyListeners();
+  }
+
+  void stopAiSearch() {
+    if (!_aiSearchActive) return;
+    _aiSearchActive = false;
     notifyListeners();
   }
 
@@ -392,6 +416,9 @@ class MemosListHeaderController extends ChangeNotifier {
   }
 
   void _handleSearchTextChanged() {
+    if (_aiSearchActive) {
+      _aiSearchActive = false;
+    }
     notifyListeners();
   }
 

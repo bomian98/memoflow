@@ -583,6 +583,86 @@ LIMIT ?;
     return rows;
   }
 
+  Future<List<Map<String, dynamic>>> listSemanticSearchCandidateChunkRows({
+    int? startTimeSec,
+    int? endTimeSecExclusive,
+    required bool includePublic,
+    required bool includePrivate,
+    required bool includeProtected,
+    required String baseUrl,
+    required String model,
+    int limit = 3000,
+  }) async {
+    final db = await _db;
+    final whereClauses = <String>[
+      'c.is_active = 1',
+      'COALESCE(p.allow_ai, 1) = 1',
+    ];
+    final args = <Object?>[];
+    if (startTimeSec != null) {
+      whereClauses.add('c.memo_create_time >= ?');
+      args.add(startTimeSec);
+    }
+    if (endTimeSecExclusive != null) {
+      whereClauses.add('c.memo_create_time < ?');
+      args.add(endTimeSecExclusive);
+    }
+    if (!includePublic) {
+      whereClauses.add("c.memo_visibility != 'PUBLIC'");
+    }
+    if (!includePrivate) {
+      whereClauses.add("c.memo_visibility != 'PRIVATE'");
+    }
+    if (!includeProtected) {
+      whereClauses.add("c.memo_visibility != 'PROTECTED'");
+    }
+    return db.rawQuery(
+      '''
+SELECT
+  c.*,
+  e.id AS embedding_id,
+  e.status AS embedding_status,
+  e.vector_blob,
+  e.dimensions,
+  e.error_text
+FROM ai_chunks c
+LEFT JOIN ai_memo_policy p ON p.memo_uid = c.memo_uid
+LEFT JOIN ai_embeddings e
+  ON e.chunk_id = c.id
+ AND e.base_url = ?
+ AND e.model = ?
+WHERE ${whereClauses.join(' AND ')}
+ORDER BY c.memo_create_time DESC, c.chunk_index ASC
+LIMIT ?;
+''',
+      <Object?>[baseUrl, model, ...args, limit],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> listMemoRowsByUids(
+    Iterable<String> memoUids,
+  ) async {
+    final normalized = memoUids
+        .map((uid) => uid.trim())
+        .where((uid) => uid.isNotEmpty)
+        .toList(growable: false);
+    if (normalized.isEmpty) return const <Map<String, dynamic>>[];
+    final placeholders = List.filled(normalized.length, '?').join(', ');
+    final db = await _db;
+    final rows = await db.rawQuery('''
+SELECT m.*
+FROM memos m
+WHERE m.uid IN ($placeholders);
+''', normalized);
+    final rowsByUid = <String, Map<String, dynamic>>{
+      for (final row in rows) ((row['uid'] as String?) ?? '').trim(): row,
+    };
+    return [
+      for (final uid in normalized)
+        if (rowsByUid[uid] != null) rowsByUid[uid]!,
+    ];
+  }
+
   Future<List<Map<String, dynamic>>> listPreviewSampleChunks({
     required int startTimeSec,
     required int endTimeSecExclusive,

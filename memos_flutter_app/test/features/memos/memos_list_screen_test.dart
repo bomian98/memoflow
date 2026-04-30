@@ -20,6 +20,8 @@ import 'package:memos_flutter_app/application/sync/webdav_backup_service.dart';
 import 'package:memos_flutter_app/application/sync/webdav_sync_service.dart';
 import 'package:memos_flutter_app/core/app_motion.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
+import 'package:memos_flutter_app/data/ai/ai_provider_adapter.dart';
+import 'package:memos_flutter_app/data/ai/ai_semantic_memo_search_service.dart';
 import 'package:memos_flutter_app/data/logs/sync_queue_progress_tracker.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
 import 'package:memos_flutter_app/data/models/attachment.dart';
@@ -1589,6 +1591,140 @@ void main() {
 
     expect(find.byType(MemoFlowFab), findsNothing);
   });
+
+  testWidgets('AI search starts directly when preflight needs no indexing', (
+    tester,
+  ) async {
+    var aiSearchCalls = 0;
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: Stream.value(const <LocalMemo>[]),
+        overrides: [
+          aiSearchIndexPreflightProvider.overrideWith(
+            (ref, query) async => AiSemanticMemoSearchIndexPreflight.empty,
+          ),
+          aiSearchMemosProvider.overrideWith((ref, query) async {
+            aiSearchCalls += 1;
+            return const <LocalMemo>[];
+          }),
+        ],
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    final screenState = _screenState(tester);
+    (screenState.debugSearchController as TextEditingController).text =
+        'what to eat';
+    screenState.debugStartAiSearch();
+    await _pumpScreenFrames(tester);
+
+    expect(screenState.debugAiSearchActive as bool, isTrue);
+    expect(find.text('Build AI search index?'), findsNothing);
+    expect(aiSearchCalls, greaterThan(0));
+  });
+
+  testWidgets('AI search index prompt cancel keeps keyword search active', (
+    tester,
+  ) async {
+    var aiSearchCalls = 0;
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: Stream.value(const <LocalMemo>[]),
+        overrides: [
+          aiSearchIndexPreflightProvider.overrideWith(
+            (ref, query) async => _preflight(needsIndexing: true),
+          ),
+          aiSearchMemosProvider.overrideWith((ref, query) async {
+            aiSearchCalls += 1;
+            return const <LocalMemo>[];
+          }),
+        ],
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    final screenState = _screenState(tester);
+    (screenState.debugSearchController as TextEditingController).text =
+        'what to eat';
+    screenState.debugStartAiSearch();
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Build AI search index?'), findsOneWidget);
+    expect(find.text('Estimated indexing tokens: 128'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await _pumpScreenFrames(tester);
+
+    expect(screenState.debugAiSearchActive as bool, isFalse);
+    expect(aiSearchCalls, 0);
+  });
+
+  testWidgets('AI search index prompt continue starts AI search', (
+    tester,
+  ) async {
+    var aiSearchCalls = 0;
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: Stream.value(const <LocalMemo>[]),
+        overrides: [
+          aiSearchIndexPreflightProvider.overrideWith(
+            (ref, query) async => _preflight(needsIndexing: true),
+          ),
+          aiSearchMemosProvider.overrideWith((ref, query) async {
+            aiSearchCalls += 1;
+            return const <LocalMemo>[];
+          }),
+        ],
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    final screenState = _screenState(tester);
+    (screenState.debugSearchController as TextEditingController).text =
+        'what to eat';
+    screenState.debugStartAiSearch();
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('Continue with AI search'));
+    await _pumpScreenFrames(tester);
+
+    expect(screenState.debugAiSearchActive as bool, isTrue);
+    expect(aiSearchCalls, greaterThan(0));
+  });
+
+  testWidgets('AI search missing config keeps existing recovery state', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: Stream.value(const <LocalMemo>[]),
+        overrides: [
+          aiSearchIndexPreflightProvider.overrideWith((ref, query) async {
+            throw const AiSemanticMemoSearchConfigurationException(
+              'Configure an embedding model before using AI search.',
+            );
+          }),
+          aiSearchMemosProvider.overrideWith((ref, query) async {
+            throw const AiSemanticMemoSearchConfigurationException(
+              'Configure an embedding model before using AI search.',
+            );
+          }),
+        ],
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    final screenState = _screenState(tester);
+    (screenState.debugSearchController as TextEditingController).text =
+        'what to eat';
+    screenState.debugStartAiSearch();
+    await _pumpScreenFrames(tester);
+
+    expect(find.text('Build AI search index?'), findsNothing);
+    expect(find.text('AI search needs an embedding model'), findsOneWidget);
+  });
 }
 
 Future<void> _pumpScreenFrames(WidgetTester tester) async {
@@ -1610,6 +1746,7 @@ Widget _buildHarness({
   bool hidePrimaryComposeFab = false,
   MemosListRouteNoteInputPresenter? showNoteInputSheet,
   MemosListRouteVoiceRecordOverlayPresenter? showVoiceRecordOverlay,
+  List<Override> overrides = const <Override>[],
 }) {
   final resolvedDevicePreferencesRepository =
       devicePreferencesRepository ??
@@ -1663,6 +1800,7 @@ Widget _buildHarness({
       unreadNotificationCountProvider.overrideWith((ref) => 0),
       syncQueuePendingCountProvider.overrideWith((ref) => Stream.value(0)),
       syncQueueAttentionCountProvider.overrideWith((ref) => Stream.value(0)),
+      ...overrides,
     ],
     child: TranslationProvider(
       child: MaterialApp(
@@ -1733,6 +1871,28 @@ MemosListFloatingCollapseController _screenFloatingCollapseController(
   final screenState = tester.state(find.byType(MemosListScreen)) as dynamic;
   return screenState.debugFloatingCollapseController
       as MemosListFloatingCollapseController;
+}
+
+dynamic _screenState(WidgetTester tester) {
+  return tester.state(find.byType(MemosListScreen)) as dynamic;
+}
+
+AiSemanticMemoSearchIndexPreflight _preflight({
+  required bool needsIndexing,
+  AiBackendKind backendKind = AiBackendKind.remoteApi,
+}) {
+  return AiSemanticMemoSearchIndexPreflight(
+    profileKey: 'test-embedding',
+    profileDisplayName: 'Test Embedding',
+    backendKind: backendKind,
+    baseUrl: backendKind == AiBackendKind.remoteApi
+        ? 'https://example.com/v1'
+        : 'http://localhost:11434',
+    model: 'test-embedding-model',
+    memoCount: needsIndexing ? 2 : 0,
+    chunkCount: needsIndexing ? 3 : 0,
+    estimatedTokenCount: needsIndexing ? 128 : 0,
+  );
 }
 
 MemosListViewportMetrics _viewportMetrics({

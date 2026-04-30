@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:memos_flutter_app/data/ai/ai_semantic_memo_search_service.dart';
 import 'package:memos_flutter_app/data/models/app_preferences.dart';
+import 'package:memos_flutter_app/data/models/attachment.dart';
+import 'package:memos_flutter_app/data/models/content_fingerprint.dart';
 import 'package:memos_flutter_app/data/models/local_memo.dart';
 import 'package:memos_flutter_app/data/models/memo_template_settings.dart';
 import 'package:memos_flutter_app/features/memos/home_quick_actions.dart';
@@ -144,6 +149,213 @@ void main() {
     );
     expect(backToTopButton.visible, isTrue);
   });
+
+  testWidgets('keyword empty state offers explicit AI search CTA', (
+    tester,
+  ) async {
+    var aiSearchStarted = false;
+    final aiSearchText = t.strings.legacy.msg_ai_search_use_ai_search;
+
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              searching: true,
+              query: _buildQueryState(searchQuery: 'what to eat'),
+            ),
+            onStartAiSearch: () => aiSearchStarted = true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text(aiSearchText), findsOneWidget);
+
+    await tester.tap(find.text(aiSearchText));
+    expect(aiSearchStarted, isTrue);
+  });
+
+  testWidgets('keyword results show optional AI search action', (tester) async {
+    var aiSearchStarted = false;
+    final aiSearchText = t.strings.legacy.msg_ai_search_use_for_related_memos;
+
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              searching: true,
+              query: _buildQueryState(searchQuery: 'what to eat'),
+              visibleMemos: <LocalMemo>[_buildMemo('memo-1')],
+            ),
+            animatedItemBuilder: (_, index, _) => Text('memo item $index'),
+            onStartAiSearch: () => aiSearchStarted = true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text(aiSearchText), findsOneWidget);
+
+    await tester.tap(find.text(aiSearchText));
+    expect(aiSearchStarted, isTrue);
+  });
+
+  testWidgets('AI empty state keeps keyword search recoverable', (
+    tester,
+  ) async {
+    var aiSearchStopped = false;
+    final noMatchesText = t.strings.legacy.msg_ai_search_no_matches;
+    final backToKeywordText =
+        t.strings.legacy.msg_ai_search_back_to_keyword_search;
+
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              searching: true,
+              query: _buildQueryState(
+                searchQuery: 'what to eat',
+                useAiSearch: true,
+              ),
+            ),
+            onStopAiSearch: () => aiSearchStopped = true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text(noMatchesText), findsOneWidget);
+    expect(find.text(backToKeywordText), findsOneWidget);
+
+    await tester.tap(find.text(backToKeywordText));
+    expect(aiSearchStopped, isTrue);
+  });
+
+  testWidgets('AI results and configuration errors are labeled', (
+    tester,
+  ) async {
+    final aiResultsText = t.strings.legacy.msg_ai_search_results_label;
+    final keywordText = t.strings.legacy.msg_ai_search_keyword;
+    final needsEmbeddingText =
+        t.strings.legacy.msg_ai_search_needs_embedding_model;
+
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              searching: true,
+              query: _buildQueryState(
+                searchQuery: 'what to eat',
+                useAiSearch: true,
+              ),
+              visibleMemos: <LocalMemo>[_buildMemo('memo-1')],
+            ),
+            animatedItemBuilder: (_, index, _) => Text('memo item $index'),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text(aiResultsText), findsOneWidget);
+    expect(find.text(keywordText), findsOneWidget);
+
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              searching: true,
+              query: _buildQueryState(
+                searchQuery: 'what to eat',
+                useAiSearch: true,
+              ),
+              memosError: const AiSemanticMemoSearchConfigurationException(
+                'missing embedding config',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text(needsEmbeddingText), findsOneWidget);
+  });
+
+  testWidgets('AI search CTA follows active locale', (tester) async {
+    LocaleSettings.setLocale(AppLocale.zhHans);
+    final localizedAiSearchText = t.strings.legacy.msg_ai_search_use_ai_search;
+    final englishAiSearchText =
+        AppLocale.en.translations.strings.legacy.msg_ai_search_use_ai_search;
+
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.zhHans.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              searching: true,
+              query: _buildQueryState(searchQuery: 'what to eat'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(localizedAiSearchText, isNot(englishAiSearchText));
+    expect(find.text(localizedAiSearchText), findsOneWidget);
+    expect(find.text(englishAiSearchText), findsNothing);
+  });
+
+  test('AI search UI copy is not hard-coded in memo list UI', () {
+    final source = [
+      File('lib/features/memos/widgets/memos_list_screen_body.dart'),
+      File('lib/features/memos/memos_list_screen.dart'),
+    ].map((file) => file.readAsStringSync()).join('\n');
+    final hardCodedPhrases = <String>[
+      'AI search is looking for related memos',
+      'Indexing, embedding, and ranking local notes for this query.',
+      'AI search needs an embedding model',
+      'AI search failed',
+      'Configure an embedding model in AI settings, then try again.',
+      'Back to keyword search',
+      'No AI matches found',
+      'Keyword search is still available for exact text matches.',
+      'Try AI search to find semantically related memos.',
+      'Use AI search',
+      'AI semantic results',
+      'Use AI search for related memos',
+      'Build AI search index?',
+      'AI search needs to index eligible memo chunks first.',
+      'Estimated indexing tokens:',
+      'Continue with AI search',
+    ];
+
+    for (final phrase in hardCodedPhrases) {
+      expect(source, isNot(contains("'$phrase'")));
+      expect(source, isNot(contains('"$phrase"')));
+    }
+  });
 }
 
 Widget _buildBodyScreen({
@@ -152,6 +364,8 @@ Widget _buildBodyScreen({
   MemosListAnimatedItemBuilder? animatedItemBuilder,
   ValueListenable<bool>? showBackToTopListenable,
   ValueListenable<MemosListFloatingCollapseState>? floatingCollapseListenable,
+  VoidCallback? onStartAiSearch,
+  VoidCallback? onStopAiSearch,
 }) {
   final resolvedData = data ?? _buildBodyData();
   final resolvedShowBackToTopListenable =
@@ -193,6 +407,8 @@ Widget _buildBodyScreen({
     floatingCollapseListenable: resolvedFloatingCollapseListenable,
     onCloseSearch: () {},
     onOpenSearch: () {},
+    onStartAiSearch: onStartAiSearch ?? () {},
+    onStopAiSearch: onStopAiSearch ?? () {},
     onToggleWindowsHeaderSearch: () {},
     onToggleQuickSearchKind: (_) {},
     onDismissGuide: () {},
@@ -213,37 +429,13 @@ MemosListScreenBodyData _buildBodyData({
   bool memosLoading = false,
   Object? memosError,
   List<LocalMemo> visibleMemos = const <LocalMemo>[],
+  bool searching = false,
+  MemosListScreenQueryState? query,
 }) {
+  final resolvedQuery = query ?? _buildQueryState();
   return MemosListScreenBodyData(
     viewState: MemosListScreenViewState(
-      query: MemosListScreenQueryState(
-        searchQuery: '',
-        resolvedTag: null,
-        advancedFilters: AdvancedSearchFilters.empty,
-        selectedShortcut: null,
-        shortcutFilter: '',
-        useShortcutFilter: false,
-        selectedQuickSearchKind: null,
-        useQuickSearch: false,
-        useRemoteSearch: false,
-        startTimeSec: null,
-        endTimeSecExclusive: null,
-        baseQuery: (
-          searchQuery: '',
-          state: 'NORMAL',
-          tag: null,
-          startTimeSec: null,
-          endTimeSecExclusive: null,
-          advancedFilters: AdvancedSearchFilters.empty,
-          pageSize: 20,
-        ),
-        shortcutQuery: null,
-        quickSearchQuery: null,
-        sourceKind: MemosListMemoSourceKind.stream,
-        queryKey: 'test',
-        showSearchLanding: false,
-        enableHomeSort: false,
-      ),
+      query: resolvedQuery,
       layout: const MemosListScreenLayoutState(
         showHeaderPillActions: false,
         listTopPadding: 0,
@@ -270,7 +462,7 @@ MemosListScreenBodyData _buildBodyData({
       activeTagStat: null,
       tagPresentationSignature: '',
     ),
-    searching: false,
+    searching: searching,
     showFilterTagChip: false,
     enableSearch: false,
     enableTitleMenu: false,
@@ -291,6 +483,75 @@ MemosListScreenBodyData _buildBodyData({
     hapticsEnabled: false,
     desktopPreviewVisible: false,
     enableDrawerOpenDragGesture: true,
+  );
+}
+
+MemosListScreenQueryState _buildQueryState({
+  String searchQuery = '',
+  bool useAiSearch = false,
+}) {
+  final baseQuery = (
+    searchQuery: searchQuery,
+    state: 'NORMAL',
+    tag: null,
+    startTimeSec: null,
+    endTimeSecExclusive: null,
+    advancedFilters: AdvancedSearchFilters.empty,
+    pageSize: 20,
+  );
+  final aiQuery = (
+    searchQuery: searchQuery,
+    state: 'NORMAL',
+    tag: null,
+    startTimeSec: null,
+    endTimeSecExclusive: null,
+    advancedFilters: AdvancedSearchFilters.empty,
+    pageSize: 20,
+  );
+  return MemosListScreenQueryState(
+    searchQuery: searchQuery,
+    resolvedTag: null,
+    advancedFilters: AdvancedSearchFilters.empty,
+    selectedShortcut: null,
+    shortcutFilter: '',
+    useShortcutFilter: false,
+    selectedQuickSearchKind: null,
+    useQuickSearch: false,
+    useAiSearch: useAiSearch,
+    useRemoteSearch: searchQuery.trim().isNotEmpty && !useAiSearch,
+    startTimeSec: null,
+    endTimeSecExclusive: null,
+    baseQuery: baseQuery,
+    shortcutQuery: null,
+    quickSearchQuery: null,
+    aiSearchQuery: useAiSearch ? aiQuery : null,
+    sourceKind: useAiSearch
+        ? MemosListMemoSourceKind.aiSearch
+        : searchQuery.trim().isNotEmpty
+        ? MemosListMemoSourceKind.remoteSearch
+        : MemosListMemoSourceKind.stream,
+    queryKey: 'test-${useAiSearch ? 'ai' : 'keyword'}-$searchQuery',
+    showSearchLanding: false,
+    enableHomeSort: false,
+  );
+}
+
+LocalMemo _buildMemo(String uid) {
+  const content = 'memo content';
+  return LocalMemo(
+    uid: uid,
+    content: content,
+    contentFingerprint: computeContentFingerprint(content),
+    visibility: 'PRIVATE',
+    pinned: false,
+    state: 'NORMAL',
+    createTime: DateTime.utc(2026, 3, 1),
+    updateTime: DateTime.utc(2026, 3, 1, 1),
+    tags: const <String>[],
+    attachments: const <Attachment>[],
+    relationCount: 0,
+    syncState: SyncState.synced,
+    lastError: null,
   );
 }
 

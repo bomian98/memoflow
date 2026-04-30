@@ -10,7 +10,13 @@ import '../../state/memos/memos_providers.dart';
 import '../../state/system/scene_micro_guide_provider.dart';
 import '../../state/tags/tag_color_lookup.dart';
 
-enum MemosListMemoSourceKind { stream, remoteSearch, quickSearch, shortcut }
+enum MemosListMemoSourceKind {
+  stream,
+  remoteSearch,
+  quickSearch,
+  shortcut,
+  aiSearch,
+}
 
 @immutable
 class MemosListScreenQueryState {
@@ -23,12 +29,14 @@ class MemosListScreenQueryState {
     required this.useShortcutFilter,
     required this.selectedQuickSearchKind,
     required this.useQuickSearch,
+    this.useAiSearch = false,
     required this.useRemoteSearch,
     required this.startTimeSec,
     required this.endTimeSecExclusive,
     required this.baseQuery,
     required this.shortcutQuery,
     required this.quickSearchQuery,
+    this.aiSearchQuery,
     required this.sourceKind,
     required this.queryKey,
     required this.showSearchLanding,
@@ -43,16 +51,25 @@ class MemosListScreenQueryState {
   final bool useShortcutFilter;
   final QuickSearchKind? selectedQuickSearchKind;
   final bool useQuickSearch;
+  final bool useAiSearch;
   final bool useRemoteSearch;
   final int? startTimeSec;
   final int? endTimeSecExclusive;
   final MemosQuery baseQuery;
   final ShortcutMemosQuery? shortcutQuery;
   final QuickSearchMemosQuery? quickSearchQuery;
+  final AiSearchMemosQuery? aiSearchQuery;
   final MemosListMemoSourceKind sourceKind;
   final String queryKey;
   final bool showSearchLanding;
   final bool enableHomeSort;
+
+  bool get canOfferAiSearch {
+    return searchQuery.trim().isNotEmpty &&
+        !useShortcutFilter &&
+        !useQuickSearch &&
+        !useAiSearch;
+  }
 }
 
 @immutable
@@ -132,6 +149,7 @@ MemosListScreenQueryState buildMemosListScreenQueryState({
   required List<Shortcut> shortcuts,
   required String? selectedShortcutId,
   required QuickSearchKind? selectedQuickSearchKind,
+  bool aiSearchActive = false,
   required String? resolvedTag,
   required AdvancedSearchFilters advancedFilters,
   required bool searching,
@@ -144,12 +162,22 @@ MemosListScreenQueryState buildMemosListScreenQueryState({
   final useShortcutFilter = shortcutFilter.trim().isNotEmpty;
   final useQuickSearch = !useShortcutFilter && selectedQuickSearchKind != null;
   final trimmedSearchQuery = MemoSearchMatcher.normalizeQuery(searchQuery);
+  final useAiSearch =
+      !useShortcutFilter &&
+      !useQuickSearch &&
+      aiSearchActive &&
+      trimmedSearchQuery.isNotEmpty;
   final useRemoteSearch =
-      !useShortcutFilter && !useQuickSearch && trimmedSearchQuery.isNotEmpty;
+      !useShortcutFilter &&
+      !useQuickSearch &&
+      !useAiSearch &&
+      trimmedSearchQuery.isNotEmpty;
   final sourceKind = useShortcutFilter
       ? MemosListMemoSourceKind.shortcut
       : useQuickSearch
       ? MemosListMemoSourceKind.quickSearch
+      : useAiSearch
+      ? MemosListMemoSourceKind.aiSearch
       : useRemoteSearch
       ? MemosListMemoSourceKind.remoteSearch
       : MemosListMemoSourceKind.stream;
@@ -186,18 +214,33 @@ MemosListScreenQueryState buildMemosListScreenQueryState({
           advancedFilters: normalizedFilters,
           pageSize: pageSize,
         );
+  final aiSearchQuery = !useAiSearch
+      ? null
+      : (
+          searchQuery: searchQuery,
+          state: state,
+          tag: resolvedTag,
+          startTimeSec: dayRange?.startSec,
+          endTimeSecExclusive: dayRange?.endSecExclusive,
+          advancedFilters: normalizedFilters,
+          pageSize: pageSize,
+        );
   final queryKey =
       '$state|${resolvedTag ?? ''}|$trimmedSearchQuery|${shortcutFilter.trim()}|'
       '${dayRange?.startSec ?? ''}|${dayRange?.endSecExclusive ?? ''}|${useShortcutFilter ? 1 : 0}|'
       '${selectedQuickSearchKind?.name ?? ''}|${useQuickSearch ? 1 : 0}|'
-      '${useRemoteSearch ? 1 : 0}|${normalizedFilters.signature}';
+      '${useAiSearch ? 1 : 0}|${useRemoteSearch ? 1 : 0}|${normalizedFilters.signature}';
   final showSearchLanding =
       searching &&
       trimmedSearchQuery.isEmpty &&
       !useQuickSearch &&
       normalizedFilters.isEmpty;
   final enableHomeSort =
-      !searching && !useRemoteSearch && state == 'NORMAL' && showDrawer;
+      !searching &&
+      !useRemoteSearch &&
+      !useAiSearch &&
+      state == 'NORMAL' &&
+      showDrawer;
 
   return MemosListScreenQueryState(
     searchQuery: searchQuery,
@@ -208,12 +251,14 @@ MemosListScreenQueryState buildMemosListScreenQueryState({
     useShortcutFilter: useShortcutFilter,
     selectedQuickSearchKind: selectedQuickSearchKind,
     useQuickSearch: useQuickSearch,
+    useAiSearch: useAiSearch,
     useRemoteSearch: useRemoteSearch,
     startTimeSec: dayRange?.startSec,
     endTimeSecExclusive: dayRange?.endSecExclusive,
     baseQuery: baseQuery,
     shortcutQuery: shortcutQuery,
     quickSearchQuery: quickSearchQuery,
+    aiSearchQuery: aiSearchQuery,
     sourceKind: sourceKind,
     queryKey: queryKey,
     showSearchLanding: showSearchLanding,

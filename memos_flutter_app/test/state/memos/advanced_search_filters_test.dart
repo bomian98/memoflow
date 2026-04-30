@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:memos_flutter_app/data/ai/ai_semantic_memo_search_service.dart';
 import 'package:memos_flutter_app/data/models/attachment.dart';
 import 'package:memos_flutter_app/data/models/local_memo.dart';
 import 'package:memos_flutter_app/data/models/memo_location.dart';
@@ -312,16 +313,56 @@ void main() {
       expect(normalized.attachmentType, isNull);
     });
   });
+
+  group('AI search result filtering', () {
+    test('applies advanced filters before result limit', () {
+      final hits = <AiSemanticMemoSearchHit>[
+        _semanticHit(_memo(uid: 'memo-no-relations')),
+        _semanticHit(_memo(uid: 'memo-related-1', relationCount: 1)),
+        _semanticHit(_memo(uid: 'memo-related-2', relationCount: 2)),
+      ];
+
+      final filtered = filterAiSearchHitsForMemoList(
+        hits,
+        advancedFilters: const AdvancedSearchFilters(
+          hasRelations: SearchToggleFilter.yes,
+        ),
+        pageSize: 1,
+      );
+
+      expect(filtered.map((memo) => memo.uid), <String>['memo-related-1']);
+    });
+
+    test('keeps ranked order for keyword-default handoff', () {
+      final hits = <AiSemanticMemoSearchHit>[
+        _semanticHit(_memo(uid: 'memo-first')),
+        _semanticHit(_memo(uid: 'memo-second')),
+        _semanticHit(_memo(uid: 'memo-third')),
+      ];
+
+      final filtered = filterAiSearchHitsForMemoList(
+        hits,
+        advancedFilters: AdvancedSearchFilters.empty,
+        pageSize: 2,
+      );
+
+      expect(filtered.map((memo) => memo.uid), <String>[
+        'memo-first',
+        'memo-second',
+      ]);
+    });
+  });
 }
 
 LocalMemo _memo({
+  String uid = 'memo-1',
   DateTime? createTime,
   List<Attachment> attachments = const [],
   MemoLocation? location,
   int relationCount = 0,
 }) {
   return LocalMemo(
-    uid: 'memo-1',
+    uid: uid,
     content: 'memo content',
     contentFingerprint: 'fingerprint',
     visibility: 'PRIVATE',
@@ -335,5 +376,15 @@ LocalMemo _memo({
     location: location,
     syncState: SyncState.synced,
     lastError: null,
+  );
+}
+
+AiSemanticMemoSearchHit _semanticHit(LocalMemo memo) {
+  return AiSemanticMemoSearchHit(
+    memo: memo,
+    score: 1,
+    bestChunkId: 1,
+    bestChunkText: memo.content,
+    matchingChunkCount: 1,
   );
 }

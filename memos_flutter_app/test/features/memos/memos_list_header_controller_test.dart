@@ -27,6 +27,28 @@ void main() {
     expect(controller.selectedQuickSearchKind, isNull);
   });
 
+  test('AI search activation is explicit and clears on query mode changes', () {
+    final controller = MemosListHeaderController(
+      initialQuickSearchKind: QuickSearchKind.links,
+    );
+    addTearDown(controller.dispose);
+
+    controller.searchController.text = 'what to eat';
+    controller.startAiSearch();
+
+    expect(controller.aiSearchActive, isTrue);
+    expect(controller.selectedQuickSearchKind, isNull);
+
+    controller.toggleQuickSearchKind(QuickSearchKind.voice);
+    expect(controller.aiSearchActive, isFalse);
+
+    controller.startAiSearch();
+    expect(controller.aiSearchActive, isTrue);
+
+    controller.searchController.text = 'what to cook';
+    expect(controller.aiSearchActive, isFalse);
+  });
+
   test('closeWindowsHeaderSearch clears query quick search and filters', () {
     final controller = MemosListHeaderController(
       initialAdvancedSearchFilters: const AdvancedSearchFilters(
