@@ -145,6 +145,34 @@ class ImageEditorI18n {
     'https://example.com': 'https://example.com',
   };
 
+  static const Map<String, String> _imageEditorI18nPtBr = {
+    'Crop': 'Cortar',
+    'Brush': 'Pincel',
+    'Text': 'Texto',
+    'Link': 'Link',
+    'Flip': 'Inverter',
+    'Rotate left': 'Girar \u00e0 esquerda',
+    'Rotate right': 'Girar \u00e0 direita',
+    'Blur': 'Desfoque',
+    'Filter': 'Filtro',
+    'Emoji': 'Emoji',
+    'Select Emoji': 'Selecionar emoji',
+    'Size Adjust': 'Ajustar tamanho',
+    'Remove': 'Remover',
+    'Size': 'Tamanho',
+    'Color': 'Cor',
+    'Background Color': 'Cor de fundo',
+    'Background Opacity': 'Opacidade do fundo',
+    'Slider Filter Color': 'Cor do filtro',
+    'Slider Color': 'Cor',
+    'Slider Opicity': 'Opacidade',
+    'Reset': 'Redefinir',
+    'Blur Radius': 'Raio do desfoque',
+    'Color Opacity': 'Opacidade da cor',
+    'Insert Your Message': 'Insira sua mensagem',
+    'https://example.com': 'https://example.com',
+  };
+
   static void apply(AppLanguage language) {
     final effective = language == AppLanguage.system
         ? appLanguageFromLocale(
@@ -156,6 +184,7 @@ class ImageEditorI18n {
       AppLanguage.zhHantTw => _imageEditorI18nZhHant,
       AppLanguage.ja => _imageEditorI18nJa,
       AppLanguage.de => _imageEditorI18nDe,
+      AppLanguage.ptBr => _imageEditorI18nPtBr,
       _ => _imageEditorI18nEn,
     };
     ImageEditor.setI18n(map);

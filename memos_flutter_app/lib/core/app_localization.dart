@@ -11,6 +11,8 @@ AppLanguage appLanguageFromLocale(Locale locale) {
       return AppLanguage.ja;
     case 'de':
       return AppLanguage.de;
+    case 'pt':
+      return AppLanguage.ptBr;
     case 'zh':
       return _isTraditionalZhLocale(locale)
           ? AppLanguage.zhHantTw
@@ -29,8 +31,8 @@ bool _isTraditionalZhLocale(Locale locale) {
 }
 
 bool _devicePrefersZh() {
-  final code =
-      WidgetsBinding.instance.platformDispatcher.locale.languageCode.toLowerCase();
+  final code = WidgetsBinding.instance.platformDispatcher.locale.languageCode
+      .toLowerCase();
   return code == 'zh';
 }
 
@@ -48,6 +50,7 @@ bool prefersEnglishFor(AppLanguage language) {
     AppLanguage.system => !_devicePrefersZh(),
     AppLanguage.ja => true,
     AppLanguage.de => true,
+    AppLanguage.ptBr => true,
   };
 }
 
@@ -61,9 +64,11 @@ bool prefersTraditionalFor(AppLanguage language) {
 
 AppLocale _deviceLocaleToAppLocale(Locale locale) {
   return switch (locale.languageCode.toLowerCase()) {
-    'zh' => _isTraditionalZhLocale(locale) ? AppLocale.zhHantTw : AppLocale.zhHans,
+    'zh' =>
+      _isTraditionalZhLocale(locale) ? AppLocale.zhHantTw : AppLocale.zhHans,
     'ja' => AppLocale.ja,
     'de' => AppLocale.de,
+    'pt' => AppLocale.ptBr,
     _ => AppLocale.en,
   };
 }
@@ -78,6 +83,7 @@ AppLocale appLocaleForLanguage(AppLanguage language) {
     AppLanguage.en => AppLocale.en,
     AppLanguage.ja => AppLocale.ja,
     AppLanguage.de => AppLocale.de,
+    AppLanguage.ptBr => AppLocale.ptBr,
   };
 }
 
@@ -118,7 +124,8 @@ String trByLocale({
 }
 
 extension AppLocalizationX on BuildContext {
-  AppLanguage get appLanguage => appLanguageFromLocale(Localizations.localeOf(this));
+  AppLanguage get appLanguage =>
+      appLanguageFromLocale(Localizations.localeOf(this));
 
   String tr({required String zh, required String en}) {
     return trByLocale(locale: Localizations.localeOf(this), zh: zh, en: en);

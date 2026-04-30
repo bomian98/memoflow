@@ -19,6 +19,7 @@ languages:
   en: "Englisch"
   ja: "Japanisch"
   de: "Deutsch"
+  ptBr: "Portugiesisch (Brasilien)"
 languagesNative:
   system: "System"
   zhHans: "简体中文"
@@ -26,6 +27,7 @@ languagesNative:
   en: "English"
   ja: "日本語"
   de: "Deutsch"
+  ptBr: "Português (Brasil)"
 onboarding:
   tagline: "Minimaler, leistungsstarker Notiz-Stream"
   selectLanguage: "Sprache auswählen"
@@ -1362,6 +1364,7 @@ legacy:
     en: "Englisch"
     ja: "Japanisch"
     de: "Deutsch"
+    pt_br: "Portugiesisch (Brasilien)"
   app_theme:
     system: "System"
     light: "Hell"

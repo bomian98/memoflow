@@ -75,6 +75,7 @@ class DesktopSettingsWindowApp extends ConsumerWidget {
         _isTraditionalZhLocale(locale) ? AppLocale.zhHantTw : AppLocale.zhHans,
       'ja' => AppLocale.ja,
       'de' => AppLocale.de,
+      'pt' => AppLocale.ptBr,
       _ => AppLocale.en,
     };
   }
@@ -89,6 +90,7 @@ class DesktopSettingsWindowApp extends ConsumerWidget {
       AppLanguage.en => AppLocale.en,
       AppLanguage.ja => AppLocale.ja,
       AppLanguage.de => AppLocale.de,
+      AppLanguage.ptBr => AppLocale.ptBr,
     };
   }
 

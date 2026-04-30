@@ -3,10 +3,10 @@
 /// Original: lib/i18n
 /// To regenerate, run: `dart run slang`
 ///
-/// Locales: 5
-/// Strings: 9797 (1959 per locale)
+/// Locales: 6
+/// Strings: 11826 (1971 per locale)
 ///
-/// Built on 2026-04-30 at 08:13 UTC
+/// Built on 2026-04-30 at 12:15 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -28,6 +28,7 @@ enum AppLocale with BaseAppLocale<AppLocale, Translations> {
 	en(languageCode: 'en', build: Translations.build),
 	de(languageCode: 'de', build: _StringsDe.build),
 	ja(languageCode: 'ja', build: _StringsJa.build),
+	ptBr(languageCode: 'pt', countryCode: 'BR', build: _StringsPtBr.build),
 	zhHans(languageCode: 'zh', scriptCode: 'Hans', build: _StringsZhHans.build),
 	zhHantTw(languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW', build: _StringsZhHantTw.build);
 
@@ -211,6 +212,7 @@ class _StringsStringsLanguagesEn {
 	String get en => 'English';
 	String get ja => 'Japanese';
 	String get de => 'German';
+	String get ptBr => 'Portuguese (Brazil)';
 }
 
 // Path: strings.languagesNative
@@ -226,6 +228,7 @@ class _StringsStringsLanguagesNativeEn {
 	String get en => 'English';
 	String get ja => '日本語';
 	String get de => 'Deutsch';
+	String get ptBr => 'Português (Brasil)';
 }
 
 // Path: strings.onboarding
@@ -2206,6 +2209,7 @@ class _StringsStringsLegacyAppLanguageEn {
 	String get en => 'English';
 	String get ja => 'Japanese';
 	String get de => 'German';
+	String get pt_br => 'Portuguese (Brazil)';
 }
 
 // Path: strings.legacy.app_theme
@@ -2790,6 +2794,7 @@ class _StringsStringsLanguagesDe extends _StringsStringsLanguagesEn {
 	@override String get en => 'Englisch';
 	@override String get ja => 'Japanisch';
 	@override String get de => 'Deutsch';
+	@override String get ptBr => 'Portugiesisch (Brasilien)';
 }
 
 // Path: strings.languagesNative
@@ -2805,6 +2810,7 @@ class _StringsStringsLanguagesNativeDe extends _StringsStringsLanguagesNativeEn 
 	@override String get en => 'English';
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
+	@override String get ptBr => 'Português (Brasil)';
 }
 
 // Path: strings.onboarding
@@ -4669,6 +4675,7 @@ class _StringsStringsLegacyAppLanguageDe extends _StringsStringsLegacyAppLanguag
 	@override String get en => 'Englisch';
 	@override String get ja => 'Japanisch';
 	@override String get de => 'Deutsch';
+	@override String get pt_br => 'Portugiesisch (Brasilien)';
 }
 
 // Path: strings.legacy.app_theme
@@ -5253,6 +5260,7 @@ class _StringsStringsLanguagesJa extends _StringsStringsLanguagesEn {
 	@override String get en => '英語';
 	@override String get ja => '日本語';
 	@override String get de => 'ドイツ語';
+	@override String get ptBr => 'ポルトガル語（ブラジル）';
 }
 
 // Path: strings.languagesNative
@@ -5268,6 +5276,7 @@ class _StringsStringsLanguagesNativeJa extends _StringsStringsLanguagesNativeEn 
 	@override String get en => 'English';
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
+	@override String get ptBr => 'Português (Brasil)';
 }
 
 // Path: strings.onboarding
@@ -7132,6 +7141,7 @@ class _StringsStringsLegacyAppLanguageJa extends _StringsStringsLegacyAppLanguag
 	@override String get en => '英語';
 	@override String get ja => '日本語';
 	@override String get de => 'ドイツ語';
+	@override String get pt_br => 'ポルトガル語（ブラジル）';
 }
 
 // Path: strings.legacy.app_theme
@@ -7631,6 +7641,2588 @@ class _StringsStringsSettingsPreferencesEditorToolbarActionsJa extends _StringsS
 }
 
 // Path: <root>
+class _StringsPtBr extends Translations {
+	/// You can call this constructor and build your own translation instance of this locale.
+	/// Constructing via the enum [AppLocale.build] is preferred.
+	_StringsPtBr.build({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver})
+		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
+		  $meta = TranslationMetadata(
+		    locale: AppLocale.ptBr,
+		    overrides: overrides ?? {},
+		    cardinalResolver: cardinalResolver,
+		    ordinalResolver: ordinalResolver,
+		  ),
+		  super.build(cardinalResolver: cardinalResolver, ordinalResolver: ordinalResolver) {
+		super.$meta.setFlatMapFunction($meta.getTranslation); // copy base translations to super.$meta
+		$meta.setFlatMapFunction(_flatMapFunction);
+	}
+
+	/// Metadata for the translations of <pt-BR>.
+	@override final TranslationMetadata<AppLocale, Translations> $meta;
+
+	/// Access flat map
+	@override dynamic operator[](String key) => $meta.getTranslation(key) ?? super.$meta.getTranslation(key);
+
+	@override late final _StringsPtBr _root = this; // ignore: unused_field
+
+	// Translations
+	@override late final _StringsStringsPtBr strings = _StringsStringsPtBr._(_root);
+}
+
+// Path: strings
+class _StringsStringsPtBr extends _StringsStringsEn {
+	_StringsStringsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override late final _StringsStringsCommonPtBr common = _StringsStringsCommonPtBr._(_root);
+	@override late final _StringsStringsLanguagesPtBr languages = _StringsStringsLanguagesPtBr._(_root);
+	@override late final _StringsStringsLanguagesNativePtBr languagesNative = _StringsStringsLanguagesNativePtBr._(_root);
+	@override late final _StringsStringsOnboardingPtBr onboarding = _StringsStringsOnboardingPtBr._(_root);
+	@override late final _StringsStringsLegalConsentPtBr legalConsent = _StringsStringsLegalConsentPtBr._(_root);
+	@override late final _StringsStringsLoginPtBr login = _StringsStringsLoginPtBr._(_root);
+	@override late final _StringsStringsSettingsPtBr settings = _StringsStringsSettingsPtBr._(_root);
+	@override late final _StringsStringsLocationPickerPtBr locationPicker = _StringsStringsLocationPickerPtBr._(_root);
+	@override late final _StringsStringsAiInsightPtBr aiInsight = _StringsStringsAiInsightPtBr._(_root);
+	@override late final _StringsStringsAiProxyPtBr aiProxy = _StringsStringsAiProxyPtBr._(_root);
+	@override late final _StringsStringsLegacyPtBr legacy = _StringsStringsLegacyPtBr._(_root);
+	@override late final _StringsStringsShareClipPtBr shareClip = _StringsStringsShareClipPtBr._(_root);
+	@override late final _StringsStringsCollectionsPtBr collections = _StringsStringsCollectionsPtBr._(_root);
+}
+
+// Path: strings.common
+class _StringsStringsCommonPtBr extends _StringsStringsCommonEn {
+	_StringsStringsCommonPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get back => 'Voltar';
+	@override String get cancel => 'Cancelar';
+	@override String get confirm => 'Confirmar';
+	@override String get save => 'Salvar';
+	@override String get saveSettings => 'Salvar configurações';
+	@override String get auto => 'Automático';
+	@override String get manual => 'Manual';
+	@override String get copiedToClipboard => 'Copiado para a área de transferência';
+	@override String get serverVersion => 'Versão do servidor';
+	@override String get selectValidServerVersion => 'Selecione uma versão válida do servidor';
+	@override String serverVersionValue({required Object version}) => 'Versão do servidor: ${version}';
+	@override String get serverVersionProbeHint => 'Antes de entrar, apenas as APIs principais da versão selecionada do servidor são verificadas.';
+	@override String get selectServerVersionRange021To026 => 'Selecione manualmente uma versão do servidor entre 0.21 e 0.26';
+}
+
+// Path: strings.languages
+class _StringsStringsLanguagesPtBr extends _StringsStringsLanguagesEn {
+	_StringsStringsLanguagesPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => 'Seguir sistema';
+	@override String get zhHans => 'Chinês (simplificado)';
+	@override String get zhHantTw => 'Chinês (tradicional, Taiwan)';
+	@override String get en => 'Inglês';
+	@override String get ja => 'Japonês';
+	@override String get de => 'Alemão';
+	@override String get ptBr => 'Português (Brasil)';
+}
+
+// Path: strings.languagesNative
+class _StringsStringsLanguagesNativePtBr extends _StringsStringsLanguagesNativeEn {
+	_StringsStringsLanguagesNativePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => 'Sistema';
+	@override String get zhHans => '简体中文';
+	@override String get zhHantTw => '繁體中文（中國台灣）';
+	@override String get en => 'English';
+	@override String get ja => '日本語';
+	@override String get de => 'Deutsch';
+	@override String get ptBr => 'Português (Brasil)';
+}
+
+// Path: strings.onboarding
+class _StringsStringsOnboardingPtBr extends _StringsStringsOnboardingEn {
+	_StringsStringsOnboardingPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get tagline => 'Fluxo de notas minimalista e poderoso';
+	@override String get selectLanguage => 'Selecione o idioma';
+	@override String get selectMode => 'Escolha um modo';
+	@override String get modeHint => 'Você pode alterar isso depois em Configurações.';
+	@override String get modeLocalTitle => 'Modo local';
+	@override String get modeLocalLabel => 'MODO LOCAL';
+	@override String get modeLocalDesc => 'Os dados permanecem no dispositivo. Não é necessária configuração de servidor, ideal para privacidade e uso offline.';
+	@override String get modeServerTitle => 'Modo servidor';
+	@override String get modeServerLabel => 'MODO SERVIDOR';
+	@override String get modeServerDesc => 'Conecte-se ao seu back-end Memos para sincronização de vários dispositivos em tempo real.';
+	@override String get localLibraryNameTitle => 'Nome da biblioteca local';
+	@override String get localLibraryNameHint => 'Insira um nome';
+	@override String get localLibraryDefaultName => 'Biblioteca local';
+	@override String get getStarted => 'Comece';
+}
+
+// Path: strings.legalConsent
+class _StringsStringsLegalConsentPtBr extends _StringsStringsLegalConsentEn {
+	_StringsStringsLegalConsentPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Revise os acordos';
+	@override String get description => 'Antes de usar MemoFlow, leia e concorde com o Contrato do Usuário e a Política de Privacidade.';
+	@override String get linksHint => 'Abra os documentos abaixo para revisar o texto completo.';
+	@override String get acknowledge => 'Li e concordo com o Contrato do Usuário e a Política de Privacidade';
+	@override String get continueAction => 'Concordar e continuar';
+	@override String get exitAction => 'Sair do aplicativo';
+}
+
+// Path: strings.login
+class _StringsStringsLoginPtBr extends _StringsStringsLoginEn {
+	_StringsStringsLoginPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Conecte-se ao Memos';
+	@override late final _StringsStringsLoginModePtBr mode = _StringsStringsLoginModePtBr._(_root);
+	@override late final _StringsStringsLoginFieldPtBr field = _StringsStringsLoginFieldPtBr._(_root);
+	@override late final _StringsStringsLoginValidationPtBr validation = _StringsStringsLoginValidationPtBr._(_root);
+	@override late final _StringsStringsLoginDialogsPtBr dialogs = _StringsStringsLoginDialogsPtBr._(_root);
+	@override late final _StringsStringsLoginCompatibilityPtBr compatibility = _StringsStringsLoginCompatibilityPtBr._(_root);
+	@override late final _StringsStringsLoginConnectPtBr connect = _StringsStringsLoginConnectPtBr._(_root);
+	@override late final _StringsStringsLoginErrorsPtBr errors = _StringsStringsLoginErrorsPtBr._(_root);
+}
+
+// Path: strings.settings
+class _StringsStringsSettingsPtBr extends _StringsStringsSettingsEn {
+	_StringsStringsSettingsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override late final _StringsStringsSettingsPreferencesPtBr preferences = _StringsStringsSettingsPreferencesPtBr._(_root);
+}
+
+// Path: strings.locationPicker
+class _StringsStringsLocationPickerPtBr extends _StringsStringsLocationPickerEn {
+	_StringsStringsLocationPickerPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get searchNearbyPlaces => 'Pesquise lugares próximos';
+	@override String latitudeValue({required Object value}) => 'Latitude ${value}';
+	@override String longitudeValue({required Object value}) => 'Longitude ${value}';
+	@override String get noPlacesFound => 'Nenhum lugar encontrado';
+	@override String get mapInitializeFailed => 'Falha ao inicializar o mapa.';
+	@override String get providerNotReady => 'O provedor de localização não está pronto.';
+	@override String get providerMissingAmapKeys => 'Amap A chave Web API e a chave de segurança são necessárias antes de selecionar um local.';
+	@override String get providerMissingBaiduKey => 'Baidu AK é necessário antes de selecionar um local.';
+	@override String get providerMissingGoogleKey => 'Mapas Google A chave API é necessária antes de selecionar um local.';
+	@override String get providerUnsupportedPlatform => 'O seletor de mapa incorporado está disponível apenas em Android e Windows.';
+}
+
+// Path: strings.aiInsight
+class _StringsStringsAiInsightPtBr extends _StringsStringsAiInsightEn {
+	_StringsStringsAiInsightPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'AI Insight Studio';
+	@override String get subtitle => 'Deixe o AI ajudá-lo a entender suas anotações de diferentes ângulos.';
+	@override String get settingsTitle => 'Configurações de análise AI';
+	@override String get startAnalysis => 'Iniciar análise';
+	@override late final _StringsStringsAiInsightCommonPtBr common = _StringsStringsAiInsightCommonPtBr._(_root);
+	@override late final _StringsStringsAiInsightTimeRangePtBr timeRange = _StringsStringsAiInsightTimeRangePtBr._(_root);
+	@override late final _StringsStringsAiInsightPrivacyScopePtBr privacyScope = _StringsStringsAiInsightPrivacyScopePtBr._(_root);
+	@override late final _StringsStringsAiInsightPromptSettingsPtBr promptSettings = _StringsStringsAiInsightPromptSettingsPtBr._(_root);
+	@override late final _StringsStringsAiInsightContentPreviewPtBr contentPreview = _StringsStringsAiInsightContentPreviewPtBr._(_root);
+	@override late final _StringsStringsAiInsightTemplatesPtBr templates = _StringsStringsAiInsightTemplatesPtBr._(_root);
+	@override late final _StringsStringsAiInsightCardsPtBr cards = _StringsStringsAiInsightCardsPtBr._(_root);
+}
+
+// Path: strings.aiProxy
+class _StringsStringsAiProxyPtBr extends _StringsStringsAiProxyEn {
+	_StringsStringsAiProxyPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Configurações de proxy';
+	@override String get notConfigured => 'Não configurado';
+	@override String statusHttp({required Object host, required Object port}) => 'HTTP · ${host}:${port}';
+	@override String statusSocks5({required Object host, required Object port}) => 'MEIAS5 · ${host}:${port}';
+	@override String get protocol => 'Protocolo';
+	@override String get host => 'Anfitrião';
+	@override String get port => 'Porta';
+	@override String get username => 'Nome de usuário';
+	@override String get password => 'Senha';
+	@override String get bypassLocalAddresses => 'Ignorar automaticamente endereços locais/privados';
+	@override String get description => 'Afeta apenas serviços AI que habilitam o proxy compartilhado. Modelos locais como Ollama e 127.0.0.1 permanecem diretos por padrão.';
+	@override String get useSharedProxy => 'Usar proxy compartilhado';
+	@override String get useSharedProxyDescription => 'Este serviço utilizará o proxy configurado nas configurações do AI.';
+	@override String get incompleteWarning => 'Este serviço tem proxy habilitado, mas as configurações de proxy compartilhado estão incompletas.';
+	@override String get openSettings => 'Abra as configurações de proxy';
+	@override String get saveSuccess => 'Configurações de proxy salvas.';
+	@override String get clearSuccess => 'Configurações de proxy apagadas.';
+	@override String get invalidHost => 'Insira um host proxy.';
+	@override String get invalidPort => 'Insira uma porta proxy válida entre 1 e 65535.';
+	@override String get incompleteError => '该服务已启用代理,但 AI 代理设置尚未配置完整';
+	@override String get testSectionTitle => 'Teste de proxy';
+	@override String get testSectionDescription => 'Use os valores atuais do formulário para testar se o proxy pode alcançar um site de destino.';
+	@override String get testUrl => 'Teste URL';
+	@override String get testAction => 'Testar conexão';
+	@override String get testing => 'Testando...';
+	@override String get invalidTestUrl => 'Insira um HTTP ou HTTPS URL válido.';
+	@override String testSuccess({required Object statusCode, required Object elapsedMs}) => 'Conexão bem-sucedida · HTTP ${statusCode} · ${elapsedMs} ms';
+	@override String testFailure({required Object message}) => 'Falha na conexão: ${message}';
+}
+
+// Path: strings.legacy
+class _StringsStringsLegacyPtBr extends _StringsStringsLegacyEn {
+	_StringsStringsLegacyPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get msg_memos_backend_docs => 'Documentos de back-end Memos';
+	@override String get msg_remember_moment_feel_warmth_life_take => 'Lembre-se do momento, sinta o calor da vida.\\nFaça uma revisão rápida todos os dias.';
+	@override String get msg_sure_want_delete_shortcut => 'Tem certeza de que deseja excluir este atalho?';
+	@override String get msg_scan_completed => 'Verificação concluída';
+	@override String get msg_confirm => 'Confirmar';
+	@override String get msg_unable_open_browser_install_browser_app => 'Não é possível abrir o navegador. Instale um aplicativo de navegador.';
+	@override String get msg_contributors => 'Contribuintes';
+	@override String get msg_feature_in_progress => 'Recurso em andamento. Em breve.';
+	@override String get msg_version_description_unknown => 'Versão: Desconhecida';
+	@override String msg_version_description_v({required Object version}) => 'Versão: v${version}';
+	@override String msg_version_description_v_build({required Object version, required Object build}) => 'Versão: v${version} (${build})';
+	@override String get msg_about_website_link => 'Site Oficial';
+	@override String get msg_about_website_link_subtitle => 'Visite o site oficial do MemoFlow';
+	@override String get msg_about_privacy_policy => 'Política de Privacidade';
+	@override String get msg_about_privacy_policy_subtitle => 'Ver detalhes de privacidade e uso de dados';
+	@override String get msg_about_user_agreement => 'Contrato do usuário';
+	@override String get msg_about_user_agreement_subtitle => 'Ver termos de serviço e regras de uso';
+	@override String get msg_about_help_center => 'Central de Ajuda';
+	@override String get msg_about_help_center_subtitle => 'Perguntas frequentes e guias de uso';
+	@override String get msg_about_release_notes_subtitle => 'Ver atualizações de versão e alterar detalhes';
+	@override String get msg_about_submit_feedback => 'Enviar comentários';
+	@override String get msg_about_submit_feedback_subtitle => 'Enviar problemas e sugestões de melhorias';
+	@override String get msg_about_contributors_subtitle => 'Ver contribuidores e lista de doadores';
+	@override String get msg_status_available => 'Ao vivo';
+	@override String get msg_status_placeholder => 'Em breve';
+	@override String get msg_debug_tap_logo_enter_debug_tools => 'Depuração: Toque no logotipo 5 vezes para abrir as ferramentas de depuração';
+	@override String get msg_donors_intro_thanks => 'Obrigado a todos os usuários que apoiam o MemoFlow.\nSuas doações nos ajudam a manter e melhorar o projeto.\n\nAgradecido abaixo.';
+	@override String get msg_enter_keywords_search_box_query_local => 'Insira palavras-chave na caixa de pesquisa para consultar conteúdo e tags locais. Funciona off-line; para o primeiro uso, aguarde até que a indexação local termine.';
+	@override String get msg_memo_not_found_locally => 'Memorando não encontrado localmente';
+	@override String get msg_token => 'Ficha';
+	@override String get msg_last_7_days => 'Últimos 7 dias';
+	@override String get msg_search_memo_content => 'Pesquisar conteúdo do memorando';
+	@override String get msg_retry_started => 'Nova tentativa iniciada';
+	@override String msg_last_year_memos({required Object lastYearMemos}) => 'Ano passado: memorandos ${lastYearMemos}';
+	@override String get msg_no_content_yet => 'Nenhum conteúdo ainda';
+	@override String get msg_no_summary_yet => 'Ainda não há resumo';
+	@override String get msg_sooner => 'mais cedo!';
+	@override String get msg_token_copied => 'Token copiado';
+	@override String get msg_share => 'Compartilhar';
+	@override String get msg_gallery_permission_required => 'Permissão da galeria necessária';
+	@override String get msg_basic_settings => 'Configurações básicas';
+	@override String get msg_bad_ssl_certificate => 'Certificado SSL inválido.';
+	@override String get msg_no_notifications => 'Nenhuma notificação';
+	@override String get msg_import_markdown => 'Importar de Markdown';
+	@override String get msg_upload_zip_package_md_files => 'Faça upload de um pacote.zip com arquivos.md';
+	@override String get msg_request_send_timeout_try => 'Tempo limite de envio da solicitação. Tente novamente.';
+	@override String get msg_select_date_range => 'Selecione o intervalo de datas';
+	@override String get msg_delete_shortcut => 'Excluir atalho';
+	@override String get msg_auto_lock_time => 'Tempo de bloqueio automático';
+	@override String get msg_replacing_delete_original_attachment_continue => 'A substituição excluirá o anexo original. Continuar?';
+	@override String get msg_add_least_one_condition => 'Adicione pelo menos uma condição.';
+	@override String get msg_upload_images_image_bed_append_links => 'Faça upload de imagens para a base de imagens e anexe links ao memorando.';
+	@override String get msg_request_cancelled => 'Solicitação cancelada.';
+	@override String get msg_generating => 'Gerando?';
+	@override String get msg_permissions_denied_reminders_disabled => 'Permissões negadas. Lembretes desativados.';
+	@override String get msg_memoflow_local_reminders => 'Lembretes locais MemoFlow';
+	@override String get msg_use_legacy_endpoints_older_memos_servers => 'Use endpoints legados (para servidores Memos mais antigos).';
+	@override String get msg_no_comments_yet => 'Ainda não há comentários';
+	@override String get msg_open => 'Aberto';
+	@override String get msg_microphone_permission_required => 'É necessária permissão para microfone';
+	@override String msg_failed_react({required Object e}) => 'Falha ao reagir: ${e}';
+	@override String get msg_restore_backup => 'Restaurar backup?';
+	@override String get msg_qr_saved_gallery => 'QR salvo na galeria';
+	@override String get msg_no_attachments => 'Sem anexos';
+	@override String get msg_enable_reminder_permissions => 'Habilitar permissões de lembrete';
+	@override String get msg_created_time => 'Hora de criação ↑';
+	@override String get msg_prompt_saved_quick_prompts => 'Seu prompt será salvo em Prompts rápidos';
+	@override String get msg_remember_password => 'Lembrar senha';
+	@override String get msg_enter_valid_url => 'Insira um URL válido';
+	@override String get msg_may_take_few_seconds => 'Isso pode levar alguns segundos';
+	@override String msg_local_sync_failed({required Object type, required Object memoError}) => 'Falha na sincronização local (${type}): ${memoError}';
+	@override String get msg_webdav_sync => 'Backup WebDAV';
+	@override String get msg_clear => 'Limpar';
+	@override String get msg_clear_recycle_bin_confirm => 'Limpar lixeira? Todos os itens serão excluídos permanentemente.';
+	@override String get msg_save_failed => 'Falha ao salvar';
+	@override String get msg_endpoint_not_found_version_mismatch => 'Endpoint não encontrado (incompatibilidade de versão?)';
+	@override String get msg_enable_webdav_sync => 'Habilitar backup WebDAV';
+	@override String get msg_local_libraries => 'Bibliotecas locais';
+	@override String get msg_apply => 'Aplicar';
+	@override String get msg_restore_only_available_local_libraries => 'A restauração está disponível apenas para bibliotecas locais.';
+	@override String get msg_sign => 'Sair?';
+	@override String get msg_reminders_disabled => 'Os lembretes estão desativados';
+	@override String get msg_downloading => 'Baixando...';
+	@override String get msg_path => 'Caminho';
+	@override String get msg_match_any => 'Corresponde a qualquer';
+	@override String get msg_local_db_pending_queue => 'BD local + fila pendente';
+	@override String msg_scan_failed({required Object e}) => 'Falha na verificação: ${e}';
+	@override String get msg_user => 'Usuário';
+	@override String get msg_pick_future_time => 'Escolha um horário futuro';
+	@override String get msg_include_pending_queue => 'Incluir fila pendente';
+	@override String get msg_enter_days => 'Insira os dias';
+	@override String get msg_times => 'Vezes';
+	@override String get msg_token_returned_only_once_cannot_fetched => 'O token é retornado apenas uma vez e não pode ser obtido novamente';
+	@override String msg_quoted_lines({required Object quoteLines}) => 'Linhas ${quoteLines} cotadas';
+	@override String get msg_use_remote => 'Usar controle remoto';
+	@override String get msg_enable_memo_location => 'Habilitar localização do memorando';
+	@override String get msg_failed_get_location => 'Falha ao obter localização';
+	@override String get msg_after_import_memos_sync_list_automatically => 'Após a importação, seus memorandos são sincronizados com a lista automaticamente. Para importações ZIP, certifique-se de que a estrutura do arquivo esteja intacta.';
+	@override String get msg_legacy_mode => 'Modo Legado';
+	@override String get msg_signed => 'Conectado';
+	@override String get msg_shortcut_includes_advanced_conditions_saving_overwrite => 'Este atalho inclui condições avançadas. Salvar irá sobrescrevê-los.';
+	@override String get msg_no_results_found => 'Nenhum resultado encontrado';
+	@override String msg_reply({required Object replyName}) => 'Responder ${replyName}...';
+	@override String get msg_copy => 'Copiar';
+	@override String get msg_enable_reminders_memos => 'Ative lembretes para seus memorandos.';
+	@override String get msg_comment => 'Comentário';
+	@override String get msg_added_voice_attachment => 'Adicionado anexo de voz.';
+	@override String get msg_customize_sidebar => 'Personalizar barra lateral';
+	@override String get msg_customize_quick_entries => 'Personalizar entradas rápidas';
+	@override String get msg_navigation_mode => 'Modo de navegação';
+	@override String get msg_navigation_mode_classic => 'Modo clássico (sem navegação inferior)';
+	@override String get msg_navigation_mode_bottom_bar => 'Modo de navegação inferior';
+	@override String get msg_navigation_preview => 'Visualização';
+	@override String get msg_navigation_slot_left_1 => 'Slot Esquerdo 1';
+	@override String get msg_navigation_slot_left_2 => 'Slot Esquerdo 2';
+	@override String get msg_navigation_slot_center => 'Ação Central';
+	@override String get msg_navigation_slot_right_1 => 'Slot direito 1';
+	@override String get msg_navigation_slot_right_2 => 'Slot direito 2';
+	@override String get msg_quick_entry_slot_1 => 'Entrada Rápida 1';
+	@override String get msg_quick_entry_slot_2 => 'Entrada Rápida 2';
+	@override String get msg_quick_entry_slot_3 => 'Entrada Rápida 3';
+	@override String get msg_coffee_add_drumstick => '☕ Café é / adicione uma coxinha';
+	@override String get msg_pin => 'Alfinete';
+	@override String get msg_enter_password_continue => 'Digite a senha para continuar';
+	@override String get msg_remove_local_library => 'Remover biblioteca local?';
+	@override String get msg_comment_2 => 'Novo comentário';
+	@override String get msg_sync_all => 'Sincronizar tudo';
+	@override String get msg_backup_schedule => 'Programação de backup';
+	@override String get msg_server_error => 'Erro no servidor';
+	@override String get msg_analyzing_memos => 'Analisando seus memorandos...';
+	@override String get msg_notification => 'Notificação';
+	@override String get msg_policy => 'Política';
+	@override String msg_failed_load({required Object error}) => 'Falha ao carregar: ${error}';
+	@override String get msg_default_visibility => 'Visibilidade padrão';
+	@override String get msg_filter => 'Filtro';
+	@override String get msg_advanced_search => 'Pesquisa avançada';
+	@override String get msg_imported_memos => 'Memorandos importados';
+	@override String get msg_token_created => 'Token criado';
+	@override String get msg_server_response_timeout_try => 'Tempo limite de resposta do servidor. Tente novamente.';
+	@override String get msg_expiring => 'Expirando';
+	@override String get msg_delete_task => 'Excluir tarefa';
+	@override String get msg_body_must_json => 'O corpo deve ser JSON';
+	@override String get msg_enable => 'Ativar';
+	@override String get msg_referenced => 'Referenciado por';
+	@override String get msg_replace_image => 'Substituir imagem?';
+	@override String get msg_debug_logs => 'Registros de depuração';
+	@override String get msg_active_tasks => 'Tarefas ativas';
+	@override String get msg_attachments => 'Anexos';
+	@override String get msg_range => 'Faixa';
+	@override String get msg_no_backups_found => 'Nenhum backup encontrado';
+	@override String get msg_create_memo => 'Criar memorando';
+	@override String get msg_street => 'Rua';
+	@override String get msg_display_name => 'Nome de exibição';
+	@override String get msg_full_text_search => 'Pesquisa de texto completo';
+	@override String get msg_create_edit_delete_actions_offline_stored => 'As ações de criação/edição/exclusão off-line são armazenadas localmente e colocadas na fila para sincronização. Eles são enviados em ordem quando estão online. Para evitar erros, as edições não enviadas podem ser mantidas como rascunhos.';
+	@override String get msg_sign_2 => 'Sair';
+	@override String get msg_end_time => 'Horário de término';
+	@override String get msg_sync_recent_content => 'Sincronizar conteúdo recente';
+	@override String get msg_resetting_local_data => 'Redefinindo dados locais...';
+	@override String get msg_incorrect_password => 'Senha incorreta';
+	@override String get msg_content_cannot_empty => 'O conteúdo não pode ficar vazio';
+	@override String get msg_preparing => 'Preparando';
+	@override String msg_ai_summary_failed({required Object formatSummaryError_e}) => 'Falha no resumo AI: ${formatSummaryError_e}';
+	@override String get msg_manage => 'Gerenciar';
+	@override String get msg_keep_data_consistent_across_devices => 'Faça backup dos dados em WebDAV para recuperação.';
+	@override String msg_playback_failed({required Object e}) => 'Falha na reprodução: ${e}';
+	@override String get msg_path_copied => 'Caminho copiado';
+	@override String get msg_auth_settings => 'Configurações de autenticação';
+	@override String get msg_randomly_draw_memo_cards => 'Compre aleatoriamente seus cartões de memorando';
+	@override String get msg_copy_log_text => 'Copiar texto do registro';
+	@override String get msg_yes => 'Sim';
+	@override String get msg_save_open_alipay_scan => 'Salve e abra Alipay para digitalizar';
+	@override String get msg_signed_but_no_token_returned => 'Conectado, mas nenhum token retornado';
+	@override String msg_create_failed({required Object formatError_e_context}) => 'Falha na criação: ${formatError_e_context}';
+	@override String get msg_expand => 'Expandir';
+	@override String get msg_local_library_only => 'Somente biblioteca local';
+	@override String get msg_reminder_channel => 'Canal de lembrete';
+	@override String get msg_grant => 'Concessão';
+	@override String get msg_import_canceled => 'Importação cancelada.';
+	@override String get msg_never => 'Nunca';
+	@override String get msg_release_notes => 'Notas de versão';
+	@override String get msg_failed_load_references => 'Falha ao carregar referências';
+	@override String get msg_select_tags => 'Selecionar tags';
+	@override String get msg_failed_load_try => 'Falha ao carregar. Por favor, tente novamente.';
+	@override String get msg_logs_copied => 'Registros copiados';
+	@override String get msg_shortcuts_not_supported_server => 'Atalhos não são suportados neste servidor.';
+	@override String msg_reply_2({required Object name}) => 'Responder ${name}...';
+	@override String get msg_anonymous => 'Anônimo';
+	@override String get msg_username => 'Nome de usuário';
+	@override String get msg_update_memo => 'Atualizar memorando';
+	@override String msg_saved({required Object targetPath}) => 'Salvo em: ${targetPath}';
+	@override String get msg_chinese_simplified => 'Chinês (simplificado)';
+	@override String get msg_memo_copied => 'Memorando copiado';
+	@override String get msg_collapse => 'Recolher';
+	@override String get msg_retry_count_controls_how_many_extra => 'A contagem de novas tentativas controla quantas tentativas extras são feitas em caso de falha. Valores mais altos podem melhorar o sucesso, mas demoram mais.';
+	@override String get msg_recording_info_missing => 'Faltam informações de gravação';
+	@override String get msg_sync_task => 'Tarefa de sincronização';
+	@override String get msg_clear_all_debug_logs => 'Limpar todos os logs de depuração?';
+	@override String get msg_clear_all_logs => 'Limpar todos os dados de registro neste dispositivo? Os arquivos exportados não serão excluídos.';
+	@override String get msg_export_finished => 'Exportação concluída';
+	@override String msg_failed_stop_recording({required Object e}) => 'Falha ao parar a gravação: ${e}';
+	@override String get msg_my_profile => 'Meu perfil';
+	@override String get msg_image_bed => 'Cama de imagem';
+	@override String msg_failed_open_notification({required Object e}) => 'Falha ao abrir notificação: ${e}';
+	@override String get msg_manual => 'Manual';
+	@override String get msg_no_html_file_found_zip => 'Nenhum arquivo HTML encontrado em ZIP.';
+	@override String get msg_also_clear_local_cache_account_offline => 'Isso também limpará o cache local desta conta (dados off-line/rascunhos/fila de sincronização pendente). Esta ação não pode ser desfeita.';
+	@override String get msg_restore => 'Restaurar';
+	@override String get msg_auto_backup => 'Backup automático';
+	@override String get msg_generate_summary => 'Gerar resumo';
+	@override String msg_days({required Object stats_activeDays}) => '${stats_activeDays} dias';
+	@override String get msg_count => '- Contagem';
+	@override String get msg_weekly => 'Semanalmente';
+	@override String get msg_notifications => 'Notificações';
+	@override String get msg_backup_failed => 'Falha no backup';
+	@override String get msg_private => 'Privado';
+	@override String get msg_filter_tags => 'Filtrar por tags';
+	@override String get msg_clear_logs => 'Limpar registros';
+	@override String get msg_logs_cleared => 'Registros apagados';
+	@override String get msg_unable_open_browser => 'Não é possível abrir o navegador';
+	@override String get msg_attachment_too_large => 'Anexo muito grande';
+	@override String get msg_query => 'Consulta';
+	@override String get msg_match_all => 'Corresponde a todos';
+	@override String get msg_record_request_response_logs => 'Registrar registros de solicitação/resposta';
+	@override String get msg_import_file => 'Importar arquivo';
+	@override String get msg_content_tags => 'Conteúdo + tags';
+	@override String get msg_feature_not_available_local_library_mode => 'Este recurso não está disponível no modo de biblioteca local.';
+	@override String msg_import_failed({required Object e}) => 'Falha na importação: ${e}';
+	@override String get msg_save_memo => 'Salvar como memorando';
+	@override String get msg_scan_disk_directory_merge_local_database => 'Verifica o diretório do disco e mescla no banco de dados local? Arquivos ausentes serão tratados como exclusões.';
+	@override String get msg_passwords_not_match => 'As senhas não coincidem';
+	@override String msg_signed_2({required Object lastLoginUser}) => 'Conectado como: ${lastLoginUser}';
+	@override String get msg_made_love_note_taking => 'Feito com amor para fazer anotações';
+	@override String get msg_password_updated_local => 'Senha atualizada (local)';
+	@override String get msg_retry => 'Tentar novamente';
+	@override String get msg_memo_stats => 'Estatísticas do memorando';
+	@override String get msg_shown_only_once_copy_keep_safe => 'Exibido apenas uma vez, copie e mantenha-o seguro.';
+	@override String get msg_describe_issue_time_repro_steps_etc => 'Descreva o problema, horário, etapas de reprodução, etc.';
+	@override String get msg_how_many_days_back => 'Há quantos dias';
+	@override String get msg_local_cache_cleared => 'Cache local limpo';
+	@override String get msg_none => 'Nenhum';
+	@override String get msg_body_json => 'Corpo (JSON)';
+	@override String msg_download_failed({required Object e}) => 'Falha no download: ${e}';
+	@override String get msg_recycle_bin => 'Lixeira';
+	@override String get msg_unpin => 'Desafixar';
+	@override String get msg_advanced_security => 'Avançado e segurança';
+	@override String get msg_run_issues_memoflow_e_g_sync => 'Se você tiver problemas no MemoFlow (por exemplo, falhas de sincronização, travamentos), siga as etapas abaixo para nos ajudar a diagnosticar e corrigir o problema mais rapidamente.\\n\\n';
+	@override String get msg_remove_all_reminder_times_memo => 'Remova todos os horários de lembrete deste memorando.';
+	@override String get msg_no_summary_save => 'Nenhum resumo para salvar';
+	@override String get msg_reset_language_selection => 'Redefinir seleção de idioma';
+	@override String get msg_v_30_days => '30 dias';
+	@override String get msg_e_g_mood_check => 'por exemplo Verificação de humor';
+	@override String get msg_note_some_tokens_returned_only_once => 'Dica: Alguns tokens são mostrados apenas uma vez. Salve-os com segurança quando forem exibidos pela primeira vez.';
+	@override String get msg_probe_memo_can_delete => 'Este memorando foi criado pelo probe MemoFlow API e pode ser excluído com segurança.';
+	@override String get msg_syncing => 'Sincronizando...';
+	@override String get msg_retention => 'Retenção';
+	@override String get msg_open_login_screen => 'Abrir tela de login';
+	@override String get msg_apply_all => 'Aplicar a todos';
+	@override String get msg_write_something_supports_tag_tasks_x => 'Escreva algo... Suporta #tag e tarefas [ ] / [x]';
+	@override String msg_http({required Object base, required Object status, required Object msg}) => '${base} (HTTP ${status}): ${msg}';
+	@override String get msg_single => 'Solteiro';
+	@override String get msg_delete_memo => 'Excluir memorando?';
+	@override String get msg_ai_provider => 'Provedor AI';
+	@override String msg_release_notes_v({required Object version}) => 'Notas de versão v${version}';
+	@override String get msg_info_only_used_background_ai_summaries => 'Esta informação é usada apenas como plano de fundo para resumos/relatórios AI e não é sincronizada com o backend.';
+	@override String get msg_not_disturb => 'Não perturbe';
+	@override String msg_local_library_import_failed({required Object e}) => 'Falha na importação da biblioteca local: ${e}';
+	@override String get msg_key_insights => 'Principais insights';
+	@override String get msg_additional_notes_optional => 'Notas adicionais (opcional)';
+	@override String get msg_server_response_error => 'Erro de resposta do servidor.';
+	@override String get msg_sort => 'Classificar';
+	@override String get msg_newest_first => 'Mais novo primeiro';
+	@override String get msg_oldest_first => 'Mais antigo primeiro';
+	@override String get msg_open_memo => 'Abrir memorando';
+	@override String get msg_api_call => 'Chamada API';
+	@override String get msg_webhooks => 'Webhooks';
+	@override String get msg_local_library => 'Biblioteca local';
+	@override String get msg_log_copied => 'Registro copiado';
+	@override String get msg_last_success => 'Último sucesso';
+	@override String get msg_restore_cloud => 'Restaurar da nuvem';
+	@override String get msg_search_public_memos => 'Pesquisar memorandos públicos';
+	@override String get msg_cancel => 'Cancelar';
+	@override String msg_processing({required Object processed, required Object total}) => 'Processando ${processed} / ${total}';
+	@override String get msg_failed_items => 'Itens com falha';
+	@override String get msg_recording_file_not_found => 'Arquivo de gravação não encontrado';
+	@override String get msg_local_db_outbox_queue => 'Banco de dados local + fila de saída';
+	@override String get msg_remove => 'Remover';
+	@override String get msg_export_format => 'Formato de exportação';
+	@override String get msg_idle => 'Inativo';
+	@override String msg_ago({required Object months}) => '${months} atrás';
+	@override String get msg_no_tags_yet => 'Ainda não há tags';
+	@override String msg_version_v({required Object version}) => 'Versão v${version}';
+	@override String get msg_sync => 'Sincronizar';
+	@override String get msg_done => 'Concluído';
+	@override String get msg_gallery_permission_required_2 => 'Permissão da galeria necessária';
+	@override String get msg_insufficient_permissions => 'Permissões insuficientes';
+	@override String get msg_no_download_url_available => 'Nenhum download URL disponível';
+	@override String get msg_record_create_memos => 'Registro para criar memorandos';
+	@override String get msg_signing => 'Fazendo login...';
+	@override String get msg_memoflow_uses_system_location_permission_get => 'MemoFlow usa permissão de localização do sistema para obter coordenadas e, em seguida, reverter geocódigos por meio do serviço do provedor selecionado (como Amap, Baidu ou Google). Você pode escolher a precisão da exibição acima.';
+	@override String get msg_continue => 'Continuar';
+	@override String get msg_notification_content_unavailable => 'Conteúdo da notificação indisponível';
+	@override String get msg_unable_read_file_path => 'Não foi possível ler o caminho do arquivo.';
+	@override String get msg_all_memos => 'Todos Memos';
+	@override String get msg_keywords => 'Palavras-chave';
+	@override String get msg_ai_search_loading_title => 'A pesquisa AI está procurando memorandos relacionados';
+	@override String get msg_ai_search_loading_message => 'Indexação, incorporação e classificação de notas locais para esta consulta.';
+	@override String get msg_ai_search_needs_embedding_model => 'A pesquisa AI precisa de um modelo de incorporação';
+	@override String get msg_ai_search_failed => 'Falha na pesquisa AI';
+	@override String get msg_ai_search_configure_embedding_model => 'Configure um modelo de incorporação nas configurações do AI e tente novamente.';
+	@override String get msg_ai_search_back_to_keyword_search => 'Voltar à pesquisa por palavra-chave';
+	@override String get msg_ai_search_no_matches => 'Nenhuma correspondência AI encontrada';
+	@override String get msg_ai_search_keyword_available => 'A pesquisa por palavra-chave ainda está disponível para correspondências exatas de texto.';
+	@override String get msg_ai_search_try_related_memos => 'Experimente a pesquisa AI para encontrar memorandos semanticamente relacionados.';
+	@override String get msg_ai_search_use_ai_search => 'Usar pesquisa AI';
+	@override String get msg_ai_search_results_label => 'Resultados semânticos AI';
+	@override String get msg_ai_search_keyword => 'Palavra-chave';
+	@override String get msg_ai_search_use_for_related_memos => 'Use a pesquisa AI para memorandos relacionados';
+	@override String get msg_ai_search_index_confirm_title => 'Construir índice de pesquisa AI?';
+	@override String get msg_ai_search_index_confirm_remote_message => 'A pesquisa AI precisa indexar primeiro os blocos de memorando elegíveis. Isso enviará esses pedaços para o modelo de incorporação configurado e poderá consumir a cota ou o custo do provedor.';
+	@override String get msg_ai_search_index_confirm_local_message => 'A pesquisa AI precisa indexar primeiro os blocos de memorando elegíveis. Isso irá processá-los com seu modelo de incorporação local e poderá usar recursos locais.';
+	@override String msg_ai_search_index_confirm_token_estimate({required Object count}) => 'Tokens de indexação estimados: ${count}';
+	@override String get msg_ai_search_index_confirm_continue => 'Continue com a pesquisa AI';
+	@override String get msg_import_result => 'Resultado de importação';
+	@override String get msg_offline_sync => 'Sincronização off-line';
+	@override String get msg_imported_memos_local_library => 'Memorandos importados da biblioteca local';
+	@override String get msg_request_failed => 'Falha na solicitação';
+	@override String get msg_log_file => 'Arquivo exportado';
+	@override String get msg_after_confirming_support_unlock_limited_gold => 'Após confirmar o suporte, você desbloqueará um emblema dourado limitado ou uma promessa eterna de ausência de anúncios (embora nunca tenha havido anúncios).';
+	@override String get msg_failed_open_system_settings => 'Falha ao abrir as configurações do sistema';
+	@override String get msg_no_mood_trend => 'Sem tendência de humor';
+	@override String get msg_memoflow_export => '#Exportação MemoFlow';
+	@override String get msg_sync_queue => 'Fila de sincronização';
+	@override String get msg_only_delete_sync_task_memo_kept => 'Exclua apenas a tarefa de sincronização; o memorando será mantido.';
+	@override String get msg_add_home_screen => 'Adicionar à tela inicial';
+	@override String get msg_past_days => 'Últimos dias';
+	@override String get msg_poster_generation_failed => 'Falha na geração do pôster';
+	@override String msg_failed_load_stats({required Object e}) => 'Falha ao carregar estatísticas: ${e}';
+	@override String get msg_customize_notification => 'Personalizar notificação';
+	@override String get msg_updated_time => 'Hora atualizada ↓';
+	@override String get msg_network_connection_failed_check_network => 'Falha na conexão de rede. Por favor, verifique sua rede.';
+	@override String get msg_special_thanks => 'Agradecimentos especiais:';
+	@override String msg_failed_comment({required Object e}) => 'Falha ao comentar: ${e}';
+	@override String get msg_security_key_sig => 'Chave de segurança (sig)';
+	@override String get msg_save_gallery => 'Salvar na galeria';
+	@override String get msg_request_sent_confirm_system_prompt => 'Solicitação enviada. Confirme no prompt do sistema';
+	@override String get msg_server_url => 'Servidor URL';
+	@override String get msg_period_review => 'Revisão do Período';
+	@override String get msg_settings_updated => 'Configurações atualizadas';
+	@override String get msg_backend_0_21_not_supported_import => 'Backend 0.21 não é suportado para importação. Atualize e tente novamente.';
+	@override String msg_failed_load_tags({required Object e}) => 'Falha ao carregar tags: ${e}';
+	@override String get msg_enter_email => 'Insira o e-mail';
+	@override String get msg_add_webhook => 'Adicionar webhook';
+	@override String get msg_read => 'Ler';
+	@override String get msg_widgets => 'Widgets';
+	@override String get msg_default => 'Padrão';
+	@override String get msg_memo_reminders => 'Lembretes de memorando';
+	@override String get msg_import_flomo => 'Importar do Flomo';
+	@override String get msg_import_swashbuckler_diary => 'Importar do Diário Swashbuckler';
+	@override String get msg_supported_json_markdown_txt_zip => 'JSON / Markdown / TXT ZIP';
+	@override String get msg_format_fixed_markdown_zip => 'O formato foi corrigido para Markdown + ZIP';
+	@override String get msg_enter_username_password => 'Digite nome de usuário e senha';
+	@override String get msg_loading => 'Carregando...';
+	@override String msg_test_scheduled({required Object timeLabel, required Object suffix, required Object pendingLabel}) => 'Teste agendado em ${timeLabel}${suffix}${pendingLabel}';
+	@override String get msg_edit_memo => 'Editar memorando';
+	@override String get msg_save => 'Salvar';
+	@override String get msg_laboratory => 'Laboratório';
+	@override String get msg_use_local => 'Usar local';
+	@override String get msg_retry_sync => 'Tentar sincronizar novamente';
+	@override String get msg_e_g_my_role_topics_interest => 'por exemplo, minha função/tópicos de interesse/preferências de estilo de redação?';
+	@override String get msg_confirm_password => 'Confirmar senha';
+	@override String get msg_not_set => 'Não definido';
+	@override String get msg_no_memos_day => 'Nenhum memorando neste dia';
+	@override String get msg_shortcut_name => 'Nome do atalho';
+	@override String get msg_edit_shortcut => 'Editar atalho';
+	@override String get msg_days_memos => 'Dias com memorandos';
+	@override String get msg_delete => 'Excluir';
+	@override String get msg_test_reminder => 'Lembrete de teste';
+	@override String get msg_enable_reminders => 'Ativar lembretes';
+	@override String get msg_links => 'Links';
+	@override String get msg_location => 'Localização';
+	@override String get msg_import_file_2 => 'Importar do arquivo';
+	@override String msg_reply_3({required Object creatorDisplayName_commentCreator_commentMemo_creator}) => 'Responder ${creatorDisplayName_commentCreator_commentMemo_creator}...';
+	@override String msg_created({required Object widget_createdAtLabel}) => '${widget_createdAtLabel} criado';
+	@override String get msg_notifications_coming_soon => 'Notificações: em breve';
+	@override String get msg_view_full_contributors => 'Ver colaboradores completos';
+	@override String get msg_no_times_set => 'Sem horários definidos';
+	@override String get msg_ignore_tls_errors => 'Ignorar erros de TLS';
+	@override String get msg_no_content => 'Sem conteúdo';
+	@override String get msg_about_15_seconds_left => 'Faltam cerca de 15 segundos';
+	@override String get msg_view_imported_memos => 'Ver memorandos importados';
+	@override String get msg_load_failed => 'Falha no carregamento';
+	@override String get msg_disk_content_conflicts_local_pending_changes => 'O conteúdo do disco entra em conflito com alterações locais pendentes. Use o disco para substituir o conteúdo local.';
+	@override String get msg_all_history_so_far_memoflow_since => 'Essa é toda a história até agora\\nMEMOFLOW DESDE 2023';
+	@override String get msg_cancelling => 'Cancelando';
+	@override String get msg_reading_file => 'Lendo arquivo...';
+	@override String get msg_switch_workspace => 'Alternar espaço de trabalho';
+	@override String get msg_optional_leave_empty_default => 'Opcional. Deixe em branco por padrão.';
+	@override String get msg_memo_reminders_2 => 'Lembretes de memorando';
+	@override String msg_save_failed_2({required Object e}) => 'Falha ao salvar: ${e}';
+	@override String get msg_record_create_memos_sync_later => 'Grave e crie memorandos (sincronize mais tarde)';
+	@override String get msg_use_https_avoid_ignoring_tls_errors => 'Use HTTPS e evite ignorar erros de TLS para proteger credenciais.';
+	@override String get msg_failed_load_announcement_config => 'Falha ao carregar a configuração do anúncio';
+	@override String get msg_shortcuts => 'Atalhos';
+	@override String get msg_memo => 'Memorando';
+	@override String get msg_maybe_later => 'Não me lembre desta versão';
+	@override String get msg_server_connection => 'Conexão do servidor';
+	@override String get msg_days_2 => 'Dias';
+	@override String get msg_include_archived => 'Incluir Arquivado';
+	@override String get msg_during_quiet_hours_reminders_silenced => 'Durante horários de silêncio, os lembretes serão silenciados.';
+	@override String get msg_preview_not_supported_type => 'Visualização não suportada para este tipo';
+	@override String get msg_failed_load_2 => 'Falha ao carregar';
+	@override String get msg_create_token => 'Criar novo token';
+	@override String get msg_enter_name => 'Por favor insira um nome.';
+	@override String get msg_api_url_incorrect => 'API URL está incorreto.';
+	@override String get msg_user_general_settings => 'Configurações gerais do usuário';
+	@override String get msg_saved_memo => 'Salvo como memorando';
+	@override String msg_restore_failed({required Object e}) => 'Falha na restauração: ${e}';
+	@override String msg_token_tail({required Object tail}) => 'Ficha de cauda ${tail}';
+	@override String get msg_manual_token => 'Token manual';
+	@override String msg_ago_2({required Object years}) => '${years} atrás';
+	@override String get msg_recent_searches => 'Pesquisas recentes';
+	@override String get msg_restored => 'Restaurado';
+	@override String get msg_no_contributors_yet => 'Ainda não há contribuidores';
+	@override String get msg_no_record_yet => 'Nenhum registro ainda';
+	@override String get msg_reminder => 'Lembrete';
+	@override String get msg_enter_api_key_ai_settings => 'Insira a chave API nas configurações AI';
+	@override String get msg_reminder_settings => 'Configurações de lembrete';
+	@override String msg_http_2({required Object base, required Object status}) => '${base} (HTTP ${status})';
+	@override String get msg_edit_webhook => 'Editar webhook';
+	@override String get msg_generate_share_poster => 'Gerar pôster de compartilhamento';
+	@override String msg_archive_failed({required Object e}) => 'Falha no arquivamento: ${e}';
+	@override String msg_comments({required Object widget_commentCount}) => 'Comentários ${widget_commentCount}';
+	@override String get msg_remove_account => 'Remover conta?';
+	@override String get msg_chinese_traditional => 'Chinês (Tradicional)';
+	@override String get msg_private_2 => 'Privado';
+	@override String get msg_current_streak => 'Sequência atual';
+	@override String get msg_generated_ai_memoflow => 'Gerado por AI · MemoFlow';
+	@override String get msg_edit_completed => 'Edição concluída';
+	@override String get msg_local => 'Locais';
+	@override String get msg_edit => 'Editar';
+	@override String msg_text({required Object shortUserName_item_sender}) => 'De ${shortUserName_item_sender}';
+	@override String get msg_got => 'Entendi';
+	@override String get msg_web_api_key => 'Chave Web API';
+	@override String get msg_preview => 'Visualização';
+	@override String get msg_enter_password => 'Por favor insira a senha';
+	@override String get msg_api => 'API';
+	@override String get msg_ok => 'OK';
+	@override String get msg_failed_load_shortcuts => 'Falha ao carregar atalhos.';
+	@override String get msg_after_recording_audio_added_current_draft => 'Após a gravação, o áudio é adicionado ao rascunho atual como um anexo para que você possa editar antes de enviar. A duração máxima é de 60 minutos; a transcrição pode ser adicionada posteriormente por meio de serviços de terceiros.';
+	@override String get msg_pull_refresh => 'Puxe para atualizar';
+	@override String get msg_unable_open_photo => 'Não foi possível abrir a foto';
+	@override String get msg_existing_tokens => 'Tokens Existentes';
+	@override String get msg_ai_settings => 'Configurações AI';
+	@override String get msg_app_lock => 'Bloqueio de aplicativo';
+	@override String get msg_total_notes => 'Total de notas';
+	@override String get msg_stats_loading => 'As estatísticas estão carregando';
+	@override String get msg_enter_token_description => 'Insira uma descrição do token';
+	@override String get msg_enter_token => 'Insira um token';
+	@override String get msg_api_plugins => 'API e plug-ins';
+	@override String get msg_parsing_file => 'Analisando arquivo...';
+	@override String get msg_english => 'Inglês';
+	@override String get msg_activity_heatmap => 'Mapa de calor da atividade';
+	@override String get msg_mark_read => 'Marcar como lido';
+	@override String get msg_request => 'Solicitação';
+	@override String msg_sync_failed({required Object type, required Object memoError}) => 'Falha na sincronização (${type}): ${memoError}';
+	@override String get msg_error_copied => 'Erro copiado';
+	@override String get msg_only_local_index_removed_disk_files => 'Apenas o índice local será removido; arquivos de disco são mantidos. Isto não pode ser desfeito.';
+	@override String get msg_switch_account => 'Trocar de conta';
+	@override String get msg_invalid_download_link => 'Link de download inválido';
+	@override String get msg_about => 'Sobre';
+	@override String get msg_icon => 'Ícone';
+	@override String get msg_reset_done_syncing => 'Redefinição concluída. Sincronizando...';
+	@override String get msg_enter_amap_web_api_key => 'Insira sua chave Amap Web API';
+	@override String get msg_recycle_bin_coming_soon => 'Lixeira: em breve';
+	@override String get msg_empty_content => '(conteúdo vazio)';
+	@override String get msg_note_most_features_offline_stats_ai => 'Observação: a maioria dos recursos (offline/estatísticas/relatórios AI/exportação) funcionam sem alterações de back-end, mas os tokens são retornados apenas uma vez? Mantenha-os seguros.';
+	@override String get msg_fixed => 'Corrigido:';
+	@override String get msg_allow_sharing_links_images_other_apps => 'Permitir o compartilhamento de links ou imagens de outros aplicativos no MemoFlow.';
+	@override String get msg_invalid_request_parameters => 'Parâmetros de solicitação inválidos';
+	@override String get msg_enter_api_url => 'Insira API URL';
+	@override String msg_pending({required Object result_pendingCount}) => '(pendente ${result_pendingCount})';
+	@override String msg_days_3({required Object currentStreak}) => '${currentStreak} dias';
+	@override String get msg_poster_not_ready_yet => 'O pôster ainda não está pronto';
+	@override String get msg_generated_memoflow => 'Gerado por MemoFlow';
+	@override String get msg_enter_name_2 => 'Insira um nome';
+	@override String get msg_version => 'Versão';
+	@override String get msg_memo_missing_disk_but_has_local => 'O memorando está faltando no disco, mas possui alterações locais pendentes. Use o disco para excluir localmente.';
+	@override String get msg_legacy_api_compatibility => 'Compatibilidade API herdada';
+	@override String get msg_sync_parameters => 'Parâmetros de sincronização';
+	@override String get msg_quick_prompts => 'Avisos rápidos';
+	@override String msg_share_failed({required Object e}) => 'Falha no compartilhamento: ${e}';
+	@override String get msg_no_memos_summarize_range => 'Não há memorandos para resumir neste intervalo';
+	@override String get msg_characters => 'Caracteres';
+	@override String get msg_capture_every_moment_record => 'Capture cada momento gravado';
+	@override String get msg_vibration => 'Vibração';
+	@override String get msg_days_4 => 'dias';
+	@override String get msg_prompt_title => 'Título do prompt';
+	@override String get msg_show_all => 'Mostrar tudo';
+	@override String get msg_no_memos_available => 'Nenhum memorando disponível';
+	@override String get msg_comment_unavailable => 'Comentário indisponível';
+	@override String get msg_refresh => 'Atualizar';
+	@override String get msg_syncing_2 => 'Sincronizando';
+	@override String get msg_body => 'Corpo';
+	@override String get msg_clear_2 => 'Limpar';
+	@override String get msg_third_party_share => 'Compartilhamento de terceiros';
+	@override String get msg_charging_station => 'Estação de carregamento';
+	@override String get msg_attachments_2 => 'Anexos';
+	@override String get msg_when_enabled_must_verify_each_app => 'Quando ativado, você deve verificar cada inicialização do aplicativo. O tempo de bloqueio automático controla quando a verificação é necessária depois que o aplicativo entra em segundo plano.';
+	@override String get msg_add_prompt => 'Adicionar prompt';
+	@override String get msg_include => 'Incluir';
+	@override String get msg_created_time_2 => 'Hora de criação ↓';
+	@override String get msg_choose_data_source_start_importing_memos => 'Escolha uma fonte de dados para começar a importar seus memorandos';
+	@override String get msg_describe_how_want_summary => 'Descreva como deseja o resumo…';
+	@override String get msg_keep_token_safe_not_share_api => 'Mantenha seu token seguro e não o compartilhe.\\nO limite de taxa da API é de 60 solicitações por minuto.';
+	@override String get msg_open_2 => 'Aberto';
+	@override String get msg_e_g_claude_3_5_sonnet => 'por exemplo claude-3-5-soneto-20241022';
+	@override String get msg_failed_request_whitelist => 'Falha ao solicitar lista de permissões';
+	@override String get msg_notification_deleted => 'Notificação excluída';
+	@override String get msg_accounts => 'Contas';
+	@override String get msg_add_local_library => 'Adicionar biblioteca local';
+	@override String get msg_sign_first => 'Faça login primeiro';
+	@override String get msg_failed_parse_query => 'Falha ao analisar a consulta';
+	@override String get msg_note_logs_sanitized_automatically_sensitive_data => 'Nota: os logs são higienizados automaticamente. Se os dados confidenciais permanecerem, edite antes de enviar.';
+	@override String get msg_add => 'Adicionar';
+	@override String msg_failed_load_3({required Object memosError}) => 'Falha ao carregar: ${memosError}';
+	@override String get msg_max_chars_day => 'Máximo de caracteres/dia';
+	@override String get msg_choose_what_edited_image => 'Escolha o que fazer com a imagem editada.';
+	@override String get msg_select => 'Selecione';
+	@override String get msg_unnamed_token => '(token sem nome)';
+	@override String get msg_name => 'Nome';
+	@override String get msg_sure_want_delete_webhook => 'Tem certeza de que deseja excluir este webhook?';
+	@override String get msg_back => 'Voltar';
+	@override String get msg_no => 'Não';
+	@override String get msg_untitled => 'Sem título';
+	@override String get msg_open_language_onboarding => 'Integração de idioma aberto';
+	@override String get msg_voice_memos => 'Voz Memos';
+	@override String get msg_unable_open_browser_try => 'Não foi possível abrir o navegador. Por favor, tente novamente.';
+	@override String get msg_date_range => 'Período';
+	@override String get msg_not_authenticated => 'Não autenticado';
+	@override String get msg_back_2 => 'Voltar';
+	@override String get msg_local_library_removed => 'Biblioteca local removida';
+	@override String get msg_exact_alarm_permission_required => 'É necessária permissão exata de alarme';
+	@override String get msg_visibility => 'Visibilidade';
+	@override String msg_failed_start_recording({required Object e}) => 'Falha ao iniciar a gravação: ${e}';
+	@override String get msg_mood_trend => 'Tendência de humor';
+	@override String get msg_local_library_name => 'Nome da biblioteca local';
+	@override String get msg_no_tokens_yet => 'Nenhum token ainda';
+	@override String get msg_loading_2 => 'Carregando?';
+	@override String get msg_location_permission_denied_permanently => 'Permissão de localização negada permanentemente';
+	@override String get msg_download => 'Baixar';
+	@override String get msg_export_time => '- Tempo de exportação';
+	@override String get msg_enter_password_2 => 'Digite a senha';
+	@override String get msg_no_image_available => 'Nenhuma imagem disponível';
+	@override String get msg_daily => 'Diariamente';
+	@override String get msg_no_likes_yet => 'Ainda não há curtidas';
+	@override String get msg_basics => 'Noções básicas';
+	@override String get msg_shortcut => 'Novo atalho';
+	@override String get msg_debug_tools => 'Ferramentas de depuração';
+	@override String get msg_save_settings => 'Salvar configurações';
+	@override String get msg_date_range_2 => 'Período';
+	@override String get msg_feedback => 'Comentários';
+	@override String get msg_image_bed_2 => 'Cama de imagem';
+	@override String get msg_image_compression => 'Compressão de imagem';
+	@override String get msg_enable_image_compression => 'Habilitar compactação de imagem';
+	@override String get msg_image_compression_desc => 'Compacte anexos de imagem recém-adicionados antes do upload.';
+	@override String get msg_image_compression_scope => 'Aplica-se apenas a anexos recém-adicionados.';
+	@override String get msg_max_side => 'Lado máximo';
+	@override String get msg_quality => 'Qualidade';
+	@override String get msg_output_format => 'Formato de saída';
+	@override String get msg_compression_mode => 'Modo de compressão';
+	@override String get msg_mode_quality => 'Qualidade';
+	@override String get msg_mode_size => 'Tamanho';
+	@override String get msg_lossless => 'Sem perdas';
+	@override String get msg_keep_metadata => 'Manter metadados';
+	@override String get msg_skip_if_bigger => 'Pular se for maior';
+	@override String get msg_resize => 'Redimensionar';
+	@override String get msg_enable_resize => 'Habilitar redimensionamento';
+	@override String get msg_resize_mode => 'Modo de redimensionamento';
+	@override String get msg_resize_width => 'Largura';
+	@override String get msg_resize_height => 'Altura';
+	@override String get msg_resize_edge => 'Borda';
+	@override String get msg_do_not_enlarge => 'Não ampliar';
+	@override String get msg_resize_mode_no_resize => 'Sem redimensionamento';
+	@override String get msg_resize_mode_dimensions => 'Dimensões';
+	@override String get msg_resize_mode_percentage => 'Porcentagem';
+	@override String get msg_resize_mode_short_edge => 'Borda curta';
+	@override String get msg_resize_mode_long_edge => 'Borda longa';
+	@override String get msg_resize_mode_fixed_width => 'Largura fixa';
+	@override String get msg_resize_mode_fixed_height => 'Altura fixa';
+	@override String get msg_jpeg => 'JPEG';
+	@override String get msg_png => 'PNG';
+	@override String get msg_webp => 'WebP';
+	@override String get msg_tiff => 'TIFF';
+	@override String get msg_chroma_subsampling => 'Subamostragem de croma';
+	@override String get msg_chroma_auto => 'Automático';
+	@override String get msg_chroma_444 => '4:4:4';
+	@override String get msg_chroma_422 => '4:2:2';
+	@override String get msg_chroma_420 => '4:2:0';
+	@override String get msg_chroma_411 => '4:1:1';
+	@override String get msg_progressive => 'Progressivo';
+	@override String get msg_optimization_level => 'Nível de otimização';
+	@override String get msg_method => 'Método';
+	@override String get msg_uncompressed => 'Descompactado';
+	@override String get msg_lzw => 'LZW';
+	@override String get msg_deflate => 'Esvaziar';
+	@override String get msg_packbits => 'PacoteBits';
+	@override String get msg_deflate_preset => 'Predefinição de esvaziamento';
+	@override String get msg_fast => 'Rápido';
+	@override String get msg_balanced => 'Equilibrado';
+	@override String get msg_best => 'Melhor';
+	@override String get msg_size_target => 'Tamanho desejado';
+	@override String get msg_output_size_unit => 'Unidade de tamanho';
+	@override String get msg_format_auto => 'Automático';
+	@override String get msg_output_format_same_as_input => 'Igual à entrada';
+	@override String get msg_format_jpeg => 'JPEG';
+	@override String get msg_format_png => 'PNG';
+	@override String get msg_format_webp => 'WebP';
+	@override String get msg_format_tiff => 'TIFF';
+	@override String get msg_bytes => 'Bytes';
+	@override String get msg_kb => 'KB';
+	@override String get msg_mb => 'MB';
+	@override String get msg_percentage => 'Porcentagem';
+	@override String get msg_lossless_warning => 'A conversão para um novo formato ou redimensionamento pode degradar a qualidade mesmo quando o modo sem perdas está ativado.';
+	@override String get msg_restoring => 'Restaurando…';
+	@override String get msg_export => 'Exportar';
+	@override String get msg_enter_token_name => 'Insira o nome do token';
+	@override String get msg_start_time => 'Hora de início';
+	@override String get msg_preparing_file_structure => 'Preparando estrutura de arquivo';
+	@override String get msg_sign_3 => 'Entrar';
+	@override String get msg_scan_local_library => 'Digitalizar biblioteca local';
+	@override String get msg_lsky_pro => 'Lsky Pro';
+	@override String get msg_exact_alarm_permission_off_reminders_may => 'A permissão exata do alarme está desativada. Os lembretes podem não disparar na hora certa. Abrir configurações agora?';
+	@override String get msg_last_30_days => 'Últimos 30 dias';
+	@override String get msg_match => 'Correspondência';
+	@override String get msg_auth_mode => 'Modo de autenticação';
+	@override String get msg_unsupported_file_type => 'Tipo de arquivo não suportado.';
+	@override String get msg_only_delete_sync_task => 'Exclua apenas a tarefa de sincronização.';
+	@override String get msg_change_password => 'Alterar senha';
+	@override String get msg_saved_2 => 'Salvo';
+	@override String get msg_import_export => 'Importação/Exportação';
+	@override String get msg_created_2 => 'Criado';
+	@override String get msg_ai_summary => 'Resumo AI';
+	@override String get msg_progress => 'Progresso';
+	@override String get msg_replace_memo_image => 'Substituir imagem do memorando';
+	@override String get msg_app_settings => 'Configurações do aplicativo';
+	@override String get msg_copy_path => 'Copiar caminho';
+	@override String get msg_components => 'Componentes';
+	@override String get msg_no_shortcuts => 'Sem atalhos';
+	@override String get msg_location_timed_try => 'O local expirou. Por favor, tente novamente.';
+	@override String get msg_attach_location_info_memos_show_subtle => 'Anexe informações de localização a memorandos e mostre nomes de lugares sutis.';
+	@override String msg_send_failed({required Object e}) => 'Falha no envio: ${e}';
+	@override String get msg_repeat => 'Repetir';
+	@override String get msg_not_signed => 'Não conectado';
+	@override String get msg_no_webhooks_configured => 'Nenhum webhooks configurado';
+	@override String get msg_apply_token => 'Aplicar token';
+	@override String get msg_enable_reminder_permissions_2 => 'Habilitar permissões de lembrete';
+	@override String get msg_enter_backup_password => 'Digite a senha de backup';
+	@override String get msg_start_backup => 'Iniciar backup';
+	@override String get msg_last_sync => 'Última sincronização';
+	@override String get msg_note_export_includes_content_already_synced => 'Nota: A exportação inclui conteúdo já sincronizado com o banco de dados local (dados offline incluídos).';
+	@override String get msg_enter_username => 'Digite o nome de usuário';
+	@override String get msg_settings_saved => 'Configurações salvas';
+	@override String get msg_no_keywords => 'Sem palavras-chave';
+	@override String get msg_these_settings_apply_newly_created_memos => 'Essas configurações se aplicam a memorandos recém-criados.';
+	@override String get msg_back_home => 'Voltar para casa';
+	@override String get msg_quiet_hours => 'Horário de silêncio';
+	@override String get msg_add_account => 'Adicionar conta';
+	@override String get msg_reset_complete => 'Redefinição concluída';
+	@override String get msg_no_shortcuts_configured => 'Nenhum atalho configurado';
+	@override String get msg_password => 'Senha';
+	@override String get msg_importing => 'Importando';
+	@override String msg_visibility_2({required Object visibilityLabel}) => 'Visibilidade: ${visibilityLabel}';
+	@override String get msg_no_logs_yet => 'Nenhum registro ainda';
+	@override String get msg_v_9_times_allowed => 'Até 9 vezes permitidas';
+	@override String get msg_last_14_days => 'Últimos 14 dias';
+	@override String get msg_location_disabled_enable_settings_first => 'A localização está desativada. Ative-o primeiro nas configurações.';
+	@override String get msg_add_2 => 'Adicionar';
+	@override String get msg_logs => 'Registros';
+	@override String get msg_references => 'Referências';
+	@override String get msg_importing_memos => 'Importando memorandos...';
+	@override String get msg_account_security => 'Conta e Segurança';
+	@override String get msg_reminder_2 => 'Lembrete';
+	@override String get msg_enable_scheduled_reminder_notifications => 'Ative notificações de lembretes agendados.';
+	@override String get msg_no_links => 'Sem links';
+	@override String get msg_delete_memo_2 => 'Excluir memorando';
+	@override String get msg_one_tap_add_not_supported_add => 'A adição com um toque não é suportada. Adicione-o no seletor de widget';
+	@override String get msg_password_2 => 'Nova Senha';
+	@override String get msg_processing_content => 'Processando conteúdo...';
+	@override String get msg_status => 'Estado';
+	@override String get msg_local_library_added => 'Biblioteca local adicionada';
+	@override String get msg_failed_open_try => 'Falha ao abrir. Por favor, tente novamente.';
+	@override String get msg_removed_locally_now_deleted_server_when => 'Ele será removido localmente agora e excluído do servidor quando estiver online.';
+	@override String get msg_server_url_unavailable => 'Servidor URL indisponível';
+	@override String get msg_no_release_notes_yet => 'Ainda não há notas de lançamento';
+	@override String get msg_cancelling_2 => 'Cancelando...';
+	@override String get msg_summaries_selected_range => 'Resumos no intervalo selecionado';
+	@override String get msg_expand_2 => 'Expandir';
+	@override String get msg_close => 'Fechar';
+	@override String msg_more_comments({required Object remainingComments}) => '${remainingComments} mais comentários';
+	@override String get msg_backing => 'Fazendo backup…';
+	@override String get msg_view_debug_logs => 'Ver registros de depuração';
+	@override String get msg_location_permission_denied => 'Permissão de localização negada';
+	@override String get msg_self_repair_reset_heatmap => 'Auto-reparo: redefinir mapa de calor';
+	@override String get msg_these_settings_changed_locally_remotely_choose => 'Essas configurações foram alteradas local e remotamente. Escolha qual versão manter.';
+	@override String get msg_not_authenticated_2 => 'Não autenticado.';
+	@override String msg_action_failed({required Object e}) => 'Ação falhou: ${e}';
+	@override String get msg_shortcut_2 => 'Novo atalho';
+	@override String get msg_url => 'URL';
+	@override String get msg_no_memos_found_html => 'Nenhum memorando encontrado em HTML.';
+	@override String get msg_enter_what_want_summarize => 'Digite o que deseja resumir...';
+	@override String get msg_unable_load_audio_source => 'Não foi possível carregar a fonte de áudio.';
+	@override String get msg_strategy_id => 'Estratégia ID';
+	@override String msg_copy_failed({required Object e}) => 'Falha na cópia: ${e}';
+	@override String get msg_enable_image_bed => 'Ativar base de imagens';
+	@override String get msg_active => 'Ativo';
+	@override String get msg_account => 'Conta';
+	@override String get msg_invalid_webdav_server_url => 'Servidor WebDAV URL inválido';
+	@override String get msg_keep_local => 'Manter local';
+	@override String get msg_within_range => 'Dentro do alcance';
+	@override String get msg_generate_log_file => 'Exportar pacote de logs';
+	@override String get msg_ai_reports => 'Relatórios AI';
+	@override String get msg_battery_optimization => 'Otimização da bateria';
+	@override String get msg_sync_overview => 'Visão geral da sincronização';
+	@override String get msg_legacy_servers_not_support_search_filters => 'Servidores legados não suportam filtros de pesquisa; os resultados podem estar incompletos.';
+	@override String get msg_conflicts_detected_run_manual_sync => 'Conflitos detectados. Execute a sincronização manual.';
+	@override String get msg_authentication_failed_check_token => 'Falha na autenticação. Verifique o token.';
+	@override String get msg_date_range_3 => 'Período';
+	@override String get msg_help_ai_understand_better => 'Ajude AI a entender você melhor';
+	@override String get msg_no_search_history => 'Sem histórico de pesquisa';
+	@override String get msg_enter_api_path => 'Insira o caminho API';
+	@override String get msg_stats => 'Estatísticas';
+	@override String get msg_text_2 => 'Novo:';
+	@override String get msg_removing_signing_clear_local_cache_account => 'Remover/sair limpará o cache local desta conta (dados off-line/rascunhos/fila de sincronização pendente).';
+	@override String get msg_updated_time_2 => 'Hora atualizada ↑';
+	@override String get msg_province => 'Província';
+	@override String get msg_submitting_sync_queue => 'Enviando fila de sincronização';
+	@override String get msg_failed => 'Falha';
+	@override String get msg_set_time => 'Definir hora';
+	@override String get msg_enable_local_library_backup => 'Habilitar backup da biblioteca local';
+	@override String get msg_cancel_2 => 'Cancelar';
+	@override String get msg_week => 'Esta semana';
+	@override String get msg_like => 'Curtir';
+	@override String get msg_location_services_disabled => 'Os serviços de localização estão desativados';
+	@override String get msg_clears_local_cache_offline_memos_pending => 'Isso limpa o cache local (memorandos offline/fila pendente) e aciona uma ressincronização completa. O conteúdo não sincronizado será perdido e pode demorar um pouco. Continuar?';
+	@override String get msg_load_more => 'Carregar mais';
+	@override String get msg_pull_up_to_load_more => 'Suba para carregar mais';
+	@override String get msg_release_to_load_more => 'Solte para carregar mais';
+	@override String get msg_scroll_down_to_load_more => 'Role para baixo para carregar mais';
+	@override String get msg_loaded_all_content => 'Todo o conteúdo carregado';
+	@override String get msg_pull_memo_list_refresh_sync_sync => 'Puxe para baixo na lista de notas para atualizar e sincronizar. A sincronização busca primeiro os itens mais recentes; execute uma sincronização completa periodicamente para manter as estatísticas/mapa de calor completos.';
+	@override String msg_server_returned_error({required Object code}) => 'Servidor retornou erro (${code}).';
+	@override String get msg_sound_feedback => 'Som e feedback';
+	@override String msg_memos_skipped_attachments_skipped({required Object exportedMemoCount, required Object skippedMemoCount, required Object exportedAttachmentCount, required Object skippedAttachmentCount}) => 'Memorandos ${exportedMemoCount} (${skippedMemoCount} ignorados), anexos ${exportedAttachmentCount} (${skippedAttachmentCount} ignorados).';
+	@override String get msg_import_complete => 'Importação concluída';
+	@override String get msg_text_3 => 'Novo';
+	@override String get msg_max_per_day => 'Máximo por dia';
+	@override String get msg_permissions_denied => 'Permissões negadas';
+	@override String get msg_memo_2 => 'Novo memorando';
+	@override String get msg_delete_reminder => 'Excluir lembrete';
+	@override String get msg_select_month => 'Selecione o mês';
+	@override String get msg_select_backup => 'Selecione backup';
+	@override String get msg_no_keywords_2 => '#Sem palavras-chave';
+	@override String get msg_preparing_memo_content => 'Preparando conteúdo do memorando';
+	@override String get msg_prompt_content => 'Conteúdo do prompt';
+	@override String get msg_default_prompt_ai_summaries_reports => 'Prompt padrão para resumos/relatórios AI';
+	@override String get msg_intro => 'Introdução';
+	@override String get msg_monthly_stats => 'Estatísticas mensais';
+	@override String get msg_times_2 => 'vezes';
+	@override String get msg_file_has_already_been_imported_skipped => 'Este arquivo já foi importado. Ignorado.';
+	@override String get msg_token_tail_unknown => 'Cauda do token desconhecida';
+	@override String get msg_press_back_exit => 'Pressione voltar novamente para sair';
+	@override String get msg_enter_password_3 => 'Digite a senha';
+	@override String get msg_sync_conflicts => 'Conflitos de sincronização';
+	@override String get msg_locale => 'Local';
+	@override String get msg_any => 'Qualquer';
+	@override String get msg_provider => 'Provedor';
+	@override String get msg_preview_2 => 'Visualização';
+	@override String get msg_automatically_upload_images_append_links_memo => 'Carregue imagens automaticamente e anexe links ao memorando.';
+	@override String get msg_import_file_not_found => 'Arquivo de importação não encontrado.';
+	@override String get msg_today => 'Hoje';
+	@override String get msg_link_card => 'Cartão de link';
+	@override String get msg_expiration => 'Expiração';
+	@override String get msg_summary_prompt_optional => 'Prompt de resumo (opcional)';
+	@override String get msg_memos => 'Memos';
+	@override String get msg_recording_file_not_found_2 => 'Arquivo de gravação não encontrado.';
+	@override String get msg_backup_settings => 'Configurações de backup';
+	@override String get msg_mode => 'Modo';
+	@override String get msg_no_markdown_memos_found_zip => 'Nenhum memorando Markdown encontrado no ZIP.';
+	@override String get msg_archived => 'Arquivado';
+	@override String msg_update_failed({required Object e}) => 'Falha na atualização: ${e}';
+	@override String get msg_enable_app_lock => 'Ativar bloqueio de aplicativo';
+	@override String get msg_html_zip => 'HTML/ZIP';
+	@override String get msg_all => 'Todos';
+	@override String get msg_model => 'Modelo';
+	@override String get msg_title => 'Título';
+	@override String get msg_amap_web_api => 'Amap Web API';
+	@override String get msg_saved_gallery => 'Salvo na galeria';
+	@override String get msg_gallery_mobile_only => 'A galeria está disponível apenas em dispositivos móveis.';
+	@override String get msg_unread => 'Não lido';
+	@override String get msg_exporting => 'Exportando...';
+	@override String get msg_network_timeout_try => 'Tempo limite da rede. Por favor, tente novamente.';
+	@override String get msg_unlock => 'Desbloquear';
+	@override String msg_ago_3({required Object diff_inDays}) => '${diff_inDays} atrás';
+	@override String msg_random_walk_days_ago_exact({required Object days}) => '${days} dias atrás';
+	@override String get msg_random_walk_day_period_dawn => 'Amanhecer';
+	@override String get msg_random_walk_day_period_morning => 'Manhã';
+	@override String get msg_random_walk_day_period_noon => 'Meio-dia';
+	@override String get msg_random_walk_day_period_afternoon => 'Tarde';
+	@override String get msg_random_walk_day_period_dusk => 'Crepúsculo';
+	@override String get msg_random_walk_day_period_night => 'Noite';
+	@override String get msg_deserve_coffee_i_m_pulling_all => 'Para merecer esse café, estou passando a noite inteira escrevendo 100 linhas de código!';
+	@override String get msg_token_name => 'Nome do Token';
+	@override String get msg_restore_completed => 'Restauração concluída';
+	@override String msg_restore_completed_to_path({required Object path}) => 'Restauração concluída. Arquivos salvos em ${path}';
+	@override String msg_restore_missing_attachments({required Object count}) => 'Falha no download de alguns anexos: ${count}';
+	@override String get msg_restore_to_directory => 'Restaurar para diretório';
+	@override String get msg_restore_export_only_notice => 'A restauração no modo servidor apenas baixa arquivos para o diretório selecionado e não grava de volta no servidor.';
+	@override String get msg_restore_config_confirm_title => 'Restaurar configurações confidenciais?';
+	@override String get msg_restore_config_confirm_hint => 'Selecione quais configurações confidenciais serão aplicadas. Outras configurações serão restauradas automaticamente.';
+	@override String get msg_restore_config_item_webdav => 'Configurações WebDAV';
+	@override String get msg_restore_config_item_image_bed => 'Configurações da cama de imagem';
+	@override String get msg_restore_config_item_image_compression => 'Configurações de compactação de imagem';
+	@override String get msg_restore_config_item_app_lock => 'Configurações de bloqueio de aplicativo';
+	@override String get msg_restore_config_item_ai => 'Configurações AI';
+	@override String get msg_backup_plain_risk_title => 'Backup de texto simples';
+	@override String get msg_backup_plain_risk_body => 'Os backups de texto simples não são criptografados e podem expor dados confidenciais. Continuar?';
+	@override String get msg_backup_config_scope => 'Configuração de backup';
+	@override String get msg_backup_config_none => 'Não faça backup da configuração';
+	@override String get msg_backup_config_none_desc => 'Faça backup apenas de memorandos e anexos.';
+	@override String get msg_backup_config_safe => 'Somente configuração segura';
+	@override String get msg_backup_config_safe_desc => 'Faça backup de preferências globais, lembretes, modelos e localização.';
+	@override String get msg_backup_config_full => 'Todas as configurações (sensíveis)';
+	@override String get msg_backup_config_full_desc => 'Inclui WebDAV, AI, bloqueio de aplicativo, base de imagem e rascunho.';
+	@override String get msg_backup_config_full_requires_encryption => 'Todas as configurações requerem backup criptografado.';
+	@override String get msg_skip => 'Pular';
+	@override String get msg_copied_clipboard => 'Copiado para a área de transferência';
+	@override String msg_failed_2({required Object attempts}) => 'Falha ${attempts}';
+	@override String get msg_too_many_requests_try_later => 'Muitos pedidos. Tente novamente mais tarde.';
+	@override String get msg_more => 'Mais';
+	@override String get msg_already_whitelisted => 'Já na lista de permissões';
+	@override String get msg_local_library_backup => 'Backup da biblioteca local';
+	@override String get msg_awesome => 'Incrível! ❤️';
+	@override String get msg_now => 'Agora';
+	@override String get msg_select_reminder_time => 'Selecione o horário do lembrete';
+	@override String get msg_protected => 'Protegido';
+	@override String msg_failed_load_4({required Object e}) => 'Falha ao carregar: ${e}';
+	@override String msg_operation_failed({required Object e}) => 'Falha na operação: ${e}';
+	@override String get msg_no_tags => 'Sem tags';
+	@override String get msg_create_tag => 'Criar etiqueta';
+	@override String get msg_edit_tag => 'Editar etiqueta';
+	@override String get msg_tag_name => 'Nome da etiqueta';
+	@override String get msg_tag_name_required => 'O nome da tag é obrigatório';
+	@override String get msg_tag_name_invalid => 'O nome da tag não pode conter /';
+	@override String get msg_parent_tag => 'Tag pai';
+	@override String get msg_no_parent => 'Nenhum pai';
+	@override String get msg_tag_color => 'Cor da etiqueta';
+	@override String get msg_inherit => 'Herdar';
+	@override String get msg_inherit_color => 'Herdar cor pai';
+	@override String get msg_tag_pinned => 'Etiqueta de alfinete';
+	@override String get msg_delete_tag => 'Excluir etiqueta';
+	@override String get msg_delete_tag_confirm => 'Excluir esta tag?';
+	@override String get msg_delete_tag_warning => 'As tags filhas serão movidas para a tag pai e esta tag será removida dos memorandos.';
+	@override String get msg_server => 'Servidor';
+	@override String get msg_improved => 'Melhorado';
+	@override String get msg_request_2 => 'Solicitação';
+	@override String msg_export_failed({required Object e}) => 'Falha na exportação: ${e}';
+	@override String get msg_notification_settings => 'Configurações de notificação';
+	@override String get msg_related_memo_was_deleted => 'O memorando relacionado foi excluído';
+	@override String get msg_email => 'E-mail';
+	@override String get msg_enter_password_4 => 'Por favor insira uma senha';
+	@override String get msg_retry_count => 'Contagem de novas tentativas';
+	@override String get msg_import_exported_html_zip_package => 'Importar pacote HTML ou ZIP exportado';
+	@override String get msg_archive => 'Arquivo';
+	@override String get msg_reset_heatmap => 'Redefinir mapa de calor?';
+	@override String get msg_token_applied => 'Token aplicado';
+	@override String get msg_log_file_created => 'Pacote de registros exportado';
+	@override String get msg_delete_sync_task => 'Excluir tarefa de sincronização';
+	@override String get msg_include_archived_2 => '- Incluir arquivado';
+	@override String get msg_memoflow_side_project_i_build_my => 'MemoFlow é um projeto paralelo que construo em meu tempo livre. Fiquei acordado até tarde consertando bugs e realmente preciso de um Americano gelado. Seu suporte reabastece minha bateria e ajuda a lançar novos recursos';
+	@override String msg_failed_generate({required Object e}) => 'Falha ao gerar: ${e}';
+	@override String get msg_search_logs => 'Registros de pesquisa';
+	@override String get msg_active_days => 'Dias ativos';
+	@override String get msg_back_top => 'Voltar ao início';
+	@override String get msg_month => 'Este mês';
+	@override String get msg_loading_references => 'Carregando referências';
+	@override String get msg_silent => 'Silencioso';
+	@override String get msg_settings => 'Configurações';
+	@override String get msg_locating => 'Localizando...';
+	@override String get msg_scan => 'Digitalizar';
+	@override String get msg_recording_path_missing => 'Caminho de gravação ausente.';
+	@override String get msg_date_range_4 => '- Período';
+	@override String get msg_suggested_tags => 'Tags sugeridas';
+	@override String get msg_energy_restored => '⚡ ENERGIA RESTAURADA';
+	@override String get msg_username_2 => 'Nome de usuário';
+	@override String get msg_ai_summary_report => 'Relatório resumido AI';
+	@override String get msg_all_tags => 'Todas as tags';
+	@override String get msg_preferences => 'Preferências';
+	@override String get msg_image_bed_3 => 'Cama de imagem';
+	@override String get msg_quick_input => 'Entrada Rápida';
+	@override String get msg_tags => 'Etiquetas';
+	@override String get msg_energy_critically_low => 'Energia criticamente baixa!';
+	@override String msg_delete_failed({required Object e}) => 'Falha na exclusão: ${e}';
+	@override String get msg_server_login => 'Login do servidor';
+	@override String get msg_like_2 => 'Curtir';
+	@override String get msg_save_2 => 'Salvar';
+	@override String get msg_unknown => 'Desconhecido';
+	@override String get msg_release_notes_2 => 'Notas de versão';
+	@override String get msg_include_error_details => 'Incluir detalhes do erro';
+	@override String get msg_write_comment => 'Escreva um comentário...';
+	@override String get msg_write_thoughts => 'Escreva seus pensamentos...';
+	@override String get msg_draft_box_title => 'Caixa de rascunho';
+	@override String get msg_draft_box_empty_desc => 'Ainda não há rascunhos salvos.';
+	@override String msg_draft_box_pending_hint({required Object count}) => 'Draft Box possui rascunhos inacabados (${count}). Toque em Caixa de rascunho para visualizar.';
+	@override String get msg_empty_draft => 'Rascunho vazio';
+	@override String get msg_editing => 'Edição';
+	@override String get msg_delete_draft => 'Excluir rascunho';
+	@override String get msg_delete_draft_confirm => 'Excluir este rascunho?';
+	@override String get msg_draft_deleted => 'Rascunho excluído';
+	@override String get msg_local_2 => 'Locais';
+	@override String get msg_expired => 'Expirado';
+	@override String get msg_fixed_2 => 'Corrigido';
+	@override String get msg_upload_attachment => 'Enviar anexo';
+	@override String get msg_battery_whitelist => 'Lista de permissões de bateria';
+	@override String get msg_district => 'Distrito';
+	@override String get msg_voice_memo => '🎙️ Mensagem de voz\\n';
+	@override String get msg_system_default => 'Padrão do sistema';
+	@override String get msg_all_memos_2 => 'Todos os memorandos';
+	@override String get msg_network_request_failed => 'Falha na solicitação de rede';
+	@override String get msg_memo_not_found => 'Memorando não encontrado';
+	@override String msg_playback_failed_2({required Object e}) => 'Falha na reprodução: ${e}';
+	@override String get msg_sync_settings_webdav_across_devices => 'Faça backup das configurações em WebDAV para recuperação.';
+	@override String get msg_offline_first_client_memos_backend => 'Um primeiro cliente off-line para o back-end Memos.';
+	@override String get msg_user_guide => 'Guia do usuário';
+	@override String get msg_notice => 'Aviso';
+	@override String get msg_exact_alarms => 'Alarmes exatos';
+	@override String get msg_restoring_overwrite_local_library_files_rebuild => 'A restauração substituirá os arquivos da biblioteca local e reconstruirá o banco de dados. Isto não pode ser desfeito.';
+	@override String get msg_enter_api_url_ai_settings => 'Insira API URL nas configurações de AI';
+	@override String msg_create_failed_2({required Object e}) => 'Falha na criação: ${e}';
+	@override String get msg_close_search => 'Fechar pesquisa';
+	@override String get msg_imported_memos_2 => 'Memorandos importados';
+	@override String get msg_explore => 'Explorar';
+	@override String get msg_network_connection_failed => 'Falha na conexão de rede.';
+	@override String msg_save_failed_3({required Object e}) => 'Falha ao salvar: ${e}';
+	@override String get msg_no_summary_share => 'Nenhum resumo para compartilhar';
+	@override String get msg_custom_model => 'Modelo personalizado';
+	@override String msg_sign_failed({required Object message}) => 'Falha no login: ${message}';
+	@override String get msg_notification_exact_alarm_permissions_required_send => 'Notificação e permissões exatas de alarme são necessárias para enviar lembretes na hora certa.';
+	@override String get msg_random_review => 'Revisão Aleatória';
+	@override String get msg_random_review_source_scope => 'Fonte da nota';
+	@override String get msg_random_review_source_all_notes => 'Todas as notas';
+	@override String get msg_random_review_source_explore_notes => 'Explorar notas';
+	@override String get msg_random_review_source_ai_history => 'Histórico AI';
+	@override String get msg_random_review_ai_history_date_range => 'Tempo de resumo AI';
+	@override String get msg_public => 'Público';
+	@override String get msg_all_2 => 'Todos';
+	@override String get msg_add_custom_model => 'Adicionar modelo personalizado';
+	@override String get msg_backup_password => 'Senha de backup';
+	@override String get msg_optional_used_sign_requests => 'Opcional. Usado para assinar solicitações.';
+	@override String get msg_search => 'Pesquisa';
+	@override String get msg_set_password => 'Definir senha';
+	@override String get msg_submit_logs => 'Exportar registros';
+	@override String get msg_logs_export_local_only => 'A exportação salva apenas os logs localmente. O aplicativo não irá carregá-los nem criar um memorando automaticamente.';
+	@override String get msg_enable_network_logging_before_exporting => 'Para problemas de login/sincronização/backup, habilite o registro de rede antes de exportar.';
+	@override String get msg_activity_heatmap_2 => 'MAPA DE CALOR DE ATIVIDADE';
+	@override String get msg_invalid_api_key_insufficient_permissions => 'Chave API inválida ou permissões insuficientes.';
+	@override String get msg_data_has_been_migrated_app_successfully => 'Seus dados foram migrados para este aplicativo com sucesso.';
+	@override String get msg_get_version => 'Obtenha a nova versão';
+	@override String get msg_token_source => 'Fonte do token';
+	@override String get msg_send => 'Enviar';
+	@override String get msg_no_pending_sync_tasks => 'Nenhuma tarefa de sincronização pendente';
+	@override String get msg_locating_memo_content => 'Localizando conteúdo do memorando';
+	@override String get msg_offline_ready => 'Pronto off-line';
+	@override String get msg_use_relative_path => 'Use um caminho relativo';
+	@override String get msg_total => 'Total';
+	@override String get msg_location_2 => 'Localização';
+	@override String get msg_location_contains => 'O local contém';
+	@override String get msg_show_location_metadata_memos_not_configured => 'Mostrar metadados de localização em memorandos. Se não estiver configurado, as coordenadas serão mostradas.';
+	@override String get msg_api_url => 'API URL';
+	@override String get msg_parsing_progress => 'Progresso da análise';
+	@override String get msg_parsing => 'Análise';
+	@override String get msg_custom => 'Personalizado';
+	@override String get msg_tags_created => 'Novas tags criadas';
+	@override String get msg_third_party_share_disabled => 'O compartilhamento de terceiros está desativado';
+	@override String get msg_loading_links => 'Carregando links...';
+	@override String get msg_how_report => 'Como denunciar?';
+	@override String get msg_confirm_password_2 => 'Confirmar senha';
+	@override String get msg_search_title_content_tags => 'Pesquise por título, conteúdo ou tags';
+	@override String msg_reset_failed({required Object e}) => 'Falha na reinicialização: ${e}';
+	@override String get msg_debug_preview_update_dialog => 'Depuração: caixa de diálogo de atualização de visualização';
+	@override String get msg_what_s => 'O que há de novo?';
+	@override String get msg_ringtone => 'Toque';
+	@override String get msg_unable_detect_backend_version_check_server => 'Não foi possível detectar a versão de back-end. Verifique o servidor URL ou rede.';
+	@override String get msg_pending_2 => 'Pendente';
+	@override String get msg_parsing_html => 'Analisando HTML...';
+	@override String get msg_actions => 'Ações';
+	@override String get msg_import_complete_2 => 'Importação concluída';
+	@override String get msg_use_disk => 'Usar disco';
+	@override String get msg_root_path => 'Caminho raiz';
+	@override String get msg_disabled => 'Desativado';
+	@override String get msg_improved_2 => 'Melhorado:';
+	@override String get msg_city => 'Cidade';
+	@override String get msg_decoding_zip => 'Decodificação ZIP...';
+	@override String get msg_notification_content => 'Conteúdo da notificação';
+	@override String get msg_resolve_conflict => 'Resolver conflito';
+	@override String get msg_webhooks_not_supported_server => 'Webhooks não são suportados neste servidor.';
+	@override String get msg_may_delayed => '(pode atrasar)';
+	@override String get msg_permissions_system_settings => 'Permissões e configurações do sistema';
+	@override String get msg_waiting_tasks_stop => 'Aguardando a interrupção das tarefas';
+	@override String get msg_done_2 => 'Concluído';
+	@override String get msg_parsing_memoflow_export => 'Analisando exportação MemoFlow...';
+	@override String msg_location_updated({required Object next_displayText_fractionDigits_6}) => 'Localização atualizada: ${next_displayText_fractionDigits_6}';
+	@override String get msg_checking_server_version => 'Verificando a versão do servidor...';
+	@override String get msg_next_time_back_fixing_bugs => '👀 Da próxima vez, voltando à correção de bugs';
+	@override String msg_ago_4({required Object weeks}) => '${weeks} atrás';
+	@override String get msg_import => 'Importar';
+	@override String get msg_create_token_2 => 'Criar token';
+	@override String get msg_marked_read => 'Marcado como lido';
+	@override String get msg_pinned => 'Fixado';
+	@override String get msg_version_update => 'Atualização de versão';
+	@override String get msg_allow_private_memos => 'Permitir memorandos privados';
+	@override String get msg_token_copied_clipboard => 'Token copiado para a área de transferência';
+	@override String get msg_keeping_more_versions_uses_more_storage => 'Manter mais versões consome mais armazenamento. Considere limpar versões antigas.';
+	@override String get msg_delete_webhook => 'Excluir webhook';
+	@override String get msg_prompt => 'Alerta';
+	@override String get msg_location_precision => 'Precisão de localização';
+	@override String get msg_password_required => 'Senha necessária';
+	@override String get msg_exit_app => 'Sair do aplicativo';
+	@override String get msg_thanks_energy_fully_restored => 'Obrigado! Energia totalmente restaurada ⚡';
+	@override String get msg_connection_timeout_check_network_api_url => 'Tempo limite de conexão. Verifique a rede ou API URL.';
+	@override String get msg_local_network_migration => 'Migração de rede local';
+	@override String get msg_local_network_migration_desc => 'Use a migração de rede local para conectar dispositivos MemoFlow e ferramentas de anotações de terceiros em seu LAN. A migração MemoFlow e Obsidian são suportadas hoje.';
+	@override String get msg_connect_obsidian => 'Conectar Obsidiana';
+	@override String get msg_connect_obsidian_desc => 'Emparelhe e sincronize o conteúdo das notas com Obsidian em sua rede local.';
+	@override String get msg_local_network_migration_more_targets => 'Mais alvos, incluindo SiYuan e outras ferramentas de terceiros, serão adicionados aqui posteriormente.';
+	@override String get msg_memoflow_migration => 'Migração MemoFlow';
+	@override String get msg_memoflow_migration_target_desc => 'Migre notas e configurações do espaço de trabalho local para outro dispositivo MemoFlow pela sua rede local.';
+	@override String get msg_memoflow_migration_targets_summary => 'MemoFlow / Obsidiana';
+	@override String get msg_memoflow_migration_role_desc => 'Escolha se este dispositivo envia ou recebe uma sessão única de migração local. Mantenha os dois dispositivos no mesmo LAN e mantenha o MemoFlow em primeiro plano durante a transferência.';
+	@override String get msg_memoflow_migration_sender => 'Eu sou o remetente';
+	@override String get msg_memoflow_migration_sender_desc => 'Escolha notas e configurações do espaço de trabalho local atual e conecte-se a um receptor próximo.';
+	@override String get msg_memoflow_migration_sender_only_local_mode => 'A função de remetente está disponível somente quando este dispositivo está usando um espaço de trabalho local.';
+	@override String get msg_memoflow_migration_receiver => 'Eu sou o receptor';
+	@override String get msg_memoflow_migration_receiver_desc => 'Crie uma sessão de recebimento, mostre um código QR e importe as notas ou configurações recebidas.';
+	@override String get msg_memoflow_migration_select_content => 'Selecionar conteúdo';
+	@override String get msg_memoflow_migration_notes => 'Conteúdo das notas';
+	@override String get msg_memoflow_migration_notes_desc => 'Envie todas as notas e anexos do espaço de trabalho local atual.';
+	@override String get msg_memoflow_migration_settings => 'Conteúdo de configurações';
+	@override String get msg_memoflow_migration_settings_desc => 'Envie preferências portáteis e configurações sensíveis opcionais.';
+	@override String get msg_memoflow_migration_safe_config => 'Configurações seguras';
+	@override String get msg_memoflow_migration_sensitive_config => 'Configurações confidenciais';
+	@override String get msg_memoflow_migration_prepare_package => 'Preparar pacote de migração';
+	@override String get msg_memoflow_migration_prepare_send => 'Prepare-se para enviar';
+	@override String get msg_memoflow_migration_send_method => 'Método de envio';
+	@override String get msg_memoflow_migration_send_method_desc => 'Escolha como se conectar ao receptor depois que o pacote estiver pronto.';
+	@override String get msg_memoflow_migration_prepare_send_first => 'Prepare o pacote na tela anterior antes de escolher o método de envio.';
+	@override String get msg_memoflow_migration_package_ready => 'Pacote pronto';
+	@override String msg_memoflow_migration_package_summary({required Object memoCount, required Object attachmentCount, required Object size}) => 'Memorandos ${memoCount} · Anexos ${attachmentCount} · ${size}';
+	@override String get msg_memoflow_migration_scan_receiver => 'Digitalizar receptor';
+	@override String get msg_memoflow_migration_search_receiver => 'Pesquise receptores próximos';
+	@override String get msg_memoflow_migration_discovered_receivers => 'Receptores próximos';
+	@override String get msg_memoflow_migration_waiting_receiver => 'Aguardando conexão do remetente…';
+	@override String get msg_memoflow_migration_review_proposal => 'Analisar proposta de migração';
+	@override String get msg_memoflow_migration_receive_mode => 'Modo de recepção';
+	@override String get msg_memoflow_migration_receive_as_new_workspace => 'Importar como um novo espaço de trabalho local';
+	@override String get msg_memoflow_migration_overwrite_current_workspace => 'Substituir o espaço de trabalho local atual';
+	@override String get msg_memoflow_migration_sensitive_config_confirm => 'Configurações confidenciais exigem sua confirmação';
+	@override String get msg_memoflow_migration_accept => 'Aceitar e receber';
+	@override String get msg_memoflow_migration_reject => 'Rejeitar';
+	@override String get msg_memoflow_migration_start_receive => 'Comece a receber';
+	@override String get msg_memoflow_migration_completed => 'Migração concluída';
+	@override String get msg_memoflow_migration_view_result => 'Ver resultado';
+	@override String get msg_memoflow_migration_result => 'Resultado da migração';
+	@override String get msg_memoflow_migration_sender_device => 'Dispositivo remetente';
+	@override String get msg_memoflow_migration_size => 'Tamanho estimado';
+	@override String msg_memoflow_migration_received_bytes({required Object size}) => 'Recebido: ${size}';
+	@override String get msg_memoflow_migration_applied_configs => 'Configurações aplicadas';
+	@override String get msg_memoflow_migration_skipped_configs => 'Configurações ignoradas';
+	@override String get msg_memoflow_migration_workspace_name => 'Espaço de trabalho';
+	@override String get msg_memoflow_migration_scan_title => 'Receptor de digitalização QR';
+	@override String get msg_memoflow_migration_scan_hint => 'Digitalize o código QR mostrado no dispositivo receptor.';
+	@override String get msg_memoflow_migration_foreground_notice => 'Mantenha o MemoFlow em primeiro plano em ambos os dispositivos durante a migração.';
+	@override String get msg_bridge_component_title => 'Ponte MemoFlow';
+	@override String get msg_bridge_component_desc => 'Emparelhe com o plugin Obsidian para sincronização local.';
+	@override String get msg_bridge_title => 'Conectar Obsidiana';
+	@override String get msg_bridge_local_mode_only => 'Emparelhe com Obsidian em sua rede local. Outros alvos poderão surgir mais tarde.';
+	@override String msg_bridge_paired_target({required Object target}) => 'Emparelhado: ${target}';
+	@override String get msg_bridge_unpaired => 'Não emparelhado';
+	@override String msg_bridge_server({required Object server}) => 'Servidor: ${server}';
+	@override String msg_bridge_device({required Object device}) => 'Dispositivo: ${device}';
+	@override String get msg_bridge_processing => 'Processando...';
+	@override String get msg_bridge_action_scan_pair => 'Digitalizar para emparelhar';
+	@override String get msg_bridge_action_mdns_discover => 'descoberta mDNS';
+	@override String get msg_bridge_action_searching => 'Pesquisando...';
+	@override String get msg_bridge_pair_code_label => 'Código de par';
+	@override String get msg_bridge_pair_code_hint => 'Digite o código de 6 dígitos mostrado em Obsidian';
+	@override String get msg_bridge_action_pairing => 'Emparelhamento...';
+	@override String get msg_bridge_action_confirm_pair => 'Confirmar par';
+	@override String get msg_bridge_action_checking => 'Verificando...';
+	@override String get msg_bridge_action_health_check => 'Verificação de integridade';
+	@override String get msg_bridge_enable => 'Habilitar ponte';
+	@override String get msg_bridge_pair_cleared => 'Emparelhamento desmarcado';
+	@override String get msg_bridge_clear_pair => 'Par claro';
+	@override String get msg_bridge_discovery_results => 'Resultados da descoberta';
+	@override String get msg_bridge_scan_title => 'Digitalizar QR';
+	@override String get msg_bridge_scan_hint => 'Digitalize o código QR mostrado pelo plugin Obsidian';
+	@override String get msg_bridge_qr_invalid => 'Código QR de emparelhamento inválido';
+	@override String get msg_bridge_pair_response_missing_token => 'Token ausente da resposta do par';
+	@override String get msg_bridge_pair_success => 'Emparelhamento bem-sucedido';
+	@override String msg_bridge_pair_failed({required Object e}) => 'Falha no emparelhamento: ${e}';
+	@override String get msg_bridge_mdns_searching => 'Pesquisando serviços mDNS...';
+	@override String msg_bridge_mdns_failed({required Object e}) => 'Falha na pesquisa mDNS: ${e}';
+	@override String get msg_bridge_mdns_not_found => 'Nenhum serviço de ponte encontrado';
+	@override String msg_bridge_mdns_found_count({required Object count}) => 'Serviços ${count} encontrados';
+	@override String get msg_bridge_input_host_required => 'Host é obrigatório';
+	@override String get msg_bridge_input_port_invalid => 'A porta é inválida';
+	@override String get msg_bridge_input_pair_code_required => 'O código do par é obrigatório';
+	@override String get msg_bridge_status_pairing => 'Emparelhamento...';
+	@override String get msg_bridge_need_pair_first => 'Por favor, emparelhe primeiro';
+	@override String get msg_bridge_status_health_checking => 'Verificando a integridade da ponte...';
+	@override String get msg_bridge_status_health_ok => 'A ponte está íntegra';
+	@override String msg_bridge_status_health_failed({required Object e}) => 'Falha na verificação de integridade: ${e}';
+	@override late final _StringsStringsLegacyAppLanguagePtBr app_language = _StringsStringsLegacyAppLanguagePtBr._(_root);
+	@override late final _StringsStringsLegacyAppThemePtBr app_theme = _StringsStringsLegacyAppThemePtBr._(_root);
+	@override late final _StringsStringsLegacyAppFontSizePtBr app_font_size = _StringsStringsLegacyAppFontSizePtBr._(_root);
+	@override late final _StringsStringsLegacyAppLineHeightPtBr app_line_height = _StringsStringsLegacyAppLineHeightPtBr._(_root);
+	@override late final _StringsStringsLegacyLaunchActionPtBr launch_action = _StringsStringsLegacyLaunchActionPtBr._(_root);
+	@override late final _StringsStringsLegacyAutoLockTimePtBr auto_lock_time = _StringsStringsLegacyAutoLockTimePtBr._(_root);
+	@override late final _StringsStringsLegacyReminderPtBr reminder = _StringsStringsLegacyReminderPtBr._(_root);
+	@override late final _StringsStringsLegacyLocationPtBr location = _StringsStringsLegacyLocationPtBr._(_root);
+	@override late final _StringsStringsLegacyWebdavPtBr webdav = _StringsStringsLegacyWebdavPtBr._(_root);
+	@override String import_count_memos({required Object count}) => '${count}';
+	@override String import_count_attachments({required Object count}) => '${count}';
+	@override String get msg_version_probe_complete => 'Análise de versão concluída';
+	@override String msg_currently_using_api({required Object version}) => 'Atualmente usando API ${version}.';
+	@override String get msg_version_probe_failed => 'Falha na análise de versão';
+	@override String get msg_copy_diagnostics => 'Copiar diagnóstico';
+	@override String get msg_diagnostics_copied => 'Diagnóstico copiado';
+	@override String msg_probe_failed({required Object error}) => 'Falha na análise: ${error}';
+	@override String get msg_no_active_session_after_sign_in => 'Nenhuma sessão ativa após login';
+	@override String get msg_request_headers => 'Cabeçalhos de solicitação';
+	@override String get msg_request_body => 'Corpo da solicitação';
+	@override String get msg_response_headers => 'Cabeçalhos de resposta';
+	@override String get msg_response_body => 'Corpo de Resposta';
+	@override String get msg_error => 'Erro';
+	@override String get msg_system_logs => 'Registros do sistema';
+	@override String msg_copy_last_lines({required Object lines}) => 'Copiar as últimas linhas ${lines}';
+	@override String get msg_export_logs_bundle => 'Pacote de registros de exportação';
+	@override String msg_showing_last_lines({required Object lines}) => 'Mostrando as últimas linhas ${lines}';
+	@override String get msg_no_system_logs_yet => 'Nenhum registro do sistema ainda';
+	@override String msg_system_logs_copied({required Object lines}) => 'Logs do sistema copiados (linhas ${lines})';
+	@override String msg_log_bundle_created({required Object path, required Object exportId}) => 'Pacote de log criado: ${path} (ExportId: ${exportId})';
+	@override String msg_failed_export_logs({required Object error}) => 'Falha ao exportar logs: ${error}';
+	@override String get msg_api_route => 'Rota API';
+	@override String get msg_screenshot_mode => 'Modo de captura de tela';
+	@override String get msg_screenshot_mode_detail => 'Ocultar barras de status/navegação para capturas limpas';
+	@override String get msg_template => 'Modelo';
+	@override String get msg_no_templates_yet => 'Ainda não há modelos';
+	@override String get msg_quick_search => 'Pesquisa rápida...';
+	@override String get msg_minimize => 'Minimizar';
+	@override String get msg_maximize => 'Maximizar';
+	@override String get msg_restore_window => 'Restaurar';
+	@override String msg_windows_enable_location_access({required Object message}) => '${message}. Habilite o acesso à localização nas configurações do Windows.';
+	@override String get msg_camera_file_missing => 'Arquivo da câmera ausente.';
+	@override String get msg_no_camera_detected => 'Nenhuma câmera detectada.';
+	@override String msg_camera_failed({required Object error}) => 'Falha na câmera: ${error}';
+	@override String get msg_camera_permission_denied_windows => 'Permissão de câmera negada. Habilite o acesso à câmera nas configurações do Windows.';
+	@override String msg_file_selection_failed({required Object error}) => 'Falha na seleção do arquivo: ${error}';
+	@override String get msg_files_unavailable_from_picker => 'Arquivos indisponíveis no seletor.';
+	@override String get msg_no_files_selected => 'Nenhum arquivo selecionado.';
+	@override String get msg_original_image => 'Originais';
+	@override String get msg_gallery_system_picker_original_desc => 'Escolha se as imagens selecionadas devem pular a compactação antes do upload.';
+	@override String get msg_gallery_system_picker_original_switch => 'Faça upload das imagens selecionadas com qualidade original';
+	@override String msg_gallery_original_selection_summary({required Object selectedCount, required Object originalCount}) => '${selectedCount} selecionado · ${originalCount} original';
+	@override String msg_added_files({required Object count}) => 'Adicionados arquivos ${count}.';
+	@override String msg_unavailable_file_count({required Object count}) => '${count} indisponível';
+	@override String msg_added_files_with_skipped({required Object count, required Object details}) => 'Adicionados arquivos ${count}. Ignorado ${details}.';
+	@override String get msg_added_photo_attachment => 'Adicionado anexo de foto.';
+	@override String get msg_enter_content_before_creating_link => 'Insira o conteúdo antes de criar um link.';
+	@override String get msg_checkbox => 'Caixa de seleção';
+	@override String get msg_code_block => 'Bloco de código';
+	@override String get msg_no_recording_input_device_found => 'Nenhum dispositivo de entrada de gravação encontrado.';
+	@override String get msg_write_current_thought => 'Escreva o que você está pensando...';
+	@override String get msg_tag => 'Etiqueta';
+	@override String get msg_attachment => 'Anexo';
+	@override String get msg_todo => 'Tudo';
+	@override String get msg_link => 'Link';
+	@override String get msg_capture_photo => 'Capturar foto';
+	@override String get msg_open_camera_settings => 'Abra as configurações da câmera';
+	@override String get msg_unable_open_windows_camera_settings => 'Não foi possível abrir as configurações da câmera Windows.';
+	@override String get msg_qr_scan_not_supported_use_manual_pairing => 'A varredura QR não é suportada nesta plataforma. \n Use o emparelhamento manual.';
+	@override String get msg_qr_scan_not_supported_pair_manually => 'A varredura QR não é suportada nesta plataforma. Emparelhe manualmente com Host, Porta e Código de Emparelhamento.';
+	@override String get msg_loading_memos => 'Carregando memorandos...';
+	@override String get msg_encryption_feature_placeholder => 'A criptografia é atualmente um espaço reservado e ainda não é aplicada.';
+	@override String get msg_password_feature_placeholder => 'O suporte à senha é atualmente um espaço reservado e ainda não é aplicado.';
+	@override String get msg_template_feature_manage_desc => 'Habilite modelos para gerenciar nomes, conteúdo e variáveis ​​de modelos.';
+	@override String get msg_shortcuts_overview => 'Visão geral dos atalhos';
+	@override String get msg_restore_defaults => 'Restaurar padrões';
+	@override String get msg_default_shortcuts_restored => 'Atalhos padrão restaurados.';
+	@override String get msg_file_save_location => 'Local de salvamento do arquivo';
+	@override String get msg_select_location => 'Selecione o local';
+	@override String get msg_repository_name => 'Nome do repositório';
+	@override String get msg_enter_repository_name_hint => 'Insira o nome do repositório';
+	@override String get msg_not_selected => 'Não selecionado';
+	@override String get msg_select_file_save_location => 'Selecione um local para salvar o arquivo.';
+	@override String get msg_enter_repository_name_prompt => 'Insira um nome de repositório.';
+	@override String get msg_enter_and_confirm_password => 'Por favor insira e confirme a senha.';
+	@override String get msg_encrypt_save_placeholder => 'Salvamento criptografado (espaço reservado)';
+	@override String get msg_windows_related_settings => 'Configurações relacionadas ao Windows';
+	@override String get msg_only_windows_desktop_supports_this_setting => 'Somente o desktop Windows suporta esta configuração.';
+	@override String get msg_shortcut_settings => 'Configurações de atalho';
+	@override String get msg_configure_windows_desktop_shortcuts => 'Configurar atalhos da área de trabalho Windows';
+	@override String get msg_close_window_minimize_to_tray => 'Minimizar para a bandeja ao fechar a janela';
+	@override String get msg_close_window_minimize_to_tray_desc => 'Quando ativado, clicar no botão Fechar no canto superior direito não sairá do aplicativo. Você pode restaurar a janela da bandeja do sistema.';
+	@override String get msg_local_storage_unavailable => 'O armazenamento local não está disponível';
+	@override String get msg_check_system_permissions_or_retry_later => 'Verifique as permissões do sistema ou tente novamente mais tarde.';
+	@override String msg_source_value({required Object source}) => 'Fonte: ${source}';
+	@override String get msg_enable_sync_bridge_first => 'Ative a ponte de sincronização primeiro.';
+	@override String get msg_sync_to_obsidian => 'Sincronizar com Obsidiana';
+	@override String get msg_sync_to_obsidian_confirm => 'Sincronize todos os memorandos da biblioteca local atual, incluindo anexos, com o Obsidian emparelhado de uma só vez. Continuar?';
+	@override String msg_sync_completed_summary({required Object succeeded, required Object total, required Object failed}) => 'Sincronização concluída: ${succeeded}/${total} bem-sucedido, ${failed} com falha.';
+	@override String msg_sync_failed_with_error({required Object error}) => 'Falha na sincronização: ${error}';
+	@override String get msg_sync_to_obsidian_in_progress => 'Sincronizando com Obsidiana...';
+	@override String get msg_action_shortcut => 'Ação - Atalho';
+	@override String get msg_global => 'Global';
+	@override String get msg_editor => 'Editor';
+	@override String get msg_paste => 'Colar';
+	@override String get msg_cut => 'Corte';
+	@override String get msg_previous_page => 'Página anterior';
+	@override String get msg_next_page => 'Próxima página';
+	@override String get msg_shift_enter_supported => 'Também suporta Shift + Enter';
+	@override String get msg_shortcuts_supported_windows_macos => 'Somente Windows e macOS suportam configurações de atalho.';
+	@override String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding} já é usado por “${action}”.';
+	@override String get msg_windows_paging_note => 'Paginação Windows: página anterior PageUp, página seguinte PageDown.';
+	@override String get msg_system_edit_shortcuts_note => 'Copiar/colar/cortar use os atalhos padrão do sistema.';
+	@override String get msg_shortcut_requires_modifier => 'Inclui pelo menos uma tecla modificadora (Ctrl/Cmd/Shift/Alt).';
+	@override String msg_current_shortcut({required Object binding}) => 'Atual: ${binding}';
+	@override String get msg_press_new_shortcut => 'Pressione o novo atalho...';
+	@override String get msg_quick_record => 'Registro rápido';
+	@override String get msg_focus_input_area => 'Área de entrada de foco';
+	@override String get msg_toggle_sidebar => 'Alternar barra lateral';
+	@override String get msg_open_settings => 'Abrir configurações';
+	@override String get msg_show_hide_memoflow => 'Mostrar/ocultar MemoFlow';
+	@override String get msg_publish_memo => 'Publicar memorando';
+	@override String get msg_bold => 'Negrito';
+	@override String get msg_underline => 'Sublinhado';
+	@override String get msg_highlight => 'Destaque';
+	@override String get msg_unordered_list => 'Lista não ordenada';
+	@override String get msg_ordered_list => 'Lista ordenada';
+	@override String get msg_undo => 'Desfazer';
+	@override String get msg_redo => 'Refazer';
+	@override String get msg_no_templates_click_add => 'Ainda não há modelos. Clique em “Adicionar modelo” para criar um.';
+	@override String get msg_weather_variables_enabled_city_not_set => 'Variáveis climáticas habilitadas (cidade não definida)';
+	@override String msg_weather_variables_city({required Object city}) => 'Variáveis climáticas: ${city}';
+	@override String get msg_weather_variables_disabled => 'Variáveis climáticas desativadas';
+	@override String get msg_template_feature_title => 'Habilitar modelos';
+	@override String get msg_template_feature_desc => 'Após habilitar, você pode escolher modelos na barra de ferramentas do editor. A escolha de um substituirá o conteúdo do editor.';
+	@override String get msg_template_list => 'Lista de modelos';
+	@override String get msg_many_templates_support_scroll => 'Quando há muitos modelos, esta área suporta rolagem vertical.';
+	@override String get msg_variable_settings => 'Configurações de variáveis';
+	@override String get msg_template_variables => 'Variáveis de modelo';
+	@override String get msg_available_variable_docs => 'Documentos de variáveis disponíveis';
+	@override String get msg_available_variable_docs_desc => 'Toque para mostrar a tabela de variáveis e notas de significado na caixa de diálogo central.';
+	@override String get msg_date_time_weather_variable_desc => 'Variáveis ​​de data/hora seguem os formatos em Configurações de variáveis; variáveis ​​meteorológicas dependem da configuração climática do AMap.';
+	@override String get msg_variable => 'Variável';
+	@override String get msg_meaning => 'Significado';
+	@override String get msg_example => 'Exemplo';
+	@override String get msg_got_it => 'Entendi';
+	@override String get msg_scene_micro_guide_list_gestures => 'Pressione e segure para copiar um memorando, toque duas vezes para editar rapidamente';
+	@override String get msg_scene_micro_guide_list_search_shortcuts => 'Toque em pesquisar títulos, conteúdo e tags; toque no título para filtros de atalho';
+	@override String get msg_scene_micro_guide_editor_tag_autocomplete_desktop => 'Digite # para sugestões de tags, use?? para escolher e pressione Enter para inserir';
+	@override String get msg_scene_micro_guide_editor_tag_autocomplete_mobile => 'Digite # ou toque no botão de tag para escolher uma tag sugerida';
+	@override String get msg_scene_micro_guide_gallery_controls_desktop => '?/? trocar? Esc fecha? redefinições de toque duplo';
+	@override String get msg_scene_micro_guide_gallery_controls_mobile => 'Toque duas vezes para redefinir';
+	@override String msg_scene_micro_guide_desktop_global_shortcuts({required Object search, required Object quickRecord, required Object overview}) => 'Pesquisa ${search}? ${quickRecord} Gravação rápida? ${overview} Ver atalhos';
+	@override String get msg_new_template => 'Adicionar modelo';
+	@override String get msg_edit_template => 'Editar modelo';
+	@override String get msg_template_name => 'Nome do modelo';
+	@override String get msg_template_name_example => 'Exemplo: Revisão matinal';
+	@override String get msg_template_content => 'Conteúdo do modelo';
+	@override String get msg_template_content_example => 'Você pode usar variáveis, por exemplo: {{data}} {{clima}}';
+	@override String get msg_template_variable_settings => 'Configurações de variáveis de modelo';
+	@override String get msg_date_format_variable => 'Formato de data ({{data}})';
+	@override String get msg_time_format_variable => 'Formato de hora ({{hora}})';
+	@override String get msg_datetime_format_variable => 'Formato de data e hora ({{datetime}})';
+	@override String get msg_enable_weather_variables => 'Habilitar variáveis climáticas';
+	@override String get msg_weather_variable_tokens => 'Variáveis: {{clima}} / {{clima.*}}';
+	@override String get msg_weather_city_adcode_or_name => 'Cidade meteorológica (adcode ou nome da cidade)';
+	@override String get msg_weather_city_example => 'Exemplo: 110000';
+	@override String get msg_weather_fallback_text => 'Texto alternativo do clima';
+	@override String get msg_keep_unknown_variables_raw => 'Mantenha variáveis desconhecidas como estão';
+	@override String get msg_keep_unknown_variables_raw_desc => 'Quando desativado, variáveis desconhecidas serão substituídas por uma string vazia.';
+	@override String get msg_delete_template => 'Excluir modelo';
+	@override String msg_delete_template_confirm_with_name({required Object name}) => 'Excluir “${name}”?';
+	@override String get msg_current_date => 'Data atual';
+	@override String get msg_current_time => 'Hora atual';
+	@override String get msg_current_datetime => 'Data e hora atuais';
+	@override String get msg_weekday_name => 'Nome do dia da semana';
+	@override String get msg_weather_plus_temperature_without_city => 'Tempo + temperatura (sem cidade)';
+	@override String get msg_city_plus_weather_plus_temperature => 'Cidade + clima + temperatura';
+	@override String get msg_weather_city_label => 'Cidade meteorológica';
+	@override String get msg_weather_province => 'Província meteorológica';
+	@override String get msg_weather_condition => 'Condições climáticas';
+	@override String get msg_temperature_without_unit => 'Temperatura (sem unidade)';
+	@override String get msg_humidity_without_percent => 'Umidade (sem símbolo %)';
+	@override String get msg_wind_direction => 'Direção do vento';
+	@override String get msg_wind_power => 'Força do vento';
+	@override String get msg_weather_report_time => 'Hora do boletim meteorológico';
+	@override String get msg_adcode => 'Código de área administrativa';
+	@override String get msg_example_saturday => 'Sábado';
+	@override String get msg_example_sunny_25c => 'Ensolarado 25°C';
+	@override String get msg_example_beijing_sunny_25c => 'Pequim Ensolarado 25°C';
+	@override String get msg_example_beijing => 'Pequim';
+	@override String get msg_example_beijing_city => 'Município de Pequim';
+	@override String get msg_example_sunny => 'Ensolarado';
+	@override String get msg_example_northeast => 'Nordeste';
+	@override String msg_total_count_times({required Object count}) => '${count} vezes no total';
+	@override String get msg_current_streak_days => 'Sequência atual (dias)';
+	@override String get msg_total_days => 'Total de dias';
+	@override String get msg_average_daily_characters => 'Média diária de caracteres';
+	@override String get msg_longest_streak_days => 'Maior sequência (dias)';
+	@override String get msg_total_memos_metric => 'Total de memorandos';
+	@override String get msg_total_characters_metric => 'Total de caracteres';
+	@override String get msg_common_writing_time => 'Tempo de escrita comum';
+	@override String get msg_most_active_day => 'Dia mais ativo';
+	@override String get msg_memo_count => 'Contagem de memorandos';
+	@override String get msg_total_characters_short => 'Total de caracteres';
+	@override String get msg_max_characters_single_day => 'Máximo de caracteres por dia';
+	@override String get msg_image => 'Imagem';
+	@override String get msg_video => 'Vídeo';
+	@override String get msg_audio => 'Áudio';
+	@override String get msg_document => 'Documento';
+	@override String get msg_other => 'Outro';
+	@override String get msg_attachment_name_contains => 'O nome do anexo contém';
+	@override String get msg_attachment_type => 'Tipo de anexo';
+	@override String get msg_linked_memos => 'Memorandos vinculados';
+	@override String get msg_clear_all_filters => 'Limpar todos os filtros';
+	@override String get msg_file => 'Arquivo';
+	@override String get msg_vs_last_month_same_memo_count => 'Mesma contagem de memorandos do mês passado';
+	@override String get msg_vs_last_month_increase_memo_count => 'Mais memorandos do que no mês passado';
+	@override String get msg_vs_last_month_decrease_memo_count => 'Menos memorandos que no mês passado';
+	@override String get msg_weekday_monday => 'Seg';
+	@override String get msg_weekday_tuesday => 'Terça';
+	@override String get msg_weekday_wednesday => 'Quarta';
+	@override String get msg_weekday_thursday => 'Qui';
+	@override String get msg_weekday_friday => 'Sexta-feira';
+	@override String get msg_weekday_saturday => 'Sábado';
+	@override String get msg_weekday_sunday => 'Sol';
+	@override String get msg_current_window_pin_not_supported => 'A fixação não é suportada na janela atual.';
+	@override String get msg_no_valid_files_selected => 'Nenhum arquivo válido selecionado.';
+	@override String msg_added_attachment_count({required Object count}) => 'Adicionados anexo(s) ${count}.';
+	@override String get msg_save_failed_check_content_retry => 'Falha ao salvar. Verifique o conteúdo e tente novamente.';
+	@override String get msg_quick_input_channel_not_ready_retry => 'O canal de entrada rápida não está pronto. Por favor, reabra a janela principal e tente novamente.';
+	@override String msg_visibility_value({required Object value}) => 'Visibilidade: ${value}';
+	@override String get msg_saved_to_memoflow => 'Salvo em MemoFlow';
+	@override String msg_quick_input_failed_with_error({required Object error}) => 'Falha na entrada rápida: ${error}';
+	@override String get msg_feature => 'Recurso';
+	@override String msg_feature_not_implemented_placeholder_with_label({required Object label}) => '“${label}” ainda não foi implementado (espaço reservado).';
+	@override String msg_quick_input_save_failed_with_error({required Object error}) => 'Falha ao salvar entrada rápida: ${error}';
+	@override String msg_toggle_memoflow_failed_with_error({required Object error}) => 'Falha ao mostrar/ocultar MemoFlow: ${error}';
+	@override String get msg_shortcuts_overview_opened => 'Visão geral dos atalhos abertos.';
+	@override String msg_unsupported_version_value({required Object version}) => 'Versão não suportada: ${version}';
+	@override String msg_version_probe_passed_with_version({required Object version}) => 'Sondagem v${version} aprovada';
+	@override String get msg_startup_slogan => 'Deixe os registros fluírem naturalmente';
+	@override String get msg_storage_read_failed_some_features_limited => 'Falha na leitura do armazenamento. Alguns recursos são limitados.';
+	@override String msg_monthly_overview({required Object month}) => 'Visão geral mensal do ${month}';
+	@override String get msg_daily_memo_trend => 'Tendência de memorando diário';
+	@override String msg_date_memo_count_tooltip({required Object date, required Object count}) => '${date} \n ${count} memorandos';
+	@override String msg_average_value({required Object value}) => 'Média ${value}';
+	@override String get msg_need_at_least_five_tags => 'Existem menos de 5 tags. Adicione mais tags e tente novamente.';
+	@override String msg_tag_cloud_tooltip({required Object count, required Object percent, required Object latest}) => 'Memorandos ${count} \n ${percent}% \n Mais recente: ${latest}';
+	@override String get msg_unnamed_tag => 'Marca sem nome';
+	@override String get msg_yearly_character_trend => 'Tendência anual de caracteres';
+	@override String get msg_no_data => 'Sem dados';
+	@override String msg_month_characters_tooltip({required Object month, required Object chars}) => '${month} \n ${chars} caracteres';
+	@override String get msg_on_this_day => 'Neste dia';
+	@override String get msg_links_label => 'Links';
+	@override late final _StringsStringsLegacyAppDrawerPtBr app_drawer = _StringsStringsLegacyAppDrawerPtBr._(_root);
+	@override late final _StringsStringsLegacyAiSummaryPtBr ai_summary = _StringsStringsLegacyAiSummaryPtBr._(_root);
+}
+
+// Path: strings.shareClip
+class _StringsStringsShareClipPtBr extends _StringsStringsShareClipEn {
+	_StringsStringsShareClipPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get videoDetected => 'Detectado como conteúdo de vídeo';
+	@override String get linkOnlyLabel => 'Salvar apenas link';
+	@override String get originalLinkLabel => 'Link original';
+	@override String get videoCandidatesTitle => 'Candidatos de vídeo';
+	@override String get downloadAndAttach => 'Baixar e anexar';
+	@override String get notSupportedLabel => 'Não suportado';
+	@override String get directLinkLabel => 'Link direto';
+	@override String get xiaohongshuLabel => 'Xiaohongshu';
+	@override String get unsupportedDash => 'Fluxo DASH separado não é suportado';
+	@override String get unsupportedStream => 'O recurso somente streaming não é compatível';
+	@override String get fileTooLargeTitle => 'O vídeo tem mais de 30 MB';
+	@override String fileTooLargeBody({required Object size}) => 'Este vídeo é ${size}, que excede o limite de anexos do servidor.';
+	@override String get compressAndSave => 'Compactar e salvar';
+	@override String get fallbackParseFailed => 'A análise do vídeo falhou, então o aplicativo salvou apenas o link.';
+	@override String get fallbackDownloadFailed => 'O download do vídeo falhou, então o aplicativo salvou apenas o link.';
+	@override String get fallbackCompressionFailed => 'Falha na compactação do vídeo, então o aplicativo salvou apenas o link.';
+	@override String get fallbackCompressionStillTooLarge => 'O vídeo compactado ainda tem mais de 30 MB, então o aplicativo salvou apenas o link.';
+	@override String get failureUnsupportedUrl => 'Esquema URL não suportado.';
+	@override String get failureLoadTimeout => 'Tempo limite esgotado ao carregar a página.';
+	@override String get failureWebView => 'WebView não conseguiu carregar a página.';
+	@override String get failureDom => 'Não foi possível ler o conteúdo da página.';
+	@override String get failureParserEmpty => 'Não foi possível extrair conteúdo legível.';
+	@override String get failureUnknown => 'Algo deu errado ao preparar esta visualização de compartilhamento.';
+	@override String get stageLoadingPage => 'Carregando página';
+	@override String get stageWaitingContent => 'Aguardando conteúdo dinâmico';
+	@override String get stageDetectingMedia => 'Detectando recursos de vídeo';
+	@override String get stageParsingArticle => 'Artigo de análise';
+	@override String get stageBuildingPreview => 'Visualização do edifício';
+	@override String get stageDownloadingVideo => 'Baixando vídeo';
+	@override String get stageCompressingVideo => 'Compactando vídeo';
+	@override String get localSavedPendingSync => 'Salvo localmente. A sincronização continuará quando disponível.';
+}
+
+// Path: strings.collections
+class _StringsStringsCollectionsPtBr extends _StringsStringsCollectionsEn {
+	_StringsStringsCollectionsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get drawerLabel => 'Coleções';
+	@override String get title => 'Coleções';
+	@override String get collection => 'Coleção';
+	@override String get pinned => 'Fixado';
+	@override String get archived => 'Arquivado';
+	@override String get addToCollection => 'Adicionar à coleção';
+	@override String get newManual => 'Novo manual';
+	@override String get create => 'Criar';
+	@override String get createCollection => 'Criar coleção';
+	@override String get editCollection => 'Editar coleção';
+	@override late final _StringsStringsCollectionsReaderPtBr reader = _StringsStringsCollectionsReaderPtBr._(_root);
+	@override String get createCollectionTooltip => 'Criar coleção';
+	@override String get reorderShelf => 'Reordenar estante';
+	@override String get reorderShelfDescription => 'Arraste para ajustar a ordem mostrada em sua estante. As coleções fixadas ainda ficam acima das demais.';
+	@override String get manageItems => 'Gerenciar itens';
+	@override String get searchCollections => 'Pesquisar coleções';
+	@override String get searchInsideCollection => 'Pesquise dentro desta coleção';
+	@override String get searchMemos => 'Pesquisar memorandos';
+	@override String get clearSearch => 'Limpar pesquisa';
+	@override String get collectionActions => 'Ações de coleta';
+	@override String get openCollection => 'Coleção aberta';
+	@override String get dragToReorder => 'Arraste para reordenar';
+	@override String get smart => 'Inteligente';
+	@override String get smartCollectionSummary => 'Coleção inteligente';
+	@override String get manual => 'Manual';
+	@override String get manualCollectionSummary => 'Coleta manual';
+	@override String get shelf => 'Prateleira';
+	@override String get timeline => 'Cronograma';
+	@override String get list => 'Lista';
+	@override String get noGroups => 'Nenhum grupo';
+	@override String get month => 'Mês';
+	@override String get quarter => 'Trimestre';
+	@override String get year => 'Ano';
+	@override String get autoCover => 'Cobertura automática';
+	@override String get coverReady => 'Capa pronta';
+	@override String get pinToTop => 'Fixar no topo';
+	@override String get privateOnly => 'Apenas privado';
+	@override String get publicOnly => 'Somente público';
+	@override String get hasAttachments => 'Possui anexos';
+	@override String get noAttachments => 'Sem anexos';
+	@override String get imagesOnly => 'Somente imagens';
+	@override String get pinnedOnlySummary => 'Somente fixado';
+	@override String lastDays({required Object days}) => 'Últimos dias ${days}';
+	@override String get customRangeSummary => 'Intervalo personalizado';
+	@override String get headerHeadline => 'Crie estantes temáticas a partir de seus memorandos';
+	@override String get headerDescription => 'As coleções permanecem locais primeiro, são atualizadas a partir de tags automaticamente e dão aos tópicos recorrentes seu próprio lar.';
+	@override String countAll({required Object count}) => 'Coleções ${count}';
+	@override String countFiltered({required Object visible, required Object total}) => 'Mostrando ${visible} de coleções ${total}';
+	@override String get noCollectionsTitle => 'Nenhuma coleção ainda';
+	@override String get noCollectionsDescription => 'Crie uma coleção inteligente para transformar tags recorrentes em uma estante selecionada.';
+	@override String get noMatchingTitle => 'Nenhuma coleção correspondente';
+	@override String get noMatchingDescription => 'Experimente uma pesquisa ou filtro diferente para encontrar a coleção que você precisa.';
+	@override String get resetFilters => 'Redefinir filtros';
+	@override String get loadingCollections => 'Carregando coleções';
+	@override String get loadingCollection => 'Carregando coleção';
+	@override String get loadingMemos => 'Carregando memorandos';
+	@override String get unableToLoadCollections => 'Não é possível carregar coleções';
+	@override String get unableToLoadCollection => 'Não foi possível carregar a coleção';
+	@override String get unableToLoadCollectionItems => 'Não foi possível carregar itens da coleção';
+	@override String get unableToLoadCurrentItems => 'Não foi possível carregar os itens atuais';
+	@override String get unableToLoadMemos => 'Não foi possível carregar memorandos';
+	@override String get deleteTitle => 'Excluir coleção?';
+	@override String deleteMessage({required Object title}) => 'Excluir "${title}"?';
+	@override String memosCount({required Object count}) => 'Memorandos ${count}';
+	@override String imagesCount({required Object count}) => '${count} com imagens';
+	@override String showingMemos({required Object visible, required Object total}) => 'Mostrando ${visible} de memorandos ${total}';
+	@override String get noMemoMatchedYet => 'Nenhum memorando correspondido ainda';
+	@override String updatedAt({required Object date}) => '${date} atualizado';
+	@override String get addMemos => 'Adicionar memorandos';
+	@override String get addMemo => 'Adicionar memorando';
+	@override String addSelected({required Object count}) => 'Adicionar (${count})';
+	@override String get remove => 'Remover';
+	@override String get noManualCollectionsTitle => 'Ainda não há coletas manuais';
+	@override String get noManualCollectionsDescription => 'Crie um para salvar este memorando e guarde-o em uma prateleira.';
+	@override String get manualCollectionNotFoundTitle => 'Coleta manual não encontrada';
+	@override String get manualCollectionNotFoundDescription => 'Esta coleção está faltando ou não está mais disponível no armazenamento local.';
+	@override String get manualCollectionEmptyTitle => 'Esta coleção ainda não possui itens.';
+	@override String get manualCollectionEmptyDescription => 'Adicione memorandos para transformar esta coleção manual em uma estante que você pode revisitar continuamente.';
+	@override String get noMemosAvailableTitle => 'Nenhum memorando disponível para adicionar';
+	@override String get noMemosAvailableDescription => 'Experimente uma palavra-chave diferente ou crie mais memorandos antes de adicioná-los aqui.';
+	@override String get collectionNotFound => 'Coleção não encontrada';
+	@override String searchNoResultsTitle({required Object query}) => 'Nenhum resultado para "${query}"';
+	@override String get searchNoResultsDescription => 'Experimente uma palavra-chave diferente dentro desta coleção.';
+	@override String get emptySmartDetail => 'Nenhum memorando corresponde às regras atuais ainda.';
+	@override String get emptyManualDetail => 'Esta coleção ainda não possui itens.';
+	@override String get basics => 'Noções básicas';
+	@override String get titleRequired => 'O título é obrigatório';
+	@override String get ruleRequired => 'Adicione pelo menos uma regra antes de salvar';
+	@override String get description => 'Descrição';
+	@override String get type => 'Tipo';
+	@override String get accentColor => 'Cor de destaque';
+	@override String get rules => 'Regras';
+	@override String get tags => 'Etiquetas';
+	@override String get selectTags => 'Selecionar tags';
+	@override String get noTagsSelected => 'Nenhuma tag selecionada';
+	@override String get tagMatch => 'Correspondência de etiqueta';
+	@override String get anyTag => 'Qualquer etiqueta';
+	@override String get allTags => 'Todas as tags';
+	@override String get includeDescendants => 'Incluir descendentes';
+	@override String get includeDescendantsDescription => 'Combine tags filhas como projeto/alfa.';
+	@override String get attachments => 'Anexos';
+	@override String get attachmentAny => 'Qualquer';
+	@override String get attachmentRequired => 'Obrigatório';
+	@override String get attachmentNone => 'Nenhum';
+	@override String get attachmentImagesOnly => 'Somente imagens';
+	@override String get dateRange => 'Período';
+	@override String get allTime => 'Todo o tempo';
+	@override String get last7Days => 'Últimos 7 dias';
+	@override String get last30Days => 'Últimos 30 dias';
+	@override String get customRange => 'Intervalo personalizado';
+	@override String get chooseRange => 'Escolha o intervalo';
+	@override String get pinnedOnly => 'Somente memorandos fixados';
+	@override String get manualItems => 'Itens manuais';
+	@override String get manualItemsDescription => 'As coleções manuais são selecionadas a partir de cartões de memorando, detalhes de memorando ou modo de gerenciamento de itens da página de detalhes.';
+	@override String get display => 'Exibição';
+	@override String get cover => 'Capa';
+	@override String get coverAttachment => 'Anexo';
+	@override String get coverImage => 'Imagem da capa';
+	@override String get noCoverImageAvailable => 'Nenhum anexo de imagem está disponível na visualização atual ainda.';
+	@override String get defaultLayout => 'Layout padrão';
+	@override String get groupBy => 'Agrupar por';
+	@override String get manualOrder => 'Pedido manual';
+	@override String get displayTimeDesc => 'Tempo de exibição ↓';
+	@override String get displayTimeAsc => 'Tempo de exibição ↑';
+	@override String get updatedTimeDesc => 'Hora atualizada ↓';
+	@override String get updatedTimeAsc => 'Hora atualizada ↑';
+	@override String get showDetailStats => 'Mostrar estatísticas detalhadas';
+	@override String get showDetailStatsDescription => 'Exibe contagem de memorandos, contagem de imagens e atividades recentes no cabeçalho de detalhes.';
+	@override String get hideWhenEmpty => 'Esconder na prateleira quando vazio';
+	@override String get hideWhenEmptyDescription => 'Mantém esta coleção fora da prateleira principal até que ela corresponda aos memorandos novamente.';
+	@override String get previewMemos => 'Memos';
+	@override String get previewImages => 'Imagens';
+	@override String get noPreviewSmart => 'Nenhuma correspondência de memorando ainda.';
+	@override String get noPreviewManual => 'Esta coleção manual ainda não possui itens.';
+}
+
+// Path: strings.login.mode
+class _StringsStringsLoginModePtBr extends _StringsStringsLoginModeEn {
+	_StringsStringsLoginModePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get password => 'Nome de usuário e senha';
+	@override String get token => 'Ficha';
+	@override String get descPassword => 'Faça login com nome de usuário e senha';
+	@override String get descToken => 'Faça login com token de acesso pessoal';
+	@override String get signInMethod => 'Método de login';
+}
+
+// Path: strings.login.field
+class _StringsStringsLoginFieldPtBr extends _StringsStringsLoginFieldEn {
+	_StringsStringsLoginFieldPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get serverUrlLabel => 'Servidor URL';
+	@override String get serverUrlHint => 'localhost:5230';
+	@override String get protocolLabel => 'Protocolo';
+	@override String get usernameLabel => 'Nome de usuário';
+	@override String get usernameHint => 'Digite o nome de usuário';
+	@override String get passwordLabel => 'Senha';
+	@override String get passwordHint => 'Digite a senha';
+	@override String get tokenLabel => 'Token (PAT)';
+	@override String get tokenHint => 'Token (PAT)';
+}
+
+// Path: strings.login.validation
+class _StringsStringsLoginValidationPtBr extends _StringsStringsLoginValidationEn {
+	_StringsStringsLoginValidationPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get serverUrlRequired => 'Por favor insira o servidor URL';
+	@override String get serverUrlInvalid => 'Insira um endereço de servidor válido, como localhost:5230 ou memos.example.com';
+	@override String get usernameRequired => 'Por favor, insira o nome de usuário';
+	@override String get passwordRequired => 'Por favor insira a senha';
+	@override String get tokenRequired => 'Insira o token';
+}
+
+// Path: strings.login.dialogs
+class _StringsStringsLoginDialogsPtBr extends _StringsStringsLoginDialogsEn {
+	_StringsStringsLoginDialogsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get insecureHttpTitle => 'Usar HTTP?';
+	@override String get insecureHttpMessage => 'HTTP não é seguro e pode expor sua conta, senha ou token. Continuar mesmo assim?';
+	@override String get httpsHandshakeFailedTitle => 'Falha na conexão HTTPS';
+	@override String get httpsHandshakeFailedMessage => 'Você está usando atualmente HTTPS. Se o seu servidor suportar apenas HTTP, você poderá usar HTTP e tentar novamente. Se o servidor suportar HTTPS, verifique seu certificado ou configuração de proxy reverso.';
+	@override String get switchToHttp => 'Use HTTP e tente novamente';
+}
+
+// Path: strings.login.compatibility
+class _StringsStringsLoginCompatibilityPtBr extends _StringsStringsLoginCompatibilityEn {
+	_StringsStringsLoginCompatibilityPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Modo de compatibilidade';
+	@override String get description => 'Use endpoints legados (para servidores Memos mais antigos)';
+}
+
+// Path: strings.login.connect
+class _StringsStringsLoginConnectPtBr extends _StringsStringsLoginConnectEn {
+	_StringsStringsLoginConnectPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get connecting => 'Conectando…';
+	@override String get action => 'Conectar';
+}
+
+// Path: strings.login.errors
+class _StringsStringsLoginErrorsPtBr extends _StringsStringsLoginErrorsEn {
+	_StringsStringsLoginErrorsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get authFailedToken => 'Falha na autenticação. Verifique se o token é válido e não expirou.';
+	@override String get authFailedPat => 'Falha na autenticação. Para o novo Memos use um PAT começando com memos_pat_ (não cole o prefixo Bearer).';
+	@override String connectionFailedWithMessage({required Object message}) => 'Falha na conexão: ${message}';
+	@override String connectionFailed({required Object error}) => 'Falha na conexão: ${error}';
+	@override String get signInFailed => 'Falha no login. Verifique nome de usuário e senha.';
+	@override String signInFailedWithMessage({required Object message}) => 'Falha no login: ${message}';
+	@override String get invalidServerUrl => 'Servidor URL inválido';
+	@override String get serverUrlNormalized => 'Servidor URL normalizado (segmentos de caminho extras removidos)';
+}
+
+// Path: strings.settings.preferences
+class _StringsStringsSettingsPreferencesPtBr extends _StringsStringsSettingsPreferencesEn {
+	_StringsStringsSettingsPreferencesPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Preferências';
+	@override String get language => 'Idioma';
+	@override String get fontSize => 'Tamanho da fonte';
+	@override String get lineHeight => 'Altura da linha';
+	@override String get font => 'Fonte';
+	@override String get systemDefault => 'Padrão do sistema';
+	@override String get noSystemFonts => 'Nenhuma fonte do sistema encontrada';
+	@override String loadFontsFailed({required Object error}) => 'Falha ao carregar fontes: ${error}';
+	@override String get collapseLongContent => 'Recolher conteúdo longo';
+	@override String get collapseReferences => 'Recolher referências';
+	@override String get showEngagementInAllMemoDetails => 'Mostrar curtidas e comentários em todos os detalhes do memorando';
+	@override String get launchAction => 'Ação de lançamento';
+	@override String get quickInputKeyboard => 'Teclado de abertura automática para entrada rápida';
+	@override String get confirmExitOnBack => 'Confirmar na saída';
+	@override late final _StringsStringsSettingsPreferencesEditorToolbarPtBr editorToolbar = _StringsStringsSettingsPreferencesEditorToolbarPtBr._(_root);
+	@override String get appearance => 'Aparência';
+	@override String get themeColor => 'Cor do tema';
+	@override String get haptics => 'Tátil';
+	@override String get customTheme => 'Tema personalizado';
+	@override String get history => 'História';
+	@override String get lightMode => 'Modo Luz';
+	@override String get darkMode => 'Modo escuro';
+	@override String get surfaces => 'Superfícies';
+	@override String get background => 'Plano de fundo';
+	@override String get backgroundColor => 'Cor de fundo';
+	@override String get card => 'Cartão';
+	@override String get cardColor => 'Cor do cartão';
+	@override String get border => 'Borda';
+	@override String get borderColor => 'Cor da borda';
+}
+
+// Path: strings.aiInsight.common
+class _StringsStringsAiInsightCommonPtBr extends _StringsStringsAiInsightCommonEn {
+	_StringsStringsAiInsightCommonPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get enabled => 'Ativado';
+	@override String get disabled => 'Desativado';
+}
+
+// Path: strings.aiInsight.timeRange
+class _StringsStringsAiInsightTimeRangePtBr extends _StringsStringsAiInsightTimeRangeEn {
+	_StringsStringsAiInsightTimeRangePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Intervalo de tempo';
+	@override String get last3Days => 'Últimos 3 dias';
+	@override String get last7Days => 'Últimos 7 dias';
+	@override String get last30Days => 'Últimos 30 dias';
+	@override String get customRange => 'Intervalo personalizado';
+}
+
+// Path: strings.aiInsight.privacyScope
+class _StringsStringsAiInsightPrivacyScopePtBr extends _StringsStringsAiInsightPrivacyScopeEn {
+	_StringsStringsAiInsightPrivacyScopePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Escopo de privacidade';
+	@override String get includePrivateNotes => 'Incluir notas privadas';
+	@override String get description => 'Se habilitado, notas privadas também serão enviadas ao modelo AI para análise.';
+}
+
+// Path: strings.aiInsight.promptSettings
+class _StringsStringsAiInsightPromptSettingsPtBr extends _StringsStringsAiInsightPromptSettingsEn {
+	_StringsStringsAiInsightPromptSettingsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Configurações de prompt';
+	@override String get editPromptTemplate => 'Editar modelo de prompt';
+	@override String get description => 'Permite que usuários avançados personalizem o prompt AI usado para este insight.';
+	@override String get emptyTemplateHint => 'Este insight ainda não possui um modelo de prompt. Adicione um antes de iniciar a análise.';
+	@override String editorDescription({required Object insight}) => 'Este modelo será usado ao executar ${insight}.';
+	@override String get editorPlaceholder => 'Descreva o que o AI deve focar, comparar, resumir ou destacar.';
+	@override String get clearTemplate => 'Limpar';
+}
+
+// Path: strings.aiInsight.contentPreview
+class _StringsStringsAiInsightContentPreviewPtBr extends _StringsStringsAiInsightContentPreviewEn {
+	_StringsStringsAiInsightContentPreviewPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Visualização do conteúdo';
+	@override String get sectionTitle => 'Visualização do conteúdo';
+	@override String get notesToSend => 'Notas para enviar';
+	@override String get estimatedTokens => 'Tokens estimados';
+	@override String get previewContent => 'Visualizar conteúdo';
+	@override String get timeRange => 'Intervalo de tempo';
+	@override String get loading => 'Preparando visualização…';
+	@override String get previewLoadFailed => 'Falha ao preparar a visualização do conteúdo.';
+	@override String get truncatedNotice => 'O conteúdo foi truncado para permanecer dentro do limite de análise atual.';
+	@override String get emptyState => 'Nenhuma nota corresponde às configurações atuais. Tente alterar o intervalo de tempo ou o escopo de privacidade.';
+	@override String noteCount({required Object count}) => 'Notas ${count}';
+	@override String tokenCount({required Object count}) => 'Tokens ${count}';
+}
+
+// Path: strings.aiInsight.templates
+class _StringsStringsAiInsightTemplatesPtBr extends _StringsStringsAiInsightTemplatesEn {
+	_StringsStringsAiInsightTemplatesPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get defaultTitle => 'Modelos padrão';
+	@override String get defaultSubtitle => 'Comece com as visualizações de análise integradas.';
+	@override String get showDefault => 'Mostrar modelos padrão';
+	@override String get hideDefault => 'Ocultar modelos padrão';
+	@override String get hiddenHint => 'Os modelos padrão estão ocultos.';
+	@override String get customTitle => 'Modelos personalizados';
+	@override String get customSubtitle => 'Crie até 10 modelos para diferentes objetivos de análise.';
+	@override String get newTemplate => 'Novo modelo';
+	@override String get emptyTitle => 'Ainda não há modelos personalizados';
+	@override String get emptyDescription => 'Crie até 10 modelos para diferentes ângulos de visão.';
+	@override String maxTemplatesReached({required Object max}) => 'Você pode adicionar até modelos ${max}.';
+	@override String get deleteDialogTitle => 'Excluir modelo personalizado';
+	@override String get deleteDialogDescription => 'Excluir este modelo não removerá o histórico existente.';
+	@override String get moreActions => 'Mais ações';
+	@override String get editAction => 'Editar';
+	@override String get deleteAction => 'Excluir';
+}
+
+// Path: strings.aiInsight.cards
+class _StringsStringsAiInsightCardsPtBr extends _StringsStringsAiInsightCardsEn {
+	_StringsStringsAiInsightCardsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override late final _StringsStringsAiInsightCardsTodayCluesPtBr todayClues = _StringsStringsAiInsightCardsTodayCluesPtBr._(_root);
+	@override late final _StringsStringsAiInsightCardsEmotionMapPtBr emotionMap = _StringsStringsAiInsightCardsEmotionMapPtBr._(_root);
+	@override late final _StringsStringsAiInsightCardsThemeResonancePtBr themeResonance = _StringsStringsAiInsightCardsThemeResonancePtBr._(_root);
+	@override late final _StringsStringsAiInsightCardsThoughtTracePtBr thoughtTrace = _StringsStringsAiInsightCardsThoughtTracePtBr._(_root);
+	@override late final _StringsStringsAiInsightCardsBlindSpotDiscoveryPtBr blindSpotDiscovery = _StringsStringsAiInsightCardsBlindSpotDiscoveryPtBr._(_root);
+	@override late final _StringsStringsAiInsightCardsRelationshipViewPtBr relationshipView = _StringsStringsAiInsightCardsRelationshipViewPtBr._(_root);
+	@override late final _StringsStringsAiInsightCardsActionExtractionPtBr actionExtraction = _StringsStringsAiInsightCardsActionExtractionPtBr._(_root);
+	@override late final _StringsStringsAiInsightCardsLongTermTrajectoryPtBr longTermTrajectory = _StringsStringsAiInsightCardsLongTermTrajectoryPtBr._(_root);
+}
+
+// Path: strings.legacy.app_language
+class _StringsStringsLegacyAppLanguagePtBr extends _StringsStringsLegacyAppLanguageEn {
+	_StringsStringsLegacyAppLanguagePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => 'Seguir sistema';
+	@override String get zh_hans => 'Chinês (simplificado)';
+	@override String get zh_hant_tw => 'Chinês (tradicional, Taiwan)';
+	@override String get en => 'Inglês';
+	@override String get ja => 'Japonês';
+	@override String get de => 'Alemão';
+	@override String get pt_br => 'Português (Brasil)';
+}
+
+// Path: strings.legacy.app_theme
+class _StringsStringsLegacyAppThemePtBr extends _StringsStringsLegacyAppThemeEn {
+	_StringsStringsLegacyAppThemePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => 'Sistema';
+	@override String get light => 'Luz';
+	@override String get dark => 'Escuro';
+}
+
+// Path: strings.legacy.app_font_size
+class _StringsStringsLegacyAppFontSizePtBr extends _StringsStringsLegacyAppFontSizeEn {
+	_StringsStringsLegacyAppFontSizePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get standard => 'Padrão';
+	@override String get large => 'Grande';
+	@override String get small => 'Pequeno';
+}
+
+// Path: strings.legacy.app_line_height
+class _StringsStringsLegacyAppLineHeightPtBr extends _StringsStringsLegacyAppLineHeightEn {
+	_StringsStringsLegacyAppLineHeightPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get classic => 'Clássico';
+	@override String get compact => 'Compacto';
+	@override String get relaxed => 'Relaxado';
+}
+
+// Path: strings.legacy.launch_action
+class _StringsStringsLegacyLaunchActionPtBr extends _StringsStringsLegacyLaunchActionEn {
+	_StringsStringsLegacyLaunchActionPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get none => 'Nenhum';
+	@override String get sync => 'Sincronizar';
+	@override String get quick_input => 'Entrada Rápida';
+	@override String get daily_review => 'Revisão Aleatória';
+}
+
+// Path: strings.legacy.auto_lock_time
+class _StringsStringsLegacyAutoLockTimePtBr extends _StringsStringsLegacyAutoLockTimeEn {
+	_StringsStringsLegacyAutoLockTimePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get immediately => 'Imediatamente';
+	@override String get after_1_min => '1 minuto';
+	@override String get after_5_min => '5 minutos';
+	@override String get after_15_min => '15 minutos';
+}
+
+// Path: strings.legacy.reminder
+class _StringsStringsLegacyReminderPtBr extends _StringsStringsLegacyReminderEn {
+	_StringsStringsLegacyReminderPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get default_title => 'Ei, lembra dessa ideia?';
+	@override String get default_body => 'Toque para ver detalhes';
+}
+
+// Path: strings.legacy.location
+class _StringsStringsLegacyLocationPtBr extends _StringsStringsLegacyLocationEn {
+	_StringsStringsLegacyLocationPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get current => 'Localização atual';
+}
+
+// Path: strings.legacy.webdav
+class _StringsStringsLegacyWebdavPtBr extends _StringsStringsLegacyWebdavEn {
+	_StringsStringsLegacyWebdavPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get not_configured => 'WebDAV não está configurado';
+	@override String get backup_disabled => 'O backup está desativado';
+	@override String get backup_account_missing => 'Conta faltando para backup';
+	@override String get backup_local_only => 'O backup está disponível apenas para bibliotecas locais';
+	@override String get backup_password_missing => 'Falta senha de backup';
+	@override String get backup_no_memo_files => 'Nenhum arquivo de memorando encontrado na biblioteca local; backup cancelado';
+	@override String get restore_account_missing => 'Conta faltando para restauração';
+	@override String get restore_local_only => 'A restauração está disponível apenas para bibliotecas locais';
+	@override String get backup_empty => 'O backup está vazio';
+	@override String get backup_no_memos => 'Nenhum memorando encontrado no backup';
+	@override String get snapshot_missing => 'Instantâneo de backup ausente';
+	@override String get snapshot_corrupted => 'Instantâneo de backup corrompido';
+	@override String get object_missing => 'Objeto de backup ausente';
+	@override String get config_corrupted => 'Configuração de backup corrompida';
+	@override String get config_invalid => 'Configuração de backup inválida';
+	@override String get password_invalid => 'Senha de backup inválida';
+	@override String get data_corrupted => 'Dados de backup corrompidos';
+	@override String get server_url_invalid => 'Servidor WebDAV URL inválido';
+	@override String get recover_password_title => 'Recuperar senha de backup';
+	@override String get recover_password_button => 'Recuperar';
+	@override String get recover_password_hint => 'Redefinir senha de backup com código de segurança';
+	@override String get recovery_code_title => 'Código de segurança';
+	@override String get recovery_code_enter => 'Insira o código de segurança';
+	@override String get recovery_code_enter_new_password => 'Digite a nova senha';
+	@override String get recovery_code_setup_message => 'A senha de backup está definida. Salve este código de segurança agora. Se a senha for esquecida, somente este código poderá redefini-la.';
+	@override String get recovery_code_reset_message => 'A senha de backup foi redefinida. Salve o novo código de segurança, o código anterior não é mais válido.';
+	@override String get recovery_code_copied => 'Código de segurança copiado';
+	@override String get recovery_reset_success => 'Redefinição de senha de backup';
+	@override String get recovery_code_invalid => 'Código de segurança inválido. Verifique e tente novamente.';
+	@override String get recovery_not_configured => 'A recuperação do código de segurança ainda não está habilitada para este backup.';
+}
+
+// Path: strings.legacy.app_drawer
+class _StringsStringsLegacyAppDrawerPtBr extends _StringsStringsLegacyAppDrawerEn {
+	_StringsStringsLegacyAppDrawerPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String tooltip_single({required Object date, required Object weekday, required Object count}) => '${date} (${weekday}) · Memorando ${count}';
+	@override String tooltip_multi({required Object date, required Object weekday, required Object count}) => '${date} (${weekday}) · Memorandos ${count}';
+}
+
+// Path: strings.legacy.ai_summary
+class _StringsStringsLegacyAiSummaryPtBr extends _StringsStringsLegacyAiSummaryEn {
+	_StringsStringsLegacyAiSummaryPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get error_api_key_empty => 'A chave API está vazia';
+	@override late final _StringsStringsLegacyAiSummarySystemPtBr system = _StringsStringsLegacyAiSummarySystemPtBr._(_root);
+	@override late final _StringsStringsLegacyAiSummaryUserPtBr user = _StringsStringsLegacyAiSummaryUserPtBr._(_root);
+	@override String get error_invalid_response => 'A resposta AI tem um formato inválido';
+	@override String get error_empty_response => 'A resposta AI está vazia';
+	@override String get error_missing_content => 'O conteúdo da resposta AI está faltando';
+	@override String get default_prompt => 'Você é um assistente de notas minimalista. Extraia os pontos principais e apresente-os em um formato limpo. Mantenha o tom profissional, caloroso e conciso. Prefira listas e parágrafos curtos.';
+}
+
+// Path: strings.collections.reader
+class _StringsStringsCollectionsReaderPtBr extends _StringsStringsCollectionsReaderEn {
+	_StringsStringsCollectionsReaderPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get comingSoon => 'Em breve';
+	@override String get manageCollectionItems => 'Gerenciar itens de coleção';
+	@override String get currentMemoActions => 'Ações atuais do memorando';
+	@override String get pageAnimationTooltip => 'Animação de página';
+	@override String get pageAnimationNone => 'Sem animação';
+	@override String get pageAnimationSlide => 'Slide';
+	@override String get pageAnimationSimulation => 'Simulação';
+	@override String progressPage({required Object current, required Object total}) => 'Página ${current}/${total}';
+	@override String progressMemo({required Object current, required Object total}) => 'Memorando ${current}/${total}';
+	@override String get settingsTitle => 'Configurações do leitor';
+	@override String get themePreset => 'Predefinição de tema';
+	@override String get themePaper => 'Papel';
+	@override String get themeEyeCare => 'Cuidados com os olhos';
+	@override String get themeDark => 'Escuro';
+	@override String get themeGray => 'Cinza';
+	@override String get brightnessMode => 'Modo de brilho';
+	@override String get brightnessSystem => 'Sistema';
+	@override String get brightnessManual => 'Manual';
+	@override String get readerBrightness => 'Brilho do leitor';
+	@override String get textScale => 'Escala de texto';
+	@override String get lineSpacing => 'Espaçamento entre linhas';
+	@override String get pagePadding => 'Preenchimento de página';
+	@override String get autoPageTitle => 'Página automática';
+	@override String get autoPageStart => 'Iniciar';
+	@override String get autoPageStop => 'Parar';
+	@override String get autoPageSecondsPerPage => 'Segundos/página';
+	@override String get styleTitle => 'Estilo do leitor';
+	@override String get backgroundStyle => 'Estilo de fundo';
+	@override String get backgroundTypePreset => 'Predefinição';
+	@override String get backgroundTypeSolid => 'Sólido';
+	@override String get backgroundTypeImage => 'Imagem';
+	@override String get backgroundAlpha => 'Fundo alfa';
+	@override String get typography => 'Tipografia';
+	@override String get readerFont => 'Fonte do leitor';
+	@override String get fontSystemDefault => 'Padrão do sistema';
+	@override String get fontWeightNormal => 'Normal';
+	@override String get fontWeightMedium => 'Médio';
+	@override String get fontWeightBold => 'Negrito';
+	@override String get letterSpacing => 'Espaçamento entre letras';
+	@override String get paragraphSpacing => 'Espaçamento entre parágrafos';
+	@override String get firstLineIndent => 'Recuo da primeira linha';
+	@override String get tipSettingsTitle => 'Configurações da barra de dicas';
+	@override String get tipSettingsSubtitle => 'Título, cabeçalho, rodapé, cores das pontas';
+	@override String get paddingSettingsTitle => 'Configurações de preenchimento';
+	@override String get paddingSettingsSubtitle => 'Preenchimento do corpo/cabeçalho/rodapé';
+	@override String get brightness => 'Brilho';
+	@override String get customSolidColor => 'Cor sólida personalizada';
+	@override String get backgroundColor => 'Cor de fundo';
+	@override String get backgroundImage => 'Imagem de fundo';
+	@override String get backgroundImageUnavailableWeb => 'O plano de fundo do arquivo de imagem não está disponível na Web.';
+	@override String get backgroundImagePickHint => 'Escolha um arquivo de imagem para o fundo do leitor.';
+	@override String get clearImageBackground => 'Limpar fundo da imagem';
+	@override String get titleSection => 'Título';
+	@override String get titleModeLeft => 'Esquerda';
+	@override String get titleModeCenter => 'Centro';
+	@override String get titleModeHidden => 'Oculto';
+	@override String get titleScale => 'Escala de título';
+	@override String get titleTopSpacing => 'Espaçamento superior do título';
+	@override String get titleBottomSpacing => 'Espaçamento inferior do título';
+	@override String get headerFooterSection => 'Cabeçalho/rodapé';
+	@override String get headerMode => 'Modo de cabeçalho';
+	@override String get footerMode => 'Modo rodapé';
+	@override String get headerLeft => 'Cabeçalho esquerdo';
+	@override String get headerCenter => 'Centro do cabeçalho';
+	@override String get headerRight => 'Cabeçalho à direita';
+	@override String get footerLeft => 'Rodapé esquerdo';
+	@override String get footerCenter => 'Rodapé central';
+	@override String get footerRight => 'Rodapé à direita';
+	@override String get tipTextColor => 'Cor do texto da dica';
+	@override String get dividerColor => 'Cor do divisor';
+	@override String get useDefaultLongPressReset => 'Usar padrão (pressione e segure para redefinir)';
+	@override String get tipSlotNone => 'Nenhum';
+	@override String get tipSlotCollectionTitle => 'Título da coleção';
+	@override String get tipSlotChapterTitle => 'Título do capítulo';
+	@override String get tipSlotTime => 'Hora';
+	@override String get tipSlotBattery => 'Bateria';
+	@override String get tipSlotBatteryPercentage => 'Bateria %';
+	@override String get tipSlotPage => 'Página';
+	@override String get tipSlotTotalProgress => 'Progresso';
+	@override String get tipSlotPageAndTotal => 'Página/total';
+	@override String get tipSlotTimeBattery => 'Tempo + bateria';
+	@override String get tipSlotTimeBatteryPercentage => 'Tempo + % de bateria';
+	@override String get tipDisplayHidden => 'Oculto';
+	@override String get tipDisplayInline => 'Embutido';
+	@override String get tipDisplayReserved => 'Reservado';
+	@override String get paddingTitle => 'Preenchimento de página';
+	@override String get paddingBody => 'Corpo';
+	@override String get paddingHeader => 'Cabeçalho';
+	@override String get paddingFooter => 'Rodapé';
+	@override String get paddingTop => 'Superior';
+	@override String get paddingBottom => 'Parte inferior';
+	@override String get paddingLeft => 'Esquerda';
+	@override String get paddingRight => 'Certo';
+	@override String get showHeaderDivider => 'Mostrar divisor de cabeçalho';
+	@override String get showFooterDivider => 'Mostrar divisor de rodapé';
+	@override String get moreSettingsTitle => 'Mais configurações';
+	@override String get moreDisplay => 'Exibição';
+	@override String get moreInput => 'Entrada';
+	@override String get moreContent => 'Conteúdo';
+	@override String get hideStatusBar => 'Ocultar barra de status';
+	@override String get hideNavigationBar => 'Ocultar barra de navegação';
+	@override String get padDisplayCutouts => 'Recortes de exibição do painel';
+	@override String get keepScreenAwake => 'Manter a tela ativa';
+	@override String get barsFollowPageStyle => 'Barras seguem o estilo da página';
+	@override String get showReadTitleAddition => 'Mostrar adição de título lido';
+	@override String get showBrightnessOverlay => 'Mostrar sobreposição de brilho';
+	@override String get mouseWheelPageTurn => 'Viragem de página da roda do mouse';
+	@override String get volumeKeyPageTurn => 'Viragem de página com tecla de volume';
+	@override String get longPressKeyPageTurn => 'Pressione longamente a tecla para virar a página';
+	@override String get touchSlop => 'Toque desleixado';
+	@override String get clickActionsTitle => 'Ações de clique';
+	@override String get clickActionsSubtitle => 'Configurar regiões de toque 3×3';
+	@override String get platformUnavailable => 'Indisponível nesta plataforma';
+	@override String get allowTextSelection => 'Permitir seleção de texto';
+	@override String get previewImageOnTap => 'Pré-visualização da imagem ao tocar';
+	@override String get tapRegionTopLeft => 'Canto superior esquerdo';
+	@override String get tapRegionTopCenter => 'Centro superior';
+	@override String get tapRegionTopRight => 'Canto superior direito';
+	@override String get tapRegionMiddleLeft => 'Meio à esquerda';
+	@override String get tapRegionMiddleCenter => 'Centro central';
+	@override String get tapRegionMiddleRight => 'Meio à direita';
+	@override String get tapRegionBottomLeft => 'Canto inferior esquerdo';
+	@override String get tapRegionBottomCenter => 'Centro inferior';
+	@override String get tapRegionBottomRight => 'Canto inferior direito';
+	@override String get tapActionNone => 'Nenhum';
+	@override String get tapActionMenu => 'Cardápio';
+	@override String get tapActionNextPage => 'Próxima página';
+	@override String get tapActionPrevPage => 'Página anterior';
+	@override String get tapActionNextChapter => 'Próximo capítulo';
+	@override String get tapActionPrevChapter => 'Capítulo anterior';
+	@override String get tapActionToc => 'sumário';
+	@override String get tapActionSearch => 'Pesquisa';
+	@override String get cancel => 'Cancelar';
+	@override String get apply => 'Aplicar';
+	@override String get styleCardsTitle => 'Cartões de estilo';
+	@override String get styleCardNew => 'Novo';
+	@override String get styleCardEditCurrent => 'Editar atual';
+	@override String get styleCardCreateTitle => 'Criar cartão de estilo';
+	@override String get styleCardEditTitle => 'Editar cartão de estilo';
+	@override String get styleCardSave => 'Salvar';
+	@override String get styleCardDelete => 'Excluir';
+	@override String get styleCardNameLabel => 'Nome do estilo';
+	@override String get styleCardBuiltIn => 'Predefinição';
+	@override String get styleCardCustom => 'Personalizado';
+}
+
+// Path: strings.settings.preferences.editorToolbar
+class _StringsStringsSettingsPreferencesEditorToolbarPtBr extends _StringsStringsSettingsPreferencesEditorToolbarEn {
+	_StringsStringsSettingsPreferencesEditorToolbarPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Personalizar barra de ferramentas do editor';
+	@override String get description => 'Pressione e segure as ferramentas para reordená-las ou mova as ferramentas entre a caixa de ferramentas e a barra de ferramentas.';
+	@override String get dragToSort => 'Visualização ao vivo';
+	@override String get toolbox => 'Caixa de ferramentas';
+	@override String get toolboxDescription => 'As ferramentas removidas ficam aqui. Toque em + para adicioná-los novamente ou arraste-os para a barra de ferramentas.';
+	@override String get createCustomButton => 'Personalizado';
+	@override String get toolbarPreview => 'Barra de ferramentas';
+	@override String get toolbarDescription => 'A barra de ferramentas abaixo corresponde ao editor. Toque em - para remover uma ferramenta ou mantenha pressionado para arrastá-la e classificá-la.';
+	@override String get toolboxEmpty => 'Nenhuma ferramenta na caixa de ferramentas no momento';
+	@override String get topRow => 'Linha superior';
+	@override String get bottomRow => 'Linha Inferior';
+	@override String get currentRow => 'Linha';
+	@override String get visible => 'Visível';
+	@override String get hidden => 'Oculto';
+	@override String get emptyRow => 'Arraste os botões aqui';
+	@override String get createCustomDialogTitle => 'Adicionar botão personalizado da barra de ferramentas';
+	@override String get createCustomDialogDescription => 'Crie um botão de inserção reutilizável para trechos de redução e texto usado com frequência.';
+	@override String get customButtonIconLabel => 'Ícone';
+	@override String get customButtonNameLabel => 'Nome';
+	@override String get customButtonNameHint => 'H1';
+	@override String get customButtonNameRequired => 'Por favor insira um nome.';
+	@override String get customButtonContentLabel => 'Inserir conteúdo';
+	@override String get customButtonContentHint => 'Por exemplo: Markdown reutilizável ou texto';
+	@override String get customButtonContentHelp => 'Quando você toca neste botão da barra de ferramentas, este conteúdo é inserido na posição atual do cursor.';
+	@override String get customButtonContentRequired => 'Insira o conteúdo a ser inserido.';
+	@override String get customButtonPreview => 'Visualização';
+	@override late final _StringsStringsSettingsPreferencesEditorToolbarCustomIconsPtBr customIcons = _StringsStringsSettingsPreferencesEditorToolbarCustomIconsPtBr._(_root);
+	@override late final _StringsStringsSettingsPreferencesEditorToolbarActionsPtBr actions = _StringsStringsSettingsPreferencesEditorToolbarActionsPtBr._(_root);
+}
+
+// Path: strings.aiInsight.cards.todayClues
+class _StringsStringsAiInsightCardsTodayCluesPtBr extends _StringsStringsAiInsightCardsTodayCluesEn {
+	_StringsStringsAiInsightCardsTodayCluesPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Dicas de hoje';
+	@override String get description => 'AI destaca os eventos recentes, tensões e ciclos abertos que merecem sua atenção primeiro.';
+}
+
+// Path: strings.aiInsight.cards.emotionMap
+class _StringsStringsAiInsightCardsEmotionMapPtBr extends _StringsStringsAiInsightCardsEmotionMapEn {
+	_StringsStringsAiInsightCardsEmotionMapPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Mapa Emocional';
+	@override String get description => 'Analise o fluxo emocional em suas anotações e veja o que tem moldado seu estado ultimamente.';
+}
+
+// Path: strings.aiInsight.cards.themeResonance
+class _StringsStringsAiInsightCardsThemeResonancePtBr extends _StringsStringsAiInsightCardsThemeResonanceEn {
+	_StringsStringsAiInsightCardsThemeResonancePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Ressonância do Tema';
+	@override String get description => 'Encontre temas repetidos em notas recentes e revele o que você sempre retorna.';
+}
+
+// Path: strings.aiInsight.cards.thoughtTrace
+class _StringsStringsAiInsightCardsThoughtTracePtBr extends _StringsStringsAiInsightCardsThoughtTraceEn {
+	_StringsStringsAiInsightCardsThoughtTracePtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Rastreamento de Pensamento';
+	@override String get description => 'Revele suposições ocultas, questões não resolvidas e linhas de pensamento que valem a pena explorar mais.';
+}
+
+// Path: strings.aiInsight.cards.blindSpotDiscovery
+class _StringsStringsAiInsightCardsBlindSpotDiscoveryPtBr extends _StringsStringsAiInsightCardsBlindSpotDiscoveryEn {
+	_StringsStringsAiInsightCardsBlindSpotDiscoveryPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Descoberta de ponto cego';
+	@override String get description => 'Identifique sinais esquecidos ou padrões sutis que são fáceis de perder durante a escrita.';
+}
+
+// Path: strings.aiInsight.cards.relationshipView
+class _StringsStringsAiInsightCardsRelationshipViewPtBr extends _StringsStringsAiInsightCardsRelationshipViewEn {
+	_StringsStringsAiInsightCardsRelationshipViewPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Visualização de Relacionamento';
+	@override String get description => 'Reformule suas anotações sob as lentes das pessoas, das interações e das mudanças na dinâmica do relacionamento.';
+}
+
+// Path: strings.aiInsight.cards.actionExtraction
+class _StringsStringsAiInsightCardsActionExtractionPtBr extends _StringsStringsAiInsightCardsActionExtractionEn {
+	_StringsStringsAiInsightCardsActionExtractionPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Extração de ação';
+	@override String get description => 'Transforme as reflexões em próximas ações concretas que você pode tentar, testar ou acompanhar.';
+}
+
+// Path: strings.aiInsight.cards.longTermTrajectory
+class _StringsStringsAiInsightCardsLongTermTrajectoryPtBr extends _StringsStringsAiInsightCardsLongTermTrajectoryEn {
+	_StringsStringsAiInsightCardsLongTermTrajectoryPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Trajetória de longo prazo';
+	@override String get description => 'Analise o tempo e identifique mudanças significativas, ciclos recorrentes e mudanças de longo prazo.';
+}
+
+// Path: strings.legacy.ai_summary.system
+class _StringsStringsLegacyAiSummarySystemPtBr extends _StringsStringsLegacyAiSummarySystemEn {
+	_StringsStringsLegacyAiSummarySystemPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get require_json => 'Por favor, imprima JSON estritamente. Não use blocos de código ou texto extra.';
+	@override String get json_format => 'Formato JSON: {"insights":["..."],"moodTrend":"...","palavras-chave":["#..."]}';
+	@override String get insights_rule => 'os insights devem ter de 2 a 5 itens; as palavras-chave devem ter de 4 a 8 itens com #.';
+}
+
+// Path: strings.legacy.ai_summary.user
+class _StringsStringsLegacyAiSummaryUserPtBr extends _StringsStringsLegacyAiSummaryUserEn {
+	_StringsStringsLegacyAiSummaryUserPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String range({required Object rangeLabel}) => 'Intervalo de tempo: ${rangeLabel}';
+	@override String counts({required Object memoCount, required Object includedCount}) => 'Memos: ${memoCount} (incluído para resumo: ${includedCount})';
+	@override String profile({required Object profile}) => 'Perfil de usuário: ${profile}';
+	@override String custom_prompt({required Object customPrompt}) => 'Instruções adicionais: ${customPrompt}';
+	@override String get memo_content => 'Conteúdo do memorando:';
+}
+
+// Path: strings.settings.preferences.editorToolbar.customIcons
+class _StringsStringsSettingsPreferencesEditorToolbarCustomIconsPtBr extends _StringsStringsSettingsPreferencesEditorToolbarCustomIconsEn {
+	_StringsStringsSettingsPreferencesEditorToolbarCustomIconsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get heading1 => 'Título 1';
+	@override String get heading2 => 'Título 2';
+	@override String get heading3 => 'Título 3';
+	@override String get quote => 'Citação';
+	@override String get inlineCode => 'Código embutido';
+	@override String get codeBlock => 'Bloco de código';
+	@override String get task => 'Tarefa';
+	@override String get divider => 'Divisor';
+	@override String get table => 'Tabela';
+	@override String get note => 'Nota';
+}
+
+// Path: strings.settings.preferences.editorToolbar.actions
+class _StringsStringsSettingsPreferencesEditorToolbarActionsPtBr extends _StringsStringsSettingsPreferencesEditorToolbarActionsEn {
+	_StringsStringsSettingsPreferencesEditorToolbarActionsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get italic => 'Itálico';
+	@override String get strikethrough => 'Tachado';
+	@override String get inlineCode => 'Código embutido';
+	@override String get bulletedList => 'Lista com marcadores';
+	@override String get taskList => 'Lista de Tarefas';
+	@override String get quote => 'Citação';
+	@override String get heading1 => 'Título 1';
+	@override String get heading2 => 'Título 2';
+	@override String get heading3 => 'Título 3';
+	@override String get divider => 'Divisor';
+	@override String get inlineMath => 'Matemática Inline';
+	@override String get blockMath => 'Bloco de matemática';
+	@override String get table => 'Tabela';
+	@override String get cutParagraph => 'Parágrafo cortado';
+	@override String get gallery => 'Galeria';
+}
+
+// Path: <root>
 class _StringsZhHans extends Translations {
 	/// You can call this constructor and build your own translation instance of this locale.
 	/// Constructing via the enum [AppLocale.build] is preferred.
@@ -7716,6 +10308,7 @@ class _StringsStringsLanguagesZhHans extends _StringsStringsLanguagesEn {
 	@override String get en => '英语';
 	@override String get ja => '日语';
 	@override String get de => '德语';
+	@override String get ptBr => '葡萄牙语（巴西）';
 }
 
 // Path: strings.languagesNative
@@ -7731,6 +10324,7 @@ class _StringsStringsLanguagesNativeZhHans extends _StringsStringsLanguagesNativ
 	@override String get en => '英语';
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
+	@override String get ptBr => 'Português (Brasil)';
 }
 
 // Path: strings.onboarding
@@ -9711,6 +12305,7 @@ class _StringsStringsLegacyAppLanguageZhHans extends _StringsStringsLegacyAppLan
 	@override String get en => '英语';
 	@override String get ja => '日语';
 	@override String get de => '德语';
+	@override String get pt_br => '葡萄牙语（巴西）';
 }
 
 // Path: strings.legacy.app_theme
@@ -10295,6 +12890,7 @@ class _StringsStringsLanguagesZhHantTw extends _StringsStringsLanguagesEn {
 	@override String get en => '英文';
 	@override String get ja => '日文';
 	@override String get de => '德文';
+	@override String get ptBr => '葡萄牙文（巴西）';
 }
 
 // Path: strings.languagesNative
@@ -10310,6 +12906,7 @@ class _StringsStringsLanguagesNativeZhHantTw extends _StringsStringsLanguagesNat
 	@override String get en => 'English';
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
+	@override String get ptBr => 'Português (Brasil)';
 }
 
 // Path: strings.onboarding
@@ -12234,6 +14831,7 @@ class _StringsStringsLegacyAppLanguageZhHantTw extends _StringsStringsLegacyAppL
 	@override String get en => '英語';
 	@override String get ja => '日語';
 	@override String get de => '德語';
+	@override String get pt_br => '葡萄牙文（巴西）';
 }
 
 // Path: strings.legacy.app_theme
@@ -12757,12 +15355,14 @@ extension on Translations {
 			case 'strings.languages.en': return 'English';
 			case 'strings.languages.ja': return 'Japanese';
 			case 'strings.languages.de': return 'German';
+			case 'strings.languages.ptBr': return 'Portuguese (Brazil)';
 			case 'strings.languagesNative.system': return 'System';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
 			case 'strings.languagesNative.en': return 'English';
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
+			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
 			case 'strings.onboarding.tagline': return 'Minimal, powerful note stream';
 			case 'strings.onboarding.selectLanguage': return 'Select language';
 			case 'strings.onboarding.selectMode': return 'Choose a mode';
@@ -14130,6 +16730,7 @@ extension on Translations {
 			case 'strings.legacy.app_language.en': return 'English';
 			case 'strings.legacy.app_language.ja': return 'Japanese';
 			case 'strings.legacy.app_language.de': return 'German';
+			case 'strings.legacy.app_language.pt_br': return 'Portuguese (Brazil)';
 			case 'strings.legacy.app_theme.system': return 'System';
 			case 'strings.legacy.app_theme.light': return 'Light';
 			case 'strings.legacy.app_theme.dark': return 'Dark';
@@ -14776,12 +17377,14 @@ extension on _StringsDe {
 			case 'strings.languages.en': return 'Englisch';
 			case 'strings.languages.ja': return 'Japanisch';
 			case 'strings.languages.de': return 'Deutsch';
+			case 'strings.languages.ptBr': return 'Portugiesisch (Brasilien)';
 			case 'strings.languagesNative.system': return 'System';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
 			case 'strings.languagesNative.en': return 'English';
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
+			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
 			case 'strings.onboarding.tagline': return 'Minimaler, leistungsstarker Notiz-Stream';
 			case 'strings.onboarding.selectLanguage': return 'Sprache auswählen';
 			case 'strings.onboarding.selectMode': return 'Modus wählen';
@@ -16081,6 +18684,7 @@ extension on _StringsDe {
 			case 'strings.legacy.app_language.en': return 'Englisch';
 			case 'strings.legacy.app_language.ja': return 'Japanisch';
 			case 'strings.legacy.app_language.de': return 'Deutsch';
+			case 'strings.legacy.app_language.pt_br': return 'Portugiesisch (Brasilien)';
 			case 'strings.legacy.app_theme.system': return 'System';
 			case 'strings.legacy.app_theme.light': return 'Hell';
 			case 'strings.legacy.app_theme.dark': return 'Dunkel';
@@ -16689,12 +19293,14 @@ extension on _StringsJa {
 			case 'strings.languages.en': return '英語';
 			case 'strings.languages.ja': return '日本語';
 			case 'strings.languages.de': return 'ドイツ語';
+			case 'strings.languages.ptBr': return 'ポルトガル語（ブラジル）';
 			case 'strings.languagesNative.system': return 'システム';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
 			case 'strings.languagesNative.en': return 'English';
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
+			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
 			case 'strings.onboarding.tagline': return 'ミニマルで強力なノートストリーム';
 			case 'strings.onboarding.selectLanguage': return '言語を選択';
 			case 'strings.onboarding.selectMode': return 'モードを選択';
@@ -17993,6 +20599,7 @@ extension on _StringsJa {
 			case 'strings.legacy.app_language.en': return '英語';
 			case 'strings.legacy.app_language.ja': return '日本語';
 			case 'strings.legacy.app_language.de': return 'ドイツ語';
+			case 'strings.legacy.app_language.pt_br': return 'ポルトガル語（ブラジル）';
 			case 'strings.legacy.app_theme.system': return 'システム';
 			case 'strings.legacy.app_theme.light': return 'ライト';
 			case 'strings.legacy.app_theme.dark': return 'ダーク';
@@ -18580,6 +21187,2028 @@ extension on _StringsJa {
 	}
 }
 
+extension on _StringsPtBr {
+	dynamic _flatMapFunction(String path) {
+		switch (path) {
+			case 'strings.common.back': return 'Voltar';
+			case 'strings.common.cancel': return 'Cancelar';
+			case 'strings.common.confirm': return 'Confirmar';
+			case 'strings.common.save': return 'Salvar';
+			case 'strings.common.saveSettings': return 'Salvar configurações';
+			case 'strings.common.auto': return 'Automático';
+			case 'strings.common.manual': return 'Manual';
+			case 'strings.common.copiedToClipboard': return 'Copiado para a área de transferência';
+			case 'strings.common.serverVersion': return 'Versão do servidor';
+			case 'strings.common.selectValidServerVersion': return 'Selecione uma versão válida do servidor';
+			case 'strings.common.serverVersionValue': return ({required Object version}) => 'Versão do servidor: ${version}';
+			case 'strings.common.serverVersionProbeHint': return 'Antes de entrar, apenas as APIs principais da versão selecionada do servidor são verificadas.';
+			case 'strings.common.selectServerVersionRange021To026': return 'Selecione manualmente uma versão do servidor entre 0.21 e 0.26';
+			case 'strings.languages.system': return 'Seguir sistema';
+			case 'strings.languages.zhHans': return 'Chinês (simplificado)';
+			case 'strings.languages.zhHantTw': return 'Chinês (tradicional, Taiwan)';
+			case 'strings.languages.en': return 'Inglês';
+			case 'strings.languages.ja': return 'Japonês';
+			case 'strings.languages.de': return 'Alemão';
+			case 'strings.languages.ptBr': return 'Português (Brasil)';
+			case 'strings.languagesNative.system': return 'Sistema';
+			case 'strings.languagesNative.zhHans': return '简体中文';
+			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
+			case 'strings.languagesNative.en': return 'English';
+			case 'strings.languagesNative.ja': return '日本語';
+			case 'strings.languagesNative.de': return 'Deutsch';
+			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
+			case 'strings.onboarding.tagline': return 'Fluxo de notas minimalista e poderoso';
+			case 'strings.onboarding.selectLanguage': return 'Selecione o idioma';
+			case 'strings.onboarding.selectMode': return 'Escolha um modo';
+			case 'strings.onboarding.modeHint': return 'Você pode alterar isso depois em Configurações.';
+			case 'strings.onboarding.modeLocalTitle': return 'Modo local';
+			case 'strings.onboarding.modeLocalLabel': return 'MODO LOCAL';
+			case 'strings.onboarding.modeLocalDesc': return 'Os dados permanecem no dispositivo. Não é necessária configuração de servidor, ideal para privacidade e uso offline.';
+			case 'strings.onboarding.modeServerTitle': return 'Modo servidor';
+			case 'strings.onboarding.modeServerLabel': return 'MODO SERVIDOR';
+			case 'strings.onboarding.modeServerDesc': return 'Conecte-se ao seu back-end Memos para sincronização de vários dispositivos em tempo real.';
+			case 'strings.onboarding.localLibraryNameTitle': return 'Nome da biblioteca local';
+			case 'strings.onboarding.localLibraryNameHint': return 'Insira um nome';
+			case 'strings.onboarding.localLibraryDefaultName': return 'Biblioteca local';
+			case 'strings.onboarding.getStarted': return 'Comece';
+			case 'strings.legalConsent.title': return 'Revise os acordos';
+			case 'strings.legalConsent.description': return 'Antes de usar MemoFlow, leia e concorde com o Contrato do Usuário e a Política de Privacidade.';
+			case 'strings.legalConsent.linksHint': return 'Abra os documentos abaixo para revisar o texto completo.';
+			case 'strings.legalConsent.acknowledge': return 'Li e concordo com o Contrato do Usuário e a Política de Privacidade';
+			case 'strings.legalConsent.continueAction': return 'Concordar e continuar';
+			case 'strings.legalConsent.exitAction': return 'Sair do aplicativo';
+			case 'strings.login.title': return 'Conecte-se ao Memos';
+			case 'strings.login.mode.password': return 'Nome de usuário e senha';
+			case 'strings.login.mode.token': return 'Ficha';
+			case 'strings.login.mode.descPassword': return 'Faça login com nome de usuário e senha';
+			case 'strings.login.mode.descToken': return 'Faça login com token de acesso pessoal';
+			case 'strings.login.mode.signInMethod': return 'Método de login';
+			case 'strings.login.field.serverUrlLabel': return 'Servidor URL';
+			case 'strings.login.field.serverUrlHint': return 'localhost:5230';
+			case 'strings.login.field.protocolLabel': return 'Protocolo';
+			case 'strings.login.field.usernameLabel': return 'Nome de usuário';
+			case 'strings.login.field.usernameHint': return 'Digite o nome de usuário';
+			case 'strings.login.field.passwordLabel': return 'Senha';
+			case 'strings.login.field.passwordHint': return 'Digite a senha';
+			case 'strings.login.field.tokenLabel': return 'Token (PAT)';
+			case 'strings.login.field.tokenHint': return 'Token (PAT)';
+			case 'strings.login.validation.serverUrlRequired': return 'Por favor insira o servidor URL';
+			case 'strings.login.validation.serverUrlInvalid': return 'Insira um endereço de servidor válido, como localhost:5230 ou memos.example.com';
+			case 'strings.login.validation.usernameRequired': return 'Por favor, insira o nome de usuário';
+			case 'strings.login.validation.passwordRequired': return 'Por favor insira a senha';
+			case 'strings.login.validation.tokenRequired': return 'Insira o token';
+			case 'strings.login.dialogs.insecureHttpTitle': return 'Usar HTTP?';
+			case 'strings.login.dialogs.insecureHttpMessage': return 'HTTP não é seguro e pode expor sua conta, senha ou token. Continuar mesmo assim?';
+			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'Falha na conexão HTTPS';
+			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return 'Você está usando atualmente HTTPS. Se o seu servidor suportar apenas HTTP, você poderá usar HTTP e tentar novamente. Se o servidor suportar HTTPS, verifique seu certificado ou configuração de proxy reverso.';
+			case 'strings.login.dialogs.switchToHttp': return 'Use HTTP e tente novamente';
+			case 'strings.login.compatibility.title': return 'Modo de compatibilidade';
+			case 'strings.login.compatibility.description': return 'Use endpoints legados (para servidores Memos mais antigos)';
+			case 'strings.login.connect.connecting': return 'Conectando…';
+			case 'strings.login.connect.action': return 'Conectar';
+			case 'strings.login.errors.authFailedToken': return 'Falha na autenticação. Verifique se o token é válido e não expirou.';
+			case 'strings.login.errors.authFailedPat': return 'Falha na autenticação. Para o novo Memos use um PAT começando com memos_pat_ (não cole o prefixo Bearer).';
+			case 'strings.login.errors.connectionFailedWithMessage': return ({required Object message}) => 'Falha na conexão: ${message}';
+			case 'strings.login.errors.connectionFailed': return ({required Object error}) => 'Falha na conexão: ${error}';
+			case 'strings.login.errors.signInFailed': return 'Falha no login. Verifique nome de usuário e senha.';
+			case 'strings.login.errors.signInFailedWithMessage': return ({required Object message}) => 'Falha no login: ${message}';
+			case 'strings.login.errors.invalidServerUrl': return 'Servidor URL inválido';
+			case 'strings.login.errors.serverUrlNormalized': return 'Servidor URL normalizado (segmentos de caminho extras removidos)';
+			case 'strings.settings.preferences.title': return 'Preferências';
+			case 'strings.settings.preferences.language': return 'Idioma';
+			case 'strings.settings.preferences.fontSize': return 'Tamanho da fonte';
+			case 'strings.settings.preferences.lineHeight': return 'Altura da linha';
+			case 'strings.settings.preferences.font': return 'Fonte';
+			case 'strings.settings.preferences.systemDefault': return 'Padrão do sistema';
+			case 'strings.settings.preferences.noSystemFonts': return 'Nenhuma fonte do sistema encontrada';
+			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => 'Falha ao carregar fontes: ${error}';
+			case 'strings.settings.preferences.collapseLongContent': return 'Recolher conteúdo longo';
+			case 'strings.settings.preferences.collapseReferences': return 'Recolher referências';
+			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return 'Mostrar curtidas e comentários em todos os detalhes do memorando';
+			case 'strings.settings.preferences.launchAction': return 'Ação de lançamento';
+			case 'strings.settings.preferences.quickInputKeyboard': return 'Teclado de abertura automática para entrada rápida';
+			case 'strings.settings.preferences.confirmExitOnBack': return 'Confirmar na saída';
+			case 'strings.settings.preferences.editorToolbar.title': return 'Personalizar barra de ferramentas do editor';
+			case 'strings.settings.preferences.editorToolbar.description': return 'Pressione e segure as ferramentas para reordená-las ou mova as ferramentas entre a caixa de ferramentas e a barra de ferramentas.';
+			case 'strings.settings.preferences.editorToolbar.dragToSort': return 'Visualização ao vivo';
+			case 'strings.settings.preferences.editorToolbar.toolbox': return 'Caixa de ferramentas';
+			case 'strings.settings.preferences.editorToolbar.toolboxDescription': return 'As ferramentas removidas ficam aqui. Toque em + para adicioná-los novamente ou arraste-os para a barra de ferramentas.';
+			case 'strings.settings.preferences.editorToolbar.createCustomButton': return 'Personalizado';
+			case 'strings.settings.preferences.editorToolbar.toolbarPreview': return 'Barra de ferramentas';
+			case 'strings.settings.preferences.editorToolbar.toolbarDescription': return 'A barra de ferramentas abaixo corresponde ao editor. Toque em - para remover uma ferramenta ou mantenha pressionado para arrastá-la e classificá-la.';
+			case 'strings.settings.preferences.editorToolbar.toolboxEmpty': return 'Nenhuma ferramenta na caixa de ferramentas no momento';
+			case 'strings.settings.preferences.editorToolbar.topRow': return 'Linha superior';
+			case 'strings.settings.preferences.editorToolbar.bottomRow': return 'Linha Inferior';
+			case 'strings.settings.preferences.editorToolbar.currentRow': return 'Linha';
+			case 'strings.settings.preferences.editorToolbar.visible': return 'Visível';
+			case 'strings.settings.preferences.editorToolbar.hidden': return 'Oculto';
+			case 'strings.settings.preferences.editorToolbar.emptyRow': return 'Arraste os botões aqui';
+			case 'strings.settings.preferences.editorToolbar.createCustomDialogTitle': return 'Adicionar botão personalizado da barra de ferramentas';
+			case 'strings.settings.preferences.editorToolbar.createCustomDialogDescription': return 'Crie um botão de inserção reutilizável para trechos de redução e texto usado com frequência.';
+			case 'strings.settings.preferences.editorToolbar.customButtonIconLabel': return 'Ícone';
+			case 'strings.settings.preferences.editorToolbar.customButtonNameLabel': return 'Nome';
+			case 'strings.settings.preferences.editorToolbar.customButtonNameHint': return 'H1';
+			case 'strings.settings.preferences.editorToolbar.customButtonNameRequired': return 'Por favor insira um nome.';
+			case 'strings.settings.preferences.editorToolbar.customButtonContentLabel': return 'Inserir conteúdo';
+			case 'strings.settings.preferences.editorToolbar.customButtonContentHint': return 'Por exemplo: Markdown reutilizável ou texto';
+			case 'strings.settings.preferences.editorToolbar.customButtonContentHelp': return 'Quando você toca neste botão da barra de ferramentas, este conteúdo é inserido na posição atual do cursor.';
+			case 'strings.settings.preferences.editorToolbar.customButtonContentRequired': return 'Insira o conteúdo a ser inserido.';
+			case 'strings.settings.preferences.editorToolbar.customButtonPreview': return 'Visualização';
+			case 'strings.settings.preferences.editorToolbar.customIcons.heading1': return 'Título 1';
+			case 'strings.settings.preferences.editorToolbar.customIcons.heading2': return 'Título 2';
+			case 'strings.settings.preferences.editorToolbar.customIcons.heading3': return 'Título 3';
+			case 'strings.settings.preferences.editorToolbar.customIcons.quote': return 'Citação';
+			case 'strings.settings.preferences.editorToolbar.customIcons.inlineCode': return 'Código embutido';
+			case 'strings.settings.preferences.editorToolbar.customIcons.codeBlock': return 'Bloco de código';
+			case 'strings.settings.preferences.editorToolbar.customIcons.task': return 'Tarefa';
+			case 'strings.settings.preferences.editorToolbar.customIcons.divider': return 'Divisor';
+			case 'strings.settings.preferences.editorToolbar.customIcons.table': return 'Tabela';
+			case 'strings.settings.preferences.editorToolbar.customIcons.note': return 'Nota';
+			case 'strings.settings.preferences.editorToolbar.actions.italic': return 'Itálico';
+			case 'strings.settings.preferences.editorToolbar.actions.strikethrough': return 'Tachado';
+			case 'strings.settings.preferences.editorToolbar.actions.inlineCode': return 'Código embutido';
+			case 'strings.settings.preferences.editorToolbar.actions.bulletedList': return 'Lista com marcadores';
+			case 'strings.settings.preferences.editorToolbar.actions.taskList': return 'Lista de Tarefas';
+			case 'strings.settings.preferences.editorToolbar.actions.quote': return 'Citação';
+			case 'strings.settings.preferences.editorToolbar.actions.heading1': return 'Título 1';
+			case 'strings.settings.preferences.editorToolbar.actions.heading2': return 'Título 2';
+			case 'strings.settings.preferences.editorToolbar.actions.heading3': return 'Título 3';
+			case 'strings.settings.preferences.editorToolbar.actions.divider': return 'Divisor';
+			case 'strings.settings.preferences.editorToolbar.actions.inlineMath': return 'Matemática Inline';
+			case 'strings.settings.preferences.editorToolbar.actions.blockMath': return 'Bloco de matemática';
+			case 'strings.settings.preferences.editorToolbar.actions.table': return 'Tabela';
+			case 'strings.settings.preferences.editorToolbar.actions.cutParagraph': return 'Parágrafo cortado';
+			case 'strings.settings.preferences.editorToolbar.actions.gallery': return 'Galeria';
+			case 'strings.settings.preferences.appearance': return 'Aparência';
+			case 'strings.settings.preferences.themeColor': return 'Cor do tema';
+			case 'strings.settings.preferences.haptics': return 'Tátil';
+			case 'strings.settings.preferences.customTheme': return 'Tema personalizado';
+			case 'strings.settings.preferences.history': return 'História';
+			case 'strings.settings.preferences.lightMode': return 'Modo Luz';
+			case 'strings.settings.preferences.darkMode': return 'Modo escuro';
+			case 'strings.settings.preferences.surfaces': return 'Superfícies';
+			case 'strings.settings.preferences.background': return 'Plano de fundo';
+			case 'strings.settings.preferences.backgroundColor': return 'Cor de fundo';
+			case 'strings.settings.preferences.card': return 'Cartão';
+			case 'strings.settings.preferences.cardColor': return 'Cor do cartão';
+			case 'strings.settings.preferences.border': return 'Borda';
+			case 'strings.settings.preferences.borderColor': return 'Cor da borda';
+			case 'strings.locationPicker.searchNearbyPlaces': return 'Pesquise lugares próximos';
+			case 'strings.locationPicker.latitudeValue': return ({required Object value}) => 'Latitude ${value}';
+			case 'strings.locationPicker.longitudeValue': return ({required Object value}) => 'Longitude ${value}';
+			case 'strings.locationPicker.noPlacesFound': return 'Nenhum lugar encontrado';
+			case 'strings.locationPicker.mapInitializeFailed': return 'Falha ao inicializar o mapa.';
+			case 'strings.locationPicker.providerNotReady': return 'O provedor de localização não está pronto.';
+			case 'strings.locationPicker.providerMissingAmapKeys': return 'Amap A chave Web API e a chave de segurança são necessárias antes de selecionar um local.';
+			case 'strings.locationPicker.providerMissingBaiduKey': return 'Baidu AK é necessário antes de selecionar um local.';
+			case 'strings.locationPicker.providerMissingGoogleKey': return 'Mapas Google A chave API é necessária antes de selecionar um local.';
+			case 'strings.locationPicker.providerUnsupportedPlatform': return 'O seletor de mapa incorporado está disponível apenas em Android e Windows.';
+			case 'strings.aiInsight.title': return 'AI Insight Studio';
+			case 'strings.aiInsight.subtitle': return 'Deixe o AI ajudá-lo a entender suas anotações de diferentes ângulos.';
+			case 'strings.aiInsight.settingsTitle': return 'Configurações de análise AI';
+			case 'strings.aiInsight.startAnalysis': return 'Iniciar análise';
+			case 'strings.aiInsight.common.enabled': return 'Ativado';
+			case 'strings.aiInsight.common.disabled': return 'Desativado';
+			case 'strings.aiInsight.timeRange.title': return 'Intervalo de tempo';
+			case 'strings.aiInsight.timeRange.last3Days': return 'Últimos 3 dias';
+			case 'strings.aiInsight.timeRange.last7Days': return 'Últimos 7 dias';
+			case 'strings.aiInsight.timeRange.last30Days': return 'Últimos 30 dias';
+			case 'strings.aiInsight.timeRange.customRange': return 'Intervalo personalizado';
+			case 'strings.aiInsight.privacyScope.title': return 'Escopo de privacidade';
+			case 'strings.aiInsight.privacyScope.includePrivateNotes': return 'Incluir notas privadas';
+			case 'strings.aiInsight.privacyScope.description': return 'Se habilitado, notas privadas também serão enviadas ao modelo AI para análise.';
+			case 'strings.aiInsight.promptSettings.title': return 'Configurações de prompt';
+			case 'strings.aiInsight.promptSettings.editPromptTemplate': return 'Editar modelo de prompt';
+			case 'strings.aiInsight.promptSettings.description': return 'Permite que usuários avançados personalizem o prompt AI usado para este insight.';
+			case 'strings.aiInsight.promptSettings.emptyTemplateHint': return 'Este insight ainda não possui um modelo de prompt. Adicione um antes de iniciar a análise.';
+			case 'strings.aiInsight.promptSettings.editorDescription': return ({required Object insight}) => 'Este modelo será usado ao executar ${insight}.';
+			case 'strings.aiInsight.promptSettings.editorPlaceholder': return 'Descreva o que o AI deve focar, comparar, resumir ou destacar.';
+			case 'strings.aiInsight.promptSettings.clearTemplate': return 'Limpar';
+			case 'strings.aiInsight.contentPreview.title': return 'Visualização do conteúdo';
+			case 'strings.aiInsight.contentPreview.sectionTitle': return 'Visualização do conteúdo';
+			case 'strings.aiInsight.contentPreview.notesToSend': return 'Notas para enviar';
+			case 'strings.aiInsight.contentPreview.estimatedTokens': return 'Tokens estimados';
+			case 'strings.aiInsight.contentPreview.previewContent': return 'Visualizar conteúdo';
+			case 'strings.aiInsight.contentPreview.timeRange': return 'Intervalo de tempo';
+			case 'strings.aiInsight.contentPreview.loading': return 'Preparando visualização…';
+			case 'strings.aiInsight.contentPreview.previewLoadFailed': return 'Falha ao preparar a visualização do conteúdo.';
+			case 'strings.aiInsight.contentPreview.truncatedNotice': return 'O conteúdo foi truncado para permanecer dentro do limite de análise atual.';
+			case 'strings.aiInsight.contentPreview.emptyState': return 'Nenhuma nota corresponde às configurações atuais. Tente alterar o intervalo de tempo ou o escopo de privacidade.';
+			case 'strings.aiInsight.contentPreview.noteCount': return ({required Object count}) => 'Notas ${count}';
+			case 'strings.aiInsight.contentPreview.tokenCount': return ({required Object count}) => 'Tokens ${count}';
+			case 'strings.aiInsight.templates.defaultTitle': return 'Modelos padrão';
+			case 'strings.aiInsight.templates.defaultSubtitle': return 'Comece com as visualizações de análise integradas.';
+			case 'strings.aiInsight.templates.showDefault': return 'Mostrar modelos padrão';
+			case 'strings.aiInsight.templates.hideDefault': return 'Ocultar modelos padrão';
+			case 'strings.aiInsight.templates.hiddenHint': return 'Os modelos padrão estão ocultos.';
+			case 'strings.aiInsight.templates.customTitle': return 'Modelos personalizados';
+			case 'strings.aiInsight.templates.customSubtitle': return 'Crie até 10 modelos para diferentes objetivos de análise.';
+			case 'strings.aiInsight.templates.newTemplate': return 'Novo modelo';
+			case 'strings.aiInsight.templates.emptyTitle': return 'Ainda não há modelos personalizados';
+			case 'strings.aiInsight.templates.emptyDescription': return 'Crie até 10 modelos para diferentes ângulos de visão.';
+			case 'strings.aiInsight.templates.maxTemplatesReached': return ({required Object max}) => 'Você pode adicionar até modelos ${max}.';
+			case 'strings.aiInsight.templates.deleteDialogTitle': return 'Excluir modelo personalizado';
+			case 'strings.aiInsight.templates.deleteDialogDescription': return 'Excluir este modelo não removerá o histórico existente.';
+			case 'strings.aiInsight.templates.moreActions': return 'Mais ações';
+			case 'strings.aiInsight.templates.editAction': return 'Editar';
+			case 'strings.aiInsight.templates.deleteAction': return 'Excluir';
+			case 'strings.aiInsight.cards.todayClues.title': return 'Dicas de hoje';
+			case 'strings.aiInsight.cards.todayClues.description': return 'AI destaca os eventos recentes, tensões e ciclos abertos que merecem sua atenção primeiro.';
+			case 'strings.aiInsight.cards.emotionMap.title': return 'Mapa Emocional';
+			case 'strings.aiInsight.cards.emotionMap.description': return 'Analise o fluxo emocional em suas anotações e veja o que tem moldado seu estado ultimamente.';
+			case 'strings.aiInsight.cards.themeResonance.title': return 'Ressonância do Tema';
+			case 'strings.aiInsight.cards.themeResonance.description': return 'Encontre temas repetidos em notas recentes e revele o que você sempre retorna.';
+			case 'strings.aiInsight.cards.thoughtTrace.title': return 'Rastreamento de Pensamento';
+			case 'strings.aiInsight.cards.thoughtTrace.description': return 'Revele suposições ocultas, questões não resolvidas e linhas de pensamento que valem a pena explorar mais.';
+			case 'strings.aiInsight.cards.blindSpotDiscovery.title': return 'Descoberta de ponto cego';
+			case 'strings.aiInsight.cards.blindSpotDiscovery.description': return 'Identifique sinais esquecidos ou padrões sutis que são fáceis de perder durante a escrita.';
+			case 'strings.aiInsight.cards.relationshipView.title': return 'Visualização de Relacionamento';
+			case 'strings.aiInsight.cards.relationshipView.description': return 'Reformule suas anotações sob as lentes das pessoas, das interações e das mudanças na dinâmica do relacionamento.';
+			case 'strings.aiInsight.cards.actionExtraction.title': return 'Extração de ação';
+			case 'strings.aiInsight.cards.actionExtraction.description': return 'Transforme as reflexões em próximas ações concretas que você pode tentar, testar ou acompanhar.';
+			case 'strings.aiInsight.cards.longTermTrajectory.title': return 'Trajetória de longo prazo';
+			case 'strings.aiInsight.cards.longTermTrajectory.description': return 'Analise o tempo e identifique mudanças significativas, ciclos recorrentes e mudanças de longo prazo.';
+			case 'strings.aiProxy.title': return 'Configurações de proxy';
+			case 'strings.aiProxy.notConfigured': return 'Não configurado';
+			case 'strings.aiProxy.statusHttp': return ({required Object host, required Object port}) => 'HTTP · ${host}:${port}';
+			case 'strings.aiProxy.statusSocks5': return ({required Object host, required Object port}) => 'MEIAS5 · ${host}:${port}';
+			case 'strings.aiProxy.protocol': return 'Protocolo';
+			case 'strings.aiProxy.host': return 'Anfitrião';
+			case 'strings.aiProxy.port': return 'Porta';
+			case 'strings.aiProxy.username': return 'Nome de usuário';
+			case 'strings.aiProxy.password': return 'Senha';
+			case 'strings.aiProxy.bypassLocalAddresses': return 'Ignorar automaticamente endereços locais/privados';
+			case 'strings.aiProxy.description': return 'Afeta apenas serviços AI que habilitam o proxy compartilhado. Modelos locais como Ollama e 127.0.0.1 permanecem diretos por padrão.';
+			case 'strings.aiProxy.useSharedProxy': return 'Usar proxy compartilhado';
+			case 'strings.aiProxy.useSharedProxyDescription': return 'Este serviço utilizará o proxy configurado nas configurações do AI.';
+			case 'strings.aiProxy.incompleteWarning': return 'Este serviço tem proxy habilitado, mas as configurações de proxy compartilhado estão incompletas.';
+			case 'strings.aiProxy.openSettings': return 'Abra as configurações de proxy';
+			case 'strings.aiProxy.saveSuccess': return 'Configurações de proxy salvas.';
+			case 'strings.aiProxy.clearSuccess': return 'Configurações de proxy apagadas.';
+			case 'strings.aiProxy.invalidHost': return 'Insira um host proxy.';
+			case 'strings.aiProxy.invalidPort': return 'Insira uma porta proxy válida entre 1 e 65535.';
+			case 'strings.aiProxy.incompleteError': return '该服务已启用代理,但 AI 代理设置尚未配置完整';
+			case 'strings.aiProxy.testSectionTitle': return 'Teste de proxy';
+			case 'strings.aiProxy.testSectionDescription': return 'Use os valores atuais do formulário para testar se o proxy pode alcançar um site de destino.';
+			case 'strings.aiProxy.testUrl': return 'Teste URL';
+			case 'strings.aiProxy.testAction': return 'Testar conexão';
+			case 'strings.aiProxy.testing': return 'Testando...';
+			case 'strings.aiProxy.invalidTestUrl': return 'Insira um HTTP ou HTTPS URL válido.';
+			case 'strings.aiProxy.testSuccess': return ({required Object statusCode, required Object elapsedMs}) => 'Conexão bem-sucedida · HTTP ${statusCode} · ${elapsedMs} ms';
+			case 'strings.aiProxy.testFailure': return ({required Object message}) => 'Falha na conexão: ${message}';
+			case 'strings.legacy.msg_memos_backend_docs': return 'Documentos de back-end Memos';
+			case 'strings.legacy.msg_remember_moment_feel_warmth_life_take': return 'Lembre-se do momento, sinta o calor da vida.\\nFaça uma revisão rápida todos os dias.';
+			case 'strings.legacy.msg_sure_want_delete_shortcut': return 'Tem certeza de que deseja excluir este atalho?';
+			case 'strings.legacy.msg_scan_completed': return 'Verificação concluída';
+			case 'strings.legacy.msg_confirm': return 'Confirmar';
+			case 'strings.legacy.msg_unable_open_browser_install_browser_app': return 'Não é possível abrir o navegador. Instale um aplicativo de navegador.';
+			case 'strings.legacy.msg_contributors': return 'Contribuintes';
+			case 'strings.legacy.msg_feature_in_progress': return 'Recurso em andamento. Em breve.';
+			case 'strings.legacy.msg_version_description_unknown': return 'Versão: Desconhecida';
+			case 'strings.legacy.msg_version_description_v': return ({required Object version}) => 'Versão: v${version}';
+			case 'strings.legacy.msg_version_description_v_build': return ({required Object version, required Object build}) => 'Versão: v${version} (${build})';
+			case 'strings.legacy.msg_about_website_link': return 'Site Oficial';
+			case 'strings.legacy.msg_about_website_link_subtitle': return 'Visite o site oficial do MemoFlow';
+			case 'strings.legacy.msg_about_privacy_policy': return 'Política de Privacidade';
+			case 'strings.legacy.msg_about_privacy_policy_subtitle': return 'Ver detalhes de privacidade e uso de dados';
+			case 'strings.legacy.msg_about_user_agreement': return 'Contrato do usuário';
+			case 'strings.legacy.msg_about_user_agreement_subtitle': return 'Ver termos de serviço e regras de uso';
+			case 'strings.legacy.msg_about_help_center': return 'Central de Ajuda';
+			case 'strings.legacy.msg_about_help_center_subtitle': return 'Perguntas frequentes e guias de uso';
+			case 'strings.legacy.msg_about_release_notes_subtitle': return 'Ver atualizações de versão e alterar detalhes';
+			case 'strings.legacy.msg_about_submit_feedback': return 'Enviar comentários';
+			case 'strings.legacy.msg_about_submit_feedback_subtitle': return 'Enviar problemas e sugestões de melhorias';
+			case 'strings.legacy.msg_about_contributors_subtitle': return 'Ver contribuidores e lista de doadores';
+			case 'strings.legacy.msg_status_available': return 'Ao vivo';
+			case 'strings.legacy.msg_status_placeholder': return 'Em breve';
+			case 'strings.legacy.msg_debug_tap_logo_enter_debug_tools': return 'Depuração: Toque no logotipo 5 vezes para abrir as ferramentas de depuração';
+			case 'strings.legacy.msg_donors_intro_thanks': return 'Obrigado a todos os usuários que apoiam o MemoFlow.\nSuas doações nos ajudam a manter e melhorar o projeto.\n\nAgradecido abaixo.';
+			case 'strings.legacy.msg_enter_keywords_search_box_query_local': return 'Insira palavras-chave na caixa de pesquisa para consultar conteúdo e tags locais. Funciona off-line; para o primeiro uso, aguarde até que a indexação local termine.';
+			case 'strings.legacy.msg_memo_not_found_locally': return 'Memorando não encontrado localmente';
+			case 'strings.legacy.msg_token': return 'Ficha';
+			case 'strings.legacy.msg_last_7_days': return 'Últimos 7 dias';
+			case 'strings.legacy.msg_search_memo_content': return 'Pesquisar conteúdo do memorando';
+			case 'strings.legacy.msg_retry_started': return 'Nova tentativa iniciada';
+			case 'strings.legacy.msg_last_year_memos': return ({required Object lastYearMemos}) => 'Ano passado: memorandos ${lastYearMemos}';
+			case 'strings.legacy.msg_no_content_yet': return 'Nenhum conteúdo ainda';
+			case 'strings.legacy.msg_no_summary_yet': return 'Ainda não há resumo';
+			case 'strings.legacy.msg_sooner': return 'mais cedo!';
+			case 'strings.legacy.msg_token_copied': return 'Token copiado';
+			case 'strings.legacy.msg_share': return 'Compartilhar';
+			case 'strings.legacy.msg_gallery_permission_required': return 'Permissão da galeria necessária';
+			case 'strings.legacy.msg_basic_settings': return 'Configurações básicas';
+			case 'strings.legacy.msg_bad_ssl_certificate': return 'Certificado SSL inválido.';
+			case 'strings.legacy.msg_no_notifications': return 'Nenhuma notificação';
+			case 'strings.legacy.msg_import_markdown': return 'Importar de Markdown';
+			case 'strings.legacy.msg_upload_zip_package_md_files': return 'Faça upload de um pacote.zip com arquivos.md';
+			case 'strings.legacy.msg_request_send_timeout_try': return 'Tempo limite de envio da solicitação. Tente novamente.';
+			case 'strings.legacy.msg_select_date_range': return 'Selecione o intervalo de datas';
+			case 'strings.legacy.msg_delete_shortcut': return 'Excluir atalho';
+			case 'strings.legacy.msg_auto_lock_time': return 'Tempo de bloqueio automático';
+			case 'strings.legacy.msg_replacing_delete_original_attachment_continue': return 'A substituição excluirá o anexo original. Continuar?';
+			case 'strings.legacy.msg_add_least_one_condition': return 'Adicione pelo menos uma condição.';
+			case 'strings.legacy.msg_upload_images_image_bed_append_links': return 'Faça upload de imagens para a base de imagens e anexe links ao memorando.';
+			case 'strings.legacy.msg_request_cancelled': return 'Solicitação cancelada.';
+			case 'strings.legacy.msg_generating': return 'Gerando?';
+			case 'strings.legacy.msg_permissions_denied_reminders_disabled': return 'Permissões negadas. Lembretes desativados.';
+			case 'strings.legacy.msg_memoflow_local_reminders': return 'Lembretes locais MemoFlow';
+			case 'strings.legacy.msg_use_legacy_endpoints_older_memos_servers': return 'Use endpoints legados (para servidores Memos mais antigos).';
+			case 'strings.legacy.msg_no_comments_yet': return 'Ainda não há comentários';
+			case 'strings.legacy.msg_open': return 'Aberto';
+			case 'strings.legacy.msg_microphone_permission_required': return 'É necessária permissão para microfone';
+			case 'strings.legacy.msg_failed_react': return ({required Object e}) => 'Falha ao reagir: ${e}';
+			case 'strings.legacy.msg_restore_backup': return 'Restaurar backup?';
+			case 'strings.legacy.msg_qr_saved_gallery': return 'QR salvo na galeria';
+			case 'strings.legacy.msg_no_attachments': return 'Sem anexos';
+			case 'strings.legacy.msg_enable_reminder_permissions': return 'Habilitar permissões de lembrete';
+			case 'strings.legacy.msg_created_time': return 'Hora de criação ↑';
+			case 'strings.legacy.msg_prompt_saved_quick_prompts': return 'Seu prompt será salvo em Prompts rápidos';
+			case 'strings.legacy.msg_remember_password': return 'Lembrar senha';
+			case 'strings.legacy.msg_enter_valid_url': return 'Insira um URL válido';
+			case 'strings.legacy.msg_may_take_few_seconds': return 'Isso pode levar alguns segundos';
+			case 'strings.legacy.msg_local_sync_failed': return ({required Object type, required Object memoError}) => 'Falha na sincronização local (${type}): ${memoError}';
+			case 'strings.legacy.msg_webdav_sync': return 'Backup WebDAV';
+			case 'strings.legacy.msg_clear': return 'Limpar';
+			case 'strings.legacy.msg_clear_recycle_bin_confirm': return 'Limpar lixeira? Todos os itens serão excluídos permanentemente.';
+			case 'strings.legacy.msg_save_failed': return 'Falha ao salvar';
+			case 'strings.legacy.msg_endpoint_not_found_version_mismatch': return 'Endpoint não encontrado (incompatibilidade de versão?)';
+			case 'strings.legacy.msg_enable_webdav_sync': return 'Habilitar backup WebDAV';
+			case 'strings.legacy.msg_local_libraries': return 'Bibliotecas locais';
+			case 'strings.legacy.msg_apply': return 'Aplicar';
+			case 'strings.legacy.msg_restore_only_available_local_libraries': return 'A restauração está disponível apenas para bibliotecas locais.';
+			case 'strings.legacy.msg_sign': return 'Sair?';
+			case 'strings.legacy.msg_reminders_disabled': return 'Os lembretes estão desativados';
+			case 'strings.legacy.msg_downloading': return 'Baixando...';
+			case 'strings.legacy.msg_path': return 'Caminho';
+			case 'strings.legacy.msg_match_any': return 'Corresponde a qualquer';
+			case 'strings.legacy.msg_local_db_pending_queue': return 'BD local + fila pendente';
+			case 'strings.legacy.msg_scan_failed': return ({required Object e}) => 'Falha na verificação: ${e}';
+			case 'strings.legacy.msg_user': return 'Usuário';
+			case 'strings.legacy.msg_pick_future_time': return 'Escolha um horário futuro';
+			case 'strings.legacy.msg_include_pending_queue': return 'Incluir fila pendente';
+			case 'strings.legacy.msg_enter_days': return 'Insira os dias';
+			case 'strings.legacy.msg_times': return 'Vezes';
+			case 'strings.legacy.msg_token_returned_only_once_cannot_fetched': return 'O token é retornado apenas uma vez e não pode ser obtido novamente';
+			case 'strings.legacy.msg_quoted_lines': return ({required Object quoteLines}) => 'Linhas ${quoteLines} cotadas';
+			case 'strings.legacy.msg_use_remote': return 'Usar controle remoto';
+			case 'strings.legacy.msg_enable_memo_location': return 'Habilitar localização do memorando';
+			case 'strings.legacy.msg_failed_get_location': return 'Falha ao obter localização';
+			case 'strings.legacy.msg_after_import_memos_sync_list_automatically': return 'Após a importação, seus memorandos são sincronizados com a lista automaticamente. Para importações ZIP, certifique-se de que a estrutura do arquivo esteja intacta.';
+			case 'strings.legacy.msg_legacy_mode': return 'Modo Legado';
+			case 'strings.legacy.msg_signed': return 'Conectado';
+			case 'strings.legacy.msg_shortcut_includes_advanced_conditions_saving_overwrite': return 'Este atalho inclui condições avançadas. Salvar irá sobrescrevê-los.';
+			case 'strings.legacy.msg_no_results_found': return 'Nenhum resultado encontrado';
+			case 'strings.legacy.msg_reply': return ({required Object replyName}) => 'Responder ${replyName}...';
+			case 'strings.legacy.msg_copy': return 'Copiar';
+			case 'strings.legacy.msg_enable_reminders_memos': return 'Ative lembretes para seus memorandos.';
+			case 'strings.legacy.msg_comment': return 'Comentário';
+			case 'strings.legacy.msg_added_voice_attachment': return 'Adicionado anexo de voz.';
+			case 'strings.legacy.msg_customize_sidebar': return 'Personalizar barra lateral';
+			case 'strings.legacy.msg_customize_quick_entries': return 'Personalizar entradas rápidas';
+			case 'strings.legacy.msg_navigation_mode': return 'Modo de navegação';
+			case 'strings.legacy.msg_navigation_mode_classic': return 'Modo clássico (sem navegação inferior)';
+			case 'strings.legacy.msg_navigation_mode_bottom_bar': return 'Modo de navegação inferior';
+			case 'strings.legacy.msg_navigation_preview': return 'Visualização';
+			case 'strings.legacy.msg_navigation_slot_left_1': return 'Slot Esquerdo 1';
+			case 'strings.legacy.msg_navigation_slot_left_2': return 'Slot Esquerdo 2';
+			case 'strings.legacy.msg_navigation_slot_center': return 'Ação Central';
+			case 'strings.legacy.msg_navigation_slot_right_1': return 'Slot direito 1';
+			case 'strings.legacy.msg_navigation_slot_right_2': return 'Slot direito 2';
+			case 'strings.legacy.msg_quick_entry_slot_1': return 'Entrada Rápida 1';
+			case 'strings.legacy.msg_quick_entry_slot_2': return 'Entrada Rápida 2';
+			case 'strings.legacy.msg_quick_entry_slot_3': return 'Entrada Rápida 3';
+			case 'strings.legacy.msg_coffee_add_drumstick': return '☕ Café é / adicione uma coxinha';
+			case 'strings.legacy.msg_pin': return 'Alfinete';
+			case 'strings.legacy.msg_enter_password_continue': return 'Digite a senha para continuar';
+			case 'strings.legacy.msg_remove_local_library': return 'Remover biblioteca local?';
+			case 'strings.legacy.msg_comment_2': return 'Novo comentário';
+			case 'strings.legacy.msg_sync_all': return 'Sincronizar tudo';
+			case 'strings.legacy.msg_backup_schedule': return 'Programação de backup';
+			case 'strings.legacy.msg_server_error': return 'Erro no servidor';
+			case 'strings.legacy.msg_analyzing_memos': return 'Analisando seus memorandos...';
+			case 'strings.legacy.msg_notification': return 'Notificação';
+			case 'strings.legacy.msg_policy': return 'Política';
+			case 'strings.legacy.msg_failed_load': return ({required Object error}) => 'Falha ao carregar: ${error}';
+			case 'strings.legacy.msg_default_visibility': return 'Visibilidade padrão';
+			case 'strings.legacy.msg_filter': return 'Filtro';
+			case 'strings.legacy.msg_advanced_search': return 'Pesquisa avançada';
+			case 'strings.legacy.msg_imported_memos': return 'Memorandos importados';
+			case 'strings.legacy.msg_token_created': return 'Token criado';
+			case 'strings.legacy.msg_server_response_timeout_try': return 'Tempo limite de resposta do servidor. Tente novamente.';
+			case 'strings.legacy.msg_expiring': return 'Expirando';
+			case 'strings.legacy.msg_delete_task': return 'Excluir tarefa';
+			case 'strings.legacy.msg_body_must_json': return 'O corpo deve ser JSON';
+			case 'strings.legacy.msg_enable': return 'Ativar';
+			case 'strings.legacy.msg_referenced': return 'Referenciado por';
+			case 'strings.legacy.msg_replace_image': return 'Substituir imagem?';
+			case 'strings.legacy.msg_debug_logs': return 'Registros de depuração';
+			case 'strings.legacy.msg_active_tasks': return 'Tarefas ativas';
+			case 'strings.legacy.msg_attachments': return 'Anexos';
+			case 'strings.legacy.msg_range': return 'Faixa';
+			case 'strings.legacy.msg_no_backups_found': return 'Nenhum backup encontrado';
+			case 'strings.legacy.msg_create_memo': return 'Criar memorando';
+			case 'strings.legacy.msg_street': return 'Rua';
+			case 'strings.legacy.msg_display_name': return 'Nome de exibição';
+			case 'strings.legacy.msg_full_text_search': return 'Pesquisa de texto completo';
+			case 'strings.legacy.msg_create_edit_delete_actions_offline_stored': return 'As ações de criação/edição/exclusão off-line são armazenadas localmente e colocadas na fila para sincronização. Eles são enviados em ordem quando estão online. Para evitar erros, as edições não enviadas podem ser mantidas como rascunhos.';
+			case 'strings.legacy.msg_sign_2': return 'Sair';
+			case 'strings.legacy.msg_end_time': return 'Horário de término';
+			case 'strings.legacy.msg_sync_recent_content': return 'Sincronizar conteúdo recente';
+			case 'strings.legacy.msg_resetting_local_data': return 'Redefinindo dados locais...';
+			case 'strings.legacy.msg_incorrect_password': return 'Senha incorreta';
+			case 'strings.legacy.msg_content_cannot_empty': return 'O conteúdo não pode ficar vazio';
+			case 'strings.legacy.msg_preparing': return 'Preparando';
+			case 'strings.legacy.msg_ai_summary_failed': return ({required Object formatSummaryError_e}) => 'Falha no resumo AI: ${formatSummaryError_e}';
+			case 'strings.legacy.msg_manage': return 'Gerenciar';
+			case 'strings.legacy.msg_keep_data_consistent_across_devices': return 'Faça backup dos dados em WebDAV para recuperação.';
+			case 'strings.legacy.msg_playback_failed': return ({required Object e}) => 'Falha na reprodução: ${e}';
+			case 'strings.legacy.msg_path_copied': return 'Caminho copiado';
+			case 'strings.legacy.msg_auth_settings': return 'Configurações de autenticação';
+			case 'strings.legacy.msg_randomly_draw_memo_cards': return 'Compre aleatoriamente seus cartões de memorando';
+			case 'strings.legacy.msg_copy_log_text': return 'Copiar texto do registro';
+			case 'strings.legacy.msg_yes': return 'Sim';
+			case 'strings.legacy.msg_save_open_alipay_scan': return 'Salve e abra Alipay para digitalizar';
+			case 'strings.legacy.msg_signed_but_no_token_returned': return 'Conectado, mas nenhum token retornado';
+			case 'strings.legacy.msg_create_failed': return ({required Object formatError_e_context}) => 'Falha na criação: ${formatError_e_context}';
+			case 'strings.legacy.msg_expand': return 'Expandir';
+			case 'strings.legacy.msg_local_library_only': return 'Somente biblioteca local';
+			case 'strings.legacy.msg_reminder_channel': return 'Canal de lembrete';
+			case 'strings.legacy.msg_grant': return 'Concessão';
+			case 'strings.legacy.msg_import_canceled': return 'Importação cancelada.';
+			case 'strings.legacy.msg_never': return 'Nunca';
+			case 'strings.legacy.msg_release_notes': return 'Notas de versão';
+			case 'strings.legacy.msg_failed_load_references': return 'Falha ao carregar referências';
+			case 'strings.legacy.msg_select_tags': return 'Selecionar tags';
+			case 'strings.legacy.msg_failed_load_try': return 'Falha ao carregar. Por favor, tente novamente.';
+			case 'strings.legacy.msg_logs_copied': return 'Registros copiados';
+			case 'strings.legacy.msg_shortcuts_not_supported_server': return 'Atalhos não são suportados neste servidor.';
+			case 'strings.legacy.msg_reply_2': return ({required Object name}) => 'Responder ${name}...';
+			case 'strings.legacy.msg_anonymous': return 'Anônimo';
+			case 'strings.legacy.msg_username': return 'Nome de usuário';
+			case 'strings.legacy.msg_update_memo': return 'Atualizar memorando';
+			case 'strings.legacy.msg_saved': return ({required Object targetPath}) => 'Salvo em: ${targetPath}';
+			case 'strings.legacy.msg_chinese_simplified': return 'Chinês (simplificado)';
+			case 'strings.legacy.msg_memo_copied': return 'Memorando copiado';
+			case 'strings.legacy.msg_collapse': return 'Recolher';
+			case 'strings.legacy.msg_retry_count_controls_how_many_extra': return 'A contagem de novas tentativas controla quantas tentativas extras são feitas em caso de falha. Valores mais altos podem melhorar o sucesso, mas demoram mais.';
+			case 'strings.legacy.msg_recording_info_missing': return 'Faltam informações de gravação';
+			case 'strings.legacy.msg_sync_task': return 'Tarefa de sincronização';
+			case 'strings.legacy.msg_clear_all_debug_logs': return 'Limpar todos os logs de depuração?';
+			case 'strings.legacy.msg_clear_all_logs': return 'Limpar todos os dados de registro neste dispositivo? Os arquivos exportados não serão excluídos.';
+			case 'strings.legacy.msg_export_finished': return 'Exportação concluída';
+			case 'strings.legacy.msg_failed_stop_recording': return ({required Object e}) => 'Falha ao parar a gravação: ${e}';
+			case 'strings.legacy.msg_my_profile': return 'Meu perfil';
+			case 'strings.legacy.msg_image_bed': return 'Cama de imagem';
+			case 'strings.legacy.msg_failed_open_notification': return ({required Object e}) => 'Falha ao abrir notificação: ${e}';
+			case 'strings.legacy.msg_manual': return 'Manual';
+			case 'strings.legacy.msg_no_html_file_found_zip': return 'Nenhum arquivo HTML encontrado em ZIP.';
+			case 'strings.legacy.msg_also_clear_local_cache_account_offline': return 'Isso também limpará o cache local desta conta (dados off-line/rascunhos/fila de sincronização pendente). Esta ação não pode ser desfeita.';
+			case 'strings.legacy.msg_restore': return 'Restaurar';
+			case 'strings.legacy.msg_auto_backup': return 'Backup automático';
+			case 'strings.legacy.msg_generate_summary': return 'Gerar resumo';
+			case 'strings.legacy.msg_days': return ({required Object stats_activeDays}) => '${stats_activeDays} dias';
+			case 'strings.legacy.msg_count': return '- Contagem';
+			case 'strings.legacy.msg_weekly': return 'Semanalmente';
+			case 'strings.legacy.msg_notifications': return 'Notificações';
+			case 'strings.legacy.msg_backup_failed': return 'Falha no backup';
+			case 'strings.legacy.msg_private': return 'Privado';
+			case 'strings.legacy.msg_filter_tags': return 'Filtrar por tags';
+			case 'strings.legacy.msg_clear_logs': return 'Limpar registros';
+			case 'strings.legacy.msg_logs_cleared': return 'Registros apagados';
+			case 'strings.legacy.msg_unable_open_browser': return 'Não é possível abrir o navegador';
+			case 'strings.legacy.msg_attachment_too_large': return 'Anexo muito grande';
+			case 'strings.legacy.msg_query': return 'Consulta';
+			case 'strings.legacy.msg_match_all': return 'Corresponde a todos';
+			case 'strings.legacy.msg_record_request_response_logs': return 'Registrar registros de solicitação/resposta';
+			case 'strings.legacy.msg_import_file': return 'Importar arquivo';
+			case 'strings.legacy.msg_content_tags': return 'Conteúdo + tags';
+			case 'strings.legacy.msg_feature_not_available_local_library_mode': return 'Este recurso não está disponível no modo de biblioteca local.';
+			case 'strings.legacy.msg_import_failed': return ({required Object e}) => 'Falha na importação: ${e}';
+			case 'strings.legacy.msg_save_memo': return 'Salvar como memorando';
+			case 'strings.legacy.msg_scan_disk_directory_merge_local_database': return 'Verifica o diretório do disco e mescla no banco de dados local? Arquivos ausentes serão tratados como exclusões.';
+			case 'strings.legacy.msg_passwords_not_match': return 'As senhas não coincidem';
+			case 'strings.legacy.msg_signed_2': return ({required Object lastLoginUser}) => 'Conectado como: ${lastLoginUser}';
+			case 'strings.legacy.msg_made_love_note_taking': return 'Feito com amor para fazer anotações';
+			case 'strings.legacy.msg_password_updated_local': return 'Senha atualizada (local)';
+			case 'strings.legacy.msg_retry': return 'Tentar novamente';
+			case 'strings.legacy.msg_memo_stats': return 'Estatísticas do memorando';
+			case 'strings.legacy.msg_shown_only_once_copy_keep_safe': return 'Exibido apenas uma vez, copie e mantenha-o seguro.';
+			case 'strings.legacy.msg_describe_issue_time_repro_steps_etc': return 'Descreva o problema, horário, etapas de reprodução, etc.';
+			case 'strings.legacy.msg_how_many_days_back': return 'Há quantos dias';
+			case 'strings.legacy.msg_local_cache_cleared': return 'Cache local limpo';
+			case 'strings.legacy.msg_none': return 'Nenhum';
+			case 'strings.legacy.msg_body_json': return 'Corpo (JSON)';
+			case 'strings.legacy.msg_download_failed': return ({required Object e}) => 'Falha no download: ${e}';
+			case 'strings.legacy.msg_recycle_bin': return 'Lixeira';
+			case 'strings.legacy.msg_unpin': return 'Desafixar';
+			case 'strings.legacy.msg_advanced_security': return 'Avançado e segurança';
+			case 'strings.legacy.msg_run_issues_memoflow_e_g_sync': return 'Se você tiver problemas no MemoFlow (por exemplo, falhas de sincronização, travamentos), siga as etapas abaixo para nos ajudar a diagnosticar e corrigir o problema mais rapidamente.\\n\\n';
+			case 'strings.legacy.msg_remove_all_reminder_times_memo': return 'Remova todos os horários de lembrete deste memorando.';
+			case 'strings.legacy.msg_no_summary_save': return 'Nenhum resumo para salvar';
+			case 'strings.legacy.msg_reset_language_selection': return 'Redefinir seleção de idioma';
+			case 'strings.legacy.msg_v_30_days': return '30 dias';
+			case 'strings.legacy.msg_e_g_mood_check': return 'por exemplo Verificação de humor';
+			case 'strings.legacy.msg_note_some_tokens_returned_only_once': return 'Dica: Alguns tokens são mostrados apenas uma vez. Salve-os com segurança quando forem exibidos pela primeira vez.';
+			case 'strings.legacy.msg_probe_memo_can_delete': return 'Este memorando foi criado pelo probe MemoFlow API e pode ser excluído com segurança.';
+			case 'strings.legacy.msg_syncing': return 'Sincronizando...';
+			case 'strings.legacy.msg_retention': return 'Retenção';
+			case 'strings.legacy.msg_open_login_screen': return 'Abrir tela de login';
+			case 'strings.legacy.msg_apply_all': return 'Aplicar a todos';
+			case 'strings.legacy.msg_write_something_supports_tag_tasks_x': return 'Escreva algo... Suporta #tag e tarefas [ ] / [x]';
+			case 'strings.legacy.msg_http': return ({required Object base, required Object status, required Object msg}) => '${base} (HTTP ${status}): ${msg}';
+			case 'strings.legacy.msg_single': return 'Solteiro';
+			case 'strings.legacy.msg_delete_memo': return 'Excluir memorando?';
+			case 'strings.legacy.msg_ai_provider': return 'Provedor AI';
+			case 'strings.legacy.msg_release_notes_v': return ({required Object version}) => 'Notas de versão v${version}';
+			case 'strings.legacy.msg_info_only_used_background_ai_summaries': return 'Esta informação é usada apenas como plano de fundo para resumos/relatórios AI e não é sincronizada com o backend.';
+			case 'strings.legacy.msg_not_disturb': return 'Não perturbe';
+			case 'strings.legacy.msg_local_library_import_failed': return ({required Object e}) => 'Falha na importação da biblioteca local: ${e}';
+			case 'strings.legacy.msg_key_insights': return 'Principais insights';
+			case 'strings.legacy.msg_additional_notes_optional': return 'Notas adicionais (opcional)';
+			case 'strings.legacy.msg_server_response_error': return 'Erro de resposta do servidor.';
+			case 'strings.legacy.msg_sort': return 'Classificar';
+			case 'strings.legacy.msg_newest_first': return 'Mais novo primeiro';
+			case 'strings.legacy.msg_oldest_first': return 'Mais antigo primeiro';
+			case 'strings.legacy.msg_open_memo': return 'Abrir memorando';
+			case 'strings.legacy.msg_api_call': return 'Chamada API';
+			case 'strings.legacy.msg_webhooks': return 'Webhooks';
+			case 'strings.legacy.msg_local_library': return 'Biblioteca local';
+			case 'strings.legacy.msg_log_copied': return 'Registro copiado';
+			case 'strings.legacy.msg_last_success': return 'Último sucesso';
+			case 'strings.legacy.msg_restore_cloud': return 'Restaurar da nuvem';
+			case 'strings.legacy.msg_search_public_memos': return 'Pesquisar memorandos públicos';
+			case 'strings.legacy.msg_cancel': return 'Cancelar';
+			case 'strings.legacy.msg_processing': return ({required Object processed, required Object total}) => 'Processando ${processed} / ${total}';
+			case 'strings.legacy.msg_failed_items': return 'Itens com falha';
+			case 'strings.legacy.msg_recording_file_not_found': return 'Arquivo de gravação não encontrado';
+			case 'strings.legacy.msg_local_db_outbox_queue': return 'Banco de dados local + fila de saída';
+			case 'strings.legacy.msg_remove': return 'Remover';
+			case 'strings.legacy.msg_export_format': return 'Formato de exportação';
+			case 'strings.legacy.msg_idle': return 'Inativo';
+			case 'strings.legacy.msg_ago': return ({required Object months}) => '${months} atrás';
+			case 'strings.legacy.msg_no_tags_yet': return 'Ainda não há tags';
+			case 'strings.legacy.msg_version_v': return ({required Object version}) => 'Versão v${version}';
+			case 'strings.legacy.msg_sync': return 'Sincronizar';
+			case 'strings.legacy.msg_done': return 'Concluído';
+			case 'strings.legacy.msg_gallery_permission_required_2': return 'Permissão da galeria necessária';
+			case 'strings.legacy.msg_insufficient_permissions': return 'Permissões insuficientes';
+			case 'strings.legacy.msg_no_download_url_available': return 'Nenhum download URL disponível';
+			case 'strings.legacy.msg_record_create_memos': return 'Registro para criar memorandos';
+			case 'strings.legacy.msg_signing': return 'Fazendo login...';
+			case 'strings.legacy.msg_memoflow_uses_system_location_permission_get': return 'MemoFlow usa permissão de localização do sistema para obter coordenadas e, em seguida, reverter geocódigos por meio do serviço do provedor selecionado (como Amap, Baidu ou Google). Você pode escolher a precisão da exibição acima.';
+			case 'strings.legacy.msg_continue': return 'Continuar';
+			case 'strings.legacy.msg_notification_content_unavailable': return 'Conteúdo da notificação indisponível';
+			case 'strings.legacy.msg_unable_read_file_path': return 'Não foi possível ler o caminho do arquivo.';
+			case 'strings.legacy.msg_all_memos': return 'Todos Memos';
+			case 'strings.legacy.msg_keywords': return 'Palavras-chave';
+			case 'strings.legacy.msg_ai_search_loading_title': return 'A pesquisa AI está procurando memorandos relacionados';
+			case 'strings.legacy.msg_ai_search_loading_message': return 'Indexação, incorporação e classificação de notas locais para esta consulta.';
+			case 'strings.legacy.msg_ai_search_needs_embedding_model': return 'A pesquisa AI precisa de um modelo de incorporação';
+			case 'strings.legacy.msg_ai_search_failed': return 'Falha na pesquisa AI';
+			case 'strings.legacy.msg_ai_search_configure_embedding_model': return 'Configure um modelo de incorporação nas configurações do AI e tente novamente.';
+			case 'strings.legacy.msg_ai_search_back_to_keyword_search': return 'Voltar à pesquisa por palavra-chave';
+			case 'strings.legacy.msg_ai_search_no_matches': return 'Nenhuma correspondência AI encontrada';
+			case 'strings.legacy.msg_ai_search_keyword_available': return 'A pesquisa por palavra-chave ainda está disponível para correspondências exatas de texto.';
+			case 'strings.legacy.msg_ai_search_try_related_memos': return 'Experimente a pesquisa AI para encontrar memorandos semanticamente relacionados.';
+			case 'strings.legacy.msg_ai_search_use_ai_search': return 'Usar pesquisa AI';
+			case 'strings.legacy.msg_ai_search_results_label': return 'Resultados semânticos AI';
+			case 'strings.legacy.msg_ai_search_keyword': return 'Palavra-chave';
+			case 'strings.legacy.msg_ai_search_use_for_related_memos': return 'Use a pesquisa AI para memorandos relacionados';
+			case 'strings.legacy.msg_ai_search_index_confirm_title': return 'Construir índice de pesquisa AI?';
+			case 'strings.legacy.msg_ai_search_index_confirm_remote_message': return 'A pesquisa AI precisa indexar primeiro os blocos de memorando elegíveis. Isso enviará esses pedaços para o modelo de incorporação configurado e poderá consumir a cota ou o custo do provedor.';
+			case 'strings.legacy.msg_ai_search_index_confirm_local_message': return 'A pesquisa AI precisa indexar primeiro os blocos de memorando elegíveis. Isso irá processá-los com seu modelo de incorporação local e poderá usar recursos locais.';
+			case 'strings.legacy.msg_ai_search_index_confirm_token_estimate': return ({required Object count}) => 'Tokens de indexação estimados: ${count}';
+			case 'strings.legacy.msg_ai_search_index_confirm_continue': return 'Continue com a pesquisa AI';
+			case 'strings.legacy.msg_import_result': return 'Resultado de importação';
+			case 'strings.legacy.msg_offline_sync': return 'Sincronização off-line';
+			case 'strings.legacy.msg_imported_memos_local_library': return 'Memorandos importados da biblioteca local';
+			case 'strings.legacy.msg_request_failed': return 'Falha na solicitação';
+			case 'strings.legacy.msg_log_file': return 'Arquivo exportado';
+			case 'strings.legacy.msg_after_confirming_support_unlock_limited_gold': return 'Após confirmar o suporte, você desbloqueará um emblema dourado limitado ou uma promessa eterna de ausência de anúncios (embora nunca tenha havido anúncios).';
+			case 'strings.legacy.msg_failed_open_system_settings': return 'Falha ao abrir as configurações do sistema';
+			case 'strings.legacy.msg_no_mood_trend': return 'Sem tendência de humor';
+			case 'strings.legacy.msg_memoflow_export': return '#Exportação MemoFlow';
+			case 'strings.legacy.msg_sync_queue': return 'Fila de sincronização';
+			case 'strings.legacy.msg_only_delete_sync_task_memo_kept': return 'Exclua apenas a tarefa de sincronização; o memorando será mantido.';
+			case 'strings.legacy.msg_add_home_screen': return 'Adicionar à tela inicial';
+			case 'strings.legacy.msg_past_days': return 'Últimos dias';
+			case 'strings.legacy.msg_poster_generation_failed': return 'Falha na geração do pôster';
+			case 'strings.legacy.msg_failed_load_stats': return ({required Object e}) => 'Falha ao carregar estatísticas: ${e}';
+			case 'strings.legacy.msg_customize_notification': return 'Personalizar notificação';
+			case 'strings.legacy.msg_updated_time': return 'Hora atualizada ↓';
+			case 'strings.legacy.msg_network_connection_failed_check_network': return 'Falha na conexão de rede. Por favor, verifique sua rede.';
+			case 'strings.legacy.msg_special_thanks': return 'Agradecimentos especiais:';
+			case 'strings.legacy.msg_failed_comment': return ({required Object e}) => 'Falha ao comentar: ${e}';
+			case 'strings.legacy.msg_security_key_sig': return 'Chave de segurança (sig)';
+			case 'strings.legacy.msg_save_gallery': return 'Salvar na galeria';
+			case 'strings.legacy.msg_request_sent_confirm_system_prompt': return 'Solicitação enviada. Confirme no prompt do sistema';
+			case 'strings.legacy.msg_server_url': return 'Servidor URL';
+			case 'strings.legacy.msg_period_review': return 'Revisão do Período';
+			case 'strings.legacy.msg_settings_updated': return 'Configurações atualizadas';
+			case 'strings.legacy.msg_backend_0_21_not_supported_import': return 'Backend 0.21 não é suportado para importação. Atualize e tente novamente.';
+			case 'strings.legacy.msg_failed_load_tags': return ({required Object e}) => 'Falha ao carregar tags: ${e}';
+			case 'strings.legacy.msg_enter_email': return 'Insira o e-mail';
+			case 'strings.legacy.msg_add_webhook': return 'Adicionar webhook';
+			case 'strings.legacy.msg_read': return 'Ler';
+			case 'strings.legacy.msg_widgets': return 'Widgets';
+			case 'strings.legacy.msg_default': return 'Padrão';
+			case 'strings.legacy.msg_memo_reminders': return 'Lembretes de memorando';
+			case 'strings.legacy.msg_import_flomo': return 'Importar do Flomo';
+			case 'strings.legacy.msg_import_swashbuckler_diary': return 'Importar do Diário Swashbuckler';
+			case 'strings.legacy.msg_supported_json_markdown_txt_zip': return 'JSON / Markdown / TXT ZIP';
+			case 'strings.legacy.msg_format_fixed_markdown_zip': return 'O formato foi corrigido para Markdown + ZIP';
+			case 'strings.legacy.msg_enter_username_password': return 'Digite nome de usuário e senha';
+			case 'strings.legacy.msg_loading': return 'Carregando...';
+			case 'strings.legacy.msg_test_scheduled': return ({required Object timeLabel, required Object suffix, required Object pendingLabel}) => 'Teste agendado em ${timeLabel}${suffix}${pendingLabel}';
+			case 'strings.legacy.msg_edit_memo': return 'Editar memorando';
+			case 'strings.legacy.msg_save': return 'Salvar';
+			case 'strings.legacy.msg_laboratory': return 'Laboratório';
+			case 'strings.legacy.msg_use_local': return 'Usar local';
+			case 'strings.legacy.msg_retry_sync': return 'Tentar sincronizar novamente';
+			case 'strings.legacy.msg_e_g_my_role_topics_interest': return 'por exemplo, minha função/tópicos de interesse/preferências de estilo de redação?';
+			case 'strings.legacy.msg_confirm_password': return 'Confirmar senha';
+			case 'strings.legacy.msg_not_set': return 'Não definido';
+			case 'strings.legacy.msg_no_memos_day': return 'Nenhum memorando neste dia';
+			case 'strings.legacy.msg_shortcut_name': return 'Nome do atalho';
+			case 'strings.legacy.msg_edit_shortcut': return 'Editar atalho';
+			case 'strings.legacy.msg_days_memos': return 'Dias com memorandos';
+			case 'strings.legacy.msg_delete': return 'Excluir';
+			case 'strings.legacy.msg_test_reminder': return 'Lembrete de teste';
+			case 'strings.legacy.msg_enable_reminders': return 'Ativar lembretes';
+			case 'strings.legacy.msg_links': return 'Links';
+			case 'strings.legacy.msg_location': return 'Localização';
+			case 'strings.legacy.msg_import_file_2': return 'Importar do arquivo';
+			case 'strings.legacy.msg_reply_3': return ({required Object creatorDisplayName_commentCreator_commentMemo_creator}) => 'Responder ${creatorDisplayName_commentCreator_commentMemo_creator}...';
+			case 'strings.legacy.msg_created': return ({required Object widget_createdAtLabel}) => '${widget_createdAtLabel} criado';
+			case 'strings.legacy.msg_notifications_coming_soon': return 'Notificações: em breve';
+			case 'strings.legacy.msg_view_full_contributors': return 'Ver colaboradores completos';
+			case 'strings.legacy.msg_no_times_set': return 'Sem horários definidos';
+			case 'strings.legacy.msg_ignore_tls_errors': return 'Ignorar erros de TLS';
+			case 'strings.legacy.msg_no_content': return 'Sem conteúdo';
+			case 'strings.legacy.msg_about_15_seconds_left': return 'Faltam cerca de 15 segundos';
+			case 'strings.legacy.msg_view_imported_memos': return 'Ver memorandos importados';
+			case 'strings.legacy.msg_load_failed': return 'Falha no carregamento';
+			case 'strings.legacy.msg_disk_content_conflicts_local_pending_changes': return 'O conteúdo do disco entra em conflito com alterações locais pendentes. Use o disco para substituir o conteúdo local.';
+			case 'strings.legacy.msg_all_history_so_far_memoflow_since': return 'Essa é toda a história até agora\\nMEMOFLOW DESDE 2023';
+			case 'strings.legacy.msg_cancelling': return 'Cancelando';
+			case 'strings.legacy.msg_reading_file': return 'Lendo arquivo...';
+			case 'strings.legacy.msg_switch_workspace': return 'Alternar espaço de trabalho';
+			case 'strings.legacy.msg_optional_leave_empty_default': return 'Opcional. Deixe em branco por padrão.';
+			case 'strings.legacy.msg_memo_reminders_2': return 'Lembretes de memorando';
+			case 'strings.legacy.msg_save_failed_2': return ({required Object e}) => 'Falha ao salvar: ${e}';
+			case 'strings.legacy.msg_record_create_memos_sync_later': return 'Grave e crie memorandos (sincronize mais tarde)';
+			case 'strings.legacy.msg_use_https_avoid_ignoring_tls_errors': return 'Use HTTPS e evite ignorar erros de TLS para proteger credenciais.';
+			case 'strings.legacy.msg_failed_load_announcement_config': return 'Falha ao carregar a configuração do anúncio';
+			case 'strings.legacy.msg_shortcuts': return 'Atalhos';
+			case 'strings.legacy.msg_memo': return 'Memorando';
+			case 'strings.legacy.msg_maybe_later': return 'Não me lembre desta versão';
+			case 'strings.legacy.msg_server_connection': return 'Conexão do servidor';
+			case 'strings.legacy.msg_days_2': return 'Dias';
+			case 'strings.legacy.msg_include_archived': return 'Incluir Arquivado';
+			case 'strings.legacy.msg_during_quiet_hours_reminders_silenced': return 'Durante horários de silêncio, os lembretes serão silenciados.';
+			case 'strings.legacy.msg_preview_not_supported_type': return 'Visualização não suportada para este tipo';
+			case 'strings.legacy.msg_failed_load_2': return 'Falha ao carregar';
+			case 'strings.legacy.msg_create_token': return 'Criar novo token';
+			case 'strings.legacy.msg_enter_name': return 'Por favor insira um nome.';
+			case 'strings.legacy.msg_api_url_incorrect': return 'API URL está incorreto.';
+			case 'strings.legacy.msg_user_general_settings': return 'Configurações gerais do usuário';
+			case 'strings.legacy.msg_saved_memo': return 'Salvo como memorando';
+			case 'strings.legacy.msg_restore_failed': return ({required Object e}) => 'Falha na restauração: ${e}';
+			case 'strings.legacy.msg_token_tail': return ({required Object tail}) => 'Ficha de cauda ${tail}';
+			case 'strings.legacy.msg_manual_token': return 'Token manual';
+			case 'strings.legacy.msg_ago_2': return ({required Object years}) => '${years} atrás';
+			case 'strings.legacy.msg_recent_searches': return 'Pesquisas recentes';
+			case 'strings.legacy.msg_restored': return 'Restaurado';
+			case 'strings.legacy.msg_no_contributors_yet': return 'Ainda não há contribuidores';
+			case 'strings.legacy.msg_no_record_yet': return 'Nenhum registro ainda';
+			case 'strings.legacy.msg_reminder': return 'Lembrete';
+			case 'strings.legacy.msg_enter_api_key_ai_settings': return 'Insira a chave API nas configurações AI';
+			case 'strings.legacy.msg_reminder_settings': return 'Configurações de lembrete';
+			case 'strings.legacy.msg_http_2': return ({required Object base, required Object status}) => '${base} (HTTP ${status})';
+			case 'strings.legacy.msg_edit_webhook': return 'Editar webhook';
+			case 'strings.legacy.msg_generate_share_poster': return 'Gerar pôster de compartilhamento';
+			case 'strings.legacy.msg_archive_failed': return ({required Object e}) => 'Falha no arquivamento: ${e}';
+			case 'strings.legacy.msg_comments': return ({required Object widget_commentCount}) => 'Comentários ${widget_commentCount}';
+			case 'strings.legacy.msg_remove_account': return 'Remover conta?';
+			case 'strings.legacy.msg_chinese_traditional': return 'Chinês (Tradicional)';
+			case 'strings.legacy.msg_private_2': return 'Privado';
+			case 'strings.legacy.msg_current_streak': return 'Sequência atual';
+			case 'strings.legacy.msg_generated_ai_memoflow': return 'Gerado por AI · MemoFlow';
+			case 'strings.legacy.msg_edit_completed': return 'Edição concluída';
+			case 'strings.legacy.msg_local': return 'Locais';
+			case 'strings.legacy.msg_edit': return 'Editar';
+			case 'strings.legacy.msg_text': return ({required Object shortUserName_item_sender}) => 'De ${shortUserName_item_sender}';
+			case 'strings.legacy.msg_got': return 'Entendi';
+			case 'strings.legacy.msg_web_api_key': return 'Chave Web API';
+			case 'strings.legacy.msg_preview': return 'Visualização';
+			case 'strings.legacy.msg_enter_password': return 'Por favor insira a senha';
+			case 'strings.legacy.msg_api': return 'API';
+			case 'strings.legacy.msg_ok': return 'OK';
+			case 'strings.legacy.msg_failed_load_shortcuts': return 'Falha ao carregar atalhos.';
+			case 'strings.legacy.msg_after_recording_audio_added_current_draft': return 'Após a gravação, o áudio é adicionado ao rascunho atual como um anexo para que você possa editar antes de enviar. A duração máxima é de 60 minutos; a transcrição pode ser adicionada posteriormente por meio de serviços de terceiros.';
+			case 'strings.legacy.msg_pull_refresh': return 'Puxe para atualizar';
+			case 'strings.legacy.msg_unable_open_photo': return 'Não foi possível abrir a foto';
+			case 'strings.legacy.msg_existing_tokens': return 'Tokens Existentes';
+			case 'strings.legacy.msg_ai_settings': return 'Configurações AI';
+			case 'strings.legacy.msg_app_lock': return 'Bloqueio de aplicativo';
+			case 'strings.legacy.msg_total_notes': return 'Total de notas';
+			case 'strings.legacy.msg_stats_loading': return 'As estatísticas estão carregando';
+			case 'strings.legacy.msg_enter_token_description': return 'Insira uma descrição do token';
+			case 'strings.legacy.msg_enter_token': return 'Insira um token';
+			case 'strings.legacy.msg_api_plugins': return 'API e plug-ins';
+			case 'strings.legacy.msg_parsing_file': return 'Analisando arquivo...';
+			case 'strings.legacy.msg_english': return 'Inglês';
+			case 'strings.legacy.msg_activity_heatmap': return 'Mapa de calor da atividade';
+			case 'strings.legacy.msg_mark_read': return 'Marcar como lido';
+			case 'strings.legacy.msg_request': return 'Solicitação';
+			case 'strings.legacy.msg_sync_failed': return ({required Object type, required Object memoError}) => 'Falha na sincronização (${type}): ${memoError}';
+			case 'strings.legacy.msg_error_copied': return 'Erro copiado';
+			case 'strings.legacy.msg_only_local_index_removed_disk_files': return 'Apenas o índice local será removido; arquivos de disco são mantidos. Isto não pode ser desfeito.';
+			case 'strings.legacy.msg_switch_account': return 'Trocar de conta';
+			case 'strings.legacy.msg_invalid_download_link': return 'Link de download inválido';
+			case 'strings.legacy.msg_about': return 'Sobre';
+			case 'strings.legacy.msg_icon': return 'Ícone';
+			case 'strings.legacy.msg_reset_done_syncing': return 'Redefinição concluída. Sincronizando...';
+			case 'strings.legacy.msg_enter_amap_web_api_key': return 'Insira sua chave Amap Web API';
+			case 'strings.legacy.msg_recycle_bin_coming_soon': return 'Lixeira: em breve';
+			case 'strings.legacy.msg_empty_content': return '(conteúdo vazio)';
+			case 'strings.legacy.msg_note_most_features_offline_stats_ai': return 'Observação: a maioria dos recursos (offline/estatísticas/relatórios AI/exportação) funcionam sem alterações de back-end, mas os tokens são retornados apenas uma vez? Mantenha-os seguros.';
+			case 'strings.legacy.msg_fixed': return 'Corrigido:';
+			case 'strings.legacy.msg_allow_sharing_links_images_other_apps': return 'Permitir o compartilhamento de links ou imagens de outros aplicativos no MemoFlow.';
+			case 'strings.legacy.msg_invalid_request_parameters': return 'Parâmetros de solicitação inválidos';
+			case 'strings.legacy.msg_enter_api_url': return 'Insira API URL';
+			case 'strings.legacy.msg_pending': return ({required Object result_pendingCount}) => '(pendente ${result_pendingCount})';
+			case 'strings.legacy.msg_days_3': return ({required Object currentStreak}) => '${currentStreak} dias';
+			case 'strings.legacy.msg_poster_not_ready_yet': return 'O pôster ainda não está pronto';
+			case 'strings.legacy.msg_generated_memoflow': return 'Gerado por MemoFlow';
+			case 'strings.legacy.msg_enter_name_2': return 'Insira um nome';
+			case 'strings.legacy.msg_version': return 'Versão';
+			case 'strings.legacy.msg_memo_missing_disk_but_has_local': return 'O memorando está faltando no disco, mas possui alterações locais pendentes. Use o disco para excluir localmente.';
+			case 'strings.legacy.msg_legacy_api_compatibility': return 'Compatibilidade API herdada';
+			case 'strings.legacy.msg_sync_parameters': return 'Parâmetros de sincronização';
+			case 'strings.legacy.msg_quick_prompts': return 'Avisos rápidos';
+			case 'strings.legacy.msg_share_failed': return ({required Object e}) => 'Falha no compartilhamento: ${e}';
+			case 'strings.legacy.msg_no_memos_summarize_range': return 'Não há memorandos para resumir neste intervalo';
+			case 'strings.legacy.msg_characters': return 'Caracteres';
+			case 'strings.legacy.msg_capture_every_moment_record': return 'Capture cada momento gravado';
+			case 'strings.legacy.msg_vibration': return 'Vibração';
+			case 'strings.legacy.msg_days_4': return 'dias';
+			case 'strings.legacy.msg_prompt_title': return 'Título do prompt';
+			case 'strings.legacy.msg_show_all': return 'Mostrar tudo';
+			case 'strings.legacy.msg_no_memos_available': return 'Nenhum memorando disponível';
+			case 'strings.legacy.msg_comment_unavailable': return 'Comentário indisponível';
+			case 'strings.legacy.msg_refresh': return 'Atualizar';
+			case 'strings.legacy.msg_syncing_2': return 'Sincronizando';
+			case 'strings.legacy.msg_body': return 'Corpo';
+			case 'strings.legacy.msg_clear_2': return 'Limpar';
+			case 'strings.legacy.msg_third_party_share': return 'Compartilhamento de terceiros';
+			case 'strings.legacy.msg_charging_station': return 'Estação de carregamento';
+			case 'strings.legacy.msg_attachments_2': return 'Anexos';
+			case 'strings.legacy.msg_when_enabled_must_verify_each_app': return 'Quando ativado, você deve verificar cada inicialização do aplicativo. O tempo de bloqueio automático controla quando a verificação é necessária depois que o aplicativo entra em segundo plano.';
+			case 'strings.legacy.msg_add_prompt': return 'Adicionar prompt';
+			case 'strings.legacy.msg_include': return 'Incluir';
+			case 'strings.legacy.msg_created_time_2': return 'Hora de criação ↓';
+			case 'strings.legacy.msg_choose_data_source_start_importing_memos': return 'Escolha uma fonte de dados para começar a importar seus memorandos';
+			case 'strings.legacy.msg_describe_how_want_summary': return 'Descreva como deseja o resumo…';
+			case 'strings.legacy.msg_keep_token_safe_not_share_api': return 'Mantenha seu token seguro e não o compartilhe.\\nO limite de taxa da API é de 60 solicitações por minuto.';
+			case 'strings.legacy.msg_open_2': return 'Aberto';
+			case 'strings.legacy.msg_e_g_claude_3_5_sonnet': return 'por exemplo claude-3-5-soneto-20241022';
+			case 'strings.legacy.msg_failed_request_whitelist': return 'Falha ao solicitar lista de permissões';
+			case 'strings.legacy.msg_notification_deleted': return 'Notificação excluída';
+			case 'strings.legacy.msg_accounts': return 'Contas';
+			case 'strings.legacy.msg_add_local_library': return 'Adicionar biblioteca local';
+			case 'strings.legacy.msg_sign_first': return 'Faça login primeiro';
+			case 'strings.legacy.msg_failed_parse_query': return 'Falha ao analisar a consulta';
+			case 'strings.legacy.msg_note_logs_sanitized_automatically_sensitive_data': return 'Nota: os logs são higienizados automaticamente. Se os dados confidenciais permanecerem, edite antes de enviar.';
+			case 'strings.legacy.msg_add': return 'Adicionar';
+			case 'strings.legacy.msg_failed_load_3': return ({required Object memosError}) => 'Falha ao carregar: ${memosError}';
+			case 'strings.legacy.msg_max_chars_day': return 'Máximo de caracteres/dia';
+			case 'strings.legacy.msg_choose_what_edited_image': return 'Escolha o que fazer com a imagem editada.';
+			case 'strings.legacy.msg_select': return 'Selecione';
+			case 'strings.legacy.msg_unnamed_token': return '(token sem nome)';
+			case 'strings.legacy.msg_name': return 'Nome';
+			case 'strings.legacy.msg_sure_want_delete_webhook': return 'Tem certeza de que deseja excluir este webhook?';
+			case 'strings.legacy.msg_back': return 'Voltar';
+			case 'strings.legacy.msg_no': return 'Não';
+			case 'strings.legacy.msg_untitled': return 'Sem título';
+			case 'strings.legacy.msg_open_language_onboarding': return 'Integração de idioma aberto';
+			case 'strings.legacy.msg_voice_memos': return 'Voz Memos';
+			case 'strings.legacy.msg_unable_open_browser_try': return 'Não foi possível abrir o navegador. Por favor, tente novamente.';
+			case 'strings.legacy.msg_date_range': return 'Período';
+			case 'strings.legacy.msg_not_authenticated': return 'Não autenticado';
+			case 'strings.legacy.msg_back_2': return 'Voltar';
+			case 'strings.legacy.msg_local_library_removed': return 'Biblioteca local removida';
+			case 'strings.legacy.msg_exact_alarm_permission_required': return 'É necessária permissão exata de alarme';
+			case 'strings.legacy.msg_visibility': return 'Visibilidade';
+			case 'strings.legacy.msg_failed_start_recording': return ({required Object e}) => 'Falha ao iniciar a gravação: ${e}';
+			case 'strings.legacy.msg_mood_trend': return 'Tendência de humor';
+			case 'strings.legacy.msg_local_library_name': return 'Nome da biblioteca local';
+			case 'strings.legacy.msg_no_tokens_yet': return 'Nenhum token ainda';
+			case 'strings.legacy.msg_loading_2': return 'Carregando?';
+			case 'strings.legacy.msg_location_permission_denied_permanently': return 'Permissão de localização negada permanentemente';
+			case 'strings.legacy.msg_download': return 'Baixar';
+			case 'strings.legacy.msg_export_time': return '- Tempo de exportação';
+			case 'strings.legacy.msg_enter_password_2': return 'Digite a senha';
+			case 'strings.legacy.msg_no_image_available': return 'Nenhuma imagem disponível';
+			case 'strings.legacy.msg_daily': return 'Diariamente';
+			case 'strings.legacy.msg_no_likes_yet': return 'Ainda não há curtidas';
+			case 'strings.legacy.msg_basics': return 'Noções básicas';
+			case 'strings.legacy.msg_shortcut': return 'Novo atalho';
+			case 'strings.legacy.msg_debug_tools': return 'Ferramentas de depuração';
+			case 'strings.legacy.msg_save_settings': return 'Salvar configurações';
+			case 'strings.legacy.msg_date_range_2': return 'Período';
+			case 'strings.legacy.msg_feedback': return 'Comentários';
+			case 'strings.legacy.msg_image_bed_2': return 'Cama de imagem';
+			case 'strings.legacy.msg_image_compression': return 'Compressão de imagem';
+			case 'strings.legacy.msg_enable_image_compression': return 'Habilitar compactação de imagem';
+			case 'strings.legacy.msg_image_compression_desc': return 'Compacte anexos de imagem recém-adicionados antes do upload.';
+			case 'strings.legacy.msg_image_compression_scope': return 'Aplica-se apenas a anexos recém-adicionados.';
+			case 'strings.legacy.msg_max_side': return 'Lado máximo';
+			case 'strings.legacy.msg_quality': return 'Qualidade';
+			case 'strings.legacy.msg_output_format': return 'Formato de saída';
+			case 'strings.legacy.msg_compression_mode': return 'Modo de compressão';
+			case 'strings.legacy.msg_mode_quality': return 'Qualidade';
+			case 'strings.legacy.msg_mode_size': return 'Tamanho';
+			case 'strings.legacy.msg_lossless': return 'Sem perdas';
+			case 'strings.legacy.msg_keep_metadata': return 'Manter metadados';
+			case 'strings.legacy.msg_skip_if_bigger': return 'Pular se for maior';
+			case 'strings.legacy.msg_resize': return 'Redimensionar';
+			case 'strings.legacy.msg_enable_resize': return 'Habilitar redimensionamento';
+			case 'strings.legacy.msg_resize_mode': return 'Modo de redimensionamento';
+			case 'strings.legacy.msg_resize_width': return 'Largura';
+			case 'strings.legacy.msg_resize_height': return 'Altura';
+			case 'strings.legacy.msg_resize_edge': return 'Borda';
+			case 'strings.legacy.msg_do_not_enlarge': return 'Não ampliar';
+			case 'strings.legacy.msg_resize_mode_no_resize': return 'Sem redimensionamento';
+			case 'strings.legacy.msg_resize_mode_dimensions': return 'Dimensões';
+			case 'strings.legacy.msg_resize_mode_percentage': return 'Porcentagem';
+			case 'strings.legacy.msg_resize_mode_short_edge': return 'Borda curta';
+			case 'strings.legacy.msg_resize_mode_long_edge': return 'Borda longa';
+			case 'strings.legacy.msg_resize_mode_fixed_width': return 'Largura fixa';
+			case 'strings.legacy.msg_resize_mode_fixed_height': return 'Altura fixa';
+			case 'strings.legacy.msg_jpeg': return 'JPEG';
+			case 'strings.legacy.msg_png': return 'PNG';
+			case 'strings.legacy.msg_webp': return 'WebP';
+			case 'strings.legacy.msg_tiff': return 'TIFF';
+			case 'strings.legacy.msg_chroma_subsampling': return 'Subamostragem de croma';
+			case 'strings.legacy.msg_chroma_auto': return 'Automático';
+			case 'strings.legacy.msg_chroma_444': return '4:4:4';
+			case 'strings.legacy.msg_chroma_422': return '4:2:2';
+			case 'strings.legacy.msg_chroma_420': return '4:2:0';
+			case 'strings.legacy.msg_chroma_411': return '4:1:1';
+			case 'strings.legacy.msg_progressive': return 'Progressivo';
+			case 'strings.legacy.msg_optimization_level': return 'Nível de otimização';
+			case 'strings.legacy.msg_method': return 'Método';
+			case 'strings.legacy.msg_uncompressed': return 'Descompactado';
+			case 'strings.legacy.msg_lzw': return 'LZW';
+			case 'strings.legacy.msg_deflate': return 'Esvaziar';
+			case 'strings.legacy.msg_packbits': return 'PacoteBits';
+			case 'strings.legacy.msg_deflate_preset': return 'Predefinição de esvaziamento';
+			case 'strings.legacy.msg_fast': return 'Rápido';
+			case 'strings.legacy.msg_balanced': return 'Equilibrado';
+			case 'strings.legacy.msg_best': return 'Melhor';
+			case 'strings.legacy.msg_size_target': return 'Tamanho desejado';
+			case 'strings.legacy.msg_output_size_unit': return 'Unidade de tamanho';
+			case 'strings.legacy.msg_format_auto': return 'Automático';
+			case 'strings.legacy.msg_output_format_same_as_input': return 'Igual à entrada';
+			case 'strings.legacy.msg_format_jpeg': return 'JPEG';
+			case 'strings.legacy.msg_format_png': return 'PNG';
+			case 'strings.legacy.msg_format_webp': return 'WebP';
+			case 'strings.legacy.msg_format_tiff': return 'TIFF';
+			case 'strings.legacy.msg_bytes': return 'Bytes';
+			case 'strings.legacy.msg_kb': return 'KB';
+			case 'strings.legacy.msg_mb': return 'MB';
+			case 'strings.legacy.msg_percentage': return 'Porcentagem';
+			case 'strings.legacy.msg_lossless_warning': return 'A conversão para um novo formato ou redimensionamento pode degradar a qualidade mesmo quando o modo sem perdas está ativado.';
+			case 'strings.legacy.msg_restoring': return 'Restaurando…';
+			case 'strings.legacy.msg_export': return 'Exportar';
+			case 'strings.legacy.msg_enter_token_name': return 'Insira o nome do token';
+			case 'strings.legacy.msg_start_time': return 'Hora de início';
+			case 'strings.legacy.msg_preparing_file_structure': return 'Preparando estrutura de arquivo';
+			case 'strings.legacy.msg_sign_3': return 'Entrar';
+			case 'strings.legacy.msg_scan_local_library': return 'Digitalizar biblioteca local';
+			case 'strings.legacy.msg_lsky_pro': return 'Lsky Pro';
+			case 'strings.legacy.msg_exact_alarm_permission_off_reminders_may': return 'A permissão exata do alarme está desativada. Os lembretes podem não disparar na hora certa. Abrir configurações agora?';
+			case 'strings.legacy.msg_last_30_days': return 'Últimos 30 dias';
+			case 'strings.legacy.msg_match': return 'Correspondência';
+			case 'strings.legacy.msg_auth_mode': return 'Modo de autenticação';
+			case 'strings.legacy.msg_unsupported_file_type': return 'Tipo de arquivo não suportado.';
+			case 'strings.legacy.msg_only_delete_sync_task': return 'Exclua apenas a tarefa de sincronização.';
+			case 'strings.legacy.msg_change_password': return 'Alterar senha';
+			case 'strings.legacy.msg_saved_2': return 'Salvo';
+			case 'strings.legacy.msg_import_export': return 'Importação/Exportação';
+			case 'strings.legacy.msg_created_2': return 'Criado';
+			case 'strings.legacy.msg_ai_summary': return 'Resumo AI';
+			case 'strings.legacy.msg_progress': return 'Progresso';
+			case 'strings.legacy.msg_replace_memo_image': return 'Substituir imagem do memorando';
+			case 'strings.legacy.msg_app_settings': return 'Configurações do aplicativo';
+			case 'strings.legacy.msg_copy_path': return 'Copiar caminho';
+			case 'strings.legacy.msg_components': return 'Componentes';
+			case 'strings.legacy.msg_no_shortcuts': return 'Sem atalhos';
+			case 'strings.legacy.msg_location_timed_try': return 'O local expirou. Por favor, tente novamente.';
+			case 'strings.legacy.msg_attach_location_info_memos_show_subtle': return 'Anexe informações de localização a memorandos e mostre nomes de lugares sutis.';
+			case 'strings.legacy.msg_send_failed': return ({required Object e}) => 'Falha no envio: ${e}';
+			case 'strings.legacy.msg_repeat': return 'Repetir';
+			case 'strings.legacy.msg_not_signed': return 'Não conectado';
+			case 'strings.legacy.msg_no_webhooks_configured': return 'Nenhum webhooks configurado';
+			case 'strings.legacy.msg_apply_token': return 'Aplicar token';
+			case 'strings.legacy.msg_enable_reminder_permissions_2': return 'Habilitar permissões de lembrete';
+			case 'strings.legacy.msg_enter_backup_password': return 'Digite a senha de backup';
+			case 'strings.legacy.msg_start_backup': return 'Iniciar backup';
+			case 'strings.legacy.msg_last_sync': return 'Última sincronização';
+			case 'strings.legacy.msg_note_export_includes_content_already_synced': return 'Nota: A exportação inclui conteúdo já sincronizado com o banco de dados local (dados offline incluídos).';
+			case 'strings.legacy.msg_enter_username': return 'Digite o nome de usuário';
+			case 'strings.legacy.msg_settings_saved': return 'Configurações salvas';
+			case 'strings.legacy.msg_no_keywords': return 'Sem palavras-chave';
+			case 'strings.legacy.msg_these_settings_apply_newly_created_memos': return 'Essas configurações se aplicam a memorandos recém-criados.';
+			case 'strings.legacy.msg_back_home': return 'Voltar para casa';
+			case 'strings.legacy.msg_quiet_hours': return 'Horário de silêncio';
+			case 'strings.legacy.msg_add_account': return 'Adicionar conta';
+			case 'strings.legacy.msg_reset_complete': return 'Redefinição concluída';
+			case 'strings.legacy.msg_no_shortcuts_configured': return 'Nenhum atalho configurado';
+			case 'strings.legacy.msg_password': return 'Senha';
+			case 'strings.legacy.msg_importing': return 'Importando';
+			case 'strings.legacy.msg_visibility_2': return ({required Object visibilityLabel}) => 'Visibilidade: ${visibilityLabel}';
+			case 'strings.legacy.msg_no_logs_yet': return 'Nenhum registro ainda';
+			case 'strings.legacy.msg_v_9_times_allowed': return 'Até 9 vezes permitidas';
+			case 'strings.legacy.msg_last_14_days': return 'Últimos 14 dias';
+			case 'strings.legacy.msg_location_disabled_enable_settings_first': return 'A localização está desativada. Ative-o primeiro nas configurações.';
+			case 'strings.legacy.msg_add_2': return 'Adicionar';
+			case 'strings.legacy.msg_logs': return 'Registros';
+			case 'strings.legacy.msg_references': return 'Referências';
+			case 'strings.legacy.msg_importing_memos': return 'Importando memorandos...';
+			case 'strings.legacy.msg_account_security': return 'Conta e Segurança';
+			case 'strings.legacy.msg_reminder_2': return 'Lembrete';
+			case 'strings.legacy.msg_enable_scheduled_reminder_notifications': return 'Ative notificações de lembretes agendados.';
+			case 'strings.legacy.msg_no_links': return 'Sem links';
+			case 'strings.legacy.msg_delete_memo_2': return 'Excluir memorando';
+			case 'strings.legacy.msg_one_tap_add_not_supported_add': return 'A adição com um toque não é suportada. Adicione-o no seletor de widget';
+			case 'strings.legacy.msg_password_2': return 'Nova Senha';
+			case 'strings.legacy.msg_processing_content': return 'Processando conteúdo...';
+			case 'strings.legacy.msg_status': return 'Estado';
+			case 'strings.legacy.msg_local_library_added': return 'Biblioteca local adicionada';
+			case 'strings.legacy.msg_failed_open_try': return 'Falha ao abrir. Por favor, tente novamente.';
+			case 'strings.legacy.msg_removed_locally_now_deleted_server_when': return 'Ele será removido localmente agora e excluído do servidor quando estiver online.';
+			case 'strings.legacy.msg_server_url_unavailable': return 'Servidor URL indisponível';
+			case 'strings.legacy.msg_no_release_notes_yet': return 'Ainda não há notas de lançamento';
+			case 'strings.legacy.msg_cancelling_2': return 'Cancelando...';
+			case 'strings.legacy.msg_summaries_selected_range': return 'Resumos no intervalo selecionado';
+			case 'strings.legacy.msg_expand_2': return 'Expandir';
+			case 'strings.legacy.msg_close': return 'Fechar';
+			case 'strings.legacy.msg_more_comments': return ({required Object remainingComments}) => '${remainingComments} mais comentários';
+			case 'strings.legacy.msg_backing': return 'Fazendo backup…';
+			case 'strings.legacy.msg_view_debug_logs': return 'Ver registros de depuração';
+			case 'strings.legacy.msg_location_permission_denied': return 'Permissão de localização negada';
+			case 'strings.legacy.msg_self_repair_reset_heatmap': return 'Auto-reparo: redefinir mapa de calor';
+			case 'strings.legacy.msg_these_settings_changed_locally_remotely_choose': return 'Essas configurações foram alteradas local e remotamente. Escolha qual versão manter.';
+			case 'strings.legacy.msg_not_authenticated_2': return 'Não autenticado.';
+			case 'strings.legacy.msg_action_failed': return ({required Object e}) => 'Ação falhou: ${e}';
+			case 'strings.legacy.msg_shortcut_2': return 'Novo atalho';
+			case 'strings.legacy.msg_url': return 'URL';
+			case 'strings.legacy.msg_no_memos_found_html': return 'Nenhum memorando encontrado em HTML.';
+			case 'strings.legacy.msg_enter_what_want_summarize': return 'Digite o que deseja resumir...';
+			case 'strings.legacy.msg_unable_load_audio_source': return 'Não foi possível carregar a fonte de áudio.';
+			case 'strings.legacy.msg_strategy_id': return 'Estratégia ID';
+			case 'strings.legacy.msg_copy_failed': return ({required Object e}) => 'Falha na cópia: ${e}';
+			case 'strings.legacy.msg_enable_image_bed': return 'Ativar base de imagens';
+			case 'strings.legacy.msg_active': return 'Ativo';
+			case 'strings.legacy.msg_account': return 'Conta';
+			case 'strings.legacy.msg_invalid_webdav_server_url': return 'Servidor WebDAV URL inválido';
+			case 'strings.legacy.msg_keep_local': return 'Manter local';
+			case 'strings.legacy.msg_within_range': return 'Dentro do alcance';
+			case 'strings.legacy.msg_generate_log_file': return 'Exportar pacote de logs';
+			case 'strings.legacy.msg_ai_reports': return 'Relatórios AI';
+			case 'strings.legacy.msg_battery_optimization': return 'Otimização da bateria';
+			case 'strings.legacy.msg_sync_overview': return 'Visão geral da sincronização';
+			case 'strings.legacy.msg_legacy_servers_not_support_search_filters': return 'Servidores legados não suportam filtros de pesquisa; os resultados podem estar incompletos.';
+			case 'strings.legacy.msg_conflicts_detected_run_manual_sync': return 'Conflitos detectados. Execute a sincronização manual.';
+			case 'strings.legacy.msg_authentication_failed_check_token': return 'Falha na autenticação. Verifique o token.';
+			case 'strings.legacy.msg_date_range_3': return 'Período';
+			case 'strings.legacy.msg_help_ai_understand_better': return 'Ajude AI a entender você melhor';
+			case 'strings.legacy.msg_no_search_history': return 'Sem histórico de pesquisa';
+			case 'strings.legacy.msg_enter_api_path': return 'Insira o caminho API';
+			case 'strings.legacy.msg_stats': return 'Estatísticas';
+			case 'strings.legacy.msg_text_2': return 'Novo:';
+			case 'strings.legacy.msg_removing_signing_clear_local_cache_account': return 'Remover/sair limpará o cache local desta conta (dados off-line/rascunhos/fila de sincronização pendente).';
+			case 'strings.legacy.msg_updated_time_2': return 'Hora atualizada ↑';
+			case 'strings.legacy.msg_province': return 'Província';
+			case 'strings.legacy.msg_submitting_sync_queue': return 'Enviando fila de sincronização';
+			case 'strings.legacy.msg_failed': return 'Falha';
+			case 'strings.legacy.msg_set_time': return 'Definir hora';
+			case 'strings.legacy.msg_enable_local_library_backup': return 'Habilitar backup da biblioteca local';
+			case 'strings.legacy.msg_cancel_2': return 'Cancelar';
+			case 'strings.legacy.msg_week': return 'Esta semana';
+			case 'strings.legacy.msg_like': return 'Curtir';
+			case 'strings.legacy.msg_location_services_disabled': return 'Os serviços de localização estão desativados';
+			case 'strings.legacy.msg_clears_local_cache_offline_memos_pending': return 'Isso limpa o cache local (memorandos offline/fila pendente) e aciona uma ressincronização completa. O conteúdo não sincronizado será perdido e pode demorar um pouco. Continuar?';
+			case 'strings.legacy.msg_load_more': return 'Carregar mais';
+			case 'strings.legacy.msg_pull_up_to_load_more': return 'Suba para carregar mais';
+			case 'strings.legacy.msg_release_to_load_more': return 'Solte para carregar mais';
+			case 'strings.legacy.msg_scroll_down_to_load_more': return 'Role para baixo para carregar mais';
+			case 'strings.legacy.msg_loaded_all_content': return 'Todo o conteúdo carregado';
+			case 'strings.legacy.msg_pull_memo_list_refresh_sync_sync': return 'Puxe para baixo na lista de notas para atualizar e sincronizar. A sincronização busca primeiro os itens mais recentes; execute uma sincronização completa periodicamente para manter as estatísticas/mapa de calor completos.';
+			case 'strings.legacy.msg_server_returned_error': return ({required Object code}) => 'Servidor retornou erro (${code}).';
+			case 'strings.legacy.msg_sound_feedback': return 'Som e feedback';
+			case 'strings.legacy.msg_memos_skipped_attachments_skipped': return ({required Object exportedMemoCount, required Object skippedMemoCount, required Object exportedAttachmentCount, required Object skippedAttachmentCount}) => 'Memorandos ${exportedMemoCount} (${skippedMemoCount} ignorados), anexos ${exportedAttachmentCount} (${skippedAttachmentCount} ignorados).';
+			case 'strings.legacy.msg_import_complete': return 'Importação concluída';
+			case 'strings.legacy.msg_text_3': return 'Novo';
+			case 'strings.legacy.msg_max_per_day': return 'Máximo por dia';
+			case 'strings.legacy.msg_permissions_denied': return 'Permissões negadas';
+			case 'strings.legacy.msg_memo_2': return 'Novo memorando';
+			case 'strings.legacy.msg_delete_reminder': return 'Excluir lembrete';
+			case 'strings.legacy.msg_select_month': return 'Selecione o mês';
+			case 'strings.legacy.msg_select_backup': return 'Selecione backup';
+			case 'strings.legacy.msg_no_keywords_2': return '#Sem palavras-chave';
+			case 'strings.legacy.msg_preparing_memo_content': return 'Preparando conteúdo do memorando';
+			case 'strings.legacy.msg_prompt_content': return 'Conteúdo do prompt';
+			case 'strings.legacy.msg_default_prompt_ai_summaries_reports': return 'Prompt padrão para resumos/relatórios AI';
+			case 'strings.legacy.msg_intro': return 'Introdução';
+			case 'strings.legacy.msg_monthly_stats': return 'Estatísticas mensais';
+			case 'strings.legacy.msg_times_2': return 'vezes';
+			case 'strings.legacy.msg_file_has_already_been_imported_skipped': return 'Este arquivo já foi importado. Ignorado.';
+			case 'strings.legacy.msg_token_tail_unknown': return 'Cauda do token desconhecida';
+			case 'strings.legacy.msg_press_back_exit': return 'Pressione voltar novamente para sair';
+			case 'strings.legacy.msg_enter_password_3': return 'Digite a senha';
+			case 'strings.legacy.msg_sync_conflicts': return 'Conflitos de sincronização';
+			case 'strings.legacy.msg_locale': return 'Local';
+			case 'strings.legacy.msg_any': return 'Qualquer';
+			case 'strings.legacy.msg_provider': return 'Provedor';
+			case 'strings.legacy.msg_preview_2': return 'Visualização';
+			case 'strings.legacy.msg_automatically_upload_images_append_links_memo': return 'Carregue imagens automaticamente e anexe links ao memorando.';
+			case 'strings.legacy.msg_import_file_not_found': return 'Arquivo de importação não encontrado.';
+			case 'strings.legacy.msg_today': return 'Hoje';
+			case 'strings.legacy.msg_link_card': return 'Cartão de link';
+			case 'strings.legacy.msg_expiration': return 'Expiração';
+			case 'strings.legacy.msg_summary_prompt_optional': return 'Prompt de resumo (opcional)';
+			case 'strings.legacy.msg_memos': return 'Memos';
+			case 'strings.legacy.msg_recording_file_not_found_2': return 'Arquivo de gravação não encontrado.';
+			case 'strings.legacy.msg_backup_settings': return 'Configurações de backup';
+			case 'strings.legacy.msg_mode': return 'Modo';
+			case 'strings.legacy.msg_no_markdown_memos_found_zip': return 'Nenhum memorando Markdown encontrado no ZIP.';
+			case 'strings.legacy.msg_archived': return 'Arquivado';
+			case 'strings.legacy.msg_update_failed': return ({required Object e}) => 'Falha na atualização: ${e}';
+			case 'strings.legacy.msg_enable_app_lock': return 'Ativar bloqueio de aplicativo';
+			case 'strings.legacy.msg_html_zip': return 'HTML/ZIP';
+			case 'strings.legacy.msg_all': return 'Todos';
+			case 'strings.legacy.msg_model': return 'Modelo';
+			case 'strings.legacy.msg_title': return 'Título';
+			case 'strings.legacy.msg_amap_web_api': return 'Amap Web API';
+			case 'strings.legacy.msg_saved_gallery': return 'Salvo na galeria';
+			case 'strings.legacy.msg_gallery_mobile_only': return 'A galeria está disponível apenas em dispositivos móveis.';
+			case 'strings.legacy.msg_unread': return 'Não lido';
+			case 'strings.legacy.msg_exporting': return 'Exportando...';
+			case 'strings.legacy.msg_network_timeout_try': return 'Tempo limite da rede. Por favor, tente novamente.';
+			case 'strings.legacy.msg_unlock': return 'Desbloquear';
+			case 'strings.legacy.msg_ago_3': return ({required Object diff_inDays}) => '${diff_inDays} atrás';
+			case 'strings.legacy.msg_random_walk_days_ago_exact': return ({required Object days}) => '${days} dias atrás';
+			case 'strings.legacy.msg_random_walk_day_period_dawn': return 'Amanhecer';
+			case 'strings.legacy.msg_random_walk_day_period_morning': return 'Manhã';
+			case 'strings.legacy.msg_random_walk_day_period_noon': return 'Meio-dia';
+			case 'strings.legacy.msg_random_walk_day_period_afternoon': return 'Tarde';
+			case 'strings.legacy.msg_random_walk_day_period_dusk': return 'Crepúsculo';
+			case 'strings.legacy.msg_random_walk_day_period_night': return 'Noite';
+			case 'strings.legacy.msg_deserve_coffee_i_m_pulling_all': return 'Para merecer esse café, estou passando a noite inteira escrevendo 100 linhas de código!';
+			case 'strings.legacy.msg_token_name': return 'Nome do Token';
+			case 'strings.legacy.msg_restore_completed': return 'Restauração concluída';
+			case 'strings.legacy.msg_restore_completed_to_path': return ({required Object path}) => 'Restauração concluída. Arquivos salvos em ${path}';
+			case 'strings.legacy.msg_restore_missing_attachments': return ({required Object count}) => 'Falha no download de alguns anexos: ${count}';
+			case 'strings.legacy.msg_restore_to_directory': return 'Restaurar para diretório';
+			case 'strings.legacy.msg_restore_export_only_notice': return 'A restauração no modo servidor apenas baixa arquivos para o diretório selecionado e não grava de volta no servidor.';
+			case 'strings.legacy.msg_restore_config_confirm_title': return 'Restaurar configurações confidenciais?';
+			case 'strings.legacy.msg_restore_config_confirm_hint': return 'Selecione quais configurações confidenciais serão aplicadas. Outras configurações serão restauradas automaticamente.';
+			case 'strings.legacy.msg_restore_config_item_webdav': return 'Configurações WebDAV';
+			case 'strings.legacy.msg_restore_config_item_image_bed': return 'Configurações da cama de imagem';
+			case 'strings.legacy.msg_restore_config_item_image_compression': return 'Configurações de compactação de imagem';
+			case 'strings.legacy.msg_restore_config_item_app_lock': return 'Configurações de bloqueio de aplicativo';
+			case 'strings.legacy.msg_restore_config_item_ai': return 'Configurações AI';
+			case 'strings.legacy.msg_backup_plain_risk_title': return 'Backup de texto simples';
+			case 'strings.legacy.msg_backup_plain_risk_body': return 'Os backups de texto simples não são criptografados e podem expor dados confidenciais. Continuar?';
+			case 'strings.legacy.msg_backup_config_scope': return 'Configuração de backup';
+			case 'strings.legacy.msg_backup_config_none': return 'Não faça backup da configuração';
+			case 'strings.legacy.msg_backup_config_none_desc': return 'Faça backup apenas de memorandos e anexos.';
+			case 'strings.legacy.msg_backup_config_safe': return 'Somente configuração segura';
+			case 'strings.legacy.msg_backup_config_safe_desc': return 'Faça backup de preferências globais, lembretes, modelos e localização.';
+			case 'strings.legacy.msg_backup_config_full': return 'Todas as configurações (sensíveis)';
+			case 'strings.legacy.msg_backup_config_full_desc': return 'Inclui WebDAV, AI, bloqueio de aplicativo, base de imagem e rascunho.';
+			case 'strings.legacy.msg_backup_config_full_requires_encryption': return 'Todas as configurações requerem backup criptografado.';
+			case 'strings.legacy.msg_skip': return 'Pular';
+			case 'strings.legacy.msg_copied_clipboard': return 'Copiado para a área de transferência';
+			case 'strings.legacy.msg_failed_2': return ({required Object attempts}) => 'Falha ${attempts}';
+			case 'strings.legacy.msg_too_many_requests_try_later': return 'Muitos pedidos. Tente novamente mais tarde.';
+			case 'strings.legacy.msg_more': return 'Mais';
+			case 'strings.legacy.msg_already_whitelisted': return 'Já na lista de permissões';
+			case 'strings.legacy.msg_local_library_backup': return 'Backup da biblioteca local';
+			case 'strings.legacy.msg_awesome': return 'Incrível! ❤️';
+			case 'strings.legacy.msg_now': return 'Agora';
+			case 'strings.legacy.msg_select_reminder_time': return 'Selecione o horário do lembrete';
+			case 'strings.legacy.msg_protected': return 'Protegido';
+			case 'strings.legacy.msg_failed_load_4': return ({required Object e}) => 'Falha ao carregar: ${e}';
+			case 'strings.legacy.msg_operation_failed': return ({required Object e}) => 'Falha na operação: ${e}';
+			case 'strings.legacy.msg_no_tags': return 'Sem tags';
+			case 'strings.legacy.msg_create_tag': return 'Criar etiqueta';
+			case 'strings.legacy.msg_edit_tag': return 'Editar etiqueta';
+			case 'strings.legacy.msg_tag_name': return 'Nome da etiqueta';
+			case 'strings.legacy.msg_tag_name_required': return 'O nome da tag é obrigatório';
+			case 'strings.legacy.msg_tag_name_invalid': return 'O nome da tag não pode conter /';
+			case 'strings.legacy.msg_parent_tag': return 'Tag pai';
+			case 'strings.legacy.msg_no_parent': return 'Nenhum pai';
+			case 'strings.legacy.msg_tag_color': return 'Cor da etiqueta';
+			case 'strings.legacy.msg_inherit': return 'Herdar';
+			case 'strings.legacy.msg_inherit_color': return 'Herdar cor pai';
+			case 'strings.legacy.msg_tag_pinned': return 'Etiqueta de alfinete';
+			case 'strings.legacy.msg_delete_tag': return 'Excluir etiqueta';
+			case 'strings.legacy.msg_delete_tag_confirm': return 'Excluir esta tag?';
+			case 'strings.legacy.msg_delete_tag_warning': return 'As tags filhas serão movidas para a tag pai e esta tag será removida dos memorandos.';
+			case 'strings.legacy.msg_server': return 'Servidor';
+			case 'strings.legacy.msg_improved': return 'Melhorado';
+			case 'strings.legacy.msg_request_2': return 'Solicitação';
+			case 'strings.legacy.msg_export_failed': return ({required Object e}) => 'Falha na exportação: ${e}';
+			case 'strings.legacy.msg_notification_settings': return 'Configurações de notificação';
+			case 'strings.legacy.msg_related_memo_was_deleted': return 'O memorando relacionado foi excluído';
+			case 'strings.legacy.msg_email': return 'E-mail';
+			case 'strings.legacy.msg_enter_password_4': return 'Por favor insira uma senha';
+			case 'strings.legacy.msg_retry_count': return 'Contagem de novas tentativas';
+			case 'strings.legacy.msg_import_exported_html_zip_package': return 'Importar pacote HTML ou ZIP exportado';
+			case 'strings.legacy.msg_archive': return 'Arquivo';
+			case 'strings.legacy.msg_reset_heatmap': return 'Redefinir mapa de calor?';
+			case 'strings.legacy.msg_token_applied': return 'Token aplicado';
+			case 'strings.legacy.msg_log_file_created': return 'Pacote de registros exportado';
+			case 'strings.legacy.msg_delete_sync_task': return 'Excluir tarefa de sincronização';
+			case 'strings.legacy.msg_include_archived_2': return '- Incluir arquivado';
+			case 'strings.legacy.msg_memoflow_side_project_i_build_my': return 'MemoFlow é um projeto paralelo que construo em meu tempo livre. Fiquei acordado até tarde consertando bugs e realmente preciso de um Americano gelado. Seu suporte reabastece minha bateria e ajuda a lançar novos recursos';
+			case 'strings.legacy.msg_failed_generate': return ({required Object e}) => 'Falha ao gerar: ${e}';
+			case 'strings.legacy.msg_search_logs': return 'Registros de pesquisa';
+			case 'strings.legacy.msg_active_days': return 'Dias ativos';
+			case 'strings.legacy.msg_back_top': return 'Voltar ao início';
+			case 'strings.legacy.msg_month': return 'Este mês';
+			case 'strings.legacy.msg_loading_references': return 'Carregando referências';
+			case 'strings.legacy.msg_silent': return 'Silencioso';
+			case 'strings.legacy.msg_settings': return 'Configurações';
+			case 'strings.legacy.msg_locating': return 'Localizando...';
+			case 'strings.legacy.msg_scan': return 'Digitalizar';
+			case 'strings.legacy.msg_recording_path_missing': return 'Caminho de gravação ausente.';
+			case 'strings.legacy.msg_date_range_4': return '- Período';
+			case 'strings.legacy.msg_suggested_tags': return 'Tags sugeridas';
+			case 'strings.legacy.msg_energy_restored': return '⚡ ENERGIA RESTAURADA';
+			case 'strings.legacy.msg_username_2': return 'Nome de usuário';
+			case 'strings.legacy.msg_ai_summary_report': return 'Relatório resumido AI';
+			case 'strings.legacy.msg_all_tags': return 'Todas as tags';
+			case 'strings.legacy.msg_preferences': return 'Preferências';
+			case 'strings.legacy.msg_image_bed_3': return 'Cama de imagem';
+			case 'strings.legacy.msg_quick_input': return 'Entrada Rápida';
+			case 'strings.legacy.msg_tags': return 'Etiquetas';
+			case 'strings.legacy.msg_energy_critically_low': return 'Energia criticamente baixa!';
+			case 'strings.legacy.msg_delete_failed': return ({required Object e}) => 'Falha na exclusão: ${e}';
+			case 'strings.legacy.msg_server_login': return 'Login do servidor';
+			case 'strings.legacy.msg_like_2': return 'Curtir';
+			case 'strings.legacy.msg_save_2': return 'Salvar';
+			case 'strings.legacy.msg_unknown': return 'Desconhecido';
+			case 'strings.legacy.msg_release_notes_2': return 'Notas de versão';
+			case 'strings.legacy.msg_include_error_details': return 'Incluir detalhes do erro';
+			case 'strings.legacy.msg_write_comment': return 'Escreva um comentário...';
+			case 'strings.legacy.msg_write_thoughts': return 'Escreva seus pensamentos...';
+			case 'strings.legacy.msg_draft_box_title': return 'Caixa de rascunho';
+			case 'strings.legacy.msg_draft_box_empty_desc': return 'Ainda não há rascunhos salvos.';
+			case 'strings.legacy.msg_draft_box_pending_hint': return ({required Object count}) => 'Draft Box possui rascunhos inacabados (${count}). Toque em Caixa de rascunho para visualizar.';
+			case 'strings.legacy.msg_empty_draft': return 'Rascunho vazio';
+			case 'strings.legacy.msg_editing': return 'Edição';
+			case 'strings.legacy.msg_delete_draft': return 'Excluir rascunho';
+			case 'strings.legacy.msg_delete_draft_confirm': return 'Excluir este rascunho?';
+			case 'strings.legacy.msg_draft_deleted': return 'Rascunho excluído';
+			case 'strings.legacy.msg_local_2': return 'Locais';
+			case 'strings.legacy.msg_expired': return 'Expirado';
+			case 'strings.legacy.msg_fixed_2': return 'Corrigido';
+			case 'strings.legacy.msg_upload_attachment': return 'Enviar anexo';
+			case 'strings.legacy.msg_battery_whitelist': return 'Lista de permissões de bateria';
+			case 'strings.legacy.msg_district': return 'Distrito';
+			case 'strings.legacy.msg_voice_memo': return '🎙️ Mensagem de voz\\n';
+			case 'strings.legacy.msg_system_default': return 'Padrão do sistema';
+			case 'strings.legacy.msg_all_memos_2': return 'Todos os memorandos';
+			case 'strings.legacy.msg_network_request_failed': return 'Falha na solicitação de rede';
+			case 'strings.legacy.msg_memo_not_found': return 'Memorando não encontrado';
+			case 'strings.legacy.msg_playback_failed_2': return ({required Object e}) => 'Falha na reprodução: ${e}';
+			case 'strings.legacy.msg_sync_settings_webdav_across_devices': return 'Faça backup das configurações em WebDAV para recuperação.';
+			case 'strings.legacy.msg_offline_first_client_memos_backend': return 'Um primeiro cliente off-line para o back-end Memos.';
+			case 'strings.legacy.msg_user_guide': return 'Guia do usuário';
+			case 'strings.legacy.msg_notice': return 'Aviso';
+			case 'strings.legacy.msg_exact_alarms': return 'Alarmes exatos';
+			case 'strings.legacy.msg_restoring_overwrite_local_library_files_rebuild': return 'A restauração substituirá os arquivos da biblioteca local e reconstruirá o banco de dados. Isto não pode ser desfeito.';
+			case 'strings.legacy.msg_enter_api_url_ai_settings': return 'Insira API URL nas configurações de AI';
+			case 'strings.legacy.msg_create_failed_2': return ({required Object e}) => 'Falha na criação: ${e}';
+			case 'strings.legacy.msg_close_search': return 'Fechar pesquisa';
+			case 'strings.legacy.msg_imported_memos_2': return 'Memorandos importados';
+			case 'strings.legacy.msg_explore': return 'Explorar';
+			case 'strings.legacy.msg_network_connection_failed': return 'Falha na conexão de rede.';
+			case 'strings.legacy.msg_save_failed_3': return ({required Object e}) => 'Falha ao salvar: ${e}';
+			case 'strings.legacy.msg_no_summary_share': return 'Nenhum resumo para compartilhar';
+			case 'strings.legacy.msg_custom_model': return 'Modelo personalizado';
+			case 'strings.legacy.msg_sign_failed': return ({required Object message}) => 'Falha no login: ${message}';
+			case 'strings.legacy.msg_notification_exact_alarm_permissions_required_send': return 'Notificação e permissões exatas de alarme são necessárias para enviar lembretes na hora certa.';
+			case 'strings.legacy.msg_random_review': return 'Revisão Aleatória';
+			case 'strings.legacy.msg_random_review_source_scope': return 'Fonte da nota';
+			case 'strings.legacy.msg_random_review_source_all_notes': return 'Todas as notas';
+			case 'strings.legacy.msg_random_review_source_explore_notes': return 'Explorar notas';
+			case 'strings.legacy.msg_random_review_source_ai_history': return 'Histórico AI';
+			case 'strings.legacy.msg_random_review_ai_history_date_range': return 'Tempo de resumo AI';
+			case 'strings.legacy.msg_public': return 'Público';
+			case 'strings.legacy.msg_all_2': return 'Todos';
+			case 'strings.legacy.msg_add_custom_model': return 'Adicionar modelo personalizado';
+			case 'strings.legacy.msg_backup_password': return 'Senha de backup';
+			case 'strings.legacy.msg_optional_used_sign_requests': return 'Opcional. Usado para assinar solicitações.';
+			case 'strings.legacy.msg_search': return 'Pesquisa';
+			case 'strings.legacy.msg_set_password': return 'Definir senha';
+			case 'strings.legacy.msg_submit_logs': return 'Exportar registros';
+			case 'strings.legacy.msg_logs_export_local_only': return 'A exportação salva apenas os logs localmente. O aplicativo não irá carregá-los nem criar um memorando automaticamente.';
+			case 'strings.legacy.msg_enable_network_logging_before_exporting': return 'Para problemas de login/sincronização/backup, habilite o registro de rede antes de exportar.';
+			case 'strings.legacy.msg_activity_heatmap_2': return 'MAPA DE CALOR DE ATIVIDADE';
+			case 'strings.legacy.msg_invalid_api_key_insufficient_permissions': return 'Chave API inválida ou permissões insuficientes.';
+			case 'strings.legacy.msg_data_has_been_migrated_app_successfully': return 'Seus dados foram migrados para este aplicativo com sucesso.';
+			case 'strings.legacy.msg_get_version': return 'Obtenha a nova versão';
+			case 'strings.legacy.msg_token_source': return 'Fonte do token';
+			case 'strings.legacy.msg_send': return 'Enviar';
+			case 'strings.legacy.msg_no_pending_sync_tasks': return 'Nenhuma tarefa de sincronização pendente';
+			case 'strings.legacy.msg_locating_memo_content': return 'Localizando conteúdo do memorando';
+			case 'strings.legacy.msg_offline_ready': return 'Pronto off-line';
+			case 'strings.legacy.msg_use_relative_path': return 'Use um caminho relativo';
+			case 'strings.legacy.msg_total': return 'Total';
+			case 'strings.legacy.msg_location_2': return 'Localização';
+			case 'strings.legacy.msg_location_contains': return 'O local contém';
+			case 'strings.legacy.msg_show_location_metadata_memos_not_configured': return 'Mostrar metadados de localização em memorandos. Se não estiver configurado, as coordenadas serão mostradas.';
+			case 'strings.legacy.msg_api_url': return 'API URL';
+			case 'strings.legacy.msg_parsing_progress': return 'Progresso da análise';
+			case 'strings.legacy.msg_parsing': return 'Análise';
+			case 'strings.legacy.msg_custom': return 'Personalizado';
+			case 'strings.legacy.msg_tags_created': return 'Novas tags criadas';
+			case 'strings.legacy.msg_third_party_share_disabled': return 'O compartilhamento de terceiros está desativado';
+			case 'strings.legacy.msg_loading_links': return 'Carregando links...';
+			case 'strings.legacy.msg_how_report': return 'Como denunciar?';
+			case 'strings.legacy.msg_confirm_password_2': return 'Confirmar senha';
+			case 'strings.legacy.msg_search_title_content_tags': return 'Pesquise por título, conteúdo ou tags';
+			case 'strings.legacy.msg_reset_failed': return ({required Object e}) => 'Falha na reinicialização: ${e}';
+			case 'strings.legacy.msg_debug_preview_update_dialog': return 'Depuração: caixa de diálogo de atualização de visualização';
+			case 'strings.legacy.msg_what_s': return 'O que há de novo?';
+			case 'strings.legacy.msg_ringtone': return 'Toque';
+			case 'strings.legacy.msg_unable_detect_backend_version_check_server': return 'Não foi possível detectar a versão de back-end. Verifique o servidor URL ou rede.';
+			case 'strings.legacy.msg_pending_2': return 'Pendente';
+			case 'strings.legacy.msg_parsing_html': return 'Analisando HTML...';
+			case 'strings.legacy.msg_actions': return 'Ações';
+			case 'strings.legacy.msg_import_complete_2': return 'Importação concluída';
+			case 'strings.legacy.msg_use_disk': return 'Usar disco';
+			case 'strings.legacy.msg_root_path': return 'Caminho raiz';
+			case 'strings.legacy.msg_disabled': return 'Desativado';
+			case 'strings.legacy.msg_improved_2': return 'Melhorado:';
+			case 'strings.legacy.msg_city': return 'Cidade';
+			case 'strings.legacy.msg_decoding_zip': return 'Decodificação ZIP...';
+			case 'strings.legacy.msg_notification_content': return 'Conteúdo da notificação';
+			case 'strings.legacy.msg_resolve_conflict': return 'Resolver conflito';
+			case 'strings.legacy.msg_webhooks_not_supported_server': return 'Webhooks não são suportados neste servidor.';
+			case 'strings.legacy.msg_may_delayed': return '(pode atrasar)';
+			case 'strings.legacy.msg_permissions_system_settings': return 'Permissões e configurações do sistema';
+			case 'strings.legacy.msg_waiting_tasks_stop': return 'Aguardando a interrupção das tarefas';
+			case 'strings.legacy.msg_done_2': return 'Concluído';
+			case 'strings.legacy.msg_parsing_memoflow_export': return 'Analisando exportação MemoFlow...';
+			case 'strings.legacy.msg_location_updated': return ({required Object next_displayText_fractionDigits_6}) => 'Localização atualizada: ${next_displayText_fractionDigits_6}';
+			case 'strings.legacy.msg_checking_server_version': return 'Verificando a versão do servidor...';
+			case 'strings.legacy.msg_next_time_back_fixing_bugs': return '👀 Da próxima vez, voltando à correção de bugs';
+			case 'strings.legacy.msg_ago_4': return ({required Object weeks}) => '${weeks} atrás';
+			case 'strings.legacy.msg_import': return 'Importar';
+			case 'strings.legacy.msg_create_token_2': return 'Criar token';
+			case 'strings.legacy.msg_marked_read': return 'Marcado como lido';
+			case 'strings.legacy.msg_pinned': return 'Fixado';
+			case 'strings.legacy.msg_version_update': return 'Atualização de versão';
+			case 'strings.legacy.msg_allow_private_memos': return 'Permitir memorandos privados';
+			case 'strings.legacy.msg_token_copied_clipboard': return 'Token copiado para a área de transferência';
+			case 'strings.legacy.msg_keeping_more_versions_uses_more_storage': return 'Manter mais versões consome mais armazenamento. Considere limpar versões antigas.';
+			case 'strings.legacy.msg_delete_webhook': return 'Excluir webhook';
+			case 'strings.legacy.msg_prompt': return 'Alerta';
+			case 'strings.legacy.msg_location_precision': return 'Precisão de localização';
+			case 'strings.legacy.msg_password_required': return 'Senha necessária';
+			case 'strings.legacy.msg_exit_app': return 'Sair do aplicativo';
+			case 'strings.legacy.msg_thanks_energy_fully_restored': return 'Obrigado! Energia totalmente restaurada ⚡';
+			case 'strings.legacy.msg_connection_timeout_check_network_api_url': return 'Tempo limite de conexão. Verifique a rede ou API URL.';
+			case 'strings.legacy.msg_local_network_migration': return 'Migração de rede local';
+			case 'strings.legacy.msg_local_network_migration_desc': return 'Use a migração de rede local para conectar dispositivos MemoFlow e ferramentas de anotações de terceiros em seu LAN. A migração MemoFlow e Obsidian são suportadas hoje.';
+			case 'strings.legacy.msg_connect_obsidian': return 'Conectar Obsidiana';
+			case 'strings.legacy.msg_connect_obsidian_desc': return 'Emparelhe e sincronize o conteúdo das notas com Obsidian em sua rede local.';
+			case 'strings.legacy.msg_local_network_migration_more_targets': return 'Mais alvos, incluindo SiYuan e outras ferramentas de terceiros, serão adicionados aqui posteriormente.';
+			case 'strings.legacy.msg_memoflow_migration': return 'Migração MemoFlow';
+			case 'strings.legacy.msg_memoflow_migration_target_desc': return 'Migre notas e configurações do espaço de trabalho local para outro dispositivo MemoFlow pela sua rede local.';
+			case 'strings.legacy.msg_memoflow_migration_targets_summary': return 'MemoFlow / Obsidiana';
+			case 'strings.legacy.msg_memoflow_migration_role_desc': return 'Escolha se este dispositivo envia ou recebe uma sessão única de migração local. Mantenha os dois dispositivos no mesmo LAN e mantenha o MemoFlow em primeiro plano durante a transferência.';
+			case 'strings.legacy.msg_memoflow_migration_sender': return 'Eu sou o remetente';
+			case 'strings.legacy.msg_memoflow_migration_sender_desc': return 'Escolha notas e configurações do espaço de trabalho local atual e conecte-se a um receptor próximo.';
+			case 'strings.legacy.msg_memoflow_migration_sender_only_local_mode': return 'A função de remetente está disponível somente quando este dispositivo está usando um espaço de trabalho local.';
+			case 'strings.legacy.msg_memoflow_migration_receiver': return 'Eu sou o receptor';
+			case 'strings.legacy.msg_memoflow_migration_receiver_desc': return 'Crie uma sessão de recebimento, mostre um código QR e importe as notas ou configurações recebidas.';
+			case 'strings.legacy.msg_memoflow_migration_select_content': return 'Selecionar conteúdo';
+			case 'strings.legacy.msg_memoflow_migration_notes': return 'Conteúdo das notas';
+			case 'strings.legacy.msg_memoflow_migration_notes_desc': return 'Envie todas as notas e anexos do espaço de trabalho local atual.';
+			case 'strings.legacy.msg_memoflow_migration_settings': return 'Conteúdo de configurações';
+			case 'strings.legacy.msg_memoflow_migration_settings_desc': return 'Envie preferências portáteis e configurações sensíveis opcionais.';
+			case 'strings.legacy.msg_memoflow_migration_safe_config': return 'Configurações seguras';
+			case 'strings.legacy.msg_memoflow_migration_sensitive_config': return 'Configurações confidenciais';
+			case 'strings.legacy.msg_memoflow_migration_prepare_package': return 'Preparar pacote de migração';
+			case 'strings.legacy.msg_memoflow_migration_prepare_send': return 'Prepare-se para enviar';
+			case 'strings.legacy.msg_memoflow_migration_send_method': return 'Método de envio';
+			case 'strings.legacy.msg_memoflow_migration_send_method_desc': return 'Escolha como se conectar ao receptor depois que o pacote estiver pronto.';
+			case 'strings.legacy.msg_memoflow_migration_prepare_send_first': return 'Prepare o pacote na tela anterior antes de escolher o método de envio.';
+			case 'strings.legacy.msg_memoflow_migration_package_ready': return 'Pacote pronto';
+			case 'strings.legacy.msg_memoflow_migration_package_summary': return ({required Object memoCount, required Object attachmentCount, required Object size}) => 'Memorandos ${memoCount} · Anexos ${attachmentCount} · ${size}';
+			case 'strings.legacy.msg_memoflow_migration_scan_receiver': return 'Digitalizar receptor';
+			case 'strings.legacy.msg_memoflow_migration_search_receiver': return 'Pesquise receptores próximos';
+			case 'strings.legacy.msg_memoflow_migration_discovered_receivers': return 'Receptores próximos';
+			case 'strings.legacy.msg_memoflow_migration_waiting_receiver': return 'Aguardando conexão do remetente…';
+			case 'strings.legacy.msg_memoflow_migration_review_proposal': return 'Analisar proposta de migração';
+			case 'strings.legacy.msg_memoflow_migration_receive_mode': return 'Modo de recepção';
+			case 'strings.legacy.msg_memoflow_migration_receive_as_new_workspace': return 'Importar como um novo espaço de trabalho local';
+			case 'strings.legacy.msg_memoflow_migration_overwrite_current_workspace': return 'Substituir o espaço de trabalho local atual';
+			case 'strings.legacy.msg_memoflow_migration_sensitive_config_confirm': return 'Configurações confidenciais exigem sua confirmação';
+			case 'strings.legacy.msg_memoflow_migration_accept': return 'Aceitar e receber';
+			case 'strings.legacy.msg_memoflow_migration_reject': return 'Rejeitar';
+			case 'strings.legacy.msg_memoflow_migration_start_receive': return 'Comece a receber';
+			case 'strings.legacy.msg_memoflow_migration_completed': return 'Migração concluída';
+			case 'strings.legacy.msg_memoflow_migration_view_result': return 'Ver resultado';
+			case 'strings.legacy.msg_memoflow_migration_result': return 'Resultado da migração';
+			case 'strings.legacy.msg_memoflow_migration_sender_device': return 'Dispositivo remetente';
+			case 'strings.legacy.msg_memoflow_migration_size': return 'Tamanho estimado';
+			case 'strings.legacy.msg_memoflow_migration_received_bytes': return ({required Object size}) => 'Recebido: ${size}';
+			case 'strings.legacy.msg_memoflow_migration_applied_configs': return 'Configurações aplicadas';
+			case 'strings.legacy.msg_memoflow_migration_skipped_configs': return 'Configurações ignoradas';
+			case 'strings.legacy.msg_memoflow_migration_workspace_name': return 'Espaço de trabalho';
+			case 'strings.legacy.msg_memoflow_migration_scan_title': return 'Receptor de digitalização QR';
+			case 'strings.legacy.msg_memoflow_migration_scan_hint': return 'Digitalize o código QR mostrado no dispositivo receptor.';
+			case 'strings.legacy.msg_memoflow_migration_foreground_notice': return 'Mantenha o MemoFlow em primeiro plano em ambos os dispositivos durante a migração.';
+			case 'strings.legacy.msg_bridge_component_title': return 'Ponte MemoFlow';
+			case 'strings.legacy.msg_bridge_component_desc': return 'Emparelhe com o plugin Obsidian para sincronização local.';
+			case 'strings.legacy.msg_bridge_title': return 'Conectar Obsidiana';
+			case 'strings.legacy.msg_bridge_local_mode_only': return 'Emparelhe com Obsidian em sua rede local. Outros alvos poderão surgir mais tarde.';
+			case 'strings.legacy.msg_bridge_paired_target': return ({required Object target}) => 'Emparelhado: ${target}';
+			case 'strings.legacy.msg_bridge_unpaired': return 'Não emparelhado';
+			case 'strings.legacy.msg_bridge_server': return ({required Object server}) => 'Servidor: ${server}';
+			case 'strings.legacy.msg_bridge_device': return ({required Object device}) => 'Dispositivo: ${device}';
+			case 'strings.legacy.msg_bridge_processing': return 'Processando...';
+			case 'strings.legacy.msg_bridge_action_scan_pair': return 'Digitalizar para emparelhar';
+			case 'strings.legacy.msg_bridge_action_mdns_discover': return 'descoberta mDNS';
+			case 'strings.legacy.msg_bridge_action_searching': return 'Pesquisando...';
+			case 'strings.legacy.msg_bridge_pair_code_label': return 'Código de par';
+			case 'strings.legacy.msg_bridge_pair_code_hint': return 'Digite o código de 6 dígitos mostrado em Obsidian';
+			case 'strings.legacy.msg_bridge_action_pairing': return 'Emparelhamento...';
+			case 'strings.legacy.msg_bridge_action_confirm_pair': return 'Confirmar par';
+			case 'strings.legacy.msg_bridge_action_checking': return 'Verificando...';
+			case 'strings.legacy.msg_bridge_action_health_check': return 'Verificação de integridade';
+			case 'strings.legacy.msg_bridge_enable': return 'Habilitar ponte';
+			case 'strings.legacy.msg_bridge_pair_cleared': return 'Emparelhamento desmarcado';
+			case 'strings.legacy.msg_bridge_clear_pair': return 'Par claro';
+			case 'strings.legacy.msg_bridge_discovery_results': return 'Resultados da descoberta';
+			case 'strings.legacy.msg_bridge_scan_title': return 'Digitalizar QR';
+			case 'strings.legacy.msg_bridge_scan_hint': return 'Digitalize o código QR mostrado pelo plugin Obsidian';
+			case 'strings.legacy.msg_bridge_qr_invalid': return 'Código QR de emparelhamento inválido';
+			case 'strings.legacy.msg_bridge_pair_response_missing_token': return 'Token ausente da resposta do par';
+			case 'strings.legacy.msg_bridge_pair_success': return 'Emparelhamento bem-sucedido';
+			case 'strings.legacy.msg_bridge_pair_failed': return ({required Object e}) => 'Falha no emparelhamento: ${e}';
+			case 'strings.legacy.msg_bridge_mdns_searching': return 'Pesquisando serviços mDNS...';
+			case 'strings.legacy.msg_bridge_mdns_failed': return ({required Object e}) => 'Falha na pesquisa mDNS: ${e}';
+			case 'strings.legacy.msg_bridge_mdns_not_found': return 'Nenhum serviço de ponte encontrado';
+			case 'strings.legacy.msg_bridge_mdns_found_count': return ({required Object count}) => 'Serviços ${count} encontrados';
+			case 'strings.legacy.msg_bridge_input_host_required': return 'Host é obrigatório';
+			case 'strings.legacy.msg_bridge_input_port_invalid': return 'A porta é inválida';
+			case 'strings.legacy.msg_bridge_input_pair_code_required': return 'O código do par é obrigatório';
+			case 'strings.legacy.msg_bridge_status_pairing': return 'Emparelhamento...';
+			case 'strings.legacy.msg_bridge_need_pair_first': return 'Por favor, emparelhe primeiro';
+			case 'strings.legacy.msg_bridge_status_health_checking': return 'Verificando a integridade da ponte...';
+			case 'strings.legacy.msg_bridge_status_health_ok': return 'A ponte está íntegra';
+			case 'strings.legacy.msg_bridge_status_health_failed': return ({required Object e}) => 'Falha na verificação de integridade: ${e}';
+			case 'strings.legacy.app_language.system': return 'Seguir sistema';
+			case 'strings.legacy.app_language.zh_hans': return 'Chinês (simplificado)';
+			case 'strings.legacy.app_language.zh_hant_tw': return 'Chinês (tradicional, Taiwan)';
+			case 'strings.legacy.app_language.en': return 'Inglês';
+			case 'strings.legacy.app_language.ja': return 'Japonês';
+			case 'strings.legacy.app_language.de': return 'Alemão';
+			case 'strings.legacy.app_language.pt_br': return 'Português (Brasil)';
+			case 'strings.legacy.app_theme.system': return 'Sistema';
+			case 'strings.legacy.app_theme.light': return 'Luz';
+			case 'strings.legacy.app_theme.dark': return 'Escuro';
+			case 'strings.legacy.app_font_size.standard': return 'Padrão';
+			case 'strings.legacy.app_font_size.large': return 'Grande';
+			case 'strings.legacy.app_font_size.small': return 'Pequeno';
+			case 'strings.legacy.app_line_height.classic': return 'Clássico';
+			case 'strings.legacy.app_line_height.compact': return 'Compacto';
+			case 'strings.legacy.app_line_height.relaxed': return 'Relaxado';
+			case 'strings.legacy.launch_action.none': return 'Nenhum';
+			case 'strings.legacy.launch_action.sync': return 'Sincronizar';
+			case 'strings.legacy.launch_action.quick_input': return 'Entrada Rápida';
+			case 'strings.legacy.launch_action.daily_review': return 'Revisão Aleatória';
+			case 'strings.legacy.auto_lock_time.immediately': return 'Imediatamente';
+			case 'strings.legacy.auto_lock_time.after_1_min': return '1 minuto';
+			case 'strings.legacy.auto_lock_time.after_5_min': return '5 minutos';
+			case 'strings.legacy.auto_lock_time.after_15_min': return '15 minutos';
+			case 'strings.legacy.reminder.default_title': return 'Ei, lembra dessa ideia?';
+			case 'strings.legacy.reminder.default_body': return 'Toque para ver detalhes';
+			case 'strings.legacy.location.current': return 'Localização atual';
+			case 'strings.legacy.webdav.not_configured': return 'WebDAV não está configurado';
+			case 'strings.legacy.webdav.backup_disabled': return 'O backup está desativado';
+			case 'strings.legacy.webdav.backup_account_missing': return 'Conta faltando para backup';
+			case 'strings.legacy.webdav.backup_local_only': return 'O backup está disponível apenas para bibliotecas locais';
+			case 'strings.legacy.webdav.backup_password_missing': return 'Falta senha de backup';
+			case 'strings.legacy.webdav.backup_no_memo_files': return 'Nenhum arquivo de memorando encontrado na biblioteca local; backup cancelado';
+			case 'strings.legacy.webdav.restore_account_missing': return 'Conta faltando para restauração';
+			case 'strings.legacy.webdav.restore_local_only': return 'A restauração está disponível apenas para bibliotecas locais';
+			case 'strings.legacy.webdav.backup_empty': return 'O backup está vazio';
+			case 'strings.legacy.webdav.backup_no_memos': return 'Nenhum memorando encontrado no backup';
+			case 'strings.legacy.webdav.snapshot_missing': return 'Instantâneo de backup ausente';
+			case 'strings.legacy.webdav.snapshot_corrupted': return 'Instantâneo de backup corrompido';
+			case 'strings.legacy.webdav.object_missing': return 'Objeto de backup ausente';
+			case 'strings.legacy.webdav.config_corrupted': return 'Configuração de backup corrompida';
+			case 'strings.legacy.webdav.config_invalid': return 'Configuração de backup inválida';
+			case 'strings.legacy.webdav.password_invalid': return 'Senha de backup inválida';
+			case 'strings.legacy.webdav.data_corrupted': return 'Dados de backup corrompidos';
+			case 'strings.legacy.webdav.server_url_invalid': return 'Servidor WebDAV URL inválido';
+			case 'strings.legacy.webdav.recover_password_title': return 'Recuperar senha de backup';
+			case 'strings.legacy.webdav.recover_password_button': return 'Recuperar';
+			case 'strings.legacy.webdav.recover_password_hint': return 'Redefinir senha de backup com código de segurança';
+			case 'strings.legacy.webdav.recovery_code_title': return 'Código de segurança';
+			case 'strings.legacy.webdav.recovery_code_enter': return 'Insira o código de segurança';
+			case 'strings.legacy.webdav.recovery_code_enter_new_password': return 'Digite a nova senha';
+			case 'strings.legacy.webdav.recovery_code_setup_message': return 'A senha de backup está definida. Salve este código de segurança agora. Se a senha for esquecida, somente este código poderá redefini-la.';
+			case 'strings.legacy.webdav.recovery_code_reset_message': return 'A senha de backup foi redefinida. Salve o novo código de segurança, o código anterior não é mais válido.';
+			case 'strings.legacy.webdav.recovery_code_copied': return 'Código de segurança copiado';
+			case 'strings.legacy.webdav.recovery_reset_success': return 'Redefinição de senha de backup';
+			case 'strings.legacy.webdav.recovery_code_invalid': return 'Código de segurança inválido. Verifique e tente novamente.';
+			case 'strings.legacy.webdav.recovery_not_configured': return 'A recuperação do código de segurança ainda não está habilitada para este backup.';
+			case 'strings.legacy.import_count_memos': return ({required Object count}) => '${count}';
+			case 'strings.legacy.import_count_attachments': return ({required Object count}) => '${count}';
+			case 'strings.legacy.msg_version_probe_complete': return 'Análise de versão concluída';
+			case 'strings.legacy.msg_currently_using_api': return ({required Object version}) => 'Atualmente usando API ${version}.';
+			case 'strings.legacy.msg_version_probe_failed': return 'Falha na análise de versão';
+			case 'strings.legacy.msg_copy_diagnostics': return 'Copiar diagnóstico';
+			case 'strings.legacy.msg_diagnostics_copied': return 'Diagnóstico copiado';
+			case 'strings.legacy.msg_probe_failed': return ({required Object error}) => 'Falha na análise: ${error}';
+			case 'strings.legacy.msg_no_active_session_after_sign_in': return 'Nenhuma sessão ativa após login';
+			case 'strings.legacy.msg_request_headers': return 'Cabeçalhos de solicitação';
+			case 'strings.legacy.msg_request_body': return 'Corpo da solicitação';
+			case 'strings.legacy.msg_response_headers': return 'Cabeçalhos de resposta';
+			case 'strings.legacy.msg_response_body': return 'Corpo de Resposta';
+			case 'strings.legacy.msg_error': return 'Erro';
+			case 'strings.legacy.msg_system_logs': return 'Registros do sistema';
+			case 'strings.legacy.msg_copy_last_lines': return ({required Object lines}) => 'Copiar as últimas linhas ${lines}';
+			case 'strings.legacy.msg_export_logs_bundle': return 'Pacote de registros de exportação';
+			case 'strings.legacy.msg_showing_last_lines': return ({required Object lines}) => 'Mostrando as últimas linhas ${lines}';
+			case 'strings.legacy.msg_no_system_logs_yet': return 'Nenhum registro do sistema ainda';
+			case 'strings.legacy.msg_system_logs_copied': return ({required Object lines}) => 'Logs do sistema copiados (linhas ${lines})';
+			case 'strings.legacy.msg_log_bundle_created': return ({required Object path, required Object exportId}) => 'Pacote de log criado: ${path} (ExportId: ${exportId})';
+			case 'strings.legacy.msg_failed_export_logs': return ({required Object error}) => 'Falha ao exportar logs: ${error}';
+			case 'strings.legacy.msg_api_route': return 'Rota API';
+			case 'strings.legacy.msg_screenshot_mode': return 'Modo de captura de tela';
+			case 'strings.legacy.msg_screenshot_mode_detail': return 'Ocultar barras de status/navegação para capturas limpas';
+			case 'strings.legacy.msg_template': return 'Modelo';
+			case 'strings.legacy.msg_no_templates_yet': return 'Ainda não há modelos';
+			case 'strings.legacy.msg_quick_search': return 'Pesquisa rápida...';
+			case 'strings.legacy.msg_minimize': return 'Minimizar';
+			case 'strings.legacy.msg_maximize': return 'Maximizar';
+			case 'strings.legacy.msg_restore_window': return 'Restaurar';
+			case 'strings.legacy.msg_windows_enable_location_access': return ({required Object message}) => '${message}. Habilite o acesso à localização nas configurações do Windows.';
+			case 'strings.legacy.msg_camera_file_missing': return 'Arquivo da câmera ausente.';
+			case 'strings.legacy.msg_no_camera_detected': return 'Nenhuma câmera detectada.';
+			case 'strings.legacy.msg_camera_failed': return ({required Object error}) => 'Falha na câmera: ${error}';
+			case 'strings.legacy.msg_camera_permission_denied_windows': return 'Permissão de câmera negada. Habilite o acesso à câmera nas configurações do Windows.';
+			case 'strings.legacy.msg_file_selection_failed': return ({required Object error}) => 'Falha na seleção do arquivo: ${error}';
+			case 'strings.legacy.msg_files_unavailable_from_picker': return 'Arquivos indisponíveis no seletor.';
+			case 'strings.legacy.msg_no_files_selected': return 'Nenhum arquivo selecionado.';
+			case 'strings.legacy.msg_original_image': return 'Originais';
+			case 'strings.legacy.msg_gallery_system_picker_original_desc': return 'Escolha se as imagens selecionadas devem pular a compactação antes do upload.';
+			case 'strings.legacy.msg_gallery_system_picker_original_switch': return 'Faça upload das imagens selecionadas com qualidade original';
+			case 'strings.legacy.msg_gallery_original_selection_summary': return ({required Object selectedCount, required Object originalCount}) => '${selectedCount} selecionado · ${originalCount} original';
+			case 'strings.legacy.msg_added_files': return ({required Object count}) => 'Adicionados arquivos ${count}.';
+			case 'strings.legacy.msg_unavailable_file_count': return ({required Object count}) => '${count} indisponível';
+			case 'strings.legacy.msg_added_files_with_skipped': return ({required Object count, required Object details}) => 'Adicionados arquivos ${count}. Ignorado ${details}.';
+			case 'strings.legacy.msg_added_photo_attachment': return 'Adicionado anexo de foto.';
+			case 'strings.legacy.msg_enter_content_before_creating_link': return 'Insira o conteúdo antes de criar um link.';
+			case 'strings.legacy.msg_checkbox': return 'Caixa de seleção';
+			case 'strings.legacy.msg_code_block': return 'Bloco de código';
+			case 'strings.legacy.msg_no_recording_input_device_found': return 'Nenhum dispositivo de entrada de gravação encontrado.';
+			case 'strings.legacy.msg_write_current_thought': return 'Escreva o que você está pensando...';
+			case 'strings.legacy.msg_tag': return 'Etiqueta';
+			case 'strings.legacy.msg_attachment': return 'Anexo';
+			case 'strings.legacy.msg_todo': return 'Tudo';
+			case 'strings.legacy.msg_link': return 'Link';
+			case 'strings.legacy.msg_capture_photo': return 'Capturar foto';
+			case 'strings.legacy.msg_open_camera_settings': return 'Abra as configurações da câmera';
+			case 'strings.legacy.msg_unable_open_windows_camera_settings': return 'Não foi possível abrir as configurações da câmera Windows.';
+			case 'strings.legacy.msg_qr_scan_not_supported_use_manual_pairing': return 'A varredura QR não é suportada nesta plataforma. \n Use o emparelhamento manual.';
+			case 'strings.legacy.msg_qr_scan_not_supported_pair_manually': return 'A varredura QR não é suportada nesta plataforma. Emparelhe manualmente com Host, Porta e Código de Emparelhamento.';
+			case 'strings.legacy.msg_loading_memos': return 'Carregando memorandos...';
+			case 'strings.legacy.msg_encryption_feature_placeholder': return 'A criptografia é atualmente um espaço reservado e ainda não é aplicada.';
+			case 'strings.legacy.msg_password_feature_placeholder': return 'O suporte à senha é atualmente um espaço reservado e ainda não é aplicado.';
+			case 'strings.legacy.msg_template_feature_manage_desc': return 'Habilite modelos para gerenciar nomes, conteúdo e variáveis ​​de modelos.';
+			case 'strings.legacy.msg_shortcuts_overview': return 'Visão geral dos atalhos';
+			case 'strings.legacy.msg_restore_defaults': return 'Restaurar padrões';
+			case 'strings.legacy.msg_default_shortcuts_restored': return 'Atalhos padrão restaurados.';
+			case 'strings.legacy.msg_file_save_location': return 'Local de salvamento do arquivo';
+			case 'strings.legacy.msg_select_location': return 'Selecione o local';
+			case 'strings.legacy.msg_repository_name': return 'Nome do repositório';
+			case 'strings.legacy.msg_enter_repository_name_hint': return 'Insira o nome do repositório';
+			case 'strings.legacy.msg_not_selected': return 'Não selecionado';
+			case 'strings.legacy.msg_select_file_save_location': return 'Selecione um local para salvar o arquivo.';
+			case 'strings.legacy.msg_enter_repository_name_prompt': return 'Insira um nome de repositório.';
+			case 'strings.legacy.msg_enter_and_confirm_password': return 'Por favor insira e confirme a senha.';
+			case 'strings.legacy.msg_encrypt_save_placeholder': return 'Salvamento criptografado (espaço reservado)';
+			case 'strings.legacy.msg_windows_related_settings': return 'Configurações relacionadas ao Windows';
+			case 'strings.legacy.msg_only_windows_desktop_supports_this_setting': return 'Somente o desktop Windows suporta esta configuração.';
+			case 'strings.legacy.msg_shortcut_settings': return 'Configurações de atalho';
+			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return 'Configurar atalhos da área de trabalho Windows';
+			case 'strings.legacy.msg_close_window_minimize_to_tray': return 'Minimizar para a bandeja ao fechar a janela';
+			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return 'Quando ativado, clicar no botão Fechar no canto superior direito não sairá do aplicativo. Você pode restaurar a janela da bandeja do sistema.';
+			case 'strings.legacy.msg_local_storage_unavailable': return 'O armazenamento local não está disponível';
+			case 'strings.legacy.msg_check_system_permissions_or_retry_later': return 'Verifique as permissões do sistema ou tente novamente mais tarde.';
+			case 'strings.legacy.msg_source_value': return ({required Object source}) => 'Fonte: ${source}';
+			case 'strings.legacy.msg_enable_sync_bridge_first': return 'Ative a ponte de sincronização primeiro.';
+			case 'strings.legacy.msg_sync_to_obsidian': return 'Sincronizar com Obsidiana';
+			case 'strings.legacy.msg_sync_to_obsidian_confirm': return 'Sincronize todos os memorandos da biblioteca local atual, incluindo anexos, com o Obsidian emparelhado de uma só vez. Continuar?';
+			case 'strings.legacy.msg_sync_completed_summary': return ({required Object succeeded, required Object total, required Object failed}) => 'Sincronização concluída: ${succeeded}/${total} bem-sucedido, ${failed} com falha.';
+			case 'strings.legacy.msg_sync_failed_with_error': return ({required Object error}) => 'Falha na sincronização: ${error}';
+			case 'strings.legacy.msg_sync_to_obsidian_in_progress': return 'Sincronizando com Obsidiana...';
+			case 'strings.legacy.msg_action_shortcut': return 'Ação - Atalho';
+			case 'strings.legacy.msg_global': return 'Global';
+			case 'strings.legacy.msg_editor': return 'Editor';
+			case 'strings.legacy.msg_paste': return 'Colar';
+			case 'strings.legacy.msg_cut': return 'Corte';
+			case 'strings.legacy.msg_previous_page': return 'Página anterior';
+			case 'strings.legacy.msg_next_page': return 'Próxima página';
+			case 'strings.legacy.msg_shift_enter_supported': return 'Também suporta Shift + Enter';
+			case 'strings.legacy.msg_shortcuts_supported_windows_macos': return 'Somente Windows e macOS suportam configurações de atalho.';
+			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding} já é usado por “${action}”.';
+			case 'strings.legacy.msg_windows_paging_note': return 'Paginação Windows: página anterior PageUp, página seguinte PageDown.';
+			case 'strings.legacy.msg_system_edit_shortcuts_note': return 'Copiar/colar/cortar use os atalhos padrão do sistema.';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return 'Inclui pelo menos uma tecla modificadora (Ctrl/Cmd/Shift/Alt).';
+			case 'strings.legacy.msg_current_shortcut': return ({required Object binding}) => 'Atual: ${binding}';
+			case 'strings.legacy.msg_press_new_shortcut': return 'Pressione o novo atalho...';
+			case 'strings.legacy.msg_quick_record': return 'Registro rápido';
+			case 'strings.legacy.msg_focus_input_area': return 'Área de entrada de foco';
+			case 'strings.legacy.msg_toggle_sidebar': return 'Alternar barra lateral';
+			case 'strings.legacy.msg_open_settings': return 'Abrir configurações';
+			case 'strings.legacy.msg_show_hide_memoflow': return 'Mostrar/ocultar MemoFlow';
+			case 'strings.legacy.msg_publish_memo': return 'Publicar memorando';
+			case 'strings.legacy.msg_bold': return 'Negrito';
+			case 'strings.legacy.msg_underline': return 'Sublinhado';
+			case 'strings.legacy.msg_highlight': return 'Destaque';
+			case 'strings.legacy.msg_unordered_list': return 'Lista não ordenada';
+			case 'strings.legacy.msg_ordered_list': return 'Lista ordenada';
+			case 'strings.legacy.msg_undo': return 'Desfazer';
+			case 'strings.legacy.msg_redo': return 'Refazer';
+			case 'strings.legacy.msg_no_templates_click_add': return 'Ainda não há modelos. Clique em “Adicionar modelo” para criar um.';
+			case 'strings.legacy.msg_weather_variables_enabled_city_not_set': return 'Variáveis climáticas habilitadas (cidade não definida)';
+			case 'strings.legacy.msg_weather_variables_city': return ({required Object city}) => 'Variáveis climáticas: ${city}';
+			case 'strings.legacy.msg_weather_variables_disabled': return 'Variáveis climáticas desativadas';
+			case 'strings.legacy.msg_template_feature_title': return 'Habilitar modelos';
+			case 'strings.legacy.msg_template_feature_desc': return 'Após habilitar, você pode escolher modelos na barra de ferramentas do editor. A escolha de um substituirá o conteúdo do editor.';
+			case 'strings.legacy.msg_template_list': return 'Lista de modelos';
+			case 'strings.legacy.msg_many_templates_support_scroll': return 'Quando há muitos modelos, esta área suporta rolagem vertical.';
+			case 'strings.legacy.msg_variable_settings': return 'Configurações de variáveis';
+			case 'strings.legacy.msg_template_variables': return 'Variáveis de modelo';
+			case 'strings.legacy.msg_available_variable_docs': return 'Documentos de variáveis disponíveis';
+			case 'strings.legacy.msg_available_variable_docs_desc': return 'Toque para mostrar a tabela de variáveis e notas de significado na caixa de diálogo central.';
+			case 'strings.legacy.msg_date_time_weather_variable_desc': return 'Variáveis ​​de data/hora seguem os formatos em Configurações de variáveis; variáveis ​​meteorológicas dependem da configuração climática do AMap.';
+			case 'strings.legacy.msg_variable': return 'Variável';
+			case 'strings.legacy.msg_meaning': return 'Significado';
+			case 'strings.legacy.msg_example': return 'Exemplo';
+			case 'strings.legacy.msg_got_it': return 'Entendi';
+			case 'strings.legacy.msg_scene_micro_guide_list_gestures': return 'Pressione e segure para copiar um memorando, toque duas vezes para editar rapidamente';
+			case 'strings.legacy.msg_scene_micro_guide_list_search_shortcuts': return 'Toque em pesquisar títulos, conteúdo e tags; toque no título para filtros de atalho';
+			case 'strings.legacy.msg_scene_micro_guide_editor_tag_autocomplete_desktop': return 'Digite # para sugestões de tags, use?? para escolher e pressione Enter para inserir';
+			case 'strings.legacy.msg_scene_micro_guide_editor_tag_autocomplete_mobile': return 'Digite # ou toque no botão de tag para escolher uma tag sugerida';
+			case 'strings.legacy.msg_scene_micro_guide_gallery_controls_desktop': return '?/? trocar? Esc fecha? redefinições de toque duplo';
+			case 'strings.legacy.msg_scene_micro_guide_gallery_controls_mobile': return 'Toque duas vezes para redefinir';
+			case 'strings.legacy.msg_scene_micro_guide_desktop_global_shortcuts': return ({required Object search, required Object quickRecord, required Object overview}) => 'Pesquisa ${search}? ${quickRecord} Gravação rápida? ${overview} Ver atalhos';
+			case 'strings.legacy.msg_new_template': return 'Adicionar modelo';
+			case 'strings.legacy.msg_edit_template': return 'Editar modelo';
+			case 'strings.legacy.msg_template_name': return 'Nome do modelo';
+			case 'strings.legacy.msg_template_name_example': return 'Exemplo: Revisão matinal';
+			case 'strings.legacy.msg_template_content': return 'Conteúdo do modelo';
+			case 'strings.legacy.msg_template_content_example': return 'Você pode usar variáveis, por exemplo: {{data}} {{clima}}';
+			case 'strings.legacy.msg_template_variable_settings': return 'Configurações de variáveis de modelo';
+			case 'strings.legacy.msg_date_format_variable': return 'Formato de data ({{data}})';
+			case 'strings.legacy.msg_time_format_variable': return 'Formato de hora ({{hora}})';
+			case 'strings.legacy.msg_datetime_format_variable': return 'Formato de data e hora ({{datetime}})';
+			case 'strings.legacy.msg_enable_weather_variables': return 'Habilitar variáveis climáticas';
+			case 'strings.legacy.msg_weather_variable_tokens': return 'Variáveis: {{clima}} / {{clima.*}}';
+			case 'strings.legacy.msg_weather_city_adcode_or_name': return 'Cidade meteorológica (adcode ou nome da cidade)';
+			case 'strings.legacy.msg_weather_city_example': return 'Exemplo: 110000';
+			case 'strings.legacy.msg_weather_fallback_text': return 'Texto alternativo do clima';
+			case 'strings.legacy.msg_keep_unknown_variables_raw': return 'Mantenha variáveis desconhecidas como estão';
+			case 'strings.legacy.msg_keep_unknown_variables_raw_desc': return 'Quando desativado, variáveis desconhecidas serão substituídas por uma string vazia.';
+			case 'strings.legacy.msg_delete_template': return 'Excluir modelo';
+			case 'strings.legacy.msg_delete_template_confirm_with_name': return ({required Object name}) => 'Excluir “${name}”?';
+			case 'strings.legacy.msg_current_date': return 'Data atual';
+			case 'strings.legacy.msg_current_time': return 'Hora atual';
+			case 'strings.legacy.msg_current_datetime': return 'Data e hora atuais';
+			case 'strings.legacy.msg_weekday_name': return 'Nome do dia da semana';
+			case 'strings.legacy.msg_weather_plus_temperature_without_city': return 'Tempo + temperatura (sem cidade)';
+			case 'strings.legacy.msg_city_plus_weather_plus_temperature': return 'Cidade + clima + temperatura';
+			case 'strings.legacy.msg_weather_city_label': return 'Cidade meteorológica';
+			case 'strings.legacy.msg_weather_province': return 'Província meteorológica';
+			case 'strings.legacy.msg_weather_condition': return 'Condições climáticas';
+			case 'strings.legacy.msg_temperature_without_unit': return 'Temperatura (sem unidade)';
+			case 'strings.legacy.msg_humidity_without_percent': return 'Umidade (sem símbolo %)';
+			case 'strings.legacy.msg_wind_direction': return 'Direção do vento';
+			case 'strings.legacy.msg_wind_power': return 'Força do vento';
+			case 'strings.legacy.msg_weather_report_time': return 'Hora do boletim meteorológico';
+			case 'strings.legacy.msg_adcode': return 'Código de área administrativa';
+			case 'strings.legacy.msg_example_saturday': return 'Sábado';
+			case 'strings.legacy.msg_example_sunny_25c': return 'Ensolarado 25°C';
+			case 'strings.legacy.msg_example_beijing_sunny_25c': return 'Pequim Ensolarado 25°C';
+			case 'strings.legacy.msg_example_beijing': return 'Pequim';
+			case 'strings.legacy.msg_example_beijing_city': return 'Município de Pequim';
+			case 'strings.legacy.msg_example_sunny': return 'Ensolarado';
+			case 'strings.legacy.msg_example_northeast': return 'Nordeste';
+			case 'strings.legacy.msg_total_count_times': return ({required Object count}) => '${count} vezes no total';
+			case 'strings.legacy.msg_current_streak_days': return 'Sequência atual (dias)';
+			case 'strings.legacy.msg_total_days': return 'Total de dias';
+			case 'strings.legacy.msg_average_daily_characters': return 'Média diária de caracteres';
+			case 'strings.legacy.msg_longest_streak_days': return 'Maior sequência (dias)';
+			case 'strings.legacy.msg_total_memos_metric': return 'Total de memorandos';
+			case 'strings.legacy.msg_total_characters_metric': return 'Total de caracteres';
+			case 'strings.legacy.msg_common_writing_time': return 'Tempo de escrita comum';
+			case 'strings.legacy.msg_most_active_day': return 'Dia mais ativo';
+			case 'strings.legacy.msg_memo_count': return 'Contagem de memorandos';
+			case 'strings.legacy.msg_total_characters_short': return 'Total de caracteres';
+			case 'strings.legacy.msg_max_characters_single_day': return 'Máximo de caracteres por dia';
+			case 'strings.legacy.msg_image': return 'Imagem';
+			case 'strings.legacy.msg_video': return 'Vídeo';
+			case 'strings.legacy.msg_audio': return 'Áudio';
+			case 'strings.legacy.msg_document': return 'Documento';
+			case 'strings.legacy.msg_other': return 'Outro';
+			case 'strings.legacy.msg_attachment_name_contains': return 'O nome do anexo contém';
+			case 'strings.legacy.msg_attachment_type': return 'Tipo de anexo';
+			case 'strings.legacy.msg_linked_memos': return 'Memorandos vinculados';
+			case 'strings.legacy.msg_clear_all_filters': return 'Limpar todos os filtros';
+			case 'strings.legacy.msg_file': return 'Arquivo';
+			case 'strings.legacy.msg_vs_last_month_same_memo_count': return 'Mesma contagem de memorandos do mês passado';
+			case 'strings.legacy.msg_vs_last_month_increase_memo_count': return 'Mais memorandos do que no mês passado';
+			case 'strings.legacy.msg_vs_last_month_decrease_memo_count': return 'Menos memorandos que no mês passado';
+			case 'strings.legacy.msg_weekday_monday': return 'Seg';
+			case 'strings.legacy.msg_weekday_tuesday': return 'Terça';
+			case 'strings.legacy.msg_weekday_wednesday': return 'Quarta';
+			case 'strings.legacy.msg_weekday_thursday': return 'Qui';
+			case 'strings.legacy.msg_weekday_friday': return 'Sexta-feira';
+			case 'strings.legacy.msg_weekday_saturday': return 'Sábado';
+			case 'strings.legacy.msg_weekday_sunday': return 'Sol';
+			case 'strings.legacy.msg_current_window_pin_not_supported': return 'A fixação não é suportada na janela atual.';
+			case 'strings.legacy.msg_no_valid_files_selected': return 'Nenhum arquivo válido selecionado.';
+			case 'strings.legacy.msg_added_attachment_count': return ({required Object count}) => 'Adicionados anexo(s) ${count}.';
+			case 'strings.legacy.msg_save_failed_check_content_retry': return 'Falha ao salvar. Verifique o conteúdo e tente novamente.';
+			case 'strings.legacy.msg_quick_input_channel_not_ready_retry': return 'O canal de entrada rápida não está pronto. Por favor, reabra a janela principal e tente novamente.';
+			case 'strings.legacy.msg_visibility_value': return ({required Object value}) => 'Visibilidade: ${value}';
+			case 'strings.legacy.msg_saved_to_memoflow': return 'Salvo em MemoFlow';
+			case 'strings.legacy.msg_quick_input_failed_with_error': return ({required Object error}) => 'Falha na entrada rápida: ${error}';
+			case 'strings.legacy.msg_feature': return 'Recurso';
+			case 'strings.legacy.msg_feature_not_implemented_placeholder_with_label': return ({required Object label}) => '“${label}” ainda não foi implementado (espaço reservado).';
+			case 'strings.legacy.msg_quick_input_save_failed_with_error': return ({required Object error}) => 'Falha ao salvar entrada rápida: ${error}';
+			case 'strings.legacy.msg_toggle_memoflow_failed_with_error': return ({required Object error}) => 'Falha ao mostrar/ocultar MemoFlow: ${error}';
+			case 'strings.legacy.msg_shortcuts_overview_opened': return 'Visão geral dos atalhos abertos.';
+			case 'strings.legacy.msg_unsupported_version_value': return ({required Object version}) => 'Versão não suportada: ${version}';
+			case 'strings.legacy.msg_version_probe_passed_with_version': return ({required Object version}) => 'Sondagem v${version} aprovada';
+			case 'strings.legacy.msg_startup_slogan': return 'Deixe os registros fluírem naturalmente';
+			case 'strings.legacy.msg_storage_read_failed_some_features_limited': return 'Falha na leitura do armazenamento. Alguns recursos são limitados.';
+			case 'strings.legacy.msg_monthly_overview': return ({required Object month}) => 'Visão geral mensal do ${month}';
+			case 'strings.legacy.msg_daily_memo_trend': return 'Tendência de memorando diário';
+			case 'strings.legacy.msg_date_memo_count_tooltip': return ({required Object date, required Object count}) => '${date} \n ${count} memorandos';
+			case 'strings.legacy.msg_average_value': return ({required Object value}) => 'Média ${value}';
+			case 'strings.legacy.msg_need_at_least_five_tags': return 'Existem menos de 5 tags. Adicione mais tags e tente novamente.';
+			case 'strings.legacy.msg_tag_cloud_tooltip': return ({required Object count, required Object percent, required Object latest}) => 'Memorandos ${count} \n ${percent}% \n Mais recente: ${latest}';
+			case 'strings.legacy.msg_unnamed_tag': return 'Marca sem nome';
+			case 'strings.legacy.msg_yearly_character_trend': return 'Tendência anual de caracteres';
+			case 'strings.legacy.msg_no_data': return 'Sem dados';
+			case 'strings.legacy.msg_month_characters_tooltip': return ({required Object month, required Object chars}) => '${month} \n ${chars} caracteres';
+			case 'strings.legacy.msg_on_this_day': return 'Neste dia';
+			case 'strings.legacy.msg_links_label': return 'Links';
+			case 'strings.legacy.app_drawer.tooltip_single': return ({required Object date, required Object weekday, required Object count}) => '${date} (${weekday}) · Memorando ${count}';
+			case 'strings.legacy.app_drawer.tooltip_multi': return ({required Object date, required Object weekday, required Object count}) => '${date} (${weekday}) · Memorandos ${count}';
+			case 'strings.legacy.ai_summary.error_api_key_empty': return 'A chave API está vazia';
+			case 'strings.legacy.ai_summary.system.require_json': return 'Por favor, imprima JSON estritamente. Não use blocos de código ou texto extra.';
+			case 'strings.legacy.ai_summary.system.json_format': return 'Formato JSON: {"insights":["..."],"moodTrend":"...","palavras-chave":["#..."]}';
+			case 'strings.legacy.ai_summary.system.insights_rule': return 'os insights devem ter de 2 a 5 itens; as palavras-chave devem ter de 4 a 8 itens com #.';
+			case 'strings.legacy.ai_summary.user.range': return ({required Object rangeLabel}) => 'Intervalo de tempo: ${rangeLabel}';
+			case 'strings.legacy.ai_summary.user.counts': return ({required Object memoCount, required Object includedCount}) => 'Memos: ${memoCount} (incluído para resumo: ${includedCount})';
+			case 'strings.legacy.ai_summary.user.profile': return ({required Object profile}) => 'Perfil de usuário: ${profile}';
+			case 'strings.legacy.ai_summary.user.custom_prompt': return ({required Object customPrompt}) => 'Instruções adicionais: ${customPrompt}';
+			case 'strings.legacy.ai_summary.user.memo_content': return 'Conteúdo do memorando:';
+			case 'strings.legacy.ai_summary.error_invalid_response': return 'A resposta AI tem um formato inválido';
+			case 'strings.legacy.ai_summary.error_empty_response': return 'A resposta AI está vazia';
+			case 'strings.legacy.ai_summary.error_missing_content': return 'O conteúdo da resposta AI está faltando';
+			case 'strings.legacy.ai_summary.default_prompt': return 'Você é um assistente de notas minimalista. Extraia os pontos principais e apresente-os em um formato limpo. Mantenha o tom profissional, caloroso e conciso. Prefira listas e parágrafos curtos.';
+			case 'strings.shareClip.videoDetected': return 'Detectado como conteúdo de vídeo';
+			case 'strings.shareClip.linkOnlyLabel': return 'Salvar apenas link';
+			case 'strings.shareClip.originalLinkLabel': return 'Link original';
+			case 'strings.shareClip.videoCandidatesTitle': return 'Candidatos de vídeo';
+			case 'strings.shareClip.downloadAndAttach': return 'Baixar e anexar';
+			case 'strings.shareClip.notSupportedLabel': return 'Não suportado';
+			case 'strings.shareClip.directLinkLabel': return 'Link direto';
+			case 'strings.shareClip.xiaohongshuLabel': return 'Xiaohongshu';
+			case 'strings.shareClip.unsupportedDash': return 'Fluxo DASH separado não é suportado';
+			case 'strings.shareClip.unsupportedStream': return 'O recurso somente streaming não é compatível';
+			case 'strings.shareClip.fileTooLargeTitle': return 'O vídeo tem mais de 30 MB';
+			case 'strings.shareClip.fileTooLargeBody': return ({required Object size}) => 'Este vídeo é ${size}, que excede o limite de anexos do servidor.';
+			case 'strings.shareClip.compressAndSave': return 'Compactar e salvar';
+			case 'strings.shareClip.fallbackParseFailed': return 'A análise do vídeo falhou, então o aplicativo salvou apenas o link.';
+			case 'strings.shareClip.fallbackDownloadFailed': return 'O download do vídeo falhou, então o aplicativo salvou apenas o link.';
+			case 'strings.shareClip.fallbackCompressionFailed': return 'Falha na compactação do vídeo, então o aplicativo salvou apenas o link.';
+			case 'strings.shareClip.fallbackCompressionStillTooLarge': return 'O vídeo compactado ainda tem mais de 30 MB, então o aplicativo salvou apenas o link.';
+			case 'strings.shareClip.failureUnsupportedUrl': return 'Esquema URL não suportado.';
+			case 'strings.shareClip.failureLoadTimeout': return 'Tempo limite esgotado ao carregar a página.';
+			case 'strings.shareClip.failureWebView': return 'WebView não conseguiu carregar a página.';
+			case 'strings.shareClip.failureDom': return 'Não foi possível ler o conteúdo da página.';
+			case 'strings.shareClip.failureParserEmpty': return 'Não foi possível extrair conteúdo legível.';
+			case 'strings.shareClip.failureUnknown': return 'Algo deu errado ao preparar esta visualização de compartilhamento.';
+			case 'strings.shareClip.stageLoadingPage': return 'Carregando página';
+			case 'strings.shareClip.stageWaitingContent': return 'Aguardando conteúdo dinâmico';
+			case 'strings.shareClip.stageDetectingMedia': return 'Detectando recursos de vídeo';
+			case 'strings.shareClip.stageParsingArticle': return 'Artigo de análise';
+			case 'strings.shareClip.stageBuildingPreview': return 'Visualização do edifício';
+			case 'strings.shareClip.stageDownloadingVideo': return 'Baixando vídeo';
+			case 'strings.shareClip.stageCompressingVideo': return 'Compactando vídeo';
+			case 'strings.shareClip.localSavedPendingSync': return 'Salvo localmente. A sincronização continuará quando disponível.';
+			case 'strings.collections.drawerLabel': return 'Coleções';
+			case 'strings.collections.title': return 'Coleções';
+			case 'strings.collections.collection': return 'Coleção';
+			case 'strings.collections.pinned': return 'Fixado';
+			case 'strings.collections.archived': return 'Arquivado';
+			case 'strings.collections.addToCollection': return 'Adicionar à coleção';
+			case 'strings.collections.newManual': return 'Novo manual';
+			case 'strings.collections.create': return 'Criar';
+			case 'strings.collections.createCollection': return 'Criar coleção';
+			case 'strings.collections.editCollection': return 'Editar coleção';
+			case 'strings.collections.reader.comingSoon': return 'Em breve';
+			case 'strings.collections.reader.manageCollectionItems': return 'Gerenciar itens de coleção';
+			case 'strings.collections.reader.currentMemoActions': return 'Ações atuais do memorando';
+			case 'strings.collections.reader.pageAnimationTooltip': return 'Animação de página';
+			case 'strings.collections.reader.pageAnimationNone': return 'Sem animação';
+			case 'strings.collections.reader.pageAnimationSlide': return 'Slide';
+			case 'strings.collections.reader.pageAnimationSimulation': return 'Simulação';
+			case 'strings.collections.reader.progressPage': return ({required Object current, required Object total}) => 'Página ${current}/${total}';
+			case 'strings.collections.reader.progressMemo': return ({required Object current, required Object total}) => 'Memorando ${current}/${total}';
+			case 'strings.collections.reader.settingsTitle': return 'Configurações do leitor';
+			case 'strings.collections.reader.themePreset': return 'Predefinição de tema';
+			case 'strings.collections.reader.themePaper': return 'Papel';
+			case 'strings.collections.reader.themeEyeCare': return 'Cuidados com os olhos';
+			case 'strings.collections.reader.themeDark': return 'Escuro';
+			case 'strings.collections.reader.themeGray': return 'Cinza';
+			case 'strings.collections.reader.brightnessMode': return 'Modo de brilho';
+			case 'strings.collections.reader.brightnessSystem': return 'Sistema';
+			case 'strings.collections.reader.brightnessManual': return 'Manual';
+			case 'strings.collections.reader.readerBrightness': return 'Brilho do leitor';
+			case 'strings.collections.reader.textScale': return 'Escala de texto';
+			case 'strings.collections.reader.lineSpacing': return 'Espaçamento entre linhas';
+			case 'strings.collections.reader.pagePadding': return 'Preenchimento de página';
+			case 'strings.collections.reader.autoPageTitle': return 'Página automática';
+			case 'strings.collections.reader.autoPageStart': return 'Iniciar';
+			case 'strings.collections.reader.autoPageStop': return 'Parar';
+			case 'strings.collections.reader.autoPageSecondsPerPage': return 'Segundos/página';
+			case 'strings.collections.reader.styleTitle': return 'Estilo do leitor';
+			case 'strings.collections.reader.backgroundStyle': return 'Estilo de fundo';
+			case 'strings.collections.reader.backgroundTypePreset': return 'Predefinição';
+			case 'strings.collections.reader.backgroundTypeSolid': return 'Sólido';
+			case 'strings.collections.reader.backgroundTypeImage': return 'Imagem';
+			case 'strings.collections.reader.backgroundAlpha': return 'Fundo alfa';
+			case 'strings.collections.reader.typography': return 'Tipografia';
+			case 'strings.collections.reader.readerFont': return 'Fonte do leitor';
+			case 'strings.collections.reader.fontSystemDefault': return 'Padrão do sistema';
+			case 'strings.collections.reader.fontWeightNormal': return 'Normal';
+			case 'strings.collections.reader.fontWeightMedium': return 'Médio';
+			case 'strings.collections.reader.fontWeightBold': return 'Negrito';
+			case 'strings.collections.reader.letterSpacing': return 'Espaçamento entre letras';
+			case 'strings.collections.reader.paragraphSpacing': return 'Espaçamento entre parágrafos';
+			case 'strings.collections.reader.firstLineIndent': return 'Recuo da primeira linha';
+			case 'strings.collections.reader.tipSettingsTitle': return 'Configurações da barra de dicas';
+			case 'strings.collections.reader.tipSettingsSubtitle': return 'Título, cabeçalho, rodapé, cores das pontas';
+			case 'strings.collections.reader.paddingSettingsTitle': return 'Configurações de preenchimento';
+			case 'strings.collections.reader.paddingSettingsSubtitle': return 'Preenchimento do corpo/cabeçalho/rodapé';
+			case 'strings.collections.reader.brightness': return 'Brilho';
+			case 'strings.collections.reader.customSolidColor': return 'Cor sólida personalizada';
+			case 'strings.collections.reader.backgroundColor': return 'Cor de fundo';
+			case 'strings.collections.reader.backgroundImage': return 'Imagem de fundo';
+			case 'strings.collections.reader.backgroundImageUnavailableWeb': return 'O plano de fundo do arquivo de imagem não está disponível na Web.';
+			case 'strings.collections.reader.backgroundImagePickHint': return 'Escolha um arquivo de imagem para o fundo do leitor.';
+			case 'strings.collections.reader.clearImageBackground': return 'Limpar fundo da imagem';
+			case 'strings.collections.reader.titleSection': return 'Título';
+			case 'strings.collections.reader.titleModeLeft': return 'Esquerda';
+			case 'strings.collections.reader.titleModeCenter': return 'Centro';
+			case 'strings.collections.reader.titleModeHidden': return 'Oculto';
+			case 'strings.collections.reader.titleScale': return 'Escala de título';
+			case 'strings.collections.reader.titleTopSpacing': return 'Espaçamento superior do título';
+			case 'strings.collections.reader.titleBottomSpacing': return 'Espaçamento inferior do título';
+			case 'strings.collections.reader.headerFooterSection': return 'Cabeçalho/rodapé';
+			case 'strings.collections.reader.headerMode': return 'Modo de cabeçalho';
+			case 'strings.collections.reader.footerMode': return 'Modo rodapé';
+			case 'strings.collections.reader.headerLeft': return 'Cabeçalho esquerdo';
+			case 'strings.collections.reader.headerCenter': return 'Centro do cabeçalho';
+			case 'strings.collections.reader.headerRight': return 'Cabeçalho à direita';
+			case 'strings.collections.reader.footerLeft': return 'Rodapé esquerdo';
+			case 'strings.collections.reader.footerCenter': return 'Rodapé central';
+			case 'strings.collections.reader.footerRight': return 'Rodapé à direita';
+			case 'strings.collections.reader.tipTextColor': return 'Cor do texto da dica';
+			case 'strings.collections.reader.dividerColor': return 'Cor do divisor';
+			case 'strings.collections.reader.useDefaultLongPressReset': return 'Usar padrão (pressione e segure para redefinir)';
+			case 'strings.collections.reader.tipSlotNone': return 'Nenhum';
+			case 'strings.collections.reader.tipSlotCollectionTitle': return 'Título da coleção';
+			case 'strings.collections.reader.tipSlotChapterTitle': return 'Título do capítulo';
+			case 'strings.collections.reader.tipSlotTime': return 'Hora';
+			case 'strings.collections.reader.tipSlotBattery': return 'Bateria';
+			case 'strings.collections.reader.tipSlotBatteryPercentage': return 'Bateria %';
+			case 'strings.collections.reader.tipSlotPage': return 'Página';
+			case 'strings.collections.reader.tipSlotTotalProgress': return 'Progresso';
+			case 'strings.collections.reader.tipSlotPageAndTotal': return 'Página/total';
+			case 'strings.collections.reader.tipSlotTimeBattery': return 'Tempo + bateria';
+			case 'strings.collections.reader.tipSlotTimeBatteryPercentage': return 'Tempo + % de bateria';
+			case 'strings.collections.reader.tipDisplayHidden': return 'Oculto';
+			case 'strings.collections.reader.tipDisplayInline': return 'Embutido';
+			case 'strings.collections.reader.tipDisplayReserved': return 'Reservado';
+			case 'strings.collections.reader.paddingTitle': return 'Preenchimento de página';
+			case 'strings.collections.reader.paddingBody': return 'Corpo';
+			case 'strings.collections.reader.paddingHeader': return 'Cabeçalho';
+			case 'strings.collections.reader.paddingFooter': return 'Rodapé';
+			case 'strings.collections.reader.paddingTop': return 'Superior';
+			case 'strings.collections.reader.paddingBottom': return 'Parte inferior';
+			case 'strings.collections.reader.paddingLeft': return 'Esquerda';
+			case 'strings.collections.reader.paddingRight': return 'Certo';
+			case 'strings.collections.reader.showHeaderDivider': return 'Mostrar divisor de cabeçalho';
+			case 'strings.collections.reader.showFooterDivider': return 'Mostrar divisor de rodapé';
+			case 'strings.collections.reader.moreSettingsTitle': return 'Mais configurações';
+			case 'strings.collections.reader.moreDisplay': return 'Exibição';
+			case 'strings.collections.reader.moreInput': return 'Entrada';
+			case 'strings.collections.reader.moreContent': return 'Conteúdo';
+			case 'strings.collections.reader.hideStatusBar': return 'Ocultar barra de status';
+			case 'strings.collections.reader.hideNavigationBar': return 'Ocultar barra de navegação';
+			case 'strings.collections.reader.padDisplayCutouts': return 'Recortes de exibição do painel';
+			case 'strings.collections.reader.keepScreenAwake': return 'Manter a tela ativa';
+			case 'strings.collections.reader.barsFollowPageStyle': return 'Barras seguem o estilo da página';
+			case 'strings.collections.reader.showReadTitleAddition': return 'Mostrar adição de título lido';
+			case 'strings.collections.reader.showBrightnessOverlay': return 'Mostrar sobreposição de brilho';
+			case 'strings.collections.reader.mouseWheelPageTurn': return 'Viragem de página da roda do mouse';
+			case 'strings.collections.reader.volumeKeyPageTurn': return 'Viragem de página com tecla de volume';
+			case 'strings.collections.reader.longPressKeyPageTurn': return 'Pressione longamente a tecla para virar a página';
+			case 'strings.collections.reader.touchSlop': return 'Toque desleixado';
+			case 'strings.collections.reader.clickActionsTitle': return 'Ações de clique';
+			case 'strings.collections.reader.clickActionsSubtitle': return 'Configurar regiões de toque 3×3';
+			case 'strings.collections.reader.platformUnavailable': return 'Indisponível nesta plataforma';
+			case 'strings.collections.reader.allowTextSelection': return 'Permitir seleção de texto';
+			case 'strings.collections.reader.previewImageOnTap': return 'Pré-visualização da imagem ao tocar';
+			case 'strings.collections.reader.tapRegionTopLeft': return 'Canto superior esquerdo';
+			case 'strings.collections.reader.tapRegionTopCenter': return 'Centro superior';
+			case 'strings.collections.reader.tapRegionTopRight': return 'Canto superior direito';
+			case 'strings.collections.reader.tapRegionMiddleLeft': return 'Meio à esquerda';
+			case 'strings.collections.reader.tapRegionMiddleCenter': return 'Centro central';
+			case 'strings.collections.reader.tapRegionMiddleRight': return 'Meio à direita';
+			case 'strings.collections.reader.tapRegionBottomLeft': return 'Canto inferior esquerdo';
+			case 'strings.collections.reader.tapRegionBottomCenter': return 'Centro inferior';
+			case 'strings.collections.reader.tapRegionBottomRight': return 'Canto inferior direito';
+			case 'strings.collections.reader.tapActionNone': return 'Nenhum';
+			case 'strings.collections.reader.tapActionMenu': return 'Cardápio';
+			case 'strings.collections.reader.tapActionNextPage': return 'Próxima página';
+			case 'strings.collections.reader.tapActionPrevPage': return 'Página anterior';
+			case 'strings.collections.reader.tapActionNextChapter': return 'Próximo capítulo';
+			case 'strings.collections.reader.tapActionPrevChapter': return 'Capítulo anterior';
+			case 'strings.collections.reader.tapActionToc': return 'sumário';
+			case 'strings.collections.reader.tapActionSearch': return 'Pesquisa';
+			case 'strings.collections.reader.cancel': return 'Cancelar';
+			case 'strings.collections.reader.apply': return 'Aplicar';
+			case 'strings.collections.reader.styleCardsTitle': return 'Cartões de estilo';
+			case 'strings.collections.reader.styleCardNew': return 'Novo';
+			case 'strings.collections.reader.styleCardEditCurrent': return 'Editar atual';
+			case 'strings.collections.reader.styleCardCreateTitle': return 'Criar cartão de estilo';
+			case 'strings.collections.reader.styleCardEditTitle': return 'Editar cartão de estilo';
+			case 'strings.collections.reader.styleCardSave': return 'Salvar';
+			case 'strings.collections.reader.styleCardDelete': return 'Excluir';
+			case 'strings.collections.reader.styleCardNameLabel': return 'Nome do estilo';
+			case 'strings.collections.reader.styleCardBuiltIn': return 'Predefinição';
+			case 'strings.collections.reader.styleCardCustom': return 'Personalizado';
+			case 'strings.collections.createCollectionTooltip': return 'Criar coleção';
+			case 'strings.collections.reorderShelf': return 'Reordenar estante';
+			case 'strings.collections.reorderShelfDescription': return 'Arraste para ajustar a ordem mostrada em sua estante. As coleções fixadas ainda ficam acima das demais.';
+			case 'strings.collections.manageItems': return 'Gerenciar itens';
+			case 'strings.collections.searchCollections': return 'Pesquisar coleções';
+			case 'strings.collections.searchInsideCollection': return 'Pesquise dentro desta coleção';
+			case 'strings.collections.searchMemos': return 'Pesquisar memorandos';
+			case 'strings.collections.clearSearch': return 'Limpar pesquisa';
+			case 'strings.collections.collectionActions': return 'Ações de coleta';
+			case 'strings.collections.openCollection': return 'Coleção aberta';
+			case 'strings.collections.dragToReorder': return 'Arraste para reordenar';
+			case 'strings.collections.smart': return 'Inteligente';
+			case 'strings.collections.smartCollectionSummary': return 'Coleção inteligente';
+			case 'strings.collections.manual': return 'Manual';
+			case 'strings.collections.manualCollectionSummary': return 'Coleta manual';
+			case 'strings.collections.shelf': return 'Prateleira';
+			case 'strings.collections.timeline': return 'Cronograma';
+			case 'strings.collections.list': return 'Lista';
+			case 'strings.collections.noGroups': return 'Nenhum grupo';
+			case 'strings.collections.month': return 'Mês';
+			case 'strings.collections.quarter': return 'Trimestre';
+			case 'strings.collections.year': return 'Ano';
+			case 'strings.collections.autoCover': return 'Cobertura automática';
+			case 'strings.collections.coverReady': return 'Capa pronta';
+			case 'strings.collections.pinToTop': return 'Fixar no topo';
+			case 'strings.collections.privateOnly': return 'Apenas privado';
+			case 'strings.collections.publicOnly': return 'Somente público';
+			case 'strings.collections.hasAttachments': return 'Possui anexos';
+			case 'strings.collections.noAttachments': return 'Sem anexos';
+			case 'strings.collections.imagesOnly': return 'Somente imagens';
+			case 'strings.collections.pinnedOnlySummary': return 'Somente fixado';
+			case 'strings.collections.lastDays': return ({required Object days}) => 'Últimos dias ${days}';
+			case 'strings.collections.customRangeSummary': return 'Intervalo personalizado';
+			case 'strings.collections.headerHeadline': return 'Crie estantes temáticas a partir de seus memorandos';
+			case 'strings.collections.headerDescription': return 'As coleções permanecem locais primeiro, são atualizadas a partir de tags automaticamente e dão aos tópicos recorrentes seu próprio lar.';
+			case 'strings.collections.countAll': return ({required Object count}) => 'Coleções ${count}';
+			case 'strings.collections.countFiltered': return ({required Object visible, required Object total}) => 'Mostrando ${visible} de coleções ${total}';
+			case 'strings.collections.noCollectionsTitle': return 'Nenhuma coleção ainda';
+			case 'strings.collections.noCollectionsDescription': return 'Crie uma coleção inteligente para transformar tags recorrentes em uma estante selecionada.';
+			case 'strings.collections.noMatchingTitle': return 'Nenhuma coleção correspondente';
+			case 'strings.collections.noMatchingDescription': return 'Experimente uma pesquisa ou filtro diferente para encontrar a coleção que você precisa.';
+			case 'strings.collections.resetFilters': return 'Redefinir filtros';
+			case 'strings.collections.loadingCollections': return 'Carregando coleções';
+			case 'strings.collections.loadingCollection': return 'Carregando coleção';
+			case 'strings.collections.loadingMemos': return 'Carregando memorandos';
+			case 'strings.collections.unableToLoadCollections': return 'Não é possível carregar coleções';
+			case 'strings.collections.unableToLoadCollection': return 'Não foi possível carregar a coleção';
+			case 'strings.collections.unableToLoadCollectionItems': return 'Não foi possível carregar itens da coleção';
+			case 'strings.collections.unableToLoadCurrentItems': return 'Não foi possível carregar os itens atuais';
+			case 'strings.collections.unableToLoadMemos': return 'Não foi possível carregar memorandos';
+			case 'strings.collections.deleteTitle': return 'Excluir coleção?';
+			case 'strings.collections.deleteMessage': return ({required Object title}) => 'Excluir "${title}"?';
+			case 'strings.collections.memosCount': return ({required Object count}) => 'Memorandos ${count}';
+			case 'strings.collections.imagesCount': return ({required Object count}) => '${count} com imagens';
+			case 'strings.collections.showingMemos': return ({required Object visible, required Object total}) => 'Mostrando ${visible} de memorandos ${total}';
+			case 'strings.collections.noMemoMatchedYet': return 'Nenhum memorando correspondido ainda';
+			case 'strings.collections.updatedAt': return ({required Object date}) => '${date} atualizado';
+			case 'strings.collections.addMemos': return 'Adicionar memorandos';
+			case 'strings.collections.addMemo': return 'Adicionar memorando';
+			case 'strings.collections.addSelected': return ({required Object count}) => 'Adicionar (${count})';
+			case 'strings.collections.remove': return 'Remover';
+			case 'strings.collections.noManualCollectionsTitle': return 'Ainda não há coletas manuais';
+			case 'strings.collections.noManualCollectionsDescription': return 'Crie um para salvar este memorando e guarde-o em uma prateleira.';
+			case 'strings.collections.manualCollectionNotFoundTitle': return 'Coleta manual não encontrada';
+			case 'strings.collections.manualCollectionNotFoundDescription': return 'Esta coleção está faltando ou não está mais disponível no armazenamento local.';
+			case 'strings.collections.manualCollectionEmptyTitle': return 'Esta coleção ainda não possui itens.';
+			case 'strings.collections.manualCollectionEmptyDescription': return 'Adicione memorandos para transformar esta coleção manual em uma estante que você pode revisitar continuamente.';
+			case 'strings.collections.noMemosAvailableTitle': return 'Nenhum memorando disponível para adicionar';
+			case 'strings.collections.noMemosAvailableDescription': return 'Experimente uma palavra-chave diferente ou crie mais memorandos antes de adicioná-los aqui.';
+			case 'strings.collections.collectionNotFound': return 'Coleção não encontrada';
+			case 'strings.collections.searchNoResultsTitle': return ({required Object query}) => 'Nenhum resultado para "${query}"';
+			case 'strings.collections.searchNoResultsDescription': return 'Experimente uma palavra-chave diferente dentro desta coleção.';
+			case 'strings.collections.emptySmartDetail': return 'Nenhum memorando corresponde às regras atuais ainda.';
+			case 'strings.collections.emptyManualDetail': return 'Esta coleção ainda não possui itens.';
+			case 'strings.collections.basics': return 'Noções básicas';
+			case 'strings.collections.titleRequired': return 'O título é obrigatório';
+			case 'strings.collections.ruleRequired': return 'Adicione pelo menos uma regra antes de salvar';
+			case 'strings.collections.description': return 'Descrição';
+			case 'strings.collections.type': return 'Tipo';
+			case 'strings.collections.accentColor': return 'Cor de destaque';
+			case 'strings.collections.rules': return 'Regras';
+			case 'strings.collections.tags': return 'Etiquetas';
+			case 'strings.collections.selectTags': return 'Selecionar tags';
+			case 'strings.collections.noTagsSelected': return 'Nenhuma tag selecionada';
+			case 'strings.collections.tagMatch': return 'Correspondência de etiqueta';
+			case 'strings.collections.anyTag': return 'Qualquer etiqueta';
+			case 'strings.collections.allTags': return 'Todas as tags';
+			case 'strings.collections.includeDescendants': return 'Incluir descendentes';
+			case 'strings.collections.includeDescendantsDescription': return 'Combine tags filhas como projeto/alfa.';
+			case 'strings.collections.attachments': return 'Anexos';
+			case 'strings.collections.attachmentAny': return 'Qualquer';
+			case 'strings.collections.attachmentRequired': return 'Obrigatório';
+			case 'strings.collections.attachmentNone': return 'Nenhum';
+			case 'strings.collections.attachmentImagesOnly': return 'Somente imagens';
+			case 'strings.collections.dateRange': return 'Período';
+			case 'strings.collections.allTime': return 'Todo o tempo';
+			case 'strings.collections.last7Days': return 'Últimos 7 dias';
+			case 'strings.collections.last30Days': return 'Últimos 30 dias';
+			case 'strings.collections.customRange': return 'Intervalo personalizado';
+			case 'strings.collections.chooseRange': return 'Escolha o intervalo';
+			case 'strings.collections.pinnedOnly': return 'Somente memorandos fixados';
+			case 'strings.collections.manualItems': return 'Itens manuais';
+			case 'strings.collections.manualItemsDescription': return 'As coleções manuais são selecionadas a partir de cartões de memorando, detalhes de memorando ou modo de gerenciamento de itens da página de detalhes.';
+			case 'strings.collections.display': return 'Exibição';
+			case 'strings.collections.cover': return 'Capa';
+			case 'strings.collections.coverAttachment': return 'Anexo';
+			case 'strings.collections.coverImage': return 'Imagem da capa';
+			case 'strings.collections.noCoverImageAvailable': return 'Nenhum anexo de imagem está disponível na visualização atual ainda.';
+			case 'strings.collections.defaultLayout': return 'Layout padrão';
+			case 'strings.collections.groupBy': return 'Agrupar por';
+			case 'strings.collections.manualOrder': return 'Pedido manual';
+			case 'strings.collections.displayTimeDesc': return 'Tempo de exibição ↓';
+			case 'strings.collections.displayTimeAsc': return 'Tempo de exibição ↑';
+			case 'strings.collections.updatedTimeDesc': return 'Hora atualizada ↓';
+			case 'strings.collections.updatedTimeAsc': return 'Hora atualizada ↑';
+			case 'strings.collections.showDetailStats': return 'Mostrar estatísticas detalhadas';
+			case 'strings.collections.showDetailStatsDescription': return 'Exibe contagem de memorandos, contagem de imagens e atividades recentes no cabeçalho de detalhes.';
+			case 'strings.collections.hideWhenEmpty': return 'Esconder na prateleira quando vazio';
+			case 'strings.collections.hideWhenEmptyDescription': return 'Mantém esta coleção fora da prateleira principal até que ela corresponda aos memorandos novamente.';
+			case 'strings.collections.previewMemos': return 'Memos';
+			case 'strings.collections.previewImages': return 'Imagens';
+			case 'strings.collections.noPreviewSmart': return 'Nenhuma correspondência de memorando ainda.';
+			case 'strings.collections.noPreviewManual': return 'Esta coleção manual ainda não possui itens.';
+			default: return null;
+		}
+	}
+}
+
 extension on _StringsZhHans {
 	dynamic _flatMapFunction(String path) {
 		switch (path) {
@@ -18602,12 +23231,14 @@ extension on _StringsZhHans {
 			case 'strings.languages.en': return '英语';
 			case 'strings.languages.ja': return '日语';
 			case 'strings.languages.de': return '德语';
+			case 'strings.languages.ptBr': return '葡萄牙语（巴西）';
 			case 'strings.languagesNative.system': return '系统';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
 			case 'strings.languagesNative.en': return '英语';
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
+			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
 			case 'strings.onboarding.tagline': return '简约而强大的笔记流';
 			case 'strings.onboarding.selectLanguage': return '选择语言';
 			case 'strings.onboarding.selectMode': return '选择工作模式';
@@ -19972,6 +24603,7 @@ extension on _StringsZhHans {
 			case 'strings.legacy.app_language.en': return '英语';
 			case 'strings.legacy.app_language.ja': return '日语';
 			case 'strings.legacy.app_language.de': return '德语';
+			case 'strings.legacy.app_language.pt_br': return '葡萄牙语（巴西）';
 			case 'strings.legacy.app_theme.system': return '系统';
 			case 'strings.legacy.app_theme.light': return '浅色';
 			case 'strings.legacy.app_theme.dark': return '深色';
@@ -20621,12 +25253,14 @@ extension on _StringsZhHantTw {
 			case 'strings.languages.en': return '英文';
 			case 'strings.languages.ja': return '日文';
 			case 'strings.languages.de': return '德文';
+			case 'strings.languages.ptBr': return '葡萄牙文（巴西）';
 			case 'strings.languagesNative.system': return '系統';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
 			case 'strings.languagesNative.en': return 'English';
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
+			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
 			case 'strings.onboarding.tagline': return '簡約而強大的筆記流';
 			case 'strings.onboarding.selectLanguage': return '選擇語言';
 			case 'strings.onboarding.selectMode': return '選擇工作模式';
@@ -21974,6 +26608,7 @@ extension on _StringsZhHantTw {
 			case 'strings.legacy.app_language.en': return '英語';
 			case 'strings.legacy.app_language.ja': return '日語';
 			case 'strings.legacy.app_language.de': return '德語';
+			case 'strings.legacy.app_language.pt_br': return '葡萄牙文（巴西）';
 			case 'strings.legacy.app_theme.system': return '系統';
 			case 'strings.legacy.app_theme.light': return '淺色';
 			case 'strings.legacy.app_theme.dark': return '深色';

@@ -1,5 +1,8 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:memos_flutter_app/core/app_localization.dart';
+import 'package:memos_flutter_app/data/models/app_preferences.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 
 void main() {
@@ -47,6 +50,66 @@ void main() {
         t.strings.legacy.msg_webhooks_not_supported_server,
         '目前伺服器不支援網路回呼',
       );
+    });
+  });
+
+  group('Brazilian Portuguese localization', () {
+    test('pt-BR keeps key UI labels in Portuguese', () {
+      final t = AppLocale.ptBr.build();
+
+      expect(t.strings.common.back, 'Voltar');
+      expect(t.strings.common.cancel, 'Cancelar');
+      expect(t.strings.common.confirm, 'Confirmar');
+      expect(
+        t.strings.common.serverVersionValue(version: '0.26.0'),
+        'Vers\u00e3o do servidor: 0.26.0',
+      );
+      expect(t.strings.onboarding.selectLanguage, 'Selecione o idioma');
+      expect(t.strings.languages.ptBr, 'Portugu\u00eas (Brasil)');
+      expect(t.strings.languagesNative.ptBr, 'Portugu\u00eas (Brasil)');
+      expect(t.strings.legacy.app_language.pt_br, 'Portugu\u00eas (Brasil)');
+    });
+
+    test('supported locales include pt-BR', () {
+      expect(AppLocaleUtils.supportedLocalesRaw, contains('pt-BR'));
+      expect(
+        AppLocaleUtils.supportedLocales,
+        contains(AppLocale.ptBr.flutterLocale),
+      );
+    });
+
+    test('Portuguese device locales map to Brazilian Portuguese', () {
+      expect(
+        appLanguageFromLocale(
+          const Locale.fromSubtags(languageCode: 'pt', countryCode: 'BR'),
+        ),
+        AppLanguage.ptBr,
+      );
+      expect(
+        appLanguageFromLocale(
+          const Locale.fromSubtags(languageCode: 'pt', countryCode: 'PT'),
+        ),
+        AppLanguage.ptBr,
+      );
+      expect(appLocaleForLanguage(AppLanguage.ptBr), AppLocale.ptBr);
+    });
+
+    test('existing non-Portuguese locale mappings remain stable', () {
+      expect(
+        appLanguageFromLocale(
+          const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
+        ),
+        AppLanguage.zhHans,
+      );
+      expect(
+        appLanguageFromLocale(
+          const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+        ),
+        AppLanguage.zhHantTw,
+      );
+      expect(appLanguageFromLocale(const Locale('ja')), AppLanguage.ja);
+      expect(appLanguageFromLocale(const Locale('de')), AppLanguage.de);
+      expect(appLanguageFromLocale(const Locale('en')), AppLanguage.en);
     });
   });
 }

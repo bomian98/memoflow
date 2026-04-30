@@ -253,6 +253,7 @@ String _localeTagForLanguage(AppLanguage language) {
     AppLanguage.zhHantTw => 'zh-Hant-TW',
     AppLanguage.ja => 'ja',
     AppLanguage.de => 'de',
+    AppLanguage.ptBr => 'pt-BR',
     AppLanguage.system => appLocaleForLanguage(language).languageCode,
     _ => 'en',
   };

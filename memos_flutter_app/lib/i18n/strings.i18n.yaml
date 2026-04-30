@@ -19,6 +19,7 @@ languages:
   en: "English"
   ja: "Japanese"
   de: "German"
+  ptBr: "Portuguese (Brazil)"
 languagesNative:
   system: "System"
   zhHans: "简体中文"
@@ -26,6 +27,7 @@ languagesNative:
   en: "English"
   ja: "日本語"
   de: "Deutsch"
+  ptBr: "Português (Brasil)"
 onboarding:
   tagline: "Minimal, powerful note stream"
   selectLanguage: "Select language"
@@ -1432,6 +1434,7 @@ legacy:
     en: "English"
     ja: "Japanese"
     de: "German"
+    pt_br: "Portuguese (Brazil)"
   app_theme:
     system: "System"
     light: "Light"
