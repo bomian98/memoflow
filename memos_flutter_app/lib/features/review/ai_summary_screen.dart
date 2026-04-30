@@ -734,6 +734,12 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     required bool useDesktopSidePane,
   }) {
     final enableWindowsDragToMove = Platform.isWindows;
+    final settings = ref.watch(aiSettingsProvider);
+    final customTemplates = settings.customInsightTemplates;
+    final defaultTemplatesCollapsed = settings.defaultInsightTemplatesCollapsed;
+    final templateStrings = context.t.strings.aiInsight.templates;
+    final canAddCustomTemplate =
+        customTemplates.length < AiSettings.maxCustomInsightTemplateCount;
     final titleText = useDesktopSidePane
         ? context.t.strings.aiInsight.title
         : (isReport
@@ -774,6 +780,43 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
             color: MemoFlowPalette.primary,
             onPressed: _shareReport,
           ),
+        if (!isReport) ...[
+          IconButton.outlined(
+            key: const Key('aiSummaryToggleDefaultTemplatesButton'),
+            tooltip: defaultTemplatesCollapsed
+                ? templateStrings.showDefault
+                : templateStrings.hideDefault,
+            onPressed: () {
+              ref
+                  .read(aiSettingsProvider.notifier)
+                  .setDefaultInsightTemplatesCollapsed(
+                    !defaultTemplatesCollapsed,
+                  );
+            },
+            style: IconButton.styleFrom(foregroundColor: textMain),
+            icon: Icon(
+              defaultTemplatesCollapsed
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_rounded,
+            ),
+          ),
+          IconButton.filled(
+            key: const Key('aiSummaryAddCustomTemplateButton'),
+            tooltip: templateStrings.newTemplate,
+            onPressed: canAddCustomTemplate
+                ? _openCreateCustomTemplateEditor
+                : null,
+            style: IconButton.styleFrom(
+              backgroundColor: MemoFlowPalette.primary,
+              disabledBackgroundColor: MemoFlowPalette.primary.withValues(
+                alpha: 0.35,
+              ),
+              foregroundColor: Colors.white,
+              disabledForegroundColor: Colors.white.withValues(alpha: 0.72),
+            ),
+            icon: const Icon(Icons.add_rounded),
+          ),
+        ],
         IconButton(
           tooltip: context.t.strings.settings.preferences.history,
           icon: Icon(Icons.history_rounded, color: textMain),
@@ -1011,10 +1054,6 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     final crossAxisCount = isNarrow ? 2 : 3;
     final width = MediaQuery.sizeOf(context).width;
     final horizontalPadding = isNarrow ? 20.0 : 28.0;
-    final isWindowsDesktop =
-        Theme.of(context).platform == TargetPlatform.windows;
-    final canAddCustomTemplate =
-        customTemplates.length < AiSettings.maxCustomInsightTemplateCount;
 
     final hasGenerationConfig = hasConfiguredChatRoute(
       settings,
@@ -1098,66 +1137,13 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
       title: templateStrings.defaultTitle,
       textMain: textMain,
       textMuted: textMuted,
-      trailing: isWindowsDesktop
-          ? null
-          : IconButton.outlined(
-              key: const Key('aiSummaryToggleDefaultTemplatesButton'),
-              tooltip: defaultTemplatesCollapsed
-                  ? templateStrings.showDefault
-                  : templateStrings.hideDefault,
-              onPressed: () {
-                ref
-                    .read(aiSettingsProvider.notifier)
-                    .setDefaultInsightTemplatesCollapsed(
-                      !defaultTemplatesCollapsed,
-                    );
-              },
-              icon: Icon(
-                defaultTemplatesCollapsed
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_rounded,
-              ),
-            ),
     );
 
     final customSectionHeader = AiSummarySectionHeader(
       title: templateStrings.customTitle,
       textMain: textMain,
       textMuted: textMuted,
-      titleSuffix: isWindowsDesktop ? buildCustomTemplateCountBadge() : null,
-      trailing: isWindowsDesktop
-          ? null
-          : Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              alignment: WrapAlignment.end,
-              children: [
-                buildCustomTemplateCountBadge(),
-                const SizedBox(width: 10),
-                Tooltip(
-                  message: templateStrings.newTemplate,
-                  child: FilledButton(
-                    key: const Key('aiSummaryAddCustomTemplateButton'),
-                    onPressed: canAddCustomTemplate
-                        ? _openCreateCustomTemplateEditor
-                        : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: MemoFlowPalette.primary,
-                      disabledBackgroundColor: MemoFlowPalette.primary
-                          .withValues(alpha: 0.35),
-                      disabledForegroundColor: Colors.white.withValues(
-                        alpha: 0.72,
-                      ),
-                      minimumSize: const Size(44, 44),
-                      padding: EdgeInsets.zero,
-                      shape: const CircleBorder(),
-                    ),
-                    child: const Icon(Icons.add_rounded),
-                  ),
-                ),
-              ],
-            ),
+      titleSuffix: buildCustomTemplateCountBadge(),
     );
 
     final emptyState = _AiCustomTemplateEmptyState(

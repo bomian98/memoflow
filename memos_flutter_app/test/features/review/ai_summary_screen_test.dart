@@ -14,19 +14,32 @@ import 'package:memos_flutter_app/data/ai/ai_analysis_models.dart';
 import 'package:memos_flutter_app/data/ai/ai_analysis_repository.dart';
 import 'package:memos_flutter_app/data/db/app_database.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
+import 'package:memos_flutter_app/data/models/device_preferences.dart';
+import 'package:memos_flutter_app/data/models/home_navigation_preferences.dart';
 import 'package:memos_flutter_app/data/models/instance_profile.dart';
+import 'package:memos_flutter_app/data/models/notification_item.dart';
 import 'package:memos_flutter_app/data/models/user.dart';
+import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/data/repositories/ai_settings_repository.dart';
+import 'package:memos_flutter_app/features/home/app_drawer.dart';
+import 'package:memos_flutter_app/features/home/home_bottom_nav_shell.dart';
+import 'package:memos_flutter_app/features/home/home_navigation_host.dart';
+import 'package:memos_flutter_app/features/home/home_root_destination_registry.dart';
 import 'package:memos_flutter_app/features/review/ai_analysis_preview_screen.dart';
 import 'package:memos_flutter_app/features/review/ai_insight_history_shared.dart';
 import 'package:memos_flutter_app/features/review/ai_insight_models.dart';
 import 'package:memos_flutter_app/features/review/ai_insight_settings_sheet.dart';
 import 'package:memos_flutter_app/features/review/ai_summary_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
+import 'package:memos_flutter_app/state/memos/sync_queue_provider.dart';
 import 'package:memos_flutter_app/state/review/ai_analysis_provider.dart';
+import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/ai_settings_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
+import 'package:memos_flutter_app/state/settings/preferences_migration_service.dart';
+import 'package:memos_flutter_app/state/settings/workspace_preferences_provider.dart';
 import 'package:memos_flutter_app/state/system/database_provider.dart';
+import 'package:memos_flutter_app/state/system/notifications_provider.dart';
 import 'package:memos_flutter_app/state/system/session_provider.dart';
 
 import '../../test_support.dart';
@@ -84,6 +97,50 @@ class _MemoryAppPreferencesRepository extends AppPreferencesRepository {
   @override
   Future<void> clear() async {
     _prefs = AppPreferences.defaultsForLanguage(AppLanguage.en);
+  }
+}
+
+class _MemoryDevicePreferencesRepository extends DevicePreferencesRepository {
+  _MemoryDevicePreferencesRepository(this._prefs)
+    : super(PreferencesMigrationService(const FlutterSecureStorage()));
+
+  DevicePreferences _prefs;
+
+  @override
+  Future<StorageReadResult<DevicePreferences>> readWithStatus() async {
+    return StorageReadResult.success(_prefs);
+  }
+
+  @override
+  Future<DevicePreferences> read() async => _prefs;
+
+  @override
+  Future<void> write(DevicePreferences prefs) async {
+    _prefs = prefs;
+  }
+}
+
+class _MemoryWorkspacePreferencesRepository
+    extends WorkspacePreferencesRepository {
+  _MemoryWorkspacePreferencesRepository(this._prefs)
+    : super(
+        PreferencesMigrationService(const FlutterSecureStorage()),
+        workspaceKey: 'users/1',
+      );
+
+  WorkspacePreferences _prefs;
+
+  @override
+  Future<StorageReadResult<WorkspacePreferences>> readWithStatus() async {
+    return StorageReadResult.success(_prefs);
+  }
+
+  @override
+  Future<WorkspacePreferences> read() async => _prefs;
+
+  @override
+  Future<void> write(WorkspacePreferences prefs) async {
+    _prefs = prefs;
   }
 }
 
@@ -271,6 +328,133 @@ Future<void> _pumpUntilFound(
   }
 }
 
+WorkspacePreferences _bottomNavOnlyMemosWorkspacePrefs() {
+  return WorkspacePreferences.defaults.copyWith(
+    homeNavigationPreferences: HomeNavigationPreferences.defaults.copyWith(
+      mode: HomeNavigationMode.bottomBar,
+      leftPrimary: HomeRootDestination.memos,
+      leftSecondary: HomeRootDestination.none,
+      rightPrimary: HomeRootDestination.none,
+      rightSecondary: HomeRootDestination.none,
+    ),
+  );
+}
+
+Widget _buildBottomNavShellTestApp({
+  required WorkspacePreferences workspacePrefs,
+}) {
+  return _buildTestApp(
+    child: const MediaQuery(
+      data: MediaQueryData(size: Size(430, 900)),
+      child: HomeBottomNavShell(),
+    ),
+    overrides: [
+      appSessionProvider.overrideWith((ref) => _TestSessionController()),
+      devicePreferencesRepositoryProvider.overrideWith(
+        (ref) => _MemoryDevicePreferencesRepository(DevicePreferences.defaults),
+      ),
+      workspacePreferencesRepositoryProvider.overrideWith(
+        (ref) => _MemoryWorkspacePreferencesRepository(workspacePrefs),
+      ),
+      notificationsProvider.overrideWith(
+        (ref) async => const <AppNotification>[],
+      ),
+      unreadNotificationCountProvider.overrideWith((ref) => 0),
+      syncQueuePendingCountProvider.overrideWith((ref) => Stream.value(0)),
+      syncQueueAttentionCountProvider.overrideWith((ref) => Stream.value(0)),
+    ],
+  );
+}
+
+class _ShellRootPage extends StatelessWidget {
+  const _ShellRootPage({
+    required this.destination,
+    required this.presentation,
+    required this.navigationHost,
+  });
+
+  final HomeRootDestination destination;
+  final HomeScreenPresentation presentation;
+  final HomeEmbeddedNavigationHost? navigationHost;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Text('page-${destination.name}-${presentation.name}'),
+      ),
+    );
+  }
+}
+
+class _HostBackInterceptingRootPage extends StatelessWidget {
+  const _HostBackInterceptingRootPage({
+    required this.destination,
+    required this.presentation,
+    required this.navigationHost,
+    required this.onBackIntercepted,
+  });
+
+  final HomeRootDestination destination;
+  final HomeScreenPresentation presentation;
+  final HomeEmbeddedNavigationHost? navigationHost;
+  final VoidCallback onBackIntercepted;
+
+  @override
+  Widget build(BuildContext context) {
+    final shouldInterceptPop =
+        presentation == HomeScreenPresentation.standalone &&
+        navigationHost != null;
+    return PopScope<void>(
+      canPop: !shouldInterceptPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || !shouldInterceptPop) return;
+        onBackIntercepted();
+        navigationHost!.handleBackToPrimaryDestination(context);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            key: Key('hostBackAppBarButton-${destination.name}'),
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () =>
+                navigationHost?.handleBackToPrimaryDestination(context),
+          ),
+        ),
+        body: Center(
+          child: Text('page-${destination.name}-${presentation.name}'),
+        ),
+      ),
+    );
+  }
+}
+
+void _installAiSummaryBackInterceptingRootBuilder({
+  required VoidCallback onBackIntercepted,
+}) {
+  debugHomeRootScreenBuilderOverride =
+      ({
+        required BuildContext context,
+        required HomeRootDestination destination,
+        required HomeScreenPresentation presentation,
+        required HomeEmbeddedNavigationHost? navigationHost,
+      }) {
+        if (destination == HomeRootDestination.aiSummary) {
+          return _HostBackInterceptingRootPage(
+            destination: destination,
+            presentation: presentation,
+            navigationHost: navigationHost,
+            onBackIntercepted: onBackIntercepted,
+          );
+        }
+        return _ShellRootPage(
+          destination: destination,
+          presentation: presentation,
+          navigationHost: navigationHost,
+        );
+      };
+}
+
 Future<void> main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
   late TestSupport support;
@@ -302,7 +486,78 @@ Future<void> main() async {
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_windowManagerChannel, null);
+    debugHomeRootScreenBuilderOverride = null;
   });
+
+  testWidgets(
+    'bottom-nav AI Summary overlay system back dismisses without recursion',
+    (tester) async {
+      var interceptedBackCount = 0;
+      _installAiSummaryBackInterceptingRootBuilder(
+        onBackIntercepted: () {
+          interceptedBackCount++;
+        },
+      );
+
+      await tester.pumpWidget(
+        _buildBottomNavShellTestApp(
+          workspacePrefs: _bottomNavOnlyMemosWorkspacePrefs(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final state = tester.state(find.byType(HomeBottomNavShell)) as dynamic;
+      state.handleDrawerDestination(
+        tester.element(find.byType(HomeBottomNavShell)),
+        AppDrawerDestination.aiSummary,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('page-aiSummary-standalone'), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(interceptedBackCount, 1);
+      expect(find.text('page-aiSummary-standalone'), findsNothing);
+      expect(find.text('page-memos-embeddedBottomNav'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'bottom-nav AI Summary overlay app bar back dismisses without recursion',
+    (tester) async {
+      var interceptedBackCount = 0;
+      _installAiSummaryBackInterceptingRootBuilder(
+        onBackIntercepted: () {
+          interceptedBackCount++;
+        },
+      );
+
+      await tester.pumpWidget(
+        _buildBottomNavShellTestApp(
+          workspacePrefs: _bottomNavOnlyMemosWorkspacePrefs(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final state = tester.state(find.byType(HomeBottomNavShell)) as dynamic;
+      state.handleDrawerDestination(
+        tester.element(find.byType(HomeBottomNavShell)),
+        AppDrawerDestination.aiSummary,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('page-aiSummary-standalone'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('hostBackAppBarButton-aiSummary')));
+      await tester.pumpAndSettle();
+
+      expect(interceptedBackCount, 0);
+      expect(find.text('page-aiSummary-standalone'), findsNothing);
+      expect(find.text('page-memos-embeddedBottomNav'), findsOneWidget);
+    },
+  );
 
   testWidgets('renders all insight cards and opens the settings sheet', (
     tester,
@@ -407,6 +662,22 @@ Future<void> main() async {
       expect(
         find.byKey(const Key('aiSummaryToggleDefaultTemplatesButton')),
         findsOneWidget,
+      );
+      expect(
+        tester
+            .getTopLeft(
+              find.byKey(const Key('aiSummaryToggleDefaultTemplatesButton')),
+            )
+            .dy,
+        lessThan(tester.getTopLeft(find.text('Default Templates')).dy),
+      );
+      expect(
+        tester
+            .getTopLeft(
+              find.byKey(const Key('aiSummaryAddCustomTemplateButton')),
+            )
+            .dy,
+        lessThan(tester.getTopLeft(find.text('Custom Templates')).dy),
       );
 
       await tester.tap(
@@ -588,7 +859,7 @@ Future<void> main() async {
 
     await tester.pumpAndSettle();
 
-    final newTemplateButton = tester.widget<FilledButton>(
+    final newTemplateButton = tester.widget<IconButton>(
       find.byKey(const Key('aiSummaryAddCustomTemplateButton')),
     );
     expect(newTemplateButton.onPressed, isNull);

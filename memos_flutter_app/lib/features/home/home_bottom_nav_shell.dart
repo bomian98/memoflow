@@ -580,11 +580,19 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
 }
 
 class _OverlayHomeNavigationHost implements HomeEmbeddedNavigationHost {
-  const _OverlayHomeNavigationHost({required this.shell});
+  _OverlayHomeNavigationHost({required this.shell});
 
   final _HomeBottomNavShellState shell;
+  bool _overlayDismissInProgress = false;
 
   void _dismissOverlayThen(BuildContext context, VoidCallback action) {
+    if (_overlayDismissInProgress) return;
+    if (!context.mounted) {
+      if (shell.mounted) {
+        action();
+      }
+      return;
+    }
     final navigator = Navigator.maybeOf(context);
     if (navigator == null || !navigator.mounted) {
       if (shell.mounted) {
@@ -595,28 +603,34 @@ class _OverlayHomeNavigationHost implements HomeEmbeddedNavigationHost {
 
     final scaffold = Scaffold.maybeOf(context);
     final isDrawerOpen = scaffold?.isDrawerOpen ?? false;
-    if (isDrawerOpen) {
+    if (isDrawerOpen && navigator.canPop()) {
       navigator.pop();
     }
 
     void dismissRoute() {
+      if (_overlayDismissInProgress) return;
+      if (!context.mounted) {
+        if (shell.mounted) {
+          action();
+        }
+        return;
+      }
       final overlayNavigator = Navigator.maybeOf(context);
-      if (overlayNavigator == null || !overlayNavigator.mounted) {
+      if (overlayNavigator == null ||
+          !overlayNavigator.mounted ||
+          !overlayNavigator.canPop()) {
         if (shell.mounted) {
           action();
         }
         return;
       }
 
-      unawaited(
-        overlayNavigator.maybePop().then((_) {
-          if (!shell.mounted) return;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!shell.mounted) return;
-            action();
-          });
-        }),
-      );
+      _overlayDismissInProgress = true;
+      overlayNavigator.pop();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!shell.mounted) return;
+        action();
+      });
     }
 
     if (isDrawerOpen) {
@@ -653,20 +667,23 @@ class _OverlayHomeNavigationHost implements HomeEmbeddedNavigationHost {
 
   @override
   void handleBackToPrimaryDestination(BuildContext context) {
+    if (_overlayDismissInProgress) return;
+    if (!context.mounted) {
+      if (shell.mounted) {
+        shell.handleBackToPrimaryDestination(shell.context);
+      }
+      return;
+    }
     final navigator = Navigator.maybeOf(context);
-    if (navigator == null || !navigator.mounted) {
+    if (navigator == null || !navigator.mounted || !navigator.canPop()) {
       if (shell.mounted) {
         shell.handleBackToPrimaryDestination(shell.context);
       }
       return;
     }
 
-    unawaited(
-      navigator.maybePop().then((didPop) {
-        if (didPop || !shell.mounted) return;
-        shell.handleBackToPrimaryDestination(shell.context);
-      }),
-    );
+    _overlayDismissInProgress = true;
+    navigator.pop();
   }
 
   @override
