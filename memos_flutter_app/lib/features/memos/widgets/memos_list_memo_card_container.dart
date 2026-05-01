@@ -20,6 +20,7 @@ import '../../../state/system/reminder_utils.dart';
 import '../../../state/system/session_provider.dart';
 import '../../../state/tags/tag_color_lookup.dart';
 import '../memo_image_grid.dart';
+import '../memo_media_cache_key.dart';
 import '../memo_media_grid.dart';
 import '../memo_video_grid.dart';
 import '../memos_list_floating_collapse_controller.dart';
@@ -64,26 +65,6 @@ class _MemoMediaEntriesCacheEntry {
   final List<MemoImageEntry> imageEntries;
   final List<MemoVideoEntry> videoEntries;
   final List<MemoMediaEntry> mediaEntries;
-}
-
-String _memoMediaEntriesCacheKey({
-  required LocalMemo memo,
-  required Uri? baseUrl,
-  required String? authHeader,
-  required bool rebaseAbsoluteFileUrlForV024,
-  required bool attachAuthForSameOriginAbsolute,
-}) {
-  final authFingerprint = authHeader == null || authHeader.trim().isEmpty
-      ? 0
-      : authHeader.trim().hashCode;
-  return '${memo.uid}|'
-      '${memo.contentFingerprint}|'
-      '${memo.updateTime.toUtc().millisecondsSinceEpoch}|'
-      '${memo.attachments.length}|'
-      '${baseUrl?.toString() ?? ''}|'
-      '$authFingerprint|'
-      '${rebaseAbsoluteFileUrlForV024 ? 1 : 0}|'
-      '${attachAuthForSameOriginAbsolute ? 1 : 0}';
 }
 
 class MemosListMemoCardContainer extends ConsumerWidget {
@@ -173,7 +154,7 @@ class MemosListMemoCardContainer extends ConsumerWidget {
     final attachAuthForSameOriginAbsolute = isServerVersion021(serverVersion);
     final token = account?.personalAccessToken ?? '';
     final authHeader = token.trim().isEmpty ? null : 'Bearer $token';
-    final mediaCacheKey = _memoMediaEntriesCacheKey(
+    final mediaCacheKey = memoMediaEntriesCacheKey(
       memo: memo,
       baseUrl: baseUrl,
       authHeader: authHeader,

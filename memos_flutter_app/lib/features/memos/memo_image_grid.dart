@@ -457,14 +457,6 @@ class MemoImageGrid extends StatelessWidget {
             ? tileWidth / tileHeight
             : 1.0;
         final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-        final cacheWidth = resolveThumbnailCacheExtent(
-          tileWidth,
-          devicePixelRatio,
-        );
-        final cacheHeight = resolveThumbnailCacheExtent(
-          tileHeight,
-          devicePixelRatio,
-        );
         return GridView.builder(
           shrinkWrap: true,
           primary: false,
@@ -477,12 +469,22 @@ class MemoImageGrid extends StatelessWidget {
             childAspectRatio: aspectRatio,
           ),
           itemCount: visible.length,
-          itemBuilder: (context, index) => buildTile(
-            visible[index],
-            index,
-            cacheWidth: cacheWidth,
-            cacheHeight: cacheHeight,
-          ),
+          itemBuilder: (context, index) {
+            final entry = visible[index];
+            final cacheTarget = resolveAspectSafeThumbnailCacheTarget(
+              tileWidth: tileWidth,
+              tileHeight: tileHeight,
+              devicePixelRatio: devicePixelRatio,
+              sourceWidth: entry.width,
+              sourceHeight: entry.height,
+            );
+            return buildTile(
+              entry,
+              index,
+              cacheWidth: cacheTarget.width,
+              cacheHeight: cacheTarget.height,
+            );
+          },
         );
       },
     );

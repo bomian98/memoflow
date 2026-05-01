@@ -1,4 +1,5 @@
 import '../../data/db/app_database.dart';
+import '../../data/models/memo_location.dart';
 
 class LocalSyncMutationService {
   LocalSyncMutationService({required this.db});
@@ -67,6 +68,40 @@ class LocalSyncMutationService {
     return db.updateMemoAttachmentsJson(
       memoUid,
       attachmentsJson: attachmentsJson,
+    );
+  }
+
+  Future<void> upsertMemo({
+    required String uid,
+    required String content,
+    required String visibility,
+    required bool pinned,
+    required String state,
+    required int createTimeSec,
+    Object? displayTimeSec,
+    required int updateTimeSec,
+    required List<String> tags,
+    required List<Map<String, dynamic>> attachments,
+    required MemoLocation? location,
+    int relationCount = 0,
+    required int syncState,
+    String? lastError,
+  }) {
+    return db.upsertMemo(
+      uid: uid,
+      content: content,
+      visibility: visibility,
+      pinned: pinned,
+      state: state,
+      createTimeSec: createTimeSec,
+      displayTimeSec: displayTimeSec,
+      updateTimeSec: updateTimeSec,
+      tags: tags,
+      attachments: attachments,
+      location: location,
+      relationCount: relationCount,
+      syncState: syncState,
+      lastError: lastError,
     );
   }
 }

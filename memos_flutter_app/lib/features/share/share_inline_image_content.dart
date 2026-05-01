@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:path/path.dart' as p;
 
+import '../../core/share_inline_image_url_rewriter.dart';
 import '../../core/url.dart';
 import '../../data/models/attachment.dart';
 import 'share_clip_models.dart';
@@ -72,28 +71,11 @@ String replaceShareInlineImageUrl(
   if (fromUrl.trim().isEmpty || toUrl.trim().isEmpty) {
     return content;
   }
-  var next = content;
-  final rawFromUrl = fromUrl.trim();
-  final rawToUrl = toUrl.trim();
-  final escapedToUrl = _escapeHtmlAttribute(rawToUrl);
-  for (final variant in _shareInlineImageUrlVariants(rawFromUrl)) {
-    next = next.replaceAll(
-      variant,
-      variant == rawFromUrl ? rawToUrl : escapedToUrl,
-    );
-  }
-  return next;
+  return replaceInlineImageUrlVariants(content, fromUrl: fromUrl, toUrl: toUrl);
 }
 
 bool contentContainsShareInlineImageUrl(String content, String url) {
-  final trimmedUrl = url.trim();
-  if (trimmedUrl.isEmpty) return false;
-  for (final variant in _shareInlineImageUrlVariants(trimmedUrl)) {
-    if (content.contains(variant)) {
-      return true;
-    }
-  }
-  return false;
+  return contentContainsInlineImageUrlVariant(content, url);
 }
 
 String removeShareInlineImageReferences(
@@ -120,10 +102,14 @@ String rewriteShareInlineImageUrlsForSyncContent(
   if (content.trim().isEmpty) return content;
 
   var next = content;
-  final replacementEntries = replacements.entries
-      .where((entry) => entry.key.trim().isNotEmpty && entry.value.trim().isNotEmpty)
-      .toList(growable: false)
-    ..sort((left, right) => right.key.length.compareTo(left.key.length));
+  final replacementEntries =
+      replacements.entries
+          .where(
+            (entry) =>
+                entry.key.trim().isNotEmpty && entry.value.trim().isNotEmpty,
+          )
+          .toList(growable: false)
+        ..sort((left, right) => right.key.length.compareTo(left.key.length));
   for (final entry in replacementEntries) {
     next = replaceShareInlineImageUrl(
       next,
@@ -132,10 +118,13 @@ String rewriteShareInlineImageUrlsForSyncContent(
     );
   }
 
-  final removalList = removeLocalUrls
-      .where((url) => url.trim().isNotEmpty && !replacements.containsKey(url))
-      .toList(growable: false)
-    ..sort((left, right) => right.length.compareTo(left.length));
+  final removalList =
+      removeLocalUrls
+          .where(
+            (url) => url.trim().isNotEmpty && !replacements.containsKey(url),
+          )
+          .toList(growable: false)
+        ..sort((left, right) => right.length.compareTo(left.length));
   for (final localUrl in removalList) {
     next = removeShareInlineImageReferences(next, localUrl: localUrl);
   }
@@ -204,7 +193,9 @@ String? resolveShareInlineAttachmentRemoteUrl(
         }
       }
     }
-    return baseUrl == null ? candidate : resolveMaybeRelativeUrl(baseUrl, candidate);
+    return baseUrl == null
+        ? candidate
+        : resolveMaybeRelativeUrl(baseUrl, candidate);
   }
 
   final name = attachment.name.trim();
@@ -212,7 +203,9 @@ String? resolveShareInlineAttachmentRemoteUrl(
   if (!name.startsWith('resources/') && !name.startsWith('attachments/')) {
     return null;
   }
-  final relativePath = filename.isNotEmpty ? '/file/$name/$filename' : '/file/$name';
+  final relativePath = filename.isNotEmpty
+      ? '/file/$name/$filename'
+      : '/file/$name';
   if (baseUrl == null) {
     return relativePath;
   }
@@ -275,23 +268,6 @@ bool _isShareInlineLocalLikeUrl(String value) {
   final uri = Uri.tryParse(trimmed);
   final scheme = uri?.scheme.toLowerCase() ?? '';
   return scheme == 'file' || scheme == 'content';
-}
-
-Iterable<String> _shareInlineImageUrlVariants(String url) sync* {
-  final variants = <String>{};
-  final trimmed = url.trim();
-  if (trimmed.isEmpty) return;
-  variants.add(trimmed);
-  variants.add(_escapeHtmlAttribute(trimmed));
-  for (final variant in variants) {
-    if (variant.isNotEmpty) {
-      yield variant;
-    }
-  }
-}
-
-String _escapeHtmlAttribute(String value) {
-  return const HtmlEscape(HtmlEscapeMode.attribute).convert(value);
 }
 
 String _resolveImageExtension(String sourceUrl, String? mimeType) {

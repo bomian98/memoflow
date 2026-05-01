@@ -69,6 +69,17 @@ import '../../i18n/strings.g.dart';
 typedef _PendingAttachment = MemoComposerPendingAttachment;
 typedef _LinkedMemo = MemoComposerLinkedMemo;
 
+ImageThumbnailCacheTarget resolveNoteInputPendingImageThumbnailCacheTarget({
+  required double tileSize,
+  required double devicePixelRatio,
+}) {
+  return resolveAspectSafeThumbnailCacheTarget(
+    tileWidth: tileSize,
+    tileHeight: tileSize,
+    devicePixelRatio: devicePixelRatio,
+  );
+}
+
 enum _DeferredShareVideoPhase {
   preparing,
   downloading,
@@ -2514,9 +2525,9 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     final isImage = _isImageMimeType(attachment.mimeType);
     final isVideo = _isVideoMimeType(attachment.mimeType);
     final file = _resolvePendingAttachmentFile(attachment);
-    final cacheExtent = resolveThumbnailCacheExtent(
-      size,
-      MediaQuery.devicePixelRatioOf(context),
+    final cacheTarget = resolveNoteInputPendingImageThumbnailCacheTarget(
+      tileSize: size,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
     );
 
     Widget content;
@@ -2534,8 +2545,8 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         borderColor: tileBorderColor,
         placeholderColor: surfaceColor,
         iconColor: iconColor,
-        cacheWidth: cacheExtent,
-        cacheHeight: cacheExtent,
+        cacheWidth: cacheTarget.width,
+        cacheHeight: cacheTarget.height,
         logScope: 'note_input_pending_tile',
       );
     } else if (isVideo && file != null) {

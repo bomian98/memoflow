@@ -315,14 +315,6 @@ class MemoMediaGrid extends StatelessWidget {
             ? tileWidth / tileHeight
             : 1.0;
         final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-        final cacheWidth = resolveThumbnailCacheExtent(
-          tileWidth,
-          devicePixelRatio,
-        );
-        final cacheHeight = resolveThumbnailCacheExtent(
-          tileHeight,
-          devicePixelRatio,
-        );
         Widget grid = GridView.builder(
           shrinkWrap: true,
           primary: false,
@@ -335,12 +327,24 @@ class MemoMediaGrid extends StatelessWidget {
             childAspectRatio: aspectRatio,
           ),
           itemCount: visible.length,
-          itemBuilder: (context, index) => buildTile(
-            visible[index],
-            index,
-            cacheWidth: cacheWidth,
-            cacheHeight: cacheHeight,
-          ),
+          itemBuilder: (context, index) {
+            final entry = visible[index];
+            final cacheTarget = entry.isImage
+                ? resolveAspectSafeThumbnailCacheTarget(
+                    tileWidth: tileWidth,
+                    tileHeight: tileHeight,
+                    devicePixelRatio: devicePixelRatio,
+                    sourceWidth: entry.image!.width,
+                    sourceHeight: entry.image!.height,
+                  )
+                : ImageThumbnailCacheTarget.empty;
+            return buildTile(
+              entry,
+              index,
+              cacheWidth: cacheTarget.width,
+              cacheHeight: cacheTarget.height,
+            );
+          },
         );
 
         if (preserveSquareTilesWhenHeightLimited &&

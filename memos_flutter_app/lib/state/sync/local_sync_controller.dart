@@ -10,6 +10,7 @@ import '../../application/attachments/attachment_preprocessor.dart';
 import '../../application/attachments/queued_attachment_stager.dart';
 import '../../application/sync/local_library_scan_service.dart';
 import '../../core/memo_relations.dart';
+import '../../core/share_inline_image_url_rewriter.dart';
 import '../../application/sync/sync_error.dart';
 import '../../application/sync/sync_types.dart';
 import '../../data/db/app_database.dart';
@@ -1097,6 +1098,14 @@ class LocalSyncController extends SyncControllerBase {
       final String value => value.trim().toLowerCase() == 'true',
       _ => false,
     };
+    final shareInlineImage = switch (payload['share_inline_image']) {
+      final bool value => value,
+      final num value => value != 0,
+      final String value => value.trim().toLowerCase() == 'true',
+      _ => false,
+    };
+    final shareInlineLocalUrl =
+        (payload['share_inline_local_url'] as String? ?? '').trim();
     if (uid == null ||
         uid.isEmpty ||
         memoUid == null ||
@@ -1126,6 +1135,7 @@ class LocalSyncController extends SyncControllerBase {
         'sourceMimeType': mimeType,
         'processedMimeType': processed.mimeType,
         'skipCompression': skipCompression,
+        'shareInlineImage': shareInlineImage,
         ...buildAttachmentPreprocessResultLogContext(processed),
         'engine': processed.engine,
         'engineVersion': processed.engineVersion,
@@ -1168,9 +1178,110 @@ class LocalSyncController extends SyncControllerBase {
       hash: processed.hash,
     );
     await _upsertAttachment(memoUid, attachment);
+    if (shareInlineImage && shareInlineLocalUrl.isNotEmpty) {
+      await _replaceShareInlineMemoContentWithPrivateFile(
+        memoUid: memoUid,
+        localUrls: _shareInlineLocalUrlCandidates(
+          shareInlineLocalUrl: shareInlineLocalUrl,
+          filePath: filePath,
+          processedFilePath: processed.filePath,
+        ),
+        privateUrl: attachment.externalLink,
+      );
+    }
     await _deleteManagedUploadSourceIfUnused(filePath);
 
     return await _isLastPendingAttachmentUpload(memoUid, currentOutboxId);
+  }
+
+  Future<void> _replaceShareInlineMemoContentWithPrivateFile({
+    required String memoUid,
+    required Set<String> localUrls,
+    required String privateUrl,
+  }) async {
+    final normalizedPrivateUrl = privateUrl.trim();
+    final candidates =
+        localUrls
+            .map((url) => url.trim())
+            .where((url) => url.isNotEmpty && url != normalizedPrivateUrl)
+            .toSet()
+            .toList(growable: false)
+          ..sort((left, right) => right.length.compareTo(left.length));
+    if (normalizedPrivateUrl.isEmpty || candidates.isEmpty) return;
+
+    final row = await db.getMemoByUid(memoUid);
+    if (row == null) {
+      throw StateError('Memo not found: $memoUid');
+    }
+    final memo = LocalMemo.fromDb(row);
+    var updatedContent = memo.content;
+    for (final candidate in candidates) {
+      updatedContent = replaceInlineImageUrlVariants(
+        updatedContent,
+        fromUrl: candidate,
+        toUrl: normalizedPrivateUrl,
+      );
+    }
+    if (updatedContent == memo.content) return;
+
+    await mutations.upsertMemo(
+      uid: memo.uid,
+      content: updatedContent,
+      visibility: memo.visibility,
+      pinned: memo.pinned,
+      state: memo.state,
+      createTimeSec: memo.createTime.toUtc().millisecondsSinceEpoch ~/ 1000,
+      displayTimeSec: memo.displayTime == null
+          ? null
+          : memo.displayTime!.toUtc().millisecondsSinceEpoch ~/ 1000,
+      updateTimeSec: memo.updateTime.toUtc().millisecondsSinceEpoch ~/ 1000,
+      tags: memo.tags,
+      attachments: memo.attachments
+          .map((attachment) => attachment.toJson())
+          .toList(growable: false),
+      location: memo.location,
+      relationCount: memo.relationCount,
+      syncState: _syncStateToDbValue(memo.syncState),
+      lastError: memo.lastError,
+    );
+    await _writeMemoFromDb(memoUid);
+  }
+
+  Set<String> _shareInlineLocalUrlCandidates({
+    required String shareInlineLocalUrl,
+    required String filePath,
+    required String processedFilePath,
+  }) {
+    final candidates = <String>{};
+    void addRaw(String value) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        candidates.add(trimmed);
+      }
+    }
+
+    void addFileUrl(String value) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty || trimmed.startsWith('content://')) return;
+      if (trimmed.startsWith('file://')) {
+        addRaw(trimmed);
+        return;
+      }
+      candidates.add(Uri.file(trimmed).toString());
+    }
+
+    addRaw(shareInlineLocalUrl);
+    addFileUrl(filePath);
+    addFileUrl(processedFilePath);
+    return candidates;
+  }
+
+  int _syncStateToDbValue(SyncState syncState) {
+    return switch (syncState) {
+      SyncState.pending => 1,
+      SyncState.error => 2,
+      SyncState.synced => 0,
+    };
   }
 
   Future<void> _handleDeleteAttachment(Map<String, dynamic> payload) async {

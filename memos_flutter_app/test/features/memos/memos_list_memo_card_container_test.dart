@@ -20,9 +20,11 @@ import 'package:memos_flutter_app/data/repositories/location_settings_repository
 import 'package:memos_flutter_app/features/memos/memos_list_floating_collapse_controller.dart';
 import 'package:memos_flutter_app/features/memos/memo_markdown.dart';
 import 'package:memos_flutter_app/features/memos/memo_image_grid.dart';
+import 'package:memos_flutter_app/features/memos/memo_media_cache_key.dart';
 import 'package:memos_flutter_app/features/memos/memo_media_grid.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_memo_card.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_memo_card_container.dart';
+import 'package:memos_flutter_app/features/image_preview/widgets/image_preview_tile.dart';
 import 'package:memos_flutter_app/features/share/share_inline_image_content.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memo_clip_card_providers.dart';
@@ -36,6 +38,113 @@ import 'package:memos_flutter_app/state/tags/tag_color_lookup.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'attachment source fingerprint changes when preview metadata changes',
+    () {
+      const base = Attachment(
+        name: 'attachments/att-1',
+        filename: 'sample.jpg',
+        type: 'image/jpeg',
+        size: 42,
+        externalLink: 'file:///old/sample.jpg',
+        width: 640,
+        height: 480,
+        hash: 'old-hash',
+      );
+      final original = memoMediaAttachmentSourceFingerprint(const [base]);
+
+      final variants = <Attachment>[
+        const Attachment(
+          name: 'attachments/att-2',
+          filename: 'sample.jpg',
+          type: 'image/jpeg',
+          size: 42,
+          externalLink: 'file:///old/sample.jpg',
+          width: 640,
+          height: 480,
+          hash: 'old-hash',
+        ),
+        const Attachment(
+          name: 'attachments/att-1',
+          filename: 'renamed.jpg',
+          type: 'image/jpeg',
+          size: 42,
+          externalLink: 'file:///old/sample.jpg',
+          width: 640,
+          height: 480,
+          hash: 'old-hash',
+        ),
+        const Attachment(
+          name: 'attachments/att-1',
+          filename: 'sample.jpg',
+          type: 'image/png',
+          size: 42,
+          externalLink: 'file:///old/sample.jpg',
+          width: 640,
+          height: 480,
+          hash: 'old-hash',
+        ),
+        const Attachment(
+          name: 'attachments/att-1',
+          filename: 'sample.jpg',
+          type: 'image/jpeg',
+          size: 43,
+          externalLink: 'file:///old/sample.jpg',
+          width: 640,
+          height: 480,
+          hash: 'old-hash',
+        ),
+        const Attachment(
+          name: 'attachments/att-1',
+          filename: 'sample.jpg',
+          type: 'image/jpeg',
+          size: 42,
+          externalLink: 'file:///new/sample.jpg',
+          width: 640,
+          height: 480,
+          hash: 'old-hash',
+        ),
+        const Attachment(
+          name: 'attachments/att-1',
+          filename: 'sample.jpg',
+          type: 'image/jpeg',
+          size: 42,
+          externalLink: 'file:///old/sample.jpg',
+          width: 800,
+          height: 480,
+          hash: 'old-hash',
+        ),
+        const Attachment(
+          name: 'attachments/att-1',
+          filename: 'sample.jpg',
+          type: 'image/jpeg',
+          size: 42,
+          externalLink: 'file:///old/sample.jpg',
+          width: 640,
+          height: 600,
+          hash: 'old-hash',
+        ),
+        const Attachment(
+          name: 'attachments/att-1',
+          filename: 'sample.jpg',
+          type: 'image/jpeg',
+          size: 42,
+          externalLink: 'file:///old/sample.jpg',
+          width: 640,
+          height: 480,
+          hash: 'new-hash',
+        ),
+      ];
+
+      for (final variant in variants) {
+        expect(
+          memoMediaAttachmentSourceFingerprint([variant]),
+          isNot(original),
+        );
+      }
+    },
+  );
 
   testWidgets('failed outbox status overrides memo sync state', (tester) async {
     final memo = _buildMemo(syncState: SyncState.pending);
@@ -188,6 +297,63 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     }
   });
+
+  testWidgets(
+    'rebuilds preview item when attachment local source changes without updateTime change',
+    (tester) async {
+      final memoUid =
+          'memo-source-refresh-${DateTime.now().microsecondsSinceEpoch}';
+      const oldPath = '/tmp/memoflow-test/queued-photo.png';
+      const newPath = '/tmp/memoflow-test/private-photo.png';
+      final expectedOldPath = Uri.file(oldPath).toFilePath();
+      final expectedNewPath = Uri.file(newPath).toFilePath();
+      Attachment attachmentFor(String path) {
+        return Attachment(
+          name: 'attachments/att-1',
+          filename: 'photo.png',
+          type: 'image/png',
+          size: 42,
+          externalLink: Uri.file(path).toString(),
+          width: 1,
+          height: 1,
+          hash: 'same-hash',
+        );
+      }
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memo: _buildMemo(
+            uid: memoUid,
+            content: 'memo with image',
+            attachments: [attachmentFor(oldPath)],
+          ),
+        ),
+      );
+      await tester.pump();
+
+      var tile = tester.widget<ImagePreviewTile>(
+        find.byType(ImagePreviewTile).first,
+      );
+      expect(tile.item.localFile?.path, expectedOldPath);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memo: _buildMemo(
+            uid: memoUid,
+            content: 'memo with image',
+            attachments: [attachmentFor(newPath)],
+          ),
+        ),
+      );
+      await tester.pump();
+
+      tile = tester.widget<ImagePreviewTile>(
+        find.byType(ImagePreviewTile).first,
+      );
+      expect(tile.item.localFile?.path, expectedNewPath);
+      expect(tile.item.localFile?.path, isNot(expectedOldPath));
+    },
+  );
 
   testWidgets('uses explicit hero tag when provided', (tester) async {
     final memo = _buildMemo();

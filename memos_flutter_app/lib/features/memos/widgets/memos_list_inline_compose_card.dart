@@ -857,9 +857,10 @@ class _InlineAttachmentTile extends StatelessWidget {
     final isImage = _isInlineImageMimeType(attachment.mimeType);
     final isVideo = _isInlineVideoMimeType(attachment.mimeType);
     final file = _resolveInlinePendingAttachmentFile(attachment);
-    final cacheExtent = resolveThumbnailCacheExtent(
-      size,
-      MediaQuery.devicePixelRatioOf(context),
+    final cacheTarget = resolveAspectSafeThumbnailCacheTarget(
+      tileWidth: size,
+      tileHeight: size,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
     );
 
     Widget content;
@@ -878,8 +879,8 @@ class _InlineAttachmentTile extends StatelessWidget {
         borderColor: tileBorderColor,
         placeholderColor: surfaceColor,
         iconColor: iconColor,
-        cacheWidth: cacheExtent,
-        cacheHeight: cacheExtent,
+        cacheWidth: cacheTarget.width,
+        cacheHeight: cacheTarget.height,
         logScope: 'inline_compose_pending_tile',
       );
     } else if (isVideo && file != null) {

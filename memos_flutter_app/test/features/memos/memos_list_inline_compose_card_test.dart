@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:memos_flutter_app/features/image_preview/widgets/image_preview_tile.dart';
 import 'package:memos_flutter_app/features/memos/compose_toolbar_shared.dart';
+import 'package:memos_flutter_app/features/memos/note_input_sheet.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_inline_compose_card.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memo_composer_controller.dart';
@@ -111,6 +115,57 @@ void main() {
       expect(removedLinkedMemoName, 'memo-1');
     },
   );
+
+  testWidgets('pending image preview uses single-axis cache fallback', (
+    tester,
+  ) async {
+    _setUnitDevicePixelRatio(tester);
+    final imageFile = await _writeTestSvg('inline-card-preview');
+    final composer = MemoComposerController();
+    final focusNode = FocusNode();
+    addTearDown(() {
+      focusNode.dispose();
+      composer.dispose();
+    });
+
+    composer.addPendingAttachments([
+      MemoComposerPendingAttachment(
+        uid: 'att-image',
+        filePath: imageFile.path,
+        filename: 'photo.svg',
+        mimeType: 'image/svg+xml',
+        size: imageFile.lengthSync(),
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _InlineComposeCardHarness(composer: composer, focusNode: focusNode),
+    );
+    await tester.pump();
+
+    final tile = tester.widget<ImagePreviewTile>(find.byType(ImagePreviewTile));
+    expect(tile.cacheWidth, 93);
+    expect(tile.cacheHeight, isNull);
+    expect(tile.fit, BoxFit.cover);
+    expect(
+      find.byKey(const ValueKey<String>('inline-attachment-att-image')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('inline-attachment-remove-att-image')),
+      findsOneWidget,
+    );
+  });
+
+  test('note input pending preview uses single-axis cache fallback', () {
+    final target = resolveNoteInputPendingImageThumbnailCacheTarget(
+      tileSize: 62,
+      devicePixelRatio: 1,
+    );
+
+    expect(target.width, 93);
+    expect(target.height, isNull);
+  });
 
   testWidgets('shows tag autocomplete and selects highlighted suggestion', (
     tester,
@@ -253,6 +308,25 @@ void main() {
       findsNothing,
     );
   });
+}
+
+void _setUnitDevicePixelRatio(WidgetTester tester) {
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetDevicePixelRatio);
+}
+
+Future<File> _writeTestSvg(String prefix) async {
+  final directory = Directory.systemTemp.createTempSync(prefix);
+  addTearDown(() async {
+    if (directory.existsSync()) {
+      await directory.delete(recursive: true);
+    }
+  });
+  final file = File('${directory.path}${Platform.pathSeparator}photo.svg');
+  file.writeAsStringSync(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="1"></svg>',
+  );
+  return file;
 }
 
 class _InlineComposeCardHarness extends StatefulWidget {

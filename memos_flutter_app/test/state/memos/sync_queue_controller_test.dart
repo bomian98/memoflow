@@ -1,12 +1,27 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
+import 'package:memos_flutter_app/application/attachments/attachment_preprocessor.dart';
+import 'package:memos_flutter_app/application/attachments/queued_attachment_stager.dart';
 import 'package:memos_flutter_app/application/sync/sync_error.dart';
+import 'package:memos_flutter_app/application/sync/sync_types.dart';
 import 'package:memos_flutter_app/data/db/app_database.dart';
+import 'package:memos_flutter_app/data/local_library/local_attachment_store.dart';
+import 'package:memos_flutter_app/data/local_library/local_library_fs.dart';
+import 'package:memos_flutter_app/data/logs/sync_queue_progress_tracker.dart';
+import 'package:memos_flutter_app/data/logs/sync_status_tracker.dart';
+import 'package:memos_flutter_app/data/models/local_library.dart';
+import 'package:memos_flutter_app/data/models/local_memo.dart';
+import 'package:memos_flutter_app/data/repositories/memoflow_bridge_settings_repository.dart';
 import 'package:memos_flutter_app/state/memos/sync_queue_controller.dart';
 import 'package:memos_flutter_app/state/memos/sync_queue_models.dart';
+import 'package:memos_flutter_app/state/sync/local_sync_controller.dart';
+import 'package:memos_flutter_app/state/sync/local_sync_mutation_service.dart';
 import 'package:memos_flutter_app/state/system/database_provider.dart';
 
 import '../../test_support.dart';
@@ -21,6 +36,117 @@ void main() {
   tearDownAll(() async {
     await support.dispose();
   });
+
+  test(
+    'local sync upload rewrites share-inline queued urls to private attachment file',
+    () async {
+      final dbName = uniqueDbName('local_sync_share_inline_private_url');
+      final db = AppDatabase(dbName: dbName);
+      final libraryDir = await support.createTempDir('local_library');
+      final fileSystem = LocalLibraryFileSystem(
+        LocalLibrary(key: 'local', name: 'Local', rootPath: libraryDir.path),
+      );
+      final attachmentStore = LocalAttachmentStore();
+      final managedDir = Directory(
+        p.join(
+          support.root.path,
+          QueuedAttachmentStager.managedRootDirName,
+          'share_inline',
+        ),
+      );
+      final sourceFile = File(p.join(managedDir.path, 'photo.png'));
+      final now = DateTime.utc(2026, 5);
+      const memoUid = 'memo-share-inline-local';
+      const attachmentUid = 'att-share-inline';
+
+      addTearDown(() async {
+        await db.close();
+        await attachmentStore.clearAll();
+        await deleteTestDatabase(dbName);
+      });
+
+      await managedDir.create(recursive: true);
+      await sourceFile.writeAsBytes(const <int>[1, 2, 3, 4]);
+      await fileSystem.ensureStructure();
+
+      final localUrl = Uri.file(sourceFile.path).toString();
+      final originalContent =
+          '<p>intro</p>\n<img src="$localUrl">\n![](<$localUrl>)';
+
+      await db.upsertMemo(
+        uid: memoUid,
+        content: originalContent,
+        visibility: 'PRIVATE',
+        pinned: false,
+        state: 'NORMAL',
+        createTimeSec: now.millisecondsSinceEpoch ~/ 1000,
+        updateTimeSec: now.millisecondsSinceEpoch ~/ 1000,
+        tags: const <String>[],
+        attachments: [
+          {
+            'name': 'attachments/$attachmentUid',
+            'filename': 'photo.png',
+            'type': 'image/png',
+            'size': sourceFile.lengthSync(),
+            'externalLink': localUrl,
+          },
+        ],
+        location: null,
+        relationCount: 0,
+        syncState: 1,
+        lastError: null,
+      );
+      await db.enqueueOutbox(
+        type: 'upload_attachment',
+        payload: {
+          'uid': attachmentUid,
+          'memo_uid': memoUid,
+          'file_path': sourceFile.path,
+          'filename': 'photo.png',
+          'mime_type': 'image/png',
+          'skip_compression': true,
+          'share_inline_image': true,
+          'share_inline_local_url': localUrl,
+        },
+      );
+
+      final controller = LocalSyncController(
+        db: db,
+        mutations: LocalSyncMutationService(db: db),
+        fileSystem: fileSystem,
+        attachmentStore: attachmentStore,
+        bridgeSettingsRepository: MemoFlowBridgeSettingsRepository(
+          const FlutterSecureStorage(),
+          accountKey: null,
+        ),
+        syncStatusTracker: SyncStatusTracker(),
+        syncQueueProgressTracker: SyncQueueProgressTracker(),
+        attachmentPreprocessor: _PassThroughAttachmentPreprocessor(),
+      );
+      addTearDown(controller.dispose);
+
+      final result = await controller.syncNow();
+
+      expect(result, isA<MemoSyncSuccess>());
+      final row = await db.getMemoByUid(memoUid);
+      final updatedContent = row?['content'] as String? ?? '';
+      final attachments =
+          (jsonDecode(row?['attachments_json'] as String) as List)
+              .cast<Map<String, dynamic>>();
+      final privateUrl = attachments.single['externalLink'] as String;
+
+      expect(privateUrl, startsWith('file://'));
+      expect(privateUrl, contains('local_attachments'));
+      expect(updatedContent, contains(privateUrl));
+      expect(updatedContent, isNot(contains(localUrl)));
+      expect(await sourceFile.exists(), isFalse);
+
+      final markdown = await fileSystem.readText('memos/$memoUid.md');
+      expect(markdown, contains(privateUrl));
+      expect(markdown, isNot(contains(localUrl)));
+      expect(LocalMemo.fromDb(row!).updateTime, now.toLocal());
+    },
+  );
 
   test('retry rebuilds remote missing memo as create_memo', () async {
     final dbName = uniqueDbName('sync_queue_retry_remote_missing');
@@ -536,4 +662,27 @@ void main() {
       expect(await db.listOutboxByMemoUid('memo-local-only-upload'), isEmpty);
     },
   );
+}
+
+class _PassThroughAttachmentPreprocessor implements AttachmentPreprocessor {
+  @override
+  Future<AttachmentPreprocessResult> preprocess(
+    AttachmentPreprocessRequest request,
+  ) async {
+    final file = File(request.filePath);
+    return AttachmentPreprocessResult(
+      filePath: request.filePath,
+      filename: request.filename,
+      mimeType: request.mimeType,
+      size: await file.length(),
+      width: 1,
+      height: 1,
+      hash: 'test-hash',
+      sourceSize: await file.length(),
+      sourceWidth: 1,
+      sourceHeight: 1,
+      sourceDisplayWidth: 1,
+      sourceDisplayHeight: 1,
+    );
+  }
 }

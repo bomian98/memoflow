@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/data/models/attachment.dart';
+import 'package:memos_flutter_app/features/image_preview/widgets/image_preview_tile.dart';
 import 'package:memos_flutter_app/features/memos/memo_image_grid.dart';
+import 'package:memos_flutter_app/features/memos/memo_media_grid.dart';
 
 void main() {
   test('collectMemoImageEntries resolves html memos resource urls', () {
@@ -83,4 +86,199 @@ void main() {
       expect(source.height, 2400);
     },
   );
+
+  testWidgets('image-only grid uses aspect-safe cache sizing', (tester) async {
+    _setUnitDevicePixelRatio(tester);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 100,
+            child: MemoImageGrid(
+              images: const <MemoImageEntry>[
+                MemoImageEntry(
+                  id: 'wide',
+                  title: 'wide',
+                  mimeType: 'image/png',
+                  previewUrl: 'https://example.com/wide.png',
+                  width: 400,
+                  height: 100,
+                ),
+              ],
+              columns: 1,
+              spacing: 0,
+              borderColor: Colors.white24,
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final tile = tester.widget<ImagePreviewTile>(find.byType(ImagePreviewTile));
+    expect(tile.cacheWidth, 600);
+    expect(tile.cacheHeight, 150);
+  });
+
+  testWidgets('unknown source dimensions use single-axis cache fallback', (
+    tester,
+  ) async {
+    _setUnitDevicePixelRatio(tester);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 100,
+            child: MemoImageGrid(
+              images: const <MemoImageEntry>[
+                MemoImageEntry(
+                  id: 'unknown',
+                  title: 'unknown',
+                  mimeType: 'image/png',
+                  previewUrl: 'https://example.com/unknown.png',
+                ),
+              ],
+              columns: 1,
+              spacing: 0,
+              borderColor: Colors.white24,
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final tile = tester.widget<ImagePreviewTile>(find.byType(ImagePreviewTile));
+    expect(tile.cacheWidth, 150);
+    expect(tile.cacheHeight, isNull);
+  });
+
+  testWidgets('media grid wide image uses aspect-safe cache sizing', (
+    tester,
+  ) async {
+    _setUnitDevicePixelRatio(tester);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 100,
+            child: MemoMediaGrid(
+              entries: const <MemoMediaEntry>[
+                MemoMediaEntry.image(
+                  MemoImageEntry(
+                    id: 'wide',
+                    title: 'wide',
+                    mimeType: 'image/png',
+                    width: 400,
+                    height: 100,
+                  ),
+                ),
+              ],
+              columns: 1,
+              spacing: 0,
+              borderColor: Colors.white24,
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final tile = tester.widget<ImagePreviewTile>(find.byType(ImagePreviewTile));
+    expect(tile.cacheWidth, 600);
+    expect(tile.cacheHeight, 150);
+  });
+
+  testWidgets('media grid tall image uses aspect-safe cache sizing', (
+    tester,
+  ) async {
+    _setUnitDevicePixelRatio(tester);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 100,
+            child: MemoMediaGrid(
+              entries: const <MemoMediaEntry>[
+                MemoMediaEntry.image(
+                  MemoImageEntry(
+                    id: 'tall',
+                    title: 'tall',
+                    mimeType: 'image/png',
+                    width: 100,
+                    height: 400,
+                  ),
+                ),
+              ],
+              columns: 1,
+              spacing: 0,
+              borderColor: Colors.white24,
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final tile = tester.widget<ImagePreviewTile>(find.byType(ImagePreviewTile));
+    expect(tile.cacheWidth, 150);
+    expect(tile.cacheHeight, 600);
+  });
+
+  testWidgets('media grid height-limited tile avoids exact tile ratio decode', (
+    tester,
+  ) async {
+    _setUnitDevicePixelRatio(tester);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 100,
+            child: MemoMediaGrid(
+              entries: const <MemoMediaEntry>[
+                MemoMediaEntry.image(
+                  MemoImageEntry(
+                    id: 'square',
+                    title: 'square',
+                    mimeType: 'image/png',
+                    width: 400,
+                    height: 400,
+                  ),
+                ),
+              ],
+              columns: 1,
+              spacing: 0,
+              maxHeight: 50,
+              borderColor: Colors.white24,
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final tile = tester.widget<ImagePreviewTile>(find.byType(ImagePreviewTile));
+    expect(tile.cacheWidth, 150);
+    expect(tile.cacheHeight, 150);
+  });
+}
+
+void _setUnitDevicePixelRatio(WidgetTester tester) {
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetDevicePixelRatio);
 }
