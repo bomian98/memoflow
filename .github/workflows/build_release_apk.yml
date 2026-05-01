@@ -103,6 +103,7 @@ jobs:
         shell: pwsh
         run: |
           $scriptPath = "./tool/build_apk.ps1"
+          Write-Host "Using $scriptPath; splash token preflight source is tool/splash_tokens.yaml."
 
           & $scriptPath `
             -NoPubGet `

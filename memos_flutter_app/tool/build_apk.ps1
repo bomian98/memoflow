@@ -373,7 +373,13 @@ try {
   Write-Host "Running: dart run tool/sync_splash_tokens.dart --check"
   & dart run tool/sync_splash_tokens.dart --check
   if ($LASTEXITCODE -ne 0) {
-    throw "Splash token outputs are out of date. Please run: dart run tool/sync_splash_tokens.dart"
+    throw @"
+Splash token outputs are out of date.
+Source of truth: tool/splash_tokens.yaml
+Regenerate outputs from memos_flutter_app:
+  dart run tool/sync_splash_tokens.dart
+Then commit the updated generated files before packaging.
+"@
   }
 
   $copied = New-Object 'System.Collections.Generic.List[string]'
