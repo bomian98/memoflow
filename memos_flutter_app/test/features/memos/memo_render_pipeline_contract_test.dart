@@ -65,6 +65,33 @@ void main() {
     expect(artifact.content, isNot(contains('https://example.com/a.png')));
   });
 
+  test('allowlisted local file images stay in rendered html', () {
+    const localUrl = 'file:///tmp/memo-inline-local.png';
+    const content = 'before\n\n<img src="$localUrl" width="100%">\n\nafter';
+
+    final artifact = pipeline.build(
+      data: content,
+      renderImages: true,
+      allowedLocalImageUrls: const {localUrl},
+    );
+
+    expect(artifact.content, contains('before'));
+    expect(artifact.content, contains('after'));
+    expect(artifact.content, contains('<img src="$localUrl" width="100%">'));
+  });
+
+  test('unallowlisted local file images are stripped from rendered html', () {
+    const localUrl = 'file:///tmp/memo-inline-local.png';
+    const content = 'before\n\n<img src="$localUrl">\n\nafter';
+
+    final artifact = pipeline.build(data: content, renderImages: true);
+
+    expect(artifact.content, contains('before'));
+    expect(artifact.content, contains('after'));
+    expect(artifact.content, isNot(contains('<img')));
+    expect(artifact.content, isNot(contains(localUrl)));
+  });
+
   test(
     'preprocessor preserves explicit blank lines with html placeholders',
     () {

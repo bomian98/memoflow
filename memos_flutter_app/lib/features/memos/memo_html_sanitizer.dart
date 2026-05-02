@@ -66,17 +66,23 @@ final List<RegExp> _allowedClassPatterns = [
   RegExp(r'^language-[\w-]+$'),
 ];
 
-String sanitizeMemoHtml(String html) {
+String sanitizeMemoHtml(
+  String html, {
+  Set<String> allowedLocalImageUrls = const <String>{},
+}) {
   final fragment = html_parser.parseFragment(html);
-  _sanitizeDomNode(fragment);
+  _sanitizeDomNode(fragment, allowedLocalImageUrls: allowedLocalImageUrls);
   return fragment.outerHtml;
 }
 
-void _sanitizeDomNode(dom.Node node) {
+void _sanitizeDomNode(
+  dom.Node node, {
+  required Set<String> allowedLocalImageUrls,
+}) {
   final children = node.nodes.toList(growable: false);
   for (final child in children) {
     if (child is dom.Element) {
-      _sanitizeElement(child);
+      _sanitizeElement(child, allowedLocalImageUrls: allowedLocalImageUrls);
       continue;
     }
     if (child.nodeType == dom.Node.COMMENT_NODE) {
@@ -85,7 +91,10 @@ void _sanitizeDomNode(dom.Node node) {
   }
 }
 
-void _sanitizeElement(dom.Element element) {
+void _sanitizeElement(
+  dom.Element element, {
+  required Set<String> allowedLocalImageUrls,
+}) {
   final tag = element.localName;
   if (tag == null) {
     element.remove();
@@ -96,19 +105,27 @@ void _sanitizeElement(dom.Element element) {
     return;
   }
   if (!_allowedHtmlTags.contains(tag)) {
-    _unwrapElement(element);
+    _unwrapElement(element, allowedLocalImageUrls: allowedLocalImageUrls);
     return;
   }
-  if (!_sanitizeAttributes(element, tag)) {
+  if (!_sanitizeAttributes(
+    element,
+    tag,
+    allowedLocalImageUrls: allowedLocalImageUrls,
+  )) {
     return;
   }
   if (tag == 'pre' || tag == 'code') {
     return;
   }
-  _sanitizeDomNode(element);
+  _sanitizeDomNode(element, allowedLocalImageUrls: allowedLocalImageUrls);
 }
 
-bool _sanitizeAttributes(dom.Element element, String tag) {
+bool _sanitizeAttributes(
+  dom.Element element,
+  String tag, {
+  required Set<String> allowedLocalImageUrls,
+}) {
   final allowedAttrs = _allowedHtmlAttributes[tag] ?? const <String>{};
   final attributes = Map<String, String>.from(element.attributes);
   element.attributes.clear();
@@ -133,7 +150,7 @@ bool _sanitizeAttributes(dom.Element element, String tag) {
       allowMailto: true,
     );
     if (href == null) {
-      _unwrapElement(element);
+      _unwrapElement(element, allowedLocalImageUrls: allowedLocalImageUrls);
       return false;
     }
     element.attributes['href'] = href;
@@ -144,6 +161,7 @@ bool _sanitizeAttributes(dom.Element element, String tag) {
       element.attributes['src'],
       allowRelative: true,
       allowMailto: false,
+      allowedLocalImageUrls: allowedLocalImageUrls,
     );
     if (src == null) {
       element.remove();
@@ -184,6 +202,7 @@ String? _sanitizeUrl(
   String? url, {
   required bool allowRelative,
   required bool allowMailto,
+  Set<String> allowedLocalImageUrls = const <String>{},
 }) {
   if (url == null) return null;
   final trimmed = url.trim();
@@ -194,13 +213,19 @@ String? _sanitizeUrl(
     final scheme = uri.scheme.toLowerCase();
     if (scheme == 'http' || scheme == 'https') return trimmed;
     if (allowMailto && scheme == 'mailto') return trimmed;
+    if (scheme == 'file' && allowedLocalImageUrls.contains(trimmed)) {
+      return trimmed;
+    }
     return null;
   }
   if (!allowRelative) return null;
   return trimmed;
 }
 
-void _unwrapElement(dom.Element element) {
+void _unwrapElement(
+  dom.Element element, {
+  required Set<String> allowedLocalImageUrls,
+}) {
   final parent = element.parent;
   if (parent == null) {
     element.remove();
@@ -212,7 +237,7 @@ void _unwrapElement(dom.Element element) {
   if (children.isNotEmpty) {
     parent.nodes.insertAll(index, children);
     for (final child in children) {
-      _sanitizeDomNode(child);
+      _sanitizeDomNode(child, allowedLocalImageUrls: allowedLocalImageUrls);
     }
   }
 }

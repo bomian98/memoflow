@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use_from_same_package
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +24,7 @@ import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
 import 'package:memos_flutter_app/state/system/session_provider.dart';
 import 'package:memos_flutter_app/state/tags/tag_color_lookup.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +70,53 @@ void main() {
     );
   });
 
+  test(
+    'detail markdown cache key changes with local inline allowlist state',
+    () {
+      final localUrl = Uri.file(_tempPath('cache-owned-inline.jpg')).toString();
+      final content = [
+        'Article body',
+        '<img src="$localUrl">',
+        buildThirdPartyShareMemoMarker(),
+      ].join('\n');
+      final memoWithoutAttachment = _buildMemo(
+        uid: 'memo-cache',
+        content: content,
+      );
+      final memoWithAttachment = _buildMemo(
+        uid: 'memo-cache',
+        content: content,
+        attachments: [_imageAttachment(localUrl)],
+      );
+
+      final withoutAttachment = buildMemoDocumentResolvedData(
+        memo: memoWithoutAttachment,
+        appLanguage: AppLanguage.en,
+        clipCard: null,
+        baseUrl: null,
+        authHeader: null,
+        rebaseAbsoluteFileUrlForV024: false,
+        attachAuthForSameOriginAbsolute: false,
+        richContentEnabled: true,
+      );
+      final withAttachment = buildMemoDocumentResolvedData(
+        memo: memoWithAttachment,
+        appLanguage: AppLanguage.en,
+        clipCard: null,
+        baseUrl: null,
+        authHeader: null,
+        rebaseAbsoluteFileUrlForV024: false,
+        attachAuthForSameOriginAbsolute: false,
+        richContentEnabled: true,
+      );
+
+      expect(
+        withoutAttachment.markdownCacheKey,
+        isNot(equals(withAttachment.markdownCacheKey)),
+      );
+    },
+  );
+
   testWidgets('detail content passes image auth context to markdown', (
     tester,
   ) async {
@@ -109,6 +159,114 @@ void main() {
       attachAuthForSameOriginAbsolute: markdown.attachAuthForSameOriginAbsolute,
     );
     expect(request?.headers, {'Authorization': authHeader});
+  });
+
+  testWidgets('detail allows current memo local attachment inline images', (
+    tester,
+  ) async {
+    final localUrl = Uri.file(_tempPath('detail-owned-inline.jpg')).toString();
+    final content = [
+      'Article body',
+      '<img src="$localUrl" width="100%">',
+      buildThirdPartyShareMemoMarker(),
+    ].join('\n');
+    final memo = _buildMemo(
+      content: content,
+      attachments: [_imageAttachment(localUrl)],
+    );
+
+    final resolvedData = buildMemoDocumentResolvedData(
+      memo: memo,
+      appLanguage: AppLanguage.en,
+      clipCard: null,
+      baseUrl: null,
+      authHeader: null,
+      rebaseAbsoluteFileUrlForV024: false,
+      attachAuthForSameOriginAbsolute: false,
+      richContentEnabled: true,
+    );
+
+    expect(resolvedData.effectiveRenderInlineImages, isTrue);
+    expect(
+      resolvedData.inlineImageSourcePolicy.allowedLocalImageUrls,
+      contains(localUrl),
+    );
+    expect(resolvedData.markdownArtifact.content, contains('<img'));
+    expect(resolvedData.markdownArtifact.content, contains(localUrl));
+    expect(resolvedData.imageEntries, hasLength(1));
+    expect(resolvedData.imageEntries.single.isAttachment, isFalse);
+    expect(resolvedData.mediaEntries.where((entry) => entry.isImage), isEmpty);
+
+    await tester.pumpWidget(
+      _buildPrimaryContentTestApp(resolvedData: resolvedData),
+    );
+
+    final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+    expect(markdown.renderImages, isTrue);
+    expect(markdown.allowedLocalImageUrls, contains(localUrl));
+  });
+
+  test('detail blocks unowned local inline image urls', () {
+    final localUrl = Uri.file(
+      _tempPath('detail-unowned-inline.jpg'),
+    ).toString();
+    final content = [
+      'Article body',
+      '<img src="$localUrl">',
+      buildThirdPartyShareMemoMarker(),
+    ].join('\n');
+    final memo = _buildMemo(content: content);
+
+    final resolvedData = buildMemoDocumentResolvedData(
+      memo: memo,
+      appLanguage: AppLanguage.en,
+      clipCard: null,
+      baseUrl: null,
+      authHeader: null,
+      rebaseAbsoluteFileUrlForV024: false,
+      attachAuthForSameOriginAbsolute: false,
+      richContentEnabled: true,
+    );
+
+    expect(resolvedData.inlineImageSourcePolicy.allowedLocalImageUrls, isEmpty);
+    expect(resolvedData.markdownArtifact.content, isNot(contains('<img')));
+    expect(resolvedData.markdownArtifact.content, isNot(contains(localUrl)));
+  });
+
+  test('detail does not allow host-mutated file urls', () {
+    final localPath = _tempPath('detail-host-mutated-inline.jpg');
+    final canonicalUrl = Uri.file(localPath).toString();
+    final hostMutatedUrl = canonicalUrl.replaceFirst(
+      'file:///',
+      'file://data/',
+    );
+    final content = [
+      'Article body',
+      '<img src="$hostMutatedUrl">',
+      buildThirdPartyShareMemoMarker(),
+    ].join('\n');
+    final memo = _buildMemo(
+      content: content,
+      attachments: [_imageAttachment(canonicalUrl)],
+    );
+
+    final resolvedData = buildMemoDocumentResolvedData(
+      memo: memo,
+      appLanguage: AppLanguage.en,
+      clipCard: null,
+      baseUrl: null,
+      authHeader: null,
+      rebaseAbsoluteFileUrlForV024: false,
+      attachAuthForSameOriginAbsolute: false,
+      richContentEnabled: true,
+    );
+
+    expect(resolvedData.inlineImageSourcePolicy.allowedLocalImageUrls, isEmpty);
+    expect(resolvedData.markdownArtifact.content, isNot(contains('<img')));
+    expect(
+      resolvedData.markdownArtifact.content,
+      isNot(contains(hostMutatedUrl)),
+    );
   });
 
   testWidgets('detail body enables double tap edit for normal memos', (
@@ -282,6 +440,20 @@ LocalMemo _buildMemo({
     syncState: SyncState.synced,
     lastError: null,
   );
+}
+
+Attachment _imageAttachment(String externalLink) {
+  return Attachment(
+    name: 'attachments/photo',
+    filename: 'photo.jpg',
+    type: 'image/jpeg',
+    size: 1,
+    externalLink: externalLink,
+  );
+}
+
+String _tempPath(String filename) {
+  return p.join(Directory.systemTemp.path, 'memo-detail-inline', filename);
 }
 
 class _TestSessionController extends AppSessionController {

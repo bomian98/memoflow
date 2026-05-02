@@ -32,6 +32,7 @@ class MemoRenderPipeline {
     required bool renderImages,
     String? highlightQuery,
     String? cacheKey,
+    Set<String> allowedLocalImageUrls = const <String>{},
   }) {
     final filteredData = stripTaskListToggleHint(data);
     final rawTrimmed = filteredData.trim();
@@ -57,16 +58,23 @@ class MemoRenderPipeline {
     }
     final tagged = decorateMemoTagsForHtml(trimmed);
 
-    final cachedHtml = cacheKey == null ? null : _cache.get(cacheKey);
+    final effectiveCacheKey = _withLocalImageAllowlistFingerprint(
+      cacheKey,
+      allowedLocalImageUrls,
+    );
+    final cachedHtml = effectiveCacheKey == null
+        ? null
+        : _cache.get(effectiveCacheKey);
     final html =
         cachedHtml ??
         _buildMemoHtml(
           tagged,
           highlightQuery: highlightQuery,
           renderImages: renderImages,
+          allowedLocalImageUrls: allowedLocalImageUrls,
         );
-    if (cacheKey != null && cachedHtml == null) {
-      _cache.set(cacheKey, html);
+    if (effectiveCacheKey != null && cachedHtml == null) {
+      _cache.set(effectiveCacheKey, html);
     }
 
     return MemoRenderArtifact(mode: MemoRenderMode.html, content: html);
@@ -86,12 +94,14 @@ MemoRenderArtifact buildMemoRenderArtifact({
   required bool renderImages,
   String? highlightQuery,
   String? cacheKey,
+  Set<String> allowedLocalImageUrls = const <String>{},
 }) {
   return _sharedMemoRenderPipeline.build(
     data: data,
     renderImages: renderImages,
     highlightQuery: highlightQuery,
     cacheKey: cacheKey,
+    allowedLocalImageUrls: allowedLocalImageUrls,
   );
 }
 
@@ -133,14 +143,42 @@ String _buildMemoHtml(
   String text, {
   required bool renderImages,
   String? highlightQuery,
+  Set<String> allowedLocalImageUrls = const <String>{},
 }) {
   final rawHtml = _renderMarkdownToHtml(text);
   final escapedCodeBlocks = _escapeCodeBlocks(rawHtml);
-  final sanitized = sanitizeMemoHtml(escapedCodeBlocks);
+  final sanitized = sanitizeMemoHtml(
+    escapedCodeBlocks,
+    allowedLocalImageUrls: allowedLocalImageUrls,
+  );
   final normalizedHtml = renderImages
       ? sanitized
       : _stripHtmlImagesFromRenderedHtml(sanitized);
   return _applySearchHighlights(normalizedHtml, highlightQuery: highlightQuery);
+}
+
+String? _withLocalImageAllowlistFingerprint(
+  String? cacheKey,
+  Set<String> allowedLocalImageUrls,
+) {
+  if (cacheKey == null) return null;
+  if (allowedLocalImageUrls.isEmpty) return cacheKey;
+  final sorted =
+      allowedLocalImageUrls
+          .map((url) => url.trim())
+          .where((url) => url.isNotEmpty)
+          .toSet()
+          .toList(growable: false)
+        ..sort();
+  final buffer = StringBuffer(cacheKey)..write('|localInlineAllow=');
+  for (final url in sorted) {
+    buffer
+      ..write(url.length)
+      ..write(':')
+      ..write(url)
+      ..write('|');
+  }
+  return buffer.toString();
 }
 
 String _stripHtmlImagesFromRenderedHtml(String html) {

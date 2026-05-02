@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use_from_same_package
 
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -473,6 +475,231 @@ void main() {
   );
 
   testWidgets(
+    'MemoListCard allowlists memo-owned local inline images in expanded article mode',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(900, 2200));
+      final localUrl = Uri.file(
+        '/tmp/memoflow-test/owned-inline.png',
+      ).toString();
+      final imageFile = File.fromUri(Uri.parse(localUrl));
+      final body =
+          'Intro paragraph.\n\n'
+          '<img src="$localUrl">\n\n'
+          '${'Detailed body paragraph. ' * 80}';
+      final attachment = Attachment(
+        name: 'attachments/att-owned',
+        filename: 'owned.png',
+        type: 'image/png',
+        size: 1,
+        externalLink: localUrl,
+        width: 1,
+        height: 1,
+      );
+      final imageEntry = MemoImageEntry(
+        id: 'inline_0',
+        title: 'owned.png',
+        mimeType: 'image/*',
+        localFile: imageFile,
+      );
+      final memo = _buildMemo(
+        content: '# Clip title\n\n$body\n\n${buildThirdPartyShareMemoMarker()}',
+        attachments: [attachment],
+      );
+
+      await tester.pumpWidget(
+        _buildDirectCardHarness(
+          memo: memo,
+          contentTextOverride: body,
+          imageEntries: [imageEntry],
+          mediaEntries: [MemoMediaEntry.image(imageEntry)],
+          initiallyExpanded: true,
+        ),
+      );
+      await tester.pump();
+
+      final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.renderImages, isTrue);
+      expect(markdown.allowedLocalImageUrls, contains(localUrl));
+      expect(markdown.imagePreviewItems, hasLength(1));
+      expect(
+        markdown.imagePreviewItems!.single.localFile?.path,
+        imageFile.path,
+      );
+      expect(markdown.onOpenImagePreview, isNotNull);
+      expect(find.byType(MemoMediaGrid), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'MemoListCard blocks unowned local inline images in expanded article mode',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(900, 2200));
+      final localUrl = Uri.file(
+        '/tmp/memoflow-test/unowned-inline.png',
+      ).toString();
+      final body =
+          'Intro paragraph.\n\n'
+          '<img src="$localUrl">\n\n'
+          '${'Detailed body paragraph. ' * 80}';
+      final memo = _buildMemo(
+        content: '# Clip title\n\n$body\n\n${buildThirdPartyShareMemoMarker()}',
+      );
+
+      await tester.pumpWidget(
+        _buildDirectCardHarness(
+          memo: memo,
+          contentTextOverride: body,
+          initiallyExpanded: true,
+        ),
+      );
+      await tester.pump();
+
+      final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.renderImages, isTrue);
+      expect(markdown.allowedLocalImageUrls, isEmpty);
+      expect(find.byType(Image), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'MemoListCard collapsed article preview keeps inline images disabled',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(900, 2200));
+      final localUrl = Uri.file(
+        '/tmp/memoflow-test/owned-collapsed.png',
+      ).toString();
+      final body =
+          'Intro paragraph.\n\n'
+          '<img src="$localUrl">\n\n'
+          '${'Detailed body paragraph. ' * 80}';
+      final memo = _buildMemo(
+        content: '# Clip title\n\n$body\n\n${buildThirdPartyShareMemoMarker()}',
+        attachments: [
+          Attachment(
+            name: 'attachments/att-collapsed',
+            filename: 'owned-collapsed.png',
+            type: 'image/png',
+            size: 1,
+            externalLink: localUrl,
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        _buildDirectCardHarness(memo: memo, contentTextOverride: body),
+      );
+      await tester.pumpAndSettle();
+
+      final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.renderImages, isFalse);
+      expect(markdown.allowedLocalImageUrls, isEmpty);
+      expect(markdown.data, isNot(contains('<img')));
+      expect(find.byType(Image), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'MemoListCard preserves remote inline image request configuration',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(900, 2200));
+      final baseUrl = Uri.parse('https://memos.example.test');
+      final body = 'Intro paragraph.\n\n${'Detailed body paragraph. ' * 80}';
+      final memo = _buildMemo(
+        content: '# Clip title\n\n$body\n\n${buildThirdPartyShareMemoMarker()}',
+      );
+
+      await tester.pumpWidget(
+        _buildDirectCardHarness(
+          memo: memo,
+          contentTextOverride: body,
+          initiallyExpanded: true,
+          baseUrl: baseUrl,
+          authHeader: 'Bearer token',
+          rebaseAbsoluteFileUrlForV024: true,
+          attachAuthForSameOriginAbsolute: true,
+        ),
+      );
+      await tester.pump();
+
+      final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.renderImages, isTrue);
+      expect(markdown.baseUrl, baseUrl);
+      expect(markdown.authHeader, 'Bearer token');
+      expect(markdown.rebaseAbsoluteFileUrlForV024, isTrue);
+      expect(markdown.attachAuthForSameOriginAbsolute, isTrue);
+    },
+  );
+
+  testWidgets(
+    'MemoListCard markdown cache key changes when local inline policy changes',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(900, 2200));
+      final contentUrl = Uri.file(
+        '/tmp/memoflow-test/content-inline.png',
+      ).toString();
+      final replacementUrl = Uri.file(
+        '/tmp/memoflow-test/other-attachment.png',
+      ).toString();
+      final body =
+          'Intro paragraph.\n\n'
+          '<img src="$contentUrl">\n\n'
+          '${'Detailed body paragraph. ' * 80}';
+      Attachment attachmentFor(String url) {
+        return Attachment(
+          name: 'attachments/att-cache',
+          filename: 'cache.png',
+          type: 'image/png',
+          size: 1,
+          externalLink: url,
+        );
+      }
+
+      await tester.pumpWidget(
+        _buildDirectCardHarness(
+          memo: _buildMemo(
+            content:
+                '# Clip title\n\n$body\n\n${buildThirdPartyShareMemoMarker()}',
+            attachments: [attachmentFor(contentUrl)],
+          ),
+          contentTextOverride: body,
+          initiallyExpanded: true,
+        ),
+      );
+      await tester.pump();
+
+      final firstMarkdown = tester.widget<MemoMarkdown>(
+        find.byType(MemoMarkdown),
+      );
+      final firstCacheKey = firstMarkdown.cacheKey;
+      expect(firstMarkdown.allowedLocalImageUrls, contains(contentUrl));
+
+      await tester.pumpWidget(
+        _buildDirectCardHarness(
+          memo: _buildMemo(
+            content:
+                '# Clip title\n\n$body\n\n${buildThirdPartyShareMemoMarker()}',
+            attachments: [attachmentFor(replacementUrl)],
+          ),
+          contentTextOverride: body,
+          initiallyExpanded: true,
+        ),
+      );
+      await tester.pump();
+
+      final secondMarkdown = tester.widget<MemoMarkdown>(
+        find.byType(MemoMarkdown),
+      );
+      expect(secondMarkdown.allowedLocalImageUrls, isEmpty);
+      expect(secondMarkdown.cacheKey, isNot(firstCacheKey));
+    },
+  );
+
+  testWidgets(
     'MemoListCard expands normal memo cards from preview text to full body content',
     (tester) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -704,6 +931,64 @@ Widget _buildHarness({
               }
               return body;
             },
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildDirectCardHarness({
+  required LocalMemo memo,
+  String? contentTextOverride,
+  List<MemoImageEntry> imageEntries = const <MemoImageEntry>[],
+  List<MemoMediaEntry> mediaEntries = const <MemoMediaEntry>[],
+  bool initiallyExpanded = false,
+  Uri? baseUrl,
+  String? authHeader,
+  bool rebaseAbsoluteFileUrlForV024 = false,
+  bool attachAuthForSameOriginAbsolute = false,
+}) {
+  LocaleSettings.setLocale(AppLocale.en);
+  return TranslationProvider(
+    child: MaterialApp(
+      locale: AppLocale.en.flutterLocale,
+      supportedLocales: AppLocaleUtils.supportedLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: SizedBox(
+            width: 420,
+            child: MemoListCard(
+              memo: memo,
+              dateText: '2024-01-02',
+              reminderText: null,
+              tagColors: TagColorLookup(const []),
+              initiallyExpanded: initiallyExpanded,
+              highlightQuery: null,
+              collapseLongContent: true,
+              collapseReferences: true,
+              isAudioPlaying: false,
+              isAudioLoading: false,
+              audioPositionListenable: null,
+              audioDurationListenable: null,
+              imageEntries: imageEntries,
+              mediaEntries: mediaEntries,
+              contentTextOverride: contentTextOverride,
+              contentHeader: const SizedBox.shrink(),
+              useExpandedArticleBody: true,
+              baseUrl: baseUrl,
+              authHeader: authHeader,
+              rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+              attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+              locationProvider: LocationServiceProvider.google,
+              onAudioSeek: null,
+              onAudioTap: null,
+              syncStatus: MemoSyncStatus.none,
+              onToggleTask: (_) {},
+              onTap: () {},
+              onAction: (_) {},
+            ),
           ),
         ),
       ),

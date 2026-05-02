@@ -47,6 +47,34 @@ void main() {
   });
 
   test(
+    'collectMemoImageEntries deduplicates matching inline local images and attachments',
+    () {
+      final localUrl = Uri.file(
+        '${Directory.systemTemp.path}${Platform.pathSeparator}memo-inline-owned-image.jpg',
+      ).toString();
+
+      final entries = collectMemoImageEntries(
+        content: '<img src="$localUrl">',
+        attachments: [
+          Attachment(
+            name: 'attachments/demo',
+            filename: 'demo.jpg',
+            type: 'image/jpeg',
+            size: 1024,
+            externalLink: localUrl,
+          ),
+        ],
+        baseUrl: null,
+        authHeader: null,
+      );
+
+      expect(entries, hasLength(1));
+      expect(entries.single.isAttachment, isFalse);
+      expect(entries.single.localFile, isNotNull);
+    },
+  );
+
+  test(
     'collectMemoImageEntries ignores html image examples in fenced code',
     () {
       final entries = collectMemoImageEntries(

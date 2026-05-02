@@ -47,4 +47,37 @@ void main() {
       expect(sanitized, isNot(contains('onclick=')));
     },
   );
+
+  test('sanitizeMemoHtml blocks file image urls by default', () {
+    const html = '<p>before</p><img src="file:///tmp/private.png"><p>after</p>';
+
+    final sanitized = sanitizeMemoHtml(html);
+
+    expect(sanitized, contains('<p>before</p>'));
+    expect(sanitized, contains('<p>after</p>'));
+    expect(sanitized, isNot(contains('<img')));
+    expect(sanitized, isNot(contains('file:///tmp/private.png')));
+  });
+
+  test(
+    'sanitizeMemoHtml preserves allowlisted file image urls only for img',
+    () {
+      const localUrl = 'file:///tmp/private.png';
+      const html =
+          '<a href="$localUrl">file</a>'
+          '<img src="$localUrl" width="100%" onclick="bad">';
+
+      final sanitized = sanitizeMemoHtml(
+        html,
+        allowedLocalImageUrls: const {localUrl},
+      );
+
+      expect(
+        sanitized,
+        contains('<img src="file:///tmp/private.png" width="100%">'),
+      );
+      expect(sanitized, isNot(contains('<a href="file:///tmp/private.png">')));
+      expect(sanitized, isNot(contains('onclick=')));
+    },
+  );
 }

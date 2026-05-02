@@ -191,6 +191,7 @@ class MemoMarkdown extends StatelessWidget {
     this.attachAuthForSameOriginAbsolute = false,
     this.imagePreviewItems,
     this.onOpenImagePreview,
+    this.allowedLocalImageUrls = const <String>{},
   });
 
   final String data;
@@ -211,7 +212,9 @@ class MemoMarkdown extends StatelessWidget {
   final bool rebaseAbsoluteFileUrlForV024;
   final bool attachAuthForSameOriginAbsolute;
   final List<ImagePreviewItem>? imagePreviewItems;
-  final Future<void> Function(ImagePreviewOpenRequest request)? onOpenImagePreview;
+  final Future<void> Function(ImagePreviewOpenRequest request)?
+  onOpenImagePreview;
+  final Set<String> allowedLocalImageUrls;
 
   @override
   Widget build(BuildContext context) {
@@ -222,6 +225,7 @@ class MemoMarkdown extends StatelessWidget {
           renderImages: renderImages,
           highlightQuery: highlightQuery,
           cacheKey: cacheKey,
+          allowedLocalImageUrls: allowedLocalImageUrls,
         );
     final contentText = effectiveArtifact.content;
     if (contentText.trim().isEmpty) return const SizedBox.shrink();
@@ -661,8 +665,7 @@ class MemoMarkdown extends StatelessWidget {
 
               final previewItems = imagePreviewItems;
               final openImagePreview = onOpenImagePreview;
-              final previewIndex =
-                  previewItems == null || previewItems.isEmpty
+              final previewIndex = previewItems == null || previewItems.isEmpty
                   ? -1
                   : resolveMemoMarkdownImagePreviewIndex(
                       items: previewItems,
@@ -684,13 +687,15 @@ class MemoMarkdown extends StatelessWidget {
                           ImagePreviewItem(
                             id: localFile?.path ?? resolvedRemoteSrc,
                             title: src,
-                            mimeType: shouldUseSvgRenderer(
+                            mimeType:
+                                shouldUseSvgRenderer(
                                   url: localFile?.path ?? resolvedRemoteSrc,
                                 )
                                 ? 'image/svg+xml'
                                 : 'image/*',
                             localFile: localFile,
-                            fullUrl: localFile == null &&
+                            fullUrl:
+                                localFile == null &&
                                     resolvedRemoteSrc.trim().isNotEmpty
                                 ? resolvedRemoteSrc.trim()
                                 : null,

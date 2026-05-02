@@ -19,6 +19,7 @@ import '../../share/share_inline_image_content.dart';
 import '../attachment_gallery_screen.dart';
 import '../memo_image_grid.dart';
 import '../memo_image_preview_adapters.dart';
+import '../memo_inline_image_sources.dart';
 import '../memo_location_line.dart';
 import '../memo_markdown.dart';
 import '../memo_media_grid.dart';
@@ -78,6 +79,12 @@ class MemoReaderContent extends ConsumerWidget {
     final rebaseAbsoluteFileUrlForV024 = isServerVersion024(serverVersion);
     final attachAuthForSameOriginAbsolute = isServerVersion021(serverVersion);
     final renderInlineImages = contentHasThirdPartyShareMarker(memo.content);
+    final inlineImageSourcePolicy = renderInlineImages
+        ? buildMemoInlineImageSourcePolicy(
+            content: memo.content,
+            attachments: memo.attachments,
+          )
+        : MemoInlineImageSourcePolicy.empty;
     final mediaEntries =
         mediaEntriesOverride ??
         () {
@@ -177,7 +184,7 @@ class MemoReaderContent extends ConsumerWidget {
           contentOverride ??
               MemoMarkdown(
                 cacheKey:
-                    'reader|${memo.uid}|${memo.contentFingerprint}|${highlightQuery ?? ''}|${renderInlineImages ? 1 : 0}',
+                    'reader|${memo.uid}|${memo.contentFingerprint}|${highlightQuery ?? ''}|${renderInlineImages ? 1 : 0}|localInline=${inlineImageSourcePolicy.fingerprint}',
                 data: memo.content,
                 highlightQuery: highlightQuery,
                 textStyle:
@@ -192,6 +199,8 @@ class MemoReaderContent extends ConsumerWidget {
                 attachAuthForSameOriginAbsolute:
                     attachAuthForSameOriginAbsolute,
                 imagePreviewItems: imagePreviewItems,
+                allowedLocalImageUrls:
+                    inlineImageSourcePolicy.allowedLocalImageUrls,
                 onOpenImagePreview: (request) =>
                     ImagePreviewLauncher.open(context, request),
               ),

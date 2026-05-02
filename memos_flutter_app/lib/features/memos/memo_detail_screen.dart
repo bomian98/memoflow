@@ -46,6 +46,7 @@ import 'memo_editor_screen.dart';
 import 'memo_detail_view.dart';
 import 'memo_image_grid.dart';
 import 'memo_image_preview_adapters.dart';
+import 'memo_inline_image_sources.dart';
 import 'memo_media_grid.dart';
 import 'memo_markdown.dart';
 import 'memo_render_pipeline.dart';
@@ -61,21 +62,24 @@ String memoDetailMarkdownCacheKey(
   LocalMemo memo, {
   required bool renderImages,
   bool stripClipTitle = false,
+  String localInlineImageFingerprint = '',
 }) {
   final renderFlag = renderImages ? 1 : 0;
   final stripFlag = stripClipTitle ? 1 : 0;
-  return 'detail|${memo.uid}|${memo.contentFingerprint}|renderImages=$renderFlag|clip=$stripFlag|highlight=';
+  return 'detail|${memo.uid}|${memo.contentFingerprint}|renderImages=$renderFlag|clip=$stripFlag|localInline=$localInlineImageFingerprint|highlight=';
 }
 
 String buildMemoDocumentMarkdownCacheKey(
   LocalMemo memo, {
   required bool renderImages,
   bool stripClipTitle = false,
+  String localInlineImageFingerprint = '',
 }) {
   return memoDetailMarkdownCacheKey(
     memo,
     renderImages: renderImages,
     stripClipTitle: stripClipTitle,
+    localInlineImageFingerprint: localInlineImageFingerprint,
   );
 }
 
@@ -93,6 +97,7 @@ class MemoDocumentResolvedData {
     required this.videoEntries,
     required this.mediaEntries,
     required this.imagePreviewItems,
+    required this.inlineImageSourcePolicy,
     required this.nonImageAttachments,
     required this.memoErrorText,
     required this.baseUrl,
@@ -113,6 +118,7 @@ class MemoDocumentResolvedData {
   final List<MemoVideoEntry> videoEntries;
   final List<MemoMediaEntry> mediaEntries;
   final List<ImagePreviewItem> imagePreviewItems;
+  final MemoInlineImageSourcePolicy inlineImageSourcePolicy;
   final List<Attachment> nonImageAttachments;
   final String? memoErrorText;
   final Uri? baseUrl;
@@ -182,6 +188,12 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
           rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
           attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
         );
+  final inlineImageSourcePolicy = effectiveRenderInlineImages
+      ? buildMemoInlineImageSourcePolicy(
+          content: memo.content,
+          attachments: memo.attachments,
+        )
+      : MemoInlineImageSourcePolicy.empty;
   final nonImageAttachments = memo.attachments
       .where(
         (attachment) =>
@@ -200,6 +212,7 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
     memo,
     renderImages: effectiveRenderInlineImages,
     stripClipTitle: clipCard != null,
+    localInlineImageFingerprint: inlineImageSourcePolicy.fingerprint,
   );
 
   return MemoDocumentResolvedData(
@@ -209,6 +222,7 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
       data: displayContentText,
       renderImages: effectiveRenderInlineImages,
       cacheKey: markdownCacheKey,
+      allowedLocalImageUrls: inlineImageSourcePolicy.allowedLocalImageUrls,
     ),
     markdownCacheKey: markdownCacheKey,
     clipCard: clipCard,
@@ -217,6 +231,7 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
     videoEntries: videoEntries,
     mediaEntries: mediaEntries,
     imagePreviewItems: imagePreviewItems,
+    inlineImageSourcePolicy: inlineImageSourcePolicy,
     nonImageAttachments: nonImageAttachments,
     memoErrorText: memoErrorText,
     baseUrl: baseUrl,
@@ -1164,6 +1179,8 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
           resolvedData.attachAuthForSameOriginAbsolute,
       tagColors: tagColors,
       imagePreviewItems: resolvedData.imagePreviewItems,
+      allowedLocalImageUrls:
+          resolvedData.inlineImageSourcePolicy.allowedLocalImageUrls,
       onOpenImagePreview: (request) =>
           ImagePreviewLauncher.open(context, request),
       onToggleTask: onToggleTask,
@@ -2900,6 +2917,7 @@ class _CollapsibleText extends StatefulWidget {
     this.attachAuthForSameOriginAbsolute = false,
     this.tagColors,
     this.imagePreviewItems,
+    this.allowedLocalImageUrls = const <String>{},
     this.onOpenImagePreview,
     this.onToggleTask,
   });
@@ -2919,6 +2937,7 @@ class _CollapsibleText extends StatefulWidget {
   final bool attachAuthForSameOriginAbsolute;
   final TagColorLookup? tagColors;
   final List<ImagePreviewItem>? imagePreviewItems;
+  final Set<String> allowedLocalImageUrls;
   final Future<void> Function(ImagePreviewOpenRequest request)?
   onOpenImagePreview;
   final ValueChanged<TaskToggleRequest>? onToggleTask;
@@ -2995,6 +3014,7 @@ class _CollapsibleTextState extends State<_CollapsibleText> {
               widget.attachAuthForSameOriginAbsolute,
           tagColors: widget.tagColors,
           imagePreviewItems: widget.imagePreviewItems,
+          allowedLocalImageUrls: widget.allowedLocalImageUrls,
           onOpenImagePreview: widget.onOpenImagePreview,
           onToggleTask: showCollapsed ? null : widget.onToggleTask,
         ),
