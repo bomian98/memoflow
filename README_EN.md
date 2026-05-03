@@ -4,21 +4,30 @@
   <img src="docs/memoflow-logo.png" alt="MemoFlow Logo" width="120">
 </p>
 
-Chinese version: [README.md](README.md)
-Official website: [memoflow.hzc073.com](https://memoflow.hzc073.com/) | Help Center: [memoflow.hzc073.com/help/](https://memoflow.hzc073.com/help/)
+<p align="center">
+  <a href="README.md">Chinese</a> |
+  <a href="https://memoflow.hzc073.com/">Official website</a> |
+  <a href="https://memoflow.hzc073.com/help/">Help Center</a>
+</p>
 
-MemoFlow is a Flutter mobile client for the [memos](https://github.com/usememos/memos) backend. This project is an independent
-third-party client and has no affiliation with the official Memos project.
+MemoFlow is a Flutter mobile client for the [memos](https://github.com/usememos/memos) backend.
+
+> This project is an independent third-party client
+> and has no affiliation with the official Memos project.
 
 ## Features
-- Offline-first: local SQLite cache + outbox retry queue.
-- Create, edit, search, pin, archive, and delete memos with Markdown, tags, and task lists.
-- Quick input: draft saving, tag suggestions, backlinks, attachments, camera capture, and undo/redo.
-- Attachment browsing: image preview, audio playback, and voice memo recording.
-- Random review and local statistics (monthly charts/heatmap), with sharing.
-- AI summary reports with configurable provider/model/prompt; share a poster or save as a memo.
-- Multi-account PAT login with compatibility mode for legacy Memos servers.
-- Widgets, app lock, preferences (theme/language/fonts), and Markdown+ZIP export.
+- Login and version compatibility: supports username/password and PAT login, with Memos API version selection and probing before login (0.21-0.26).
+- Offline-first: local SQLite cache + outbox retry queue, with sync queue viewing and retry support.
+- Complete memo workflow: create, edit, search, pin, archive, delete, filter by tags, and browse Explore.
+- Markdown and task lists: supports common Markdown rendering, task list progress display, backlinks, and linked navigation.
+- Multimedia input and preview: supports attachment upload, camera capture, voice recording, image/audio/video preview, and downloads.
+- Version history and trash: supports viewing/restoring memo history versions, plus restoring or permanently deleting from trash.
+- Reminder system: supports memo reminders, test reminders, do-not-disturb windows, ringtone/vibration, and other reminder settings.
+- Import and export: supports Markdown+ZIP export and flomo/Markdown ZIP import.
+- Local library mode: supports adding and scanning local libraries, with coexistence and switching alongside server mode.
+- WebDAV capabilities: supports WebDAV sync, backup/restore, retention policies, and recovery code flow.
+- AI and review statistics: supports AI summaries, random reviews, statistics, and heatmap display.
+- Experience and personalization: supports notification center, widgets, app lock, theme/language/font preferences, and more.
 
 ## TODO
 - User
@@ -34,22 +43,23 @@ third-party client and has no affiliation with the official Memos project.
   - Markdown
     - [x] Basic rendering: headings, quotes, horizontal rules, bold, italic, inline code, code blocks, unordered/ordered lists, links, images
     - [x] Custom extensions: strikethrough, task lists, tables, footnotes, highlight, underline via inline HTML
-    - [ ] LaTeX formulas
+    - [x] LaTeX formulas
   - Attachments
     - [x] Browse attachments
     - [x] Image preview
     - [x] Audio playback
-    - [ ] Edit attachments
+    - [x] Edit attachments
   - Interaction
     - [x] Likes/comments
 - Other
   - [x] Offline-first sync
-  - [ ] Single-device mode
+  - [x] Draft box
+  - [x] Standalone mode
   - [x] AI summary
   - [ ] Speech-to-text
-  - [ ] Custom quick tools
+  - [x] Custom quick tools
   - [x] Task progress bar
-  - [ ] Multi-language (align with Memos backend locales, 33 total)
+  - [ ] Multi-language
     <details>
     <summary>Language list (click to expand)</summary>
 
@@ -76,7 +86,7 @@ third-party client and has no affiliation with the official Memos project.
     - [ ] `nl` Dutch
     - [ ] `pl` Polish
     - [ ] `pt-PT` Portuguese (Portugal)
-    - [ ] `pt-BR` Portuguese (Brazil)
+    - [x] `pt-BR` Portuguese (Brazil)
     - [ ] `ru` Russian
     - [ ] `sl` Slovenian
     - [ ] `sv` Swedish

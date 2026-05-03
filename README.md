@@ -10,7 +10,7 @@
   <a href="https://memoflow.hzc073.com/help/">帮助中心</a>
 </p>
 
-MemoFlow 是一个面向 [memos](https://github.com/usememos/memos) 后端的 Flutter 移动端客户端。
+MemoFlow 是一个面向 [memos](https://github.com/usememos/memos) 后端的 多功能 移动端客户端。
 
 >本项目为独立的第三方客户端，
 与 Memos 官方项目没有任何关系。
@@ -43,22 +43,23 @@ MemoFlow 是一个面向 [memos](https://github.com/usememos/memos) 后端的 Fl
   - Markdown
     - [x] 基础渲染:标题、引用、分割线、加粗、斜体、行内代码、代码块、无序/有序列表、链接、图片
     - [x] 自定义扩展渲染：删除线、任务列表、表格、脚注、高亮、下划线用内联 HTML
-    - [ ] LaTeX公式
+    - [x] LaTeX公式
   - 附件
     - [x] 附件浏览
     - [x] 图片预览
     - [x] 音频播放
-    - [ ] 附件编辑
+    - [x] 附件编辑
   - 互动
     - [x] 点赞/评论
 - 其他
   - [x] 离线优先同步
-  - [ ] 单机模式
+  - [x] 草稿箱
+  - [x] 单机模式
   - [x] AI 总结
   - [ ] 语音转文字
-  - [ ] 自定义快速工具
+  - [x] 自定义快速工具
   - [x] 任务事项进度条
-  - [ ] 多语言（对齐 Memos 后端语言包，33 项）
+  - [ ] 多语言
     <details>
     <summary>语言列表（点击展开）</summary>
 
@@ -85,7 +86,7 @@ MemoFlow 是一个面向 [memos](https://github.com/usememos/memos) 后端的 Fl
     - [ ] `nl` 荷兰语
     - [ ] `pl` 波兰语
     - [ ] `pt-PT` 葡萄牙语（葡萄牙）
-    - [ ] `pt-BR` 葡萄牙语（巴西）
+    - [x] `pt-BR` 葡萄牙语（巴西）
     - [ ] `ru` 俄语
     - [ ] `sl` 斯洛文尼亚语
     - [ ] `sv` 瑞典语
