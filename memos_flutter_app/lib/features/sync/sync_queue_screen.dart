@@ -19,30 +19,36 @@ import '../../state/system/logging_provider.dart';
 import '../../state/system/database_provider.dart';
 import '../../data/models/local_memo.dart';
 import '../../state/memos/memo_sync_constraints.dart';
+import '../home/home_entry_screen.dart';
+import '../home/home_navigation_host.dart';
 import '../memos/memo_detail_screen.dart';
-import '../memos/memos_list_screen.dart';
 import '../../i18n/strings.g.dart';
 
 final _bridgeBulkPushRunningProvider = StateProvider<bool>((ref) => false);
 
 class SyncQueueScreen extends ConsumerWidget {
-  const SyncQueueScreen({super.key});
+  const SyncQueueScreen({super.key, this.embeddedNavigationHost});
+
+  final HomeEmbeddedNavigationHost? embeddedNavigationHost;
 
   void _backToAllMemos(BuildContext context) {
+    final host = embeddedNavigationHost;
+    if (host != null) {
+      host.handleBackToPrimaryDestination(context);
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => const MemosListScreen(
-          title: 'MemoFlow',
-          state: 'NORMAL',
-          showDrawer: true,
-          enableCompose: true,
-        ),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const HomeEntryScreen()),
       (route) => false,
     );
   }
 
   void _handleBack(BuildContext context) {
+    final host = embeddedNavigationHost;
+    if (host != null) {
+      host.handleBackToPrimaryDestination(context);
+      return;
+    }
     if (Navigator.of(context).canPop()) {
       context.safePop();
       return;

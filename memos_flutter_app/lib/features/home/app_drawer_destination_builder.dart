@@ -33,7 +33,9 @@ Widget buildDrawerDestinationScreen({
       hidePrimaryComposeFab:
           presentation == HomeScreenPresentation.embeddedBottomNav,
     ),
-    AppDrawerDestination.syncQueue => const SyncQueueScreen(),
+    AppDrawerDestination.syncQueue => SyncQueueScreen(
+      embeddedNavigationHost: navigationHost,
+    ),
     AppDrawerDestination.explore => ExploreScreen(
       presentation: presentation,
       embeddedNavigationHost: navigationHost,
@@ -57,17 +59,28 @@ Widget buildDrawerDestinationScreen({
     AppDrawerDestination.collections => CollectionsScreen(
       embeddedNavigationHost: navigationHost,
     ),
-    AppDrawerDestination.tags => const TagsScreen(),
+    AppDrawerDestination.tags => TagsScreen(
+      presentation: presentation,
+      embeddedNavigationHost: navigationHost,
+    ),
     AppDrawerDestination.resources => ResourcesScreen(
       presentation: presentation,
       embeddedNavigationHost: navigationHost,
     ),
-    AppDrawerDestination.recycleBin => const RecycleBinScreen(),
-    AppDrawerDestination.stats => const StatsScreen(),
+    AppDrawerDestination.recycleBin => RecycleBinScreen(
+      presentation: presentation,
+      embeddedNavigationHost: navigationHost,
+    ),
+    AppDrawerDestination.stats => StatsScreen(
+      embeddedNavigationHost: navigationHost,
+    ),
     AppDrawerDestination.settings => SettingsScreen(
       presentation: presentation,
       embeddedNavigationHost: navigationHost,
     ),
-    AppDrawerDestination.about => const AboutScreen(),
+    AppDrawerDestination.about => AboutScreen(
+      presentation: presentation,
+      embeddedNavigationHost: navigationHost,
+    ),
   };
 }

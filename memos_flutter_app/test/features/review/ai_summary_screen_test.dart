@@ -438,6 +438,7 @@ void _installAiSummaryBackInterceptingRootBuilder({
         required HomeRootDestination destination,
         required HomeScreenPresentation presentation,
         required HomeEmbeddedNavigationHost? navigationHost,
+        String? memosTag,
       }) {
         if (destination == HomeRootDestination.aiSummary) {
           return _HostBackInterceptingRootPage(

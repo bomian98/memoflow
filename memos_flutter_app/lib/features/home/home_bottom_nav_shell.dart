@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/drawer_navigation.dart';
 import '../../core/memoflow_palette.dart';
+import '../../core/tags.dart';
 import '../../core/top_toast.dart';
 import '../../data/models/home_navigation_preferences.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
 import '../../state/system/session_provider.dart';
-import '../memos/memos_list_screen.dart';
 import '../memos/note_input_sheet.dart';
 import '../memos/widgets/memos_list_floating_actions.dart';
 import '../notifications/notifications_screen.dart';
@@ -44,6 +44,7 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
   HomeRootDestination _activeDestination = HomeRootDestination.memos;
   VoiceRecordOverlayDragSession? _voiceOverlayDragSession;
   Future<void>? _voiceOverlayDragFuture;
+  String? _activeMemosTag;
   late final AnimationController _tabTransitionController;
   HomeRootDestination? _transitionPreviousDestination;
   int _transitionDirection = 0;
@@ -91,8 +92,18 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
     return defaultTargetPlatform == TargetPlatform.android;
   }
 
-  void _switchDestination(HomeRootDestination destination) {
-    if (_activeDestination == destination) return;
+  void _switchDestination(
+    HomeRootDestination destination, {
+    bool clearMemosTag = true,
+  }) {
+    if (_activeDestination == destination) {
+      if (destination == HomeRootDestination.memos &&
+          clearMemosTag &&
+          _activeMemosTag != null) {
+        setState(() => _activeMemosTag = null);
+      }
+      return;
+    }
     final visibleTabs = _resolvedPreferences.visibleTabs;
     final currentIndex = visibleTabs.indexOf(_activeDestination);
     final nextIndex = visibleTabs.indexOf(destination);
@@ -112,6 +123,9 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
           : _activeDestination;
       _transitionDirection = direction;
       _activeDestination = destination;
+      if (destination == HomeRootDestination.memos && clearMemosTag) {
+        _activeMemosTag = null;
+      }
     });
 
     if (direction != 0) {
@@ -137,6 +151,27 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
       _transitionPreviousDestination = null;
       _transitionDirection = 0;
     });
+  }
+
+  String? _normalizeMemosTag(String? tag) {
+    final normalized = normalizeTagPath(tag ?? '');
+    return normalized.isEmpty ? null : normalized;
+  }
+
+  void _switchToMemosTag(String tag) {
+    final normalized = _normalizeMemosTag(tag);
+    final memosDestination = _resolvedPreferences.fallbackDestinationFor(
+      HomeRootDestination.memos,
+    );
+    _switchDestination(memosDestination, clearMemosTag: false);
+    if (_activeMemosTag == normalized) return;
+    setState(() => _activeMemosTag = normalized);
+  }
+
+  bool _clearMemosTagIfNeeded() {
+    if (_activeMemosTag == null) return false;
+    setState(() => _activeMemosTag = null);
+    return true;
   }
 
   void _handleBodySwipePointerDown(PointerDownEvent event) {
@@ -287,6 +322,9 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
                 destination: destination,
                 presentation: HomeScreenPresentation.embeddedBottomNav,
                 navigationHost: this,
+                memosTag: destination == HomeRootDestination.memos
+                    ? _activeMemosTag
+                    : null,
               ),
             ),
           ),
@@ -461,16 +499,7 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
 
   @override
   void handleDrawerTag(BuildContext context, String tag) {
-    _closeDrawerThenPush(
-      context,
-      MemosListScreen(
-        title: '#$tag',
-        state: 'NORMAL',
-        tag: tag,
-        showDrawer: true,
-        enableCompose: true,
-      ),
-    );
+    _closeDrawerThen(context, () => _switchToMemosTag(tag));
   }
 
   @override
@@ -487,6 +516,7 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
 
   @override
   void handleBackToPrimaryDestination(BuildContext context) {
+    if (_clearMemosTagIfNeeded()) return;
     final resolved = _resolvedPreferences;
     _switchDestination(
       resolved.fallbackDestinationFor(HomeRootDestination.memos),
@@ -546,9 +576,12 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
     final enableSwipeNavigation = _isMobileNativePlatform();
 
     return PopScope(
-      canPop: activeDestination == primaryDestination,
+      canPop:
+          activeDestination == primaryDestination && _activeMemosTag == null,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop || activeDestination == primaryDestination) return;
+        if (didPop) return;
+        if (_clearMemosTagIfNeeded()) return;
+        if (activeDestination == primaryDestination) return;
         _switchDestination(primaryDestination);
       },
       child: Scaffold(

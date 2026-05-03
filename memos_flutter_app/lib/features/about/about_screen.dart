@@ -6,29 +6,41 @@ import '../../core/platform_layout.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
 import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/home_entry_screen.dart';
+import '../home/home_navigation_host.dart';
 import '../memos/memos_list_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../settings/about_us_screen.dart';
 import '../../i18n/strings.g.dart';
 
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key});
+  const AboutScreen({
+    super.key,
+    this.presentation = HomeScreenPresentation.standalone,
+    this.embeddedNavigationHost,
+  });
+
+  final HomeScreenPresentation presentation;
+  final HomeEmbeddedNavigationHost? embeddedNavigationHost;
 
   void _backToAllMemos(BuildContext context) {
+    final host = embeddedNavigationHost;
+    if (host != null) {
+      host.handleBackToPrimaryDestination(context);
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => const MemosListScreen(
-          title: 'MemoFlow',
-          state: 'NORMAL',
-          showDrawer: true,
-          enableCompose: true,
-        ),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const HomeEntryScreen()),
       (route) => false,
     );
   }
 
   void _navigate(BuildContext context, AppDrawerDestination dest) {
+    final host = embeddedNavigationHost;
+    if (host != null) {
+      host.handleDrawerDestination(context, dest);
+      return;
+    }
     closeDrawerThenPushReplacement(
       context,
       buildDrawerDestinationScreen(context: context, destination: dest),
@@ -36,6 +48,11 @@ class AboutScreen extends StatelessWidget {
   }
 
   void _openTag(BuildContext context, String tag) {
+    final host = embeddedNavigationHost;
+    if (host != null) {
+      host.handleDrawerTag(context, tag);
+      return;
+    }
     closeDrawerThenPushReplacement(
       context,
       MemosListScreen(
@@ -49,6 +66,11 @@ class AboutScreen extends StatelessWidget {
   }
 
   void _openNotifications(BuildContext context) {
+    final host = embeddedNavigationHost;
+    if (host != null) {
+      host.handleOpenNotifications(context);
+      return;
+    }
     closeDrawerThenPushReplacement(context, const NotificationsScreen());
   }
 
@@ -63,6 +85,8 @@ class AboutScreen extends StatelessWidget {
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isWindowsDesktop = platform == TargetPlatform.windows;
     final enableWindowsDragToMove = isWindowsDesktop;
+    final useEmbeddedBottomNav =
+        presentation == HomeScreenPresentation.embeddedBottomNav;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.about,
       onSelect: (d) => _navigate(context, d),
@@ -72,9 +96,9 @@ class AboutScreen extends StatelessWidget {
     );
     final pageBody = const AboutUsContent();
     return PopScope(
-      canPop: false,
+      canPop: useEmbeddedBottomNav,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
+        if (didPop || useEmbeddedBottomNav) return;
         _backToAllMemos(context);
       },
       child: isWindowsDesktop

@@ -26,13 +26,14 @@ import '../../state/memos/memos_list_providers.dart';
 import '../../state/settings/resolved_preferences_provider.dart';
 import '../../state/system/database_provider.dart';
 import '../../state/tags/tag_color_lookup.dart';
+import '../home/home_entry_screen.dart';
+import '../home/home_navigation_host.dart';
 import '../memos/memo_editor_screen.dart';
 import '../memos/memo_markdown.dart';
 import '../memos/memo_detail_screen.dart';
 import '../memos/memo_versions_screen.dart';
 import '../memos/memos_list_memo_action_delegate.dart';
 import '../memos/memos_list_mutation_coordinator.dart';
-import '../memos/memos_list_screen.dart';
 import '../memos/widgets/memos_list_memo_card.dart';
 import '../memos/widgets/memos_list_memo_card_container.dart';
 import '../sync/sync_queue_screen.dart';
@@ -67,9 +68,14 @@ final _calendarDayMemosProvider =
     });
 
 class StatsScreen extends ConsumerStatefulWidget {
-  const StatsScreen({super.key, this.showBackButton = true});
+  const StatsScreen({
+    super.key,
+    this.showBackButton = true,
+    this.embeddedNavigationHost,
+  });
 
   final bool showBackButton;
+  final HomeEmbeddedNavigationHost? embeddedNavigationHost;
 
   @override
   ConsumerState<StatsScreen> createState() => _StatsScreenState();
@@ -139,20 +145,23 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   void _backToAllMemos() {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleBackToPrimaryDestination(context);
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => const MemosListScreen(
-          title: 'MemoFlow',
-          state: 'NORMAL',
-          showDrawer: true,
-          enableCompose: true,
-        ),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const HomeEntryScreen()),
       (route) => false,
     );
   }
 
   void _handleBack() {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleBackToPrimaryDestination(context);
+      return;
+    }
     if (Navigator.of(context).canPop()) {
       context.safePop();
       return;
@@ -162,9 +171,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
   Future<void> _openSyncQueue() async {
     if (!mounted) return;
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const SyncQueueScreen()));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SyncQueueScreen(
+          embeddedNavigationHost: widget.embeddedNavigationHost,
+        ),
+      ),
+    );
   }
 
   Future<bool> _confirmDeleteMemo(LocalMemo memo) async {

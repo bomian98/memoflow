@@ -11,6 +11,8 @@ import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
 import '../home/app_drawer_menu_button.dart';
 import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/home_entry_screen.dart';
+import '../home/home_navigation_host.dart';
 import '../memos/memos_list_screen.dart';
 import '../notifications/notifications_screen.dart';
 import 'tag_edit_sheet.dart';
@@ -18,7 +20,14 @@ import 'tag_sorting.dart';
 import 'tag_tree.dart';
 
 class TagsScreen extends ConsumerStatefulWidget {
-  const TagsScreen({super.key});
+  const TagsScreen({
+    super.key,
+    this.presentation = HomeScreenPresentation.standalone,
+    this.embeddedNavigationHost,
+  });
+
+  final HomeScreenPresentation presentation;
+  final HomeEmbeddedNavigationHost? embeddedNavigationHost;
 
   @override
   ConsumerState<TagsScreen> createState() => _TagsScreenState();
@@ -35,20 +44,23 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
   }
 
   void _backToAllMemos(BuildContext context) {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleBackToPrimaryDestination(context);
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => const MemosListScreen(
-          title: 'MemoFlow',
-          state: 'NORMAL',
-          showDrawer: true,
-          enableCompose: true,
-        ),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const HomeEntryScreen()),
       (route) => false,
     );
   }
 
   void _navigate(BuildContext context, AppDrawerDestination dest) {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleDrawerDestination(context, dest);
+      return;
+    }
     closeDrawerThenPushReplacement(
       context,
       buildDrawerDestinationScreen(context: context, destination: dest),
@@ -56,6 +68,11 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
   }
 
   void _openTag(BuildContext context, String tag) {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleDrawerTag(context, tag);
+      return;
+    }
     closeDrawerThenPushReplacement(
       context,
       MemosListScreen(
@@ -69,6 +86,11 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
   }
 
   void _openNotifications(BuildContext context) {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleOpenNotifications(context);
+      return;
+    }
     closeDrawerThenPushReplacement(context, const NotificationsScreen());
   }
 
@@ -114,6 +136,8 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     final isWindowsDesktop =
         Theme.of(context).platform == TargetPlatform.windows;
     final enableWindowsDragToMove = isWindowsDesktop;
+    final useEmbeddedBottomNav =
+        widget.presentation == HomeScreenPresentation.embeddedBottomNav;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.tags,
       onSelect: (d) => _navigate(context, d),
@@ -240,9 +264,9 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     );
 
     return PopScope(
-      canPop: false,
+      canPop: useEmbeddedBottomNav,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
+        if (didPop || useEmbeddedBottomNav) return;
         _backToAllMemos(context);
       },
       child: isWindowsDesktop

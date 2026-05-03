@@ -16,12 +16,21 @@ import '../../i18n/strings.g.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
 import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/home_entry_screen.dart';
+import '../home/home_navigation_host.dart';
 import 'memos_list_screen.dart';
 import '../notifications/notifications_screen.dart';
 import 'recycle_bin_preview_screen.dart';
 
 class RecycleBinScreen extends ConsumerStatefulWidget {
-  const RecycleBinScreen({super.key});
+  const RecycleBinScreen({
+    super.key,
+    this.presentation = HomeScreenPresentation.standalone,
+    this.embeddedNavigationHost,
+  });
+
+  final HomeScreenPresentation presentation;
+  final HomeEmbeddedNavigationHost? embeddedNavigationHost;
 
   @override
   ConsumerState<RecycleBinScreen> createState() => _RecycleBinScreenState();
@@ -29,20 +38,23 @@ class RecycleBinScreen extends ConsumerStatefulWidget {
 
 class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
   void _backToAllMemos() {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleBackToPrimaryDestination(context);
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => const MemosListScreen(
-          title: 'MemoFlow',
-          state: 'NORMAL',
-          showDrawer: true,
-          enableCompose: true,
-        ),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const HomeEntryScreen()),
       (route) => false,
     );
   }
 
   void _handleBack() {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleBackToPrimaryDestination(context);
+      return;
+    }
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
       navigator.pop();
@@ -52,6 +64,11 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
   }
 
   void _navigate(AppDrawerDestination dest) {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleDrawerDestination(context, dest);
+      return;
+    }
     closeDrawerThenPushReplacement(
       context,
       buildDrawerDestinationScreen(context: context, destination: dest),
@@ -59,6 +76,11 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
   }
 
   void _openTag(String tag) {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleDrawerTag(context, tag);
+      return;
+    }
     closeDrawerThenPushReplacement(
       context,
       MemosListScreen(
@@ -72,6 +94,11 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
   }
 
   void _openNotifications() {
+    final embeddedNavigationHost = widget.embeddedNavigationHost;
+    if (embeddedNavigationHost != null) {
+      embeddedNavigationHost.handleOpenNotifications(context);
+      return;
+    }
     closeDrawerThenPushReplacement(context, const NotificationsScreen());
   }
 
@@ -91,6 +118,8 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
     final isWindowsDesktop =
         Theme.of(context).platform == TargetPlatform.windows;
     final enableWindowsDragToMove = isWindowsDesktop;
+    final useEmbeddedBottomNav =
+        widget.presentation == HomeScreenPresentation.embeddedBottomNav;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.recycleBin,
@@ -232,9 +261,9 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
     );
 
     return PopScope(
-      canPop: false,
+      canPop: useEmbeddedBottomNav,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
+        if (didPop || useEmbeddedBottomNav) return;
         _handleBack();
       },
       child: isWindowsDesktop

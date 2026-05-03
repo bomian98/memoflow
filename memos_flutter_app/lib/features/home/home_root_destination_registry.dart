@@ -18,6 +18,7 @@ typedef DebugHomeRootScreenBuilder =
       required HomeRootDestination destination,
       required HomeScreenPresentation presentation,
       required HomeEmbeddedNavigationHost? navigationHost,
+      String? memosTag,
     });
 
 class HomeRootDestinationDefinition {
@@ -114,6 +115,7 @@ Widget buildHomeRootScreen({
   required HomeRootDestination destination,
   required HomeScreenPresentation presentation,
   required HomeEmbeddedNavigationHost? navigationHost,
+  String? memosTag,
 }) {
   final debugBuilder = debugHomeRootScreenBuilderOverride;
   if (debugBuilder != null) {
@@ -122,6 +124,7 @@ Widget buildHomeRootScreen({
       destination: destination,
       presentation: presentation,
       navigationHost: navigationHost,
+      memosTag: memosTag,
     );
     if (debugWidget != null) {
       return debugWidget;
@@ -132,11 +135,15 @@ Widget buildHomeRootScreen({
     case HomeRootDestination.none:
       return const SizedBox.shrink();
     case HomeRootDestination.memos:
+      final effectiveMemosTag = memosTag?.trim();
+      final hasMemosTag = effectiveMemosTag?.isNotEmpty ?? false;
       return MemosListScreen(
-        title: 'MemoFlow',
+        title: hasMemosTag ? '#$effectiveMemosTag' : 'MemoFlow',
         state: 'NORMAL',
+        tag: hasMemosTag ? effectiveMemosTag : null,
         showDrawer: true,
         enableCompose: true,
+        showFilterTagChip: hasMemosTag,
         enableDesktopResizableHomeInlineCompose:
             presentation == HomeScreenPresentation.standalone,
         presentation: presentation,

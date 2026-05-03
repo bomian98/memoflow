@@ -3544,19 +3544,6 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
                                   ],
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Container(
-                                  width: 130,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.1)
-                                        : Colors.black.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ),
