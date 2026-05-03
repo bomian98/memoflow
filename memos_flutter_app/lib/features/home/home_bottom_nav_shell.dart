@@ -766,20 +766,20 @@ class _HomeBottomNavigationBar extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.08)
         : Colors.black.withValues(alpha: 0.06);
 
-    return SafeArea(
-      top: false,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: background,
-          border: Border(top: BorderSide(color: borderColor)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
-              blurRadius: 16,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        border: Border(top: BorderSide(color: borderColor)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
         child: SizedBox(
           height: 52,
           child: Padding(
@@ -787,17 +787,20 @@ class _HomeBottomNavigationBar extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: _HomeBottomNavigationGroup(
-                    destinations: [
-                      resolved.leftPrimary,
-                      resolved.leftSecondary,
-                    ],
+                  child: _HomeBottomNavigationSlot(
+                    destination: resolved.leftPrimary,
                     activeDestination: activeDestination,
                     onSelectDestination: onSelectDestination,
                   ),
                 ),
-                SizedBox(
-                  width: 62,
+                Expanded(
+                  child: _HomeBottomNavigationSlot(
+                    destination: resolved.leftSecondary,
+                    activeDestination: activeDestination,
+                    onSelectDestination: onSelectDestination,
+                  ),
+                ),
+                Expanded(
                   child: Center(
                     child: MemoFlowFab(
                       onPressed: () => unawaited(onAddPressed()),
@@ -812,11 +815,15 @@ class _HomeBottomNavigationBar extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: _HomeBottomNavigationGroup(
-                    destinations: [
-                      resolved.rightPrimary,
-                      resolved.rightSecondary,
-                    ],
+                  child: _HomeBottomNavigationSlot(
+                    destination: resolved.rightPrimary,
+                    activeDestination: activeDestination,
+                    onSelectDestination: onSelectDestination,
+                  ),
+                ),
+                Expanded(
+                  child: _HomeBottomNavigationSlot(
+                    destination: resolved.rightSecondary,
                     activeDestination: activeDestination,
                     onSelectDestination: onSelectDestination,
                   ),
@@ -830,32 +837,26 @@ class _HomeBottomNavigationBar extends StatelessWidget {
   }
 }
 
-class _HomeBottomNavigationGroup extends StatelessWidget {
-  const _HomeBottomNavigationGroup({
-    required this.destinations,
+class _HomeBottomNavigationSlot extends StatelessWidget {
+  const _HomeBottomNavigationSlot({
+    required this.destination,
     required this.activeDestination,
     required this.onSelectDestination,
   });
 
-  final List<HomeRootDestination> destinations;
+  final HomeRootDestination destination;
   final HomeRootDestination activeDestination;
   final ValueChanged<HomeRootDestination> onSelectDestination;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (final destination in destinations)
-          Expanded(
-            child: destination == HomeRootDestination.none
-                ? const SizedBox.shrink()
-                : _HomeBottomNavigationItem(
-                    destination: destination,
-                    selected: destination == activeDestination,
-                    onTap: () => onSelectDestination(destination),
-                  ),
-          ),
-      ],
+    if (destination == HomeRootDestination.none) {
+      return const SizedBox.shrink();
+    }
+    return _HomeBottomNavigationItem(
+      destination: destination,
+      selected: destination == activeDestination,
+      onTap: () => onSelectDestination(destination),
     );
   }
 }
@@ -887,17 +888,28 @@ class _HomeBottomNavigationItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Center(
-          child: Text(
-            definition.labelBuilder(context),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: color,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(definition.icon, color: color, size: 20),
+              const SizedBox(height: 2),
+              Transform.translate(
+                offset: const Offset(0, 5),
+                child: Text(
+                  definition.labelBuilder(context),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

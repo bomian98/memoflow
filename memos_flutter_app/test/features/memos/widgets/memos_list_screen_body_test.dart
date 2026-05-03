@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:memos_flutter_app/core/memoflow_palette.dart';
+import 'package:memos_flutter_app/core/theme_colors.dart';
 import 'package:memos_flutter_app/data/ai/ai_semantic_memo_search_service.dart';
 import 'package:memos_flutter_app/data/models/app_preferences.dart';
 import 'package:memos_flutter_app/data/models/attachment.dart';
@@ -26,6 +28,7 @@ void main() {
 
   setUp(() {
     LocaleSettings.setLocale(AppLocale.en);
+    MemoFlowPalette.applyThemeColor(AppThemeColor.brickRed);
   });
 
   testWidgets(
@@ -101,6 +104,7 @@ void main() {
   );
 
   testWidgets('overlay buttons react to listenable changes', (tester) async {
+    MemoFlowPalette.applyThemeColor(AppThemeColor.cypressGreen);
     final showBackToTop = ValueNotifier<bool>(false);
     final floatingCollapse = ValueNotifier<MemosListFloatingCollapseState>(
       const MemosListFloatingCollapseState(memoUid: null, scrolling: false),
@@ -137,17 +141,121 @@ void main() {
       memoUid: 'memo-1',
       scrolling: true,
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     floatingButton = tester.widget<MemoFloatingCollapseButton>(
       find.byType(MemoFloatingCollapseButton),
     );
     expect(floatingButton.visible, isTrue);
     expect(floatingButton.scrolling, isTrue);
+    expect(
+      find.descendant(
+        of: find.byType(MemoFloatingCollapseButton),
+        matching: find.byIcon(Icons.unfold_less_rounded),
+      ),
+      findsOneWidget,
+    );
     backToTopButton = tester.widget<BackToTopButton>(
       find.byType(BackToTopButton),
     );
     expect(backToTopButton.visible, isTrue);
+
+    final collapseRectWithBackToTop = tester.getRect(
+      find.byType(MemoFloatingCollapseButton),
+    );
+    final backToTopRect = tester.getRect(find.byType(BackToTopButton));
+    expect(collapseRectWithBackToTop.bottom, lessThan(backToTopRect.top));
+    expect(
+      backToTopRect.top - collapseRectWithBackToTop.bottom,
+      closeTo(12, 0.1),
+    );
+    final collapseDecoration =
+        tester
+                .widget<Container>(
+                  find.descendant(
+                    of: find.byType(MemoFloatingCollapseButton),
+                    matching: find.byType(Container),
+                  ),
+                )
+                .decoration
+            as BoxDecoration;
+    final backToTopDecoration =
+        tester
+                .widget<Container>(
+                  find.descendant(
+                    of: find.byType(BackToTopButton),
+                    matching: find.byType(Container),
+                  ),
+                )
+                .decoration
+            as BoxDecoration;
+    expect(collapseDecoration.color, MemoFlowPalette.primary);
+    expect(collapseDecoration.color, backToTopDecoration.color);
+
+    showBackToTop.value = false;
+    await tester.pumpAndSettle();
+
+    final collapseRectWithoutBackToTop = tester.getRect(
+      find.byType(MemoFloatingCollapseButton),
+    );
+    expect(
+      collapseRectWithoutBackToTop.top,
+      closeTo(collapseRectWithBackToTop.top, 0.1),
+    );
+    backToTopButton = tester.widget<BackToTopButton>(
+      find.byType(BackToTopButton),
+    );
+    expect(backToTopButton.visible, isFalse);
+  });
+
+  testWidgets('mobile touch scroll moves floating actions to active side', (
+    tester,
+  ) async {
+    await _pumpBodyWithVisibleFloatingActions(
+      tester,
+      platform: TargetPlatform.android,
+    );
+
+    expect(_collapseButtonRect(tester).right, closeTo(800 - 16, 0.1));
+
+    await tester.dragFrom(const Offset(80, 420), const Offset(0, -80));
+    await tester.pumpAndSettle();
+
+    expect(_collapseButtonRect(tester).left, closeTo(16, 0.1));
+
+    await tester.dragFrom(const Offset(720, 420), const Offset(0, -80));
+    await tester.pumpAndSettle();
+
+    expect(_collapseButtonRect(tester).right, closeTo(800 - 16, 0.1));
+  });
+
+  testWidgets('mobile plain taps do not move floating actions', (tester) async {
+    await _pumpBodyWithVisibleFloatingActions(
+      tester,
+      platform: TargetPlatform.android,
+    );
+
+    final initialRect = _collapseButtonRect(tester);
+
+    await tester.tapAt(const Offset(80, 420));
+    await tester.pumpAndSettle();
+
+    expect(_collapseButtonRect(tester).left, closeTo(initialRect.left, 0.1));
+    expect(_collapseButtonRect(tester).right, closeTo(initialRect.right, 0.1));
+  });
+
+  testWidgets('desktop scroll input keeps floating actions right aligned', (
+    tester,
+  ) async {
+    await _pumpBodyWithVisibleFloatingActions(
+      tester,
+      platform: TargetPlatform.windows,
+    );
+
+    await tester.dragFrom(const Offset(80, 420), const Offset(0, -80));
+    await tester.pumpAndSettle();
+
+    expect(_collapseButtonRect(tester).right, closeTo(800 - 16, 0.1));
   });
 
   testWidgets('keyword empty state offers explicit AI search CTA', (
@@ -423,6 +531,45 @@ Widget _buildBodyScreen({
     animatedItemBuilder:
         animatedItemBuilder ?? (_, _, _) => const SizedBox.shrink(),
   );
+}
+
+Future<void> _pumpBodyWithVisibleFloatingActions(
+  WidgetTester tester, {
+  required TargetPlatform platform,
+}) async {
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = const Size(800, 1000);
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
+  final showBackToTop = ValueNotifier<bool>(true);
+  final floatingCollapse = ValueNotifier<MemosListFloatingCollapseState>(
+    const MemosListFloatingCollapseState(memoUid: 'memo-1', scrolling: false),
+  );
+  addTearDown(showBackToTop.dispose);
+  addTearDown(floatingCollapse.dispose);
+
+  await tester.pumpWidget(
+    TranslationProvider(
+      child: MaterialApp(
+        locale: AppLocale.en.flutterLocale,
+        supportedLocales: AppLocaleUtils.supportedLocales,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        theme: ThemeData(platform: platform),
+        home: _buildBodyScreen(
+          showBackToTopListenable: showBackToTop,
+          floatingCollapseListenable: floatingCollapse,
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Rect _collapseButtonRect(WidgetTester tester) {
+  return tester.getRect(find.byType(MemoFloatingCollapseButton));
 }
 
 MemosListScreenBodyData _buildBodyData({

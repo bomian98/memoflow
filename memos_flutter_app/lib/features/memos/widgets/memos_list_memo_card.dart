@@ -370,6 +370,12 @@ class MemoListCardState extends State<MemoListCard> {
     _scheduleFloatingGeometryPublish();
   }
 
+  double? currentCardTopScrollOffset() {
+    final cardRenderObject = _renderBoxForKey(_cardKey);
+    if (cardRenderObject == null) return null;
+    return _scrollOffsetToReveal(cardRenderObject, 0.0);
+  }
+
   @visibleForTesting
   void debugExpandForTest() {
     if (_expanded) return;
@@ -417,34 +423,33 @@ class MemoListCardState extends State<MemoListCard> {
 
   MemoFloatingCollapseGeometry? _computeFloatingGeometry() {
     if (!_expanded || !_showToggle) return null;
-    final cardContext = _cardKey.currentContext;
-    final toggleContext = _toggleButtonKey.currentContext;
-    if (cardContext == null || toggleContext == null) return null;
+    final cardRenderObject = _renderBoxForKey(_cardKey);
+    final toggleRenderObject = _renderBoxForKey(_toggleButtonKey);
+    if (cardRenderObject == null || toggleRenderObject == null) return null;
 
-    final cardRenderObject = cardContext.findRenderObject();
-    final toggleRenderObject = toggleContext.findRenderObject();
-    if (cardRenderObject is! RenderBox ||
-        !cardRenderObject.hasSize ||
-        toggleRenderObject is! RenderBox ||
-        !toggleRenderObject.hasSize) {
-      return null;
-    }
-
-    final viewport = RenderAbstractViewport.maybeOf(cardRenderObject);
-    if (viewport == null) return null;
-
-    final cardTopOffset = viewport
-        .getOffsetToReveal(cardRenderObject, 0.0)
-        .offset;
-    final toggleTopOffset = viewport
-        .getOffsetToReveal(toggleRenderObject, 0.0)
-        .offset;
+    final cardTopOffset = _scrollOffsetToReveal(cardRenderObject, 0.0);
+    final toggleTopOffset = _scrollOffsetToReveal(toggleRenderObject, 0.0);
+    if (cardTopOffset == null || toggleTopOffset == null) return null;
     return MemoFloatingCollapseGeometry(
       cardTopOffset: cardTopOffset,
       cardBottomOffset: cardTopOffset + cardRenderObject.size.height,
       toggleTopOffset: toggleTopOffset,
       toggleBottomOffset: toggleTopOffset + toggleRenderObject.size.height,
     );
+  }
+
+  RenderBox? _renderBoxForKey(GlobalKey key) {
+    final keyContext = key.currentContext;
+    if (keyContext == null) return null;
+    final renderObject = keyContext.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) return null;
+    return renderObject;
+  }
+
+  double? _scrollOffsetToReveal(RenderBox renderObject, double alignment) {
+    final viewport = RenderAbstractViewport.maybeOf(renderObject);
+    if (viewport == null) return null;
+    return viewport.getOffsetToReveal(renderObject, alignment).offset;
   }
 
   @override

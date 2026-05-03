@@ -45,77 +45,77 @@ class MemoFloatingCollapseButton extends StatelessWidget {
     required this.scrolling,
     required this.label,
     required this.onPressed,
-    this.padding = const EdgeInsets.only(top: 12, right: 16),
+    this.size = 44,
+    this.iconSize = 24,
   });
 
   final bool visible;
   final bool scrolling;
   final String label;
   final VoidCallback onPressed;
-  final EdgeInsets padding;
+  final double size;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark
-        ? const Color(0xF02F2725)
-        : Colors.white.withValues(alpha: 0.96);
-    final borderColor = MemoFlowPalette.primary.withValues(
-      alpha: isDark ? 0.28 : 0.18,
+    final background = MemoFlowPalette.primary;
+    final iconColor = Colors.white;
+    final shadowColor = MemoFlowPalette.primary.withValues(
+      alpha: isDark ? 0.35 : 0.25,
     );
-    final shadowColor = Colors.black.withValues(alpha: isDark ? 0.24 : 0.08);
-    final foreground = MemoFlowPalette.primary;
 
     return IgnorePointer(
       ignoring: !visible,
-      child: SafeArea(
-        child: Padding(
-          padding: padding,
-          child: Align(
-            alignment: Alignment.topRight,
+      child: ExcludeSemantics(
+        excluding: !visible,
+        child: Tooltip(
+          message: label,
+          excludeFromSemantics: true,
+          child: Semantics(
+            button: true,
+            label: label,
+            onTap: onPressed,
             child: AnimatedSlide(
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOutCubic,
-              offset: visible ? Offset.zero : const Offset(0.15, -0.08),
+              offset: visible ? Offset.zero : const Offset(0, 0.16),
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOutCubic,
                 opacity: visible ? (scrolling ? 0.34 : 0.96) : 0,
-                child: Material(
-                  color: background,
-                  elevation: scrolling ? 0 : 3,
-                  shadowColor: shadowColor,
-                  borderRadius: BorderRadius.circular(999),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(999),
-                    onTap: onPressed,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: borderColor),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.expand_less_rounded,
-                            size: 16,
-                            color: foreground,
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  scale: visible ? 1 : 0.85,
+                  child: SizedBox.square(
+                    dimension: size,
+                    child: Material(
+                      color: Colors.transparent,
+                      elevation: 0,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: onPressed,
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: background,
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                                color: shadowColor,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            label,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: foreground,
-                            ),
+                          child: Icon(
+                            Icons.unfold_less_rounded,
+                            size: iconSize,
+                            color: iconColor,
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

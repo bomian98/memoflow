@@ -1990,7 +1990,22 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     if (memoUid == null) return;
     final memoState = _animatedListController.currentStateFor(memoUid);
     if (memoState == null) return;
+    final cardTopScrollOffset = memoState.currentCardTopScrollOffset();
     memoState.collapseFromFloating();
+    _restoreFloatingCollapseScrollAnchor(cardTopScrollOffset);
+  }
+
+  void _restoreFloatingCollapseScrollAnchor(double? cardTopScrollOffset) {
+    if (cardTopScrollOffset == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final position = _scrollController.position;
+      final target = cardTopScrollOffset
+          .clamp(position.minScrollExtent, position.maxScrollExtent)
+          .toDouble();
+      if ((target - position.pixels).abs() < 0.5) return;
+      _scrollController.jumpTo(target);
+    });
   }
 
   bool _handlePageNavigationShortcut({

@@ -1094,6 +1094,13 @@ void main() {
       await tester.pump();
 
       expect(_floatingCollapseButton(tester).visible, isTrue);
+      expect(
+        find.descendant(
+          of: find.byType(MemoFloatingCollapseButton),
+          matching: find.byIcon(Icons.unfold_less_rounded),
+        ),
+        findsOneWidget,
+      );
 
       _floatingCollapseButton(tester).onPressed();
       await _pumpScreenFrames(tester);
@@ -1108,6 +1115,151 @@ void main() {
       );
       expect(_floatingCollapseButton(tester).visible, isFalse);
       expect(controller.value.memoUid, isNull);
+      expect(tester.takeException(), isNull);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets(
+    'windows wide layout floating collapse restores active memo scroll anchor',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1600, 700);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1600, 700),
+          showDrawer: true,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-a', content: _buildLongPlainTextMemoContent()),
+        _buildMemo(uid: 'memo-b', content: _buildSixLineMemoContent('B')),
+        _buildMemo(uid: 'memo-c', content: _buildSixLineMemoContent('C')),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      final firstCardFinder = find.byType(MemoListCard).first;
+      final memoCardState = tester.state(firstCardFinder) as dynamic;
+      memoCardState.debugExpandForTest();
+      await _pumpScreenFrames(tester);
+
+      final scrollController = _screenScrollController(tester);
+      final anchor = memoCardState.currentCardTopScrollOffset() as double?;
+      expect(anchor, isNotNull);
+
+      final deepOffset = (anchor! + 1800)
+          .clamp(
+            scrollController.position.minScrollExtent,
+            scrollController.position.maxScrollExtent,
+          )
+          .toDouble();
+      expect(deepOffset, greaterThan(anchor + 50));
+      scrollController.jumpTo(deepOffset);
+      await _pumpScreenFrames(tester);
+      expect(scrollController.offset, closeTo(deepOffset, 0.1));
+      final controller = _screenFloatingCollapseController(tester);
+      controller.upsertGeometry(
+        'memo-a',
+        MemoFloatingCollapseGeometry(
+          cardTopOffset: anchor,
+          cardBottomOffset: anchor + 2400,
+          toggleTopOffset: anchor + 2200,
+          toggleBottomOffset: anchor + 2240,
+        ),
+      );
+      controller.updateViewportMetrics(
+        _viewportMetrics(
+          pixels: scrollController.offset,
+          maxScrollExtent: scrollController.position.maxScrollExtent,
+          viewport: scrollController.position.viewportDimension,
+        ),
+      );
+      await tester.pump();
+      expect(_floatingCollapseButton(tester).visible, isTrue);
+
+      _floatingCollapseButton(tester).onPressed();
+      await _pumpScreenFrames(tester);
+
+      final expectedOffset = anchor
+          .clamp(
+            scrollController.position.minScrollExtent,
+            scrollController.position.maxScrollExtent,
+          )
+          .toDouble();
+      expect(scrollController.position.maxScrollExtent, greaterThan(100));
+      expect(scrollController.offset, closeTo(expectedOffset, 1));
+      expect(tester.getRect(firstCardFinder).bottom, greaterThan(0));
+      expect(tester.getRect(firstCardFinder).top, lessThan(700));
+      expect(
+        find.descendant(
+          of: firstCardFinder,
+          matching: find.widgetWithText(TextButton, 'Expand'),
+        ),
+        findsOneWidget,
+      );
+      expect(_floatingCollapseButton(tester).visible, isFalse);
+      expect(tester.takeException(), isNull);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets(
+    'windows wide layout floating collapse ignores stale active memo safely',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1600, 900);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1600, 900),
+          showDrawer: true,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Visible memo remains mounted.'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      final controller = _screenFloatingCollapseController(tester);
+      controller.upsertGeometry(
+        'missing-memo',
+        const MemoFloatingCollapseGeometry(
+          cardTopOffset: 0,
+          cardBottomOffset: 1600,
+          toggleTopOffset: 1200,
+          toggleBottomOffset: 1240,
+        ),
+      );
+      controller.updateViewportMetrics(
+        _viewportMetrics(pixels: 0, maxScrollExtent: 2400, viewport: 500),
+      );
+      await tester.pump();
+
+      expect(_floatingCollapseButton(tester).visible, isTrue);
+      expect(controller.value.memoUid, 'missing-memo');
+
+      _floatingCollapseButton(tester).onPressed();
+      await _pumpScreenFrames(tester);
+
+      expect(find.byType(MemoListCard), findsOneWidget);
+      expect(controller.value.memoUid, 'missing-memo');
       expect(tester.takeException(), isNull);
       debugDefaultTargetPlatformOverride = null;
     },
@@ -1857,6 +2009,19 @@ String _buildLongPlainTextMemoContent() {
         'Long memo paragraph $index with enough words to keep the '
         'expanded body tall for floating collapse testing.',
   ).join('\n\n');
+}
+
+String _buildSixLineMemoContent(String label) {
+  return List<String>.generate(
+    6,
+    (index) => 'Memo $label line $index keeps the collapsed list scrollable.',
+  ).join('\n');
+}
+
+ScrollController _screenScrollController(WidgetTester tester) {
+  return tester
+      .widget<CustomScrollView>(find.byType(CustomScrollView).first)
+      .controller!;
 }
 
 MemoFloatingCollapseButton _floatingCollapseButton(WidgetTester tester) {
