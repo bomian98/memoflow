@@ -1694,6 +1694,14 @@ legacy:
   msg_clear_all_filters: "Clear all filters"
 shareClip:
   localSavedPendingSync: "Lokal gespeichert. Die Synchronisierung wird fortgesetzt, sobald sie verfügbar ist."
+memoTimeAdjustment:
+  action: "Erstellungszeit ändern"
+  saved: "Erstellungszeit aktualisiert"
+  description: "Nach dem Speichern wird dieses Memo nach der neuen Erstellungszeit angezeigt und sortiert."
+  dateField: "Datum"
+  timeField: "Uhrzeit"
+  selectedCreationTime: "Erstellungszeit: $value"
+  failed: "Erstellungszeit konnte nicht geändert werden: $error"
 collections:
   drawerLabel: "Collections"
   title: "Collections"

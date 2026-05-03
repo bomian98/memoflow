@@ -14,8 +14,10 @@ import 'package:memos_flutter_app/data/db/app_database.dart';
 import 'package:memos_flutter_app/data/logs/sync_queue_progress_tracker.dart';
 import 'package:memos_flutter_app/data/logs/sync_status_tracker.dart';
 import 'package:memos_flutter_app/data/models/image_bed_settings.dart';
+import 'package:memos_flutter_app/data/models/local_memo.dart';
 import 'package:memos_flutter_app/data/repositories/image_bed_settings_repository.dart';
 import 'package:memos_flutter_app/features/share/share_inline_image_content.dart';
+import 'package:memos_flutter_app/state/memos/memo_mutation_service.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/memos/note_input_providers.dart';
 import 'package:memos_flutter_app/state/memos/sync_queue_controller.dart';
@@ -108,6 +110,83 @@ void main() {
   );
 
   test(
+    'memo time adjustment updates local timestamps and enqueues payload',
+    () async {
+      final dbName = uniqueDbName('memo_mutation_adjust_time');
+      final db = AppDatabase(dbName: dbName);
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+
+      addTearDown(() async {
+        container.dispose();
+        await db.close();
+        await deleteTestDatabase(dbName);
+      });
+
+      await db.upsertMemo(
+        uid: 'memo-old',
+        content: 'old time',
+        visibility: 'PRIVATE',
+        pinned: false,
+        state: 'NORMAL',
+        createTimeSec: 1735689600,
+        displayTimeSec: 1735689600,
+        updateTimeSec: 1735689600,
+        tags: const <String>[],
+        attachments: const <Map<String, dynamic>>[],
+        location: null,
+        relationCount: 0,
+        syncState: 0,
+      );
+      await db.upsertMemo(
+        uid: 'memo-newer',
+        content: 'newer time',
+        visibility: 'PRIVATE',
+        pinned: false,
+        state: 'NORMAL',
+        createTimeSec: 1735776000,
+        displayTimeSec: 1735776000,
+        updateTimeSec: 1735776000,
+        tags: const <String>[],
+        attachments: const <Map<String, dynamic>>[],
+        location: null,
+        relationCount: 0,
+        syncState: 0,
+      );
+
+      final before = LocalMemo.fromDb((await db.getMemoByUid('memo-old'))!);
+      final selectedTime = DateTime.fromMillisecondsSinceEpoch(
+        1735862400 * 1000,
+        isUtc: true,
+      ).toLocal();
+
+      await container
+          .read(memoMutationServiceProvider)
+          .adjustMemoTime(memo: before, selectedTime: selectedTime);
+
+      final after = await db.getMemoByUid('memo-old');
+      expect(after, isNotNull);
+      expect(after!['create_time'], 1735862400);
+      expect(after['display_time'], 1735862400);
+      expect(after['sync_state'], SyncState.pending.index);
+
+      final rows = await db.listMemos(limit: 10);
+      expect(rows.first['uid'], 'memo-old');
+
+      final pending = await db.listOutboxPending(limit: 10);
+      expect(pending, hasLength(1));
+      expect(pending.single['type'], 'update_memo');
+      final payload =
+          jsonDecode(pending.single['payload'] as String)
+              as Map<String, dynamic>;
+      expect(payload['uid'], 'memo-old');
+      expect(payload['create_time'], 1735862400);
+      expect(payload['display_time'], 1735862400);
+    },
+  );
+
+  test(
     'RemoteSyncController keeps memo pending for update_memo when attachment tasks remain',
     () async {
       final server = await _RemoteSyncAttachmentRegressionServer.start();
@@ -195,6 +274,81 @@ void main() {
       expect(row?['sync_state'], 1);
     },
   );
+
+  test('RemoteSyncController sends timestamp fields for update_memo', () async {
+    final server = await _RemoteSyncAttachmentRegressionServer.start();
+    final dbName = uniqueDbName('remote_sync_update_memo_time');
+    final db = AppDatabase(dbName: dbName);
+    final api = MemoApiFacade.authenticated(
+      baseUrl: server.baseUrl,
+      personalAccessToken: 'test-pat',
+      version: MemoApiVersion.v027,
+    );
+
+    addTearDown(() async {
+      await db.close();
+      await server.close();
+      await deleteTestDatabase(dbName);
+    });
+
+    await db.upsertMemo(
+      uid: 'memo-time',
+      content: 'memo time update',
+      visibility: 'PRIVATE',
+      pinned: false,
+      state: 'NORMAL',
+      createTimeSec: 1773424800,
+      displayTimeSec: 1773424800,
+      updateTimeSec: 1773424800,
+      tags: const <String>[],
+      attachments: const <Map<String, dynamic>>[],
+      location: null,
+      relationCount: 0,
+      syncState: 1,
+      lastError: null,
+    );
+    final adjusted = DateTime.utc(2026, 1, 2, 3, 4, 5);
+    final adjustedSec = adjusted.millisecondsSinceEpoch ~/ 1000;
+    await db.enqueueOutbox(
+      type: 'update_memo',
+      payload: {
+        'uid': 'memo-time',
+        'create_time': adjustedSec,
+        'display_time': adjustedSec,
+      },
+    );
+
+    final controller = RemoteSyncController(
+      db: db,
+      api: api,
+      currentUserName: 'users/demo',
+      syncStatusTracker: SyncStatusTracker(),
+      syncQueueProgressTracker: SyncQueueProgressTracker(),
+      imageBedRepository: _FakeImageBedSettingsRepository(),
+      attachmentPreprocessor: _PassThroughAttachmentPreprocessor(),
+    );
+    addTearDown(controller.dispose);
+
+    final result = await HttpOverrides.runWithHttpOverrides(
+      () => controller.syncNow(),
+      _PassthroughHttpOverrides(),
+    );
+
+    expect(result, isA<MemoSyncSuccess>());
+    final patchRequest = server.requests.singleWhere(
+      (request) =>
+          request.method == 'PATCH' &&
+          request.path == '/api/v1/memos/memo-time',
+    );
+    expect(
+      DateTime.parse(patchRequest.jsonBody?['createTime'] as String).toUtc(),
+      adjusted,
+    );
+    expect(
+      DateTime.parse(patchRequest.jsonBody?['displayTime'] as String).toUtc(),
+      adjusted,
+    );
+  });
 
   test(
     'RemoteSyncController keeps memo pending when later attachment tasks remain',

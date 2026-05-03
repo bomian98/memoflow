@@ -39,6 +39,11 @@ abstract interface class MemosListMutationRepositoryAdapter {
 
   Future<void> updateMemo(LocalMemo memo, {bool? pinned, String? state});
 
+  Future<void> adjustMemoTime({
+    required LocalMemo memo,
+    required DateTime selectedTime,
+  });
+
   Future<void> updateMemoContent(
     LocalMemo memo,
     String content, {
@@ -105,6 +110,16 @@ class RiverpodMemosListMutationRepositoryAdapter
     return _read(
       memosListControllerProvider,
     ).updateMemo(memo, pinned: pinned, state: state);
+  }
+
+  @override
+  Future<void> adjustMemoTime({
+    required LocalMemo memo,
+    required DateTime selectedTime,
+  }) {
+    return _read(
+      memosListControllerProvider,
+    ).adjustMemoTime(memo: memo, selectedTime: selectedTime);
   }
 
   @override
@@ -385,6 +400,45 @@ class MemosListMutationCoordinator extends ChangeNotifier {
           'memoUid': memo.uid,
           'pinned': pinned,
           'state': state,
+          'triggerSync': triggerSync,
+        },
+      );
+      return MemosListMutationResult.failed(error);
+    }
+  }
+
+  Future<MemosListMutationResult> adjustMemoTime({
+    required LocalMemo memo,
+    required DateTime selectedTime,
+    bool triggerSync = true,
+  }) async {
+    if (_disposed) {
+      return const MemosListMutationResult.noop();
+    }
+
+    final selectedTimeSec = selectedTime.toUtc().millisecondsSinceEpoch ~/ 1000;
+    try {
+      await _repository.adjustMemoTime(memo: memo, selectedTime: selectedTime);
+      if (triggerSync) {
+        unawaited(
+          _requestMemosSyncFollowUp(
+            operation: 'adjust_memo_time',
+            context: <String, Object?>{
+              'memoUid': memo.uid,
+              'selectedTimeSec': selectedTimeSec,
+            },
+          ),
+        );
+      }
+      return const MemosListMutationResult.handled();
+    } catch (error, stackTrace) {
+      _logMutationError(
+        'adjust_memo_time_failed',
+        error,
+        stackTrace,
+        context: <String, Object?>{
+          'memoUid': memo.uid,
+          'selectedTimeSec': selectedTimeSec,
           'triggerSync': triggerSync,
         },
       );

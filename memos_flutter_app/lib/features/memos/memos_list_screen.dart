@@ -79,6 +79,7 @@ import 'memo_detail_screen.dart';
 import 'memo_editor_screen.dart';
 import 'memo_hero_flight.dart';
 import 'memo_markdown.dart';
+import 'memo_time_adjustment_sheet.dart';
 import 'memo_versions_screen.dart';
 import 'memos_list_animated_list_controller.dart';
 import 'memos_list_audio_playback_coordinator.dart';
@@ -1161,6 +1162,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           ref: ref,
           memo: memo,
         );
+      },
+      pickTimeAdjustment: (memo) {
+        return showMemoTimeAdjustmentSheet(context: context, memo: memo);
       },
       handleRestoreSuccess: (toastMessage) async {
         if (!mounted) return;

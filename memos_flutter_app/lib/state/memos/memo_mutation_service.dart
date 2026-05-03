@@ -444,6 +444,48 @@ class MemoMutationService {
     );
   }
 
+  Future<void> adjustMemoTime({
+    required LocalMemo memo,
+    required DateTime selectedTime,
+  }) async {
+    final adjustedTime = selectedTime.toLocal();
+    final createTimeSec = adjustedTime.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final nowSec = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+    final db = this.db;
+    final syncPolicy = resolveMemoSyncMutationPolicy(
+      currentLastError: memo.lastError,
+    );
+
+    await db.upsertMemo(
+      uid: memo.uid,
+      content: memo.content,
+      visibility: memo.visibility,
+      pinned: memo.pinned,
+      state: memo.state,
+      createTimeSec: createTimeSec,
+      displayTimeSec: createTimeSec,
+      updateTimeSec: nowSec,
+      tags: memo.tags,
+      attachments: memo.attachments
+          .map((attachment) => attachment.toJson())
+          .toList(growable: false),
+      location: memo.location,
+      relationCount: memo.relationCount,
+      syncState: syncPolicy.syncState,
+      lastError: syncPolicy.lastError,
+    );
+
+    if (!syncPolicy.allowRemoteSync) return;
+    await db.enqueueOutbox(
+      type: 'update_memo',
+      payload: {
+        'uid': memo.uid,
+        'create_time': createTimeSec,
+        'display_time': createTimeSec,
+      },
+    );
+  }
+
   Future<void> updateMemoContent(
     LocalMemo memo,
     String content, {

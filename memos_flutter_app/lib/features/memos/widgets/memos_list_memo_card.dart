@@ -134,6 +134,7 @@ enum MemoCardAction {
   copy,
   togglePinned,
   edit,
+  adjustTime,
   history,
   reminder,
   addToCollection,
@@ -190,6 +191,10 @@ List<PopupMenuEntry<MemoCardAction>> buildMemoCardActionMenuItems({
     PopupMenuItem(
       value: MemoCardAction.edit,
       child: Text(context.t.strings.legacy.msg_edit),
+    ),
+    PopupMenuItem(
+      value: MemoCardAction.adjustTime,
+      child: Text(context.t.strings.memoTimeAdjustment.action),
     ),
     PopupMenuItem(
       value: MemoCardAction.history,

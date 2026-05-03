@@ -31,6 +31,7 @@ import '../home/home_navigation_host.dart';
 import '../memos/memo_editor_screen.dart';
 import '../memos/memo_markdown.dart';
 import '../memos/memo_detail_screen.dart';
+import '../memos/memo_time_adjustment_sheet.dart';
 import '../memos/memo_versions_screen.dart';
 import '../memos/memos_list_memo_action_delegate.dart';
 import '../memos/memos_list_mutation_coordinator.dart';
@@ -119,6 +120,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       openHistory: _openMemoHistory,
       openReminder: _openMemoReminder,
       openAddToCollection: _openAddMemoToCollection,
+      pickTimeAdjustment: (memo) {
+        return showMemoTimeAdjustmentSheet(context: context, memo: memo);
+      },
       handleRestoreSuccess: (toastMessage) async {
         if (!mounted) return;
         showTopToast(context, toastMessage);

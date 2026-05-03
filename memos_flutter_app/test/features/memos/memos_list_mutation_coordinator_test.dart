@@ -240,6 +240,38 @@ void main() {
   );
 
   test(
+    'adjust memo time routes through repository and requests sync',
+    () async {
+      final container = ProviderContainer();
+      final repository = _FakeMutationRepositoryAdapter();
+      final sync = _FakeMutationSyncAdapter();
+      final coordinator = MemosListMutationCoordinator(
+        read: container.read,
+        repositoryOverride: repository,
+        syncOverride: sync,
+      );
+      addTearDown(() {
+        coordinator.dispose();
+        container.dispose();
+      });
+
+      final memo = _buildMemo();
+      final selectedTime = DateTime.utc(2025, 2, 3, 4, 5);
+      final result = await coordinator.adjustMemoTime(
+        memo: memo,
+        selectedTime: selectedTime,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(result.kind, MemosListMutationResultKind.handled);
+      expect(repository.adjustMemoTimeCallCount, 1);
+      expect(repository.lastAdjustedTimeMemo, memo);
+      expect(repository.lastSelectedTime, selectedTime);
+      expect(sync.requestCallCount, 1);
+    },
+  );
+
+  test(
     'delete forwards recycle-bin callback and syncs after success',
     () async {
       final container = ProviderContainer();
@@ -424,6 +456,7 @@ class _FakeMutationRepositoryAdapter
   Object? quickInputError;
   Object? inlineComposeError;
   Object? updateMemoError;
+  Object? adjustMemoTimeError;
   Object? updateMemoContentError;
   Object? deleteError;
   Object? retryOutboxError;
@@ -432,6 +465,7 @@ class _FakeMutationRepositoryAdapter
   int createQuickInputCallCount = 0;
   int createInlineComposeCallCount = 0;
   int updateMemoCallCount = 0;
+  int adjustMemoTimeCallCount = 0;
   int updateMemoContentCallCount = 0;
   int deleteMemoCallCount = 0;
 
@@ -454,6 +488,9 @@ class _FakeMutationRepositoryAdapter
   LocalMemo? lastUpdatedMemo;
   bool? lastUpdatedPinned;
   String? lastUpdatedState;
+
+  LocalMemo? lastAdjustedTimeMemo;
+  DateTime? lastSelectedTime;
 
   LocalMemo? lastUpdatedContentMemo;
   String? lastUpdatedContent;
@@ -522,6 +559,19 @@ class _FakeMutationRepositoryAdapter
     lastUpdatedState = state;
     if (updateMemoError != null) {
       throw updateMemoError!;
+    }
+  }
+
+  @override
+  Future<void> adjustMemoTime({
+    required LocalMemo memo,
+    required DateTime selectedTime,
+  }) async {
+    adjustMemoTimeCallCount++;
+    lastAdjustedTimeMemo = memo;
+    lastSelectedTime = selectedTime;
+    if (adjustMemoTimeError != null) {
+      throw adjustMemoTimeError!;
     }
   }
 

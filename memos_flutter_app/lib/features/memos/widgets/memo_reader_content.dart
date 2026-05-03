@@ -27,6 +27,49 @@ import '../memo_video_grid.dart';
 
 final DateFormat _memoReaderDateFormatter = DateFormat('yyyy-MM-dd HH:mm');
 
+const memoReaderTimeAdjustTriggerKey = ValueKey<String>(
+  'memo-reader-time-adjust-trigger',
+);
+
+class _MemoReaderTimeLabel extends StatelessWidget {
+  const _MemoReaderTimeLabel({
+    required this.text,
+    required this.style,
+    required this.onTap,
+  });
+
+  final String text;
+  final TextStyle? style;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (onTap == null) {
+      return Text(text, style: style);
+    }
+    final color = style?.color ?? Theme.of(context).colorScheme.primary;
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: memoReaderTimeAdjustTriggerKey,
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(text, style: style),
+              const SizedBox(width: 4),
+              Icon(Icons.edit_calendar_outlined, size: 14, color: color),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class MemoReaderContent extends ConsumerWidget {
   const MemoReaderContent({
     super.key,
@@ -44,6 +87,7 @@ class MemoReaderContent extends ConsumerWidget {
     this.nonMediaAttachmentsOverride,
     this.showAttachmentsSection = true,
     this.mediaMaxCount = 18,
+    this.onTimeTap,
     this.onReplaceAttachment,
   });
 
@@ -61,6 +105,7 @@ class MemoReaderContent extends ConsumerWidget {
   final List<Attachment>? nonMediaAttachmentsOverride;
   final bool showAttachmentsSection;
   final int mediaMaxCount;
+  final VoidCallback? onTimeTap;
   final Future<void> Function(EditedImageResult result)? onReplaceAttachment;
 
   @override
@@ -158,13 +203,14 @@ class MemoReaderContent extends ConsumerWidget {
                 color: Theme.of(context).dividerColor.withValues(alpha: 0.32),
               ),
             ),
-          Text(
-            _memoReaderDateFormatter.format(displayTime),
+          _MemoReaderTimeLabel(
+            text: _memoReaderDateFormatter.format(displayTime),
             style:
                 metaTextStyle ??
                 Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+            onTap: onTimeTap,
           ),
           if (memo.location != null) ...[
             const SizedBox(height: 6),

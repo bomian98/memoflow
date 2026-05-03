@@ -1744,6 +1744,14 @@ legacy:
   msg_clear_all_filters: "\u6e05\u9664\u6240\u6709\u7be9\u9078"
 shareClip:
   localSavedPendingSync: "\u5df2\u4fdd\u5b58\u5230\u672c\u6a5f\uff0c\u5f8c\u7e8c\u540c\u6b65\u6703\u5728\u53ef\u7528\u6642\u7e7c\u7e8c\u3002"
+memoTimeAdjustment:
+  action: "修改建立時間"
+  saved: "建立時間已修改"
+  description: "儲存後，這則筆記會依新的建立時間顯示與排序。"
+  dateField: "日期"
+  timeField: "時間"
+  selectedCreationTime: "建立時間：$value"
+  failed: "修改建立時間失敗：$error"
 collections:
   drawerLabel: "\u5408\u96c6"
   title: "\u5408\u96c6"

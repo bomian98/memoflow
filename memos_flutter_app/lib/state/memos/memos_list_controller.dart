@@ -183,6 +183,15 @@ class MemosListController {
         .updateMemo(memo, pinned: pinned, state: state);
   }
 
+  Future<void> adjustMemoTime({
+    required LocalMemo memo,
+    required DateTime selectedTime,
+  }) async {
+    await _ref
+        .read(memoMutationServiceProvider)
+        .adjustMemoTime(memo: memo, selectedTime: selectedTime);
+  }
+
   Future<void> updateMemoContent(
     LocalMemo memo,
     String content, {

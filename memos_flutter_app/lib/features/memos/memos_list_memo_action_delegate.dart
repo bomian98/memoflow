@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/local_memo.dart';
 import '../../i18n/strings.g.dart';
+import 'memo_time_adjustment_sheet.dart';
 import 'memo_task_list_service.dart';
 import 'memos_list_mutation_coordinator.dart';
 import 'widgets/memos_list_memo_card.dart';
@@ -20,6 +21,7 @@ class MemosListMemoActionDelegate {
     required Future<void> Function(LocalMemo memo) openHistory,
     required Future<void> Function(LocalMemo memo) openReminder,
     required Future<void> Function(LocalMemo memo) openAddToCollection,
+    required Future<DateTime?> Function(LocalMemo memo) pickTimeAdjustment,
     required Future<void> Function(String toastMessage) handleRestoreSuccess,
     required void Function(String message) showTopToast,
     required void Function(String message) showSnackBar,
@@ -35,6 +37,7 @@ class MemosListMemoActionDelegate {
        _openHistory = openHistory,
        _openReminder = openReminder,
        _openAddToCollection = openAddToCollection,
+       _pickTimeAdjustment = pickTimeAdjustment,
        _handleRestoreSuccess = handleRestoreSuccess,
        _showTopToast = showTopToast,
        _showSnackBar = showSnackBar;
@@ -51,6 +54,7 @@ class MemosListMemoActionDelegate {
   final Future<void> Function(LocalMemo memo) _openHistory;
   final Future<void> Function(LocalMemo memo) _openReminder;
   final Future<void> Function(LocalMemo memo) _openAddToCollection;
+  final Future<DateTime?> Function(LocalMemo memo) _pickTimeAdjustment;
   final Future<void> Function(String toastMessage) _handleRestoreSuccess;
   final void Function(String message) _showTopToast;
   final void Function(String message) _showSnackBar;
@@ -201,6 +205,9 @@ class MemosListMemoActionDelegate {
       case MemoCardAction.edit:
         await _openEditor(memo);
         return;
+      case MemoCardAction.adjustTime:
+        await adjustMemoTime(memo);
+        return;
       case MemoCardAction.history:
         await _openHistory(memo);
         return;
@@ -218,6 +225,30 @@ class MemosListMemoActionDelegate {
         return;
       case MemoCardAction.delete:
         await deleteMemo(memo);
+        return;
+    }
+  }
+
+  Future<void> adjustMemoTime(LocalMemo memo) async {
+    final selectedTime = await _pickTimeAdjustment(memo);
+    if (selectedTime == null) return;
+    final result = await _mutationCoordinator.adjustMemoTime(
+      memo: memo,
+      selectedTime: selectedTime,
+    );
+    final context = _contextResolver();
+    if (!context.mounted) return;
+    switch (result.kind) {
+      case MemosListMutationResultKind.handled:
+        _showTopToast(memoTimeAdjustmentSavedLabel(context));
+        return;
+      case MemosListMutationResultKind.noop:
+        return;
+      case MemosListMutationResultKind.failed:
+        final error = result.error ?? '';
+        _showSnackBar(
+          context.t.strings.memoTimeAdjustment.failed(error: error),
+        );
         return;
     }
   }

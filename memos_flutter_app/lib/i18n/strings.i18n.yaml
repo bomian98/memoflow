@@ -1790,6 +1790,14 @@ shareClip:
   stageDownloadingVideo: "Downloading video"
   stageCompressingVideo: "Compressing video"
   localSavedPendingSync: "Saved locally. Sync will continue when available."
+memoTimeAdjustment:
+  action: "Change creation time"
+  saved: "Creation time updated"
+  description: "After saving, this memo will display and sort by the new creation time."
+  dateField: "Date"
+  timeField: "Time"
+  selectedCreationTime: "Creation time: $value"
+  failed: "Failed to change creation time: $error"
 collections:
   drawerLabel: "Collections"
   title: "Collections"

@@ -31,6 +31,15 @@ class MemoDetailController {
         .updateMemo(memo, pinned: pinned, state: state);
   }
 
+  Future<void> adjustMemoTime({
+    required LocalMemo memo,
+    required DateTime selectedTime,
+  }) async {
+    await _ref
+        .read(memoMutationServiceProvider)
+        .adjustMemoTime(memo: memo, selectedTime: selectedTime);
+  }
+
   Future<void> deleteMemo(LocalMemo memo) async {
     await _ref.read(memoDeleteServiceProvider).deleteMemo(memo);
   }

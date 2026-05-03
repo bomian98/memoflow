@@ -4,9 +4,9 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 6
-/// Strings: 11826 (1971 per locale)
+/// Strings: 11868 (1978 per locale)
 ///
-/// Built on 2026-04-30 at 12:15 UTC
+/// Built on 2026-05-03 at 12:27 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -174,6 +174,7 @@ class _StringsStringsEn {
 	late final _StringsStringsAiProxyEn aiProxy = _StringsStringsAiProxyEn._(_root);
 	late final _StringsStringsLegacyEn legacy = _StringsStringsLegacyEn._(_root);
 	late final _StringsStringsShareClipEn shareClip = _StringsStringsShareClipEn._(_root);
+	late final _StringsStringsMemoTimeAdjustmentEn memoTimeAdjustment = _StringsStringsMemoTimeAdjustmentEn._(_root);
 	late final _StringsStringsCollectionsEn collections = _StringsStringsCollectionsEn._(_root);
 }
 
@@ -1800,6 +1801,22 @@ class _StringsStringsShareClipEn {
 	String get localSavedPendingSync => 'Saved locally. Sync will continue when available.';
 }
 
+// Path: strings.memoTimeAdjustment
+class _StringsStringsMemoTimeAdjustmentEn {
+	_StringsStringsMemoTimeAdjustmentEn._(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get action => 'Change creation time';
+	String get saved => 'Creation time updated';
+	String get description => 'After saving, this memo will display and sort by the new creation time.';
+	String get dateField => 'Date';
+	String get timeField => 'Time';
+	String selectedCreationTime({required Object value}) => 'Creation time: ${value}';
+	String failed({required Object error}) => 'Failed to change creation time: ${error}';
+}
+
 // Path: strings.collections
 class _StringsStringsCollectionsEn {
 	_StringsStringsCollectionsEn._(this._root);
@@ -2756,6 +2773,7 @@ class _StringsStringsDe extends _StringsStringsEn {
 	@override late final _StringsStringsAiProxyDe aiProxy = _StringsStringsAiProxyDe._(_root);
 	@override late final _StringsStringsLegacyDe legacy = _StringsStringsLegacyDe._(_root);
 	@override late final _StringsStringsShareClipDe shareClip = _StringsStringsShareClipDe._(_root);
+	@override late final _StringsStringsMemoTimeAdjustmentDe memoTimeAdjustment = _StringsStringsMemoTimeAdjustmentDe._(_root);
 	@override late final _StringsStringsCollectionsDe collections = _StringsStringsCollectionsDe._(_root);
 }
 
@@ -4291,6 +4309,22 @@ class _StringsStringsShareClipDe extends _StringsStringsShareClipEn {
 	@override String get localSavedPendingSync => 'Lokal gespeichert. Die Synchronisierung wird fortgesetzt, sobald sie verfügbar ist.';
 }
 
+// Path: strings.memoTimeAdjustment
+class _StringsStringsMemoTimeAdjustmentDe extends _StringsStringsMemoTimeAdjustmentEn {
+	_StringsStringsMemoTimeAdjustmentDe._(_StringsDe root) : this._root = root, super._(root);
+
+	@override final _StringsDe _root; // ignore: unused_field
+
+	// Translations
+	@override String get action => 'Erstellungszeit ändern';
+	@override String get saved => 'Erstellungszeit aktualisiert';
+	@override String get description => 'Nach dem Speichern wird dieses Memo nach der neuen Erstellungszeit angezeigt und sortiert.';
+	@override String get dateField => 'Datum';
+	@override String get timeField => 'Uhrzeit';
+	@override String selectedCreationTime({required Object value}) => 'Erstellungszeit: ${value}';
+	@override String failed({required Object error}) => 'Erstellungszeit konnte nicht geändert werden: ${error}';
+}
+
 // Path: strings.collections
 class _StringsStringsCollectionsDe extends _StringsStringsCollectionsEn {
 	_StringsStringsCollectionsDe._(_StringsDe root) : this._root = root, super._(root);
@@ -5222,6 +5256,7 @@ class _StringsStringsJa extends _StringsStringsEn {
 	@override late final _StringsStringsAiProxyJa aiProxy = _StringsStringsAiProxyJa._(_root);
 	@override late final _StringsStringsLegacyJa legacy = _StringsStringsLegacyJa._(_root);
 	@override late final _StringsStringsShareClipJa shareClip = _StringsStringsShareClipJa._(_root);
+	@override late final _StringsStringsMemoTimeAdjustmentJa memoTimeAdjustment = _StringsStringsMemoTimeAdjustmentJa._(_root);
 	@override late final _StringsStringsCollectionsJa collections = _StringsStringsCollectionsJa._(_root);
 }
 
@@ -6757,6 +6792,22 @@ class _StringsStringsShareClipJa extends _StringsStringsShareClipEn {
 	@override String get localSavedPendingSync => 'ローカルに保存しました。同期は利用可能になり次第続行されます。';
 }
 
+// Path: strings.memoTimeAdjustment
+class _StringsStringsMemoTimeAdjustmentJa extends _StringsStringsMemoTimeAdjustmentEn {
+	_StringsStringsMemoTimeAdjustmentJa._(_StringsJa root) : this._root = root, super._(root);
+
+	@override final _StringsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get action => '作成日時を変更';
+	@override String get saved => '作成日時を更新しました';
+	@override String get description => '保存後、このメモは新しい作成日時で表示・並べ替えされます。';
+	@override String get dateField => '日付';
+	@override String get timeField => '時刻';
+	@override String selectedCreationTime({required Object value}) => '作成日時：${value}';
+	@override String failed({required Object error}) => '作成日時の変更に失敗しました：${error}';
+}
+
 // Path: strings.collections
 class _StringsStringsCollectionsJa extends _StringsStringsCollectionsEn {
 	_StringsStringsCollectionsJa._(_StringsJa root) : this._root = root, super._(root);
@@ -7688,6 +7739,7 @@ class _StringsStringsPtBr extends _StringsStringsEn {
 	@override late final _StringsStringsAiProxyPtBr aiProxy = _StringsStringsAiProxyPtBr._(_root);
 	@override late final _StringsStringsLegacyPtBr legacy = _StringsStringsLegacyPtBr._(_root);
 	@override late final _StringsStringsShareClipPtBr shareClip = _StringsStringsShareClipPtBr._(_root);
+	@override late final _StringsStringsMemoTimeAdjustmentPtBr memoTimeAdjustment = _StringsStringsMemoTimeAdjustmentPtBr._(_root);
 	@override late final _StringsStringsCollectionsPtBr collections = _StringsStringsCollectionsPtBr._(_root);
 }
 
@@ -9314,6 +9366,22 @@ class _StringsStringsShareClipPtBr extends _StringsStringsShareClipEn {
 	@override String get localSavedPendingSync => 'Salvo localmente. A sincronização continuará quando disponível.';
 }
 
+// Path: strings.memoTimeAdjustment
+class _StringsStringsMemoTimeAdjustmentPtBr extends _StringsStringsMemoTimeAdjustmentEn {
+	_StringsStringsMemoTimeAdjustmentPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get action => 'Alterar data de criação';
+	@override String get saved => 'Data de criação atualizada';
+	@override String get description => 'Depois de salvar, este memo será exibido e ordenado pela nova data de criação.';
+	@override String get dateField => 'Data';
+	@override String get timeField => 'Hora';
+	@override String selectedCreationTime({required Object value}) => 'Data de criação: ${value}';
+	@override String failed({required Object error}) => 'Falha ao alterar a data de criação: ${error}';
+}
+
 // Path: strings.collections
 class _StringsStringsCollectionsPtBr extends _StringsStringsCollectionsEn {
 	_StringsStringsCollectionsPtBr._(_StringsPtBr root) : this._root = root, super._(root);
@@ -10270,6 +10338,7 @@ class _StringsStringsZhHans extends _StringsStringsEn {
 	@override late final _StringsStringsAiProxyZhHans aiProxy = _StringsStringsAiProxyZhHans._(_root);
 	@override late final _StringsStringsLegacyZhHans legacy = _StringsStringsLegacyZhHans._(_root);
 	@override late final _StringsStringsShareClipZhHans shareClip = _StringsStringsShareClipZhHans._(_root);
+	@override late final _StringsStringsMemoTimeAdjustmentZhHans memoTimeAdjustment = _StringsStringsMemoTimeAdjustmentZhHans._(_root);
 	@override late final _StringsStringsCollectionsZhHans collections = _StringsStringsCollectionsZhHans._(_root);
 }
 
@@ -11896,6 +11965,22 @@ class _StringsStringsShareClipZhHans extends _StringsStringsShareClipEn {
 	@override String get localSavedPendingSync => '已保存到本地，后续同步会在可用时继续。';
 }
 
+// Path: strings.memoTimeAdjustment
+class _StringsStringsMemoTimeAdjustmentZhHans extends _StringsStringsMemoTimeAdjustmentEn {
+	_StringsStringsMemoTimeAdjustmentZhHans._(_StringsZhHans root) : this._root = root, super._(root);
+
+	@override final _StringsZhHans _root; // ignore: unused_field
+
+	// Translations
+	@override String get action => '修改创建时间';
+	@override String get saved => '创建时间已修改';
+	@override String get description => '保存后，这条笔记会按新的创建时间显示和排序。';
+	@override String get dateField => '日期';
+	@override String get timeField => '时间';
+	@override String selectedCreationTime({required Object value}) => '创建时间：${value}';
+	@override String failed({required Object error}) => '修改创建时间失败：${error}';
+}
+
 // Path: strings.collections
 class _StringsStringsCollectionsZhHans extends _StringsStringsCollectionsEn {
 	_StringsStringsCollectionsZhHans._(_StringsZhHans root) : this._root = root, super._(root);
@@ -12852,6 +12937,7 @@ class _StringsStringsZhHantTw extends _StringsStringsEn {
 	@override late final _StringsStringsAiProxyZhHantTw aiProxy = _StringsStringsAiProxyZhHantTw._(_root);
 	@override late final _StringsStringsLegacyZhHantTw legacy = _StringsStringsLegacyZhHantTw._(_root);
 	@override late final _StringsStringsShareClipZhHantTw shareClip = _StringsStringsShareClipZhHantTw._(_root);
+	@override late final _StringsStringsMemoTimeAdjustmentZhHantTw memoTimeAdjustment = _StringsStringsMemoTimeAdjustmentZhHantTw._(_root);
 	@override late final _StringsStringsCollectionsZhHantTw collections = _StringsStringsCollectionsZhHantTw._(_root);
 }
 
@@ -14445,6 +14531,22 @@ class _StringsStringsShareClipZhHantTw extends _StringsStringsShareClipEn {
 
 	// Translations
 	@override String get localSavedPendingSync => '已保存到本機，後續同步會在可用時繼續。';
+}
+
+// Path: strings.memoTimeAdjustment
+class _StringsStringsMemoTimeAdjustmentZhHantTw extends _StringsStringsMemoTimeAdjustmentEn {
+	_StringsStringsMemoTimeAdjustmentZhHantTw._(_StringsZhHantTw root) : this._root = root, super._(root);
+
+	@override final _StringsZhHantTw _root; // ignore: unused_field
+
+	// Translations
+	@override String get action => '修改建立時間';
+	@override String get saved => '建立時間已修改';
+	@override String get description => '儲存後，這則筆記會依新的建立時間顯示與排序。';
+	@override String get dateField => '日期';
+	@override String get timeField => '時間';
+	@override String selectedCreationTime({required Object value}) => '建立時間：${value}';
+	@override String failed({required Object error}) => '修改建立時間失敗：${error}';
 }
 
 // Path: strings.collections
@@ -17073,6 +17175,13 @@ extension on Translations {
 			case 'strings.shareClip.stageDownloadingVideo': return 'Downloading video';
 			case 'strings.shareClip.stageCompressingVideo': return 'Compressing video';
 			case 'strings.shareClip.localSavedPendingSync': return 'Saved locally. Sync will continue when available.';
+			case 'strings.memoTimeAdjustment.action': return 'Change creation time';
+			case 'strings.memoTimeAdjustment.saved': return 'Creation time updated';
+			case 'strings.memoTimeAdjustment.description': return 'After saving, this memo will display and sort by the new creation time.';
+			case 'strings.memoTimeAdjustment.dateField': return 'Date';
+			case 'strings.memoTimeAdjustment.timeField': return 'Time';
+			case 'strings.memoTimeAdjustment.selectedCreationTime': return ({required Object value}) => 'Creation time: ${value}';
+			case 'strings.memoTimeAdjustment.failed': return ({required Object error}) => 'Failed to change creation time: ${error}';
 			case 'strings.collections.drawerLabel': return 'Collections';
 			case 'strings.collections.title': return 'Collections';
 			case 'strings.collections.collection': return 'Collection';
@@ -18989,6 +19098,13 @@ extension on _StringsDe {
 			case 'strings.legacy.msg_linked_memos': return 'Linked memos';
 			case 'strings.legacy.msg_clear_all_filters': return 'Clear all filters';
 			case 'strings.shareClip.localSavedPendingSync': return 'Lokal gespeichert. Die Synchronisierung wird fortgesetzt, sobald sie verfügbar ist.';
+			case 'strings.memoTimeAdjustment.action': return 'Erstellungszeit ändern';
+			case 'strings.memoTimeAdjustment.saved': return 'Erstellungszeit aktualisiert';
+			case 'strings.memoTimeAdjustment.description': return 'Nach dem Speichern wird dieses Memo nach der neuen Erstellungszeit angezeigt und sortiert.';
+			case 'strings.memoTimeAdjustment.dateField': return 'Datum';
+			case 'strings.memoTimeAdjustment.timeField': return 'Uhrzeit';
+			case 'strings.memoTimeAdjustment.selectedCreationTime': return ({required Object value}) => 'Erstellungszeit: ${value}';
+			case 'strings.memoTimeAdjustment.failed': return ({required Object error}) => 'Erstellungszeit konnte nicht geändert werden: ${error}';
 			case 'strings.collections.drawerLabel': return 'Collections';
 			case 'strings.collections.title': return 'Collections';
 			case 'strings.collections.collection': return 'Collection';
@@ -20905,6 +21021,13 @@ extension on _StringsJa {
 			case 'strings.legacy.msg_linked_memos': return 'Linked memos';
 			case 'strings.legacy.msg_clear_all_filters': return 'Clear all filters';
 			case 'strings.shareClip.localSavedPendingSync': return 'ローカルに保存しました。同期は利用可能になり次第続行されます。';
+			case 'strings.memoTimeAdjustment.action': return '作成日時を変更';
+			case 'strings.memoTimeAdjustment.saved': return '作成日時を更新しました';
+			case 'strings.memoTimeAdjustment.description': return '保存後、このメモは新しい作成日時で表示・並べ替えされます。';
+			case 'strings.memoTimeAdjustment.dateField': return '日付';
+			case 'strings.memoTimeAdjustment.timeField': return '時刻';
+			case 'strings.memoTimeAdjustment.selectedCreationTime': return ({required Object value}) => '作成日時：${value}';
+			case 'strings.memoTimeAdjustment.failed': return ({required Object error}) => '作成日時の変更に失敗しました：${error}';
 			case 'strings.collections.drawerLabel': return 'Collections';
 			case 'strings.collections.title': return 'Collections';
 			case 'strings.collections.collection': return 'Collection';
@@ -22927,6 +23050,13 @@ extension on _StringsPtBr {
 			case 'strings.shareClip.stageDownloadingVideo': return 'Baixando vídeo';
 			case 'strings.shareClip.stageCompressingVideo': return 'Compactando vídeo';
 			case 'strings.shareClip.localSavedPendingSync': return 'Salvo localmente. A sincronização continuará quando disponível.';
+			case 'strings.memoTimeAdjustment.action': return 'Alterar data de criação';
+			case 'strings.memoTimeAdjustment.saved': return 'Data de criação atualizada';
+			case 'strings.memoTimeAdjustment.description': return 'Depois de salvar, este memo será exibido e ordenado pela nova data de criação.';
+			case 'strings.memoTimeAdjustment.dateField': return 'Data';
+			case 'strings.memoTimeAdjustment.timeField': return 'Hora';
+			case 'strings.memoTimeAdjustment.selectedCreationTime': return ({required Object value}) => 'Data de criação: ${value}';
+			case 'strings.memoTimeAdjustment.failed': return ({required Object error}) => 'Falha ao alterar a data de criação: ${error}';
 			case 'strings.collections.drawerLabel': return 'Coleções';
 			case 'strings.collections.title': return 'Coleções';
 			case 'strings.collections.collection': return 'Coleção';
@@ -24949,6 +25079,13 @@ extension on _StringsZhHans {
 			case 'strings.shareClip.stageDownloadingVideo': return '正在下载视频';
 			case 'strings.shareClip.stageCompressingVideo': return '正在压缩视频';
 			case 'strings.shareClip.localSavedPendingSync': return '已保存到本地，后续同步会在可用时继续。';
+			case 'strings.memoTimeAdjustment.action': return '修改创建时间';
+			case 'strings.memoTimeAdjustment.saved': return '创建时间已修改';
+			case 'strings.memoTimeAdjustment.description': return '保存后，这条笔记会按新的创建时间显示和排序。';
+			case 'strings.memoTimeAdjustment.dateField': return '日期';
+			case 'strings.memoTimeAdjustment.timeField': return '时间';
+			case 'strings.memoTimeAdjustment.selectedCreationTime': return ({required Object value}) => '创建时间：${value}';
+			case 'strings.memoTimeAdjustment.failed': return ({required Object error}) => '修改创建时间失败：${error}';
 			case 'strings.collections.drawerLabel': return '合集';
 			case 'strings.collections.title': return '合集';
 			case 'strings.collections.collection': return '合集';
@@ -26925,6 +27062,13 @@ extension on _StringsZhHantTw {
 			case 'strings.legacy.msg_linked_memos': return '雙鏈';
 			case 'strings.legacy.msg_clear_all_filters': return '清除所有篩選';
 			case 'strings.shareClip.localSavedPendingSync': return '已保存到本機，後續同步會在可用時繼續。';
+			case 'strings.memoTimeAdjustment.action': return '修改建立時間';
+			case 'strings.memoTimeAdjustment.saved': return '建立時間已修改';
+			case 'strings.memoTimeAdjustment.description': return '儲存後，這則筆記會依新的建立時間顯示與排序。';
+			case 'strings.memoTimeAdjustment.dateField': return '日期';
+			case 'strings.memoTimeAdjustment.timeField': return '時間';
+			case 'strings.memoTimeAdjustment.selectedCreationTime': return ({required Object value}) => '建立時間：${value}';
+			case 'strings.memoTimeAdjustment.failed': return ({required Object error}) => '修改建立時間失敗：${error}';
 			case 'strings.collections.drawerLabel': return '合集';
 			case 'strings.collections.title': return '合集';
 			case 'strings.collections.collection': return '合集';

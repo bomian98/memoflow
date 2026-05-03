@@ -51,6 +51,7 @@ import 'memo_media_grid.dart';
 import 'memo_markdown.dart';
 import 'memo_render_pipeline.dart';
 import 'memo_hero_flight.dart';
+import 'memo_time_adjustment_sheet.dart';
 import 'memo_versions_screen.dart';
 import 'memos_list_screen.dart';
 import 'memo_video_grid.dart';
@@ -519,6 +520,42 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     await _reload();
   }
 
+  Future<void> _adjustMemoTime() async {
+    if (widget.readOnly || _isArchivedMemo()) return;
+    final memo = _memo;
+    if (memo == null) return;
+    final selectedTime = await showMemoTimeAdjustmentSheet(
+      context: context,
+      memo: memo,
+    );
+    if (!mounted || selectedTime == null) return;
+    try {
+      await ref
+          .read(memoDetailControllerProvider)
+          .adjustMemoTime(memo: memo, selectedTime: selectedTime);
+      unawaited(
+        ref
+            .read(syncCoordinatorProvider.notifier)
+            .requestSync(
+              const SyncRequest(
+                kind: SyncRequestKind.memos,
+                reason: SyncRequestReason.manual,
+              ),
+            ),
+      );
+      if (!mounted) return;
+      showTopToast(context, memoTimeAdjustmentSavedLabel(context));
+      await _reload();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.t.strings.memoTimeAdjustment.failed(error: e)),
+        ),
+      );
+    }
+  }
+
   Future<void> _openVersionHistory() async {
     final memo = _memo;
     if (memo == null) return;
@@ -867,6 +904,7 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
       hapticsEnabled: hapticsEnabled,
       markdownSelectable: _routeSettled,
       onDoubleTapEdit: onDoubleTapEdit,
+      onTimeTap: widget.readOnly || isArchived ? null : _adjustMemoTime,
       onReplaceAttachment: canEditAttachments ? _replaceMemoAttachment : null,
       onToggleTask: canToggleTasks
           ? (request) {
@@ -1126,6 +1164,7 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
     this.markdownSelectable = true,
     this.mediaMaxHeightFactor = 0.4,
     this.onDoubleTapEdit,
+    this.onTimeTap,
     this.onToggleTask,
     this.onReplaceAttachment,
   });
@@ -1137,6 +1176,7 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
   final bool markdownSelectable;
   final double mediaMaxHeightFactor;
   final VoidCallback? onDoubleTapEdit;
+  final VoidCallback? onTimeTap;
   final TaskToggleHandler? onToggleTask;
   final Future<void> Function(EditedImageResult result)? onReplaceAttachment;
 
@@ -1217,6 +1257,7 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
           mediaEntriesOverride: mediaEntries,
           nonMediaAttachmentsOverride: resolvedData.nonImageAttachments,
           showAttachmentsSection: false,
+          onTimeTap: onTimeTap,
           onReplaceAttachment: allowImageEdit ? onReplaceAttachment : null,
         ),
         if (mediaEntries.isNotEmpty) const SizedBox(height: 12),

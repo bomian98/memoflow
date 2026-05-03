@@ -24,6 +24,7 @@ import 'package:memos_flutter_app/features/memos/memo_markdown.dart';
 import 'package:memos_flutter_app/features/memos/memo_image_grid.dart';
 import 'package:memos_flutter_app/features/memos/memo_media_cache_key.dart';
 import 'package:memos_flutter_app/features/memos/memo_media_grid.dart';
+import 'package:memos_flutter_app/features/memos/memo_time_adjustment_sheet.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_memo_card.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_memo_card_container.dart';
 import 'package:memos_flutter_app/features/image_preview/widgets/image_preview_tile.dart';
@@ -40,6 +41,106 @@ import 'package:memos_flutter_app/state/tags/tag_color_lookup.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('card menu exposes creation time change only for normal memos', (
+    tester,
+  ) async {
+    late List<PopupMenuEntry<MemoCardAction>> normalItems;
+    late List<PopupMenuEntry<MemoCardAction>> archivedItems;
+
+    await tester.pumpWidget(
+      _buildTimeAdjustmentHarness(
+        Builder(
+          builder: (context) {
+            normalItems = buildMemoCardActionMenuItems(
+              context: context,
+              memo: _buildMemo(),
+              deleteColor: Colors.red,
+            );
+            archivedItems = buildMemoCardActionMenuItems(
+              context: context,
+              memo: _buildMemo(state: 'ARCHIVED'),
+              deleteColor: Colors.red,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(_menuValues(normalItems), contains(MemoCardAction.adjustTime));
+    expect(
+      _menuValues(archivedItems),
+      isNot(contains(MemoCardAction.adjustTime)),
+    );
+  });
+
+  testWidgets('creation time sheet cancels without a result', (tester) async {
+    var completed = false;
+    DateTime? result;
+
+    await tester.pumpWidget(
+      _buildTimeAdjustmentHarness(
+        Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () async {
+              result = await showMemoTimeAdjustmentSheet(
+                context: context,
+                memo: _buildMemo(),
+              );
+              completed = true;
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(memoTimeAdjustmentSheetKey), findsOneWidget);
+    expect(find.text(t.strings.memoTimeAdjustment.action), findsOneWidget);
+    expect(find.textContaining('2024-01-02'), findsWidgets);
+    expect(find.textContaining('03:04'), findsWidgets);
+
+    await tester.tap(find.byKey(memoTimeAdjustmentCancelButtonKey));
+    await tester.pumpAndSettle();
+
+    expect(completed, isTrue);
+    expect(result, isNull);
+  });
+
+  testWidgets('creation time sheet saves current effective time', (
+    tester,
+  ) async {
+    DateTime? result;
+    final displayTime = DateTime(2024, 2, 3, 4, 5, 6);
+    final memo = _buildMemo(displayTime: displayTime);
+
+    await tester.pumpWidget(
+      _buildTimeAdjustmentHarness(
+        Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () async {
+              result = await showMemoTimeAdjustmentSheet(
+                context: context,
+                memo: memo,
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(memoTimeAdjustmentSaveButtonKey));
+    await tester.pumpAndSettle();
+
+    expect(result, displayTime);
+  });
 
   test(
     'attachment source fingerprint changes when preview metadata changes',
@@ -1033,6 +1134,8 @@ MemoClipCardMetadata _buildClipCardMetadata(String memoUid) {
 LocalMemo _buildMemo({
   String uid = 'memo-1',
   String content = 'memo body',
+  String state = 'NORMAL',
+  DateTime? displayTime,
   SyncState syncState = SyncState.synced,
   List<Attachment> attachments = const <Attachment>[],
 }) {
@@ -1043,14 +1146,34 @@ LocalMemo _buildMemo({
     contentFingerprint: computeContentFingerprint(content),
     visibility: 'PRIVATE',
     pinned: false,
-    state: 'NORMAL',
+    state: state,
     createTime: now,
+    displayTime: displayTime,
     updateTime: now,
     tags: const <String>[],
     attachments: attachments,
     relationCount: 0,
     syncState: syncState,
     lastError: null,
+  );
+}
+
+List<MemoCardAction?> _menuValues(List<PopupMenuEntry<MemoCardAction>> items) {
+  return items
+      .whereType<PopupMenuItem<MemoCardAction>>()
+      .map((item) => item.value)
+      .toList(growable: false);
+}
+
+Widget _buildTimeAdjustmentHarness(Widget child) {
+  LocaleSettings.setLocale(AppLocale.en);
+  return TranslationProvider(
+    child: MaterialApp(
+      locale: AppLocale.en.flutterLocale,
+      supportedLocales: AppLocaleUtils.supportedLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: Scaffold(body: Center(child: child)),
+    ),
   );
 }
 

@@ -832,6 +832,17 @@ extension _RemoteSyncOutbox on RemoteSyncController {
     final state = payload['state'] as String?;
     final hasLocation = payload.containsKey('location');
     final location = _parseLocationPayload(payload['location']);
+    final createTime = _parsePayloadTime(
+      payload['create_time'] ?? payload['createTime'],
+    );
+    final displayTime = _parsePayloadTime(
+      payload['display_time'] ?? payload['displayTime'],
+    );
+    if (createTime != null && !api.supportsMemoCreateTimeUpdate) {
+      throw StateError(
+        'Remote memo createTime update is unsupported by this server version',
+      );
+    }
     final syncAttachments = payload['sync_attachments'] as bool? ?? false;
     final hasPendingAttachments =
         payload['has_pending_attachments'] as bool? ?? false;
@@ -852,6 +863,8 @@ extension _RemoteSyncOutbox on RemoteSyncController {
         visibility: visibility,
         pinned: pinned,
         state: state,
+        createTime: createTime,
+        displayTime: displayTime,
         location: payload['location'] == null ? null : location,
       );
     } else {
@@ -861,6 +874,8 @@ extension _RemoteSyncOutbox on RemoteSyncController {
         visibility: visibility,
         pinned: pinned,
         state: state,
+        createTime: createTime,
+        displayTime: displayTime,
       );
     }
     if (hasRelations) {

@@ -1694,6 +1694,14 @@ legacy:
   msg_clear_all_filters: "Clear all filters"
 shareClip:
   localSavedPendingSync: "ローカルに保存しました。同期は利用可能になり次第続行されます。"
+memoTimeAdjustment:
+  action: "作成日時を変更"
+  saved: "作成日時を更新しました"
+  description: "保存後、このメモは新しい作成日時で表示・並べ替えされます。"
+  dateField: "日付"
+  timeField: "時刻"
+  selectedCreationTime: "作成日時：$value"
+  failed: "作成日時の変更に失敗しました：$error"
 collections:
   drawerLabel: "Collections"
   title: "Collections"

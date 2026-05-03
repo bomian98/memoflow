@@ -1786,6 +1786,14 @@ shareClip:
   stageDownloadingVideo: Baixando vídeo
   stageCompressingVideo: Compactando vídeo
   localSavedPendingSync: Salvo localmente. A sincronização continuará quando disponível.
+memoTimeAdjustment:
+  action: "Alterar data de criação"
+  saved: "Data de criação atualizada"
+  description: "Depois de salvar, este memo será exibido e ordenado pela nova data de criação."
+  dateField: "Data"
+  timeField: "Hora"
+  selectedCreationTime: "Data de criação: $value"
+  failed: "Falha ao alterar a data de criação: $error"
 collections:
   drawerLabel: Coleções
   title: Coleções
