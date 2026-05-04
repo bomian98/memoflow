@@ -20,6 +20,7 @@ languages:
   ja: "日本語"
   de: "ドイツ語"
   ptBr: "ポルトガル語（ブラジル）"
+  ko: "韓国語"
 languagesNative:
   system: "システム"
   zhHans: "简体中文"
@@ -28,6 +29,7 @@ languagesNative:
   ja: "日本語"
   de: "Deutsch"
   ptBr: "Português (Brasil)"
+  ko: "한국어"
 onboarding:
   tagline: "ミニマルで強力なノートストリーム"
   selectLanguage: "言語を選択"
@@ -1364,6 +1366,7 @@ legacy:
     ja: "日本語"
     de: "ドイツ語"
     pt_br: "ポルトガル語（ブラジル）"
+    ko: "韓国語"
   app_theme:
     system: "システム"
     light: "ライト"

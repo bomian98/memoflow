@@ -423,14 +423,6 @@ class HomeWidgetsUpdater {
   }
 
   String _localeTagForLanguage(AppLanguage language) {
-    return switch (language) {
-      AppLanguage.zhHans => 'zh-Hans',
-      AppLanguage.zhHantTw => 'zh-Hant-TW',
-      AppLanguage.ja => 'ja',
-      AppLanguage.de => 'de',
-      AppLanguage.ptBr => 'pt-BR',
-      AppLanguage.system => appLocaleForLanguage(language).languageCode,
-      _ => 'en',
-    };
+    return localeTagForAppLanguage(language);
   }
 }

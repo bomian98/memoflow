@@ -20,6 +20,7 @@ languages:
   ja: "日文"
   de: "德文"
   ptBr: "葡萄牙文（巴西）"
+  ko: "韓語"
 languagesNative:
   system: "系統"
   zhHans: "简体中文"
@@ -28,6 +29,7 @@ languagesNative:
   ja: "日本語"
   de: "Deutsch"
   ptBr: "Português (Brasil)"
+  ko: "한국어"
 onboarding:
   tagline: "簡約而強大的筆記流"
   selectLanguage: "選擇語言"
@@ -1413,6 +1415,7 @@ legacy:
     ja: "日語"
     de: "德語"
     pt_br: "葡萄牙文（巴西）"
+    ko: "韓語"
   app_theme:
     system: "系統"
     light: "淺色"

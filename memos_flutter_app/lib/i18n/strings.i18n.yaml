@@ -20,6 +20,7 @@ languages:
   ja: "Japanese"
   de: "German"
   ptBr: "Portuguese (Brazil)"
+  ko: "Korean"
 languagesNative:
   system: "System"
   zhHans: "简体中文"
@@ -28,6 +29,7 @@ languagesNative:
   ja: "日本語"
   de: "Deutsch"
   ptBr: "Português (Brasil)"
+  ko: "한국어"
 onboarding:
   tagline: "Minimal, powerful note stream"
   selectLanguage: "Select language"
@@ -1435,6 +1437,7 @@ legacy:
     ja: "Japanese"
     de: "German"
     pt_br: "Portuguese (Brazil)"
+    ko: "Korean"
   app_theme:
     system: "System"
     light: "Light"

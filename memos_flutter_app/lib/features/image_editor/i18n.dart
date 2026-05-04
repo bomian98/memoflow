@@ -173,6 +173,34 @@ class ImageEditorI18n {
     'https://example.com': 'https://example.com',
   };
 
+  static const Map<String, String> _imageEditorI18nKo = {
+    'Crop': '자르기',
+    'Brush': '브러시',
+    'Text': '텍스트',
+    'Link': '링크',
+    'Flip': '뒤집기',
+    'Rotate left': '왼쪽으로 회전',
+    'Rotate right': '오른쪽으로 회전',
+    'Blur': '흐림',
+    'Filter': '필터',
+    'Emoji': '이모지',
+    'Select Emoji': '이모지 선택',
+    'Size Adjust': '크기 조정',
+    'Remove': '삭제',
+    'Size': '크기',
+    'Color': '색상',
+    'Background Color': '배경 색상',
+    'Background Opacity': '배경 투명도',
+    'Slider Filter Color': '필터 색상',
+    'Slider Color': '색상',
+    'Slider Opicity': '투명도',
+    'Reset': '재설정',
+    'Blur Radius': '흐림 반경',
+    'Color Opacity': '색상 투명도',
+    'Insert Your Message': '메시지를 입력하세요',
+    'https://example.com': '링크를 입력하세요',
+  };
+
   static void apply(AppLanguage language) {
     final effective = language == AppLanguage.system
         ? appLanguageFromLocale(
@@ -185,6 +213,7 @@ class ImageEditorI18n {
       AppLanguage.ja => _imageEditorI18nJa,
       AppLanguage.de => _imageEditorI18nDe,
       AppLanguage.ptBr => _imageEditorI18nPtBr,
+      AppLanguage.ko => _imageEditorI18nKo,
       _ => _imageEditorI18nEn,
     };
     ImageEditor.setI18n(map);

@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memos_flutter_app/core/app_localization.dart';
+import 'package:memos_flutter_app/core/sync_feedback.dart';
 import 'package:memos_flutter_app/data/models/app_preferences.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 
@@ -110,6 +111,92 @@ void main() {
       expect(appLanguageFromLocale(const Locale('ja')), AppLanguage.ja);
       expect(appLanguageFromLocale(const Locale('de')), AppLanguage.de);
       expect(appLanguageFromLocale(const Locale('en')), AppLanguage.en);
+    });
+  });
+
+  group('Korean localization', () {
+    test('ko keeps key UI labels in Korean', () {
+      final t = AppLocale.ko.build();
+
+      expect(t.strings.common.back, '뒤로');
+      expect(t.strings.common.cancel, '취소');
+      expect(t.strings.common.confirm, '확인');
+      expect(
+        t.strings.common.serverVersionValue(version: '0.26.0'),
+        '서버 버전: 0.26.0',
+      );
+      expect(t.strings.onboarding.selectLanguage, '언어 선택');
+      expect(t.strings.settings.preferences.language, '언어');
+      expect(t.strings.languages.ko, '한국어');
+      expect(t.strings.languagesNative.ko, '한국어');
+      expect(t.strings.legacy.app_language.ko, '한국어');
+    });
+
+    test('supported locales include Korean', () {
+      expect(AppLocaleUtils.supportedLocalesRaw, contains('ko'));
+      expect(
+        AppLocaleUtils.supportedLocales,
+        contains(AppLocale.ko.flutterLocale),
+      );
+    });
+
+    test('Korean device locale maps to Korean', () {
+      expect(appLanguageFromLocale(const Locale('ko')), AppLanguage.ko);
+      expect(
+        appLanguageFromLocale(
+          const Locale.fromSubtags(languageCode: 'ko', countryCode: 'KR'),
+        ),
+        AppLanguage.ko,
+      );
+      expect(appLocaleForDeviceLocale(const Locale('ko')), AppLocale.ko);
+      expect(appLocaleForLanguage(AppLanguage.ko), AppLocale.ko);
+      expect(AppLanguage.ko.name, 'ko');
+    });
+
+    testWidgets('Follow System resolves Korean device locale to Korean', (
+      tester,
+    ) async {
+      tester.binding.platformDispatcher.localeTestValue = const Locale('ko');
+      addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
+
+      expect(appLocaleForLanguage(AppLanguage.system), AppLocale.ko);
+      expect(localeTagForAppLanguage(AppLanguage.system), 'ko');
+    });
+
+    test('existing non-Korean locale mappings remain stable', () {
+      expect(
+        appLanguageFromLocale(
+          const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
+        ),
+        AppLanguage.zhHans,
+      );
+      expect(
+        appLanguageFromLocale(
+          const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+        ),
+        AppLanguage.zhHantTw,
+      );
+      expect(appLanguageFromLocale(const Locale('ja')), AppLanguage.ja);
+      expect(appLanguageFromLocale(const Locale('de')), AppLanguage.de);
+      expect(appLanguageFromLocale(const Locale('pt')), AppLanguage.ptBr);
+      expect(appLanguageFromLocale(const Locale('en')), AppLanguage.en);
+    });
+
+    test('manual Korean localization paths are covered', () {
+      expect(
+        buildSyncFeedbackMessage(language: AppLanguage.ko, succeeded: true),
+        '동기화 완료',
+      );
+      expect(
+        buildSyncFeedbackMessage(language: AppLanguage.ko, succeeded: false),
+        '동기화 실패',
+      );
+      expect(
+        buildAutoSyncProgressMessage(language: AppLanguage.ko),
+        '자동 동기화 진행 중...',
+      );
+      expect(aiOutputLanguageNameFor(AppLanguage.ko), 'Korean');
+      expect(localeTagForAppLanguage(AppLanguage.ko), 'ko');
     });
   });
 }

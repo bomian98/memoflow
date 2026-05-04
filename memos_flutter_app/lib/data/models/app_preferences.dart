@@ -10,7 +10,8 @@ enum AppLanguage {
   en('legacy.app_language.en'),
   ja('legacy.app_language.ja'),
   de('legacy.app_language.de'),
-  ptBr('legacy.app_language.pt_br');
+  ptBr('legacy.app_language.pt_br'),
+  ko('legacy.app_language.ko');
 
   const AppLanguage(this.labelKey);
   final String labelKey;

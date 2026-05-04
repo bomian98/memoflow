@@ -11,6 +11,8 @@ AppLanguage appLanguageFromLocale(Locale locale) {
       return AppLanguage.ja;
     case 'de':
       return AppLanguage.de;
+    case 'ko':
+      return AppLanguage.ko;
     case 'pt':
       return AppLanguage.ptBr;
     case 'zh':
@@ -31,9 +33,15 @@ bool _isTraditionalZhLocale(Locale locale) {
 }
 
 bool _devicePrefersZh() {
-  final code = WidgetsBinding.instance.platformDispatcher.locale.languageCode
-      .toLowerCase();
-  return code == 'zh';
+  return _devicePrefersLanguage(AppLanguage.zhHans) ||
+      _devicePrefersLanguage(AppLanguage.zhHantTw);
+}
+
+bool _devicePrefersLanguage(AppLanguage language) {
+  return appLanguageFromLocale(
+        WidgetsBinding.instance.platformDispatcher.locale,
+      ) ==
+      language;
 }
 
 bool _devicePrefersTraditionalZh() {
@@ -51,6 +59,7 @@ bool prefersEnglishFor(AppLanguage language) {
     AppLanguage.ja => true,
     AppLanguage.de => true,
     AppLanguage.ptBr => true,
+    AppLanguage.ko => true,
   };
 }
 
@@ -68,9 +77,14 @@ AppLocale _deviceLocaleToAppLocale(Locale locale) {
       _isTraditionalZhLocale(locale) ? AppLocale.zhHantTw : AppLocale.zhHans,
     'ja' => AppLocale.ja,
     'de' => AppLocale.de,
+    'ko' => AppLocale.ko,
     'pt' => AppLocale.ptBr,
     _ => AppLocale.en,
   };
+}
+
+AppLocale appLocaleForDeviceLocale(Locale locale) {
+  return _deviceLocaleToAppLocale(locale);
 }
 
 AppLocale appLocaleForLanguage(AppLanguage language) {
@@ -84,6 +98,41 @@ AppLocale appLocaleForLanguage(AppLanguage language) {
     AppLanguage.ja => AppLocale.ja,
     AppLanguage.de => AppLocale.de,
     AppLanguage.ptBr => AppLocale.ptBr,
+    AppLanguage.ko => AppLocale.ko,
+  };
+}
+
+AppLanguage effectiveAppLanguage(AppLanguage language) {
+  return language == AppLanguage.system
+      ? appLanguageFromLocale(WidgetsBinding.instance.platformDispatcher.locale)
+      : language;
+}
+
+String localeTagForAppLanguage(AppLanguage language) {
+  return switch (effectiveAppLanguage(language)) {
+    AppLanguage.zhHans => 'zh-Hans',
+    AppLanguage.zhHantTw => 'zh-Hant-TW',
+    AppLanguage.ja => 'ja',
+    AppLanguage.de => 'de',
+    AppLanguage.ptBr => 'pt-BR',
+    AppLanguage.ko => 'ko',
+    AppLanguage.en || AppLanguage.system => 'en',
+  };
+}
+
+bool startsWeekOnMondayForAppLanguage(AppLanguage language) {
+  return switch (effectiveAppLanguage(language)) {
+    AppLanguage.de => true,
+    _ => false,
+  };
+}
+
+String aiOutputLanguageNameFor(AppLanguage language) {
+  return switch (effectiveAppLanguage(language)) {
+    AppLanguage.zhHans => 'Simplified Chinese',
+    AppLanguage.zhHantTw => 'Traditional Chinese',
+    AppLanguage.ko => 'Korean',
+    _ => 'English',
   };
 }
 

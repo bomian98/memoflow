@@ -20,6 +20,7 @@ languages:
   ja: Japonês
   de: Alemão
   ptBr: Português (Brasil)
+  ko: Coreano
 languagesNative:
   system: Sistema
   zhHans: 简体中文
@@ -28,6 +29,7 @@ languagesNative:
   ja: 日本語
   de: Deutsch
   ptBr: Português (Brasil)
+  ko: 한국어
 onboarding:
   tagline: Fluxo de notas minimalista e poderoso
   selectLanguage: Selecione o idioma
@@ -1431,6 +1433,7 @@ legacy:
     ja: Japonês
     de: Alemão
     pt_br: Português (Brasil)
+    ko: Coreano
   app_theme:
     system: Sistema
     light: Luz

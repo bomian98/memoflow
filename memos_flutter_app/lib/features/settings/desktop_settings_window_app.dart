@@ -61,37 +61,8 @@ class DesktopSettingsWindowApp extends ConsumerWidget {
 
   final int windowId;
 
-  static bool _isTraditionalZhLocale(Locale locale) {
-    if (locale.languageCode.toLowerCase() != 'zh') return false;
-    final script = locale.scriptCode?.toLowerCase();
-    if (script == 'hant') return true;
-    final region = locale.countryCode?.toUpperCase();
-    return region == 'TW' || region == 'HK' || region == 'MO';
-  }
-
-  static AppLocale _deviceLocaleToAppLocale(Locale locale) {
-    return switch (locale.languageCode.toLowerCase()) {
-      'zh' =>
-        _isTraditionalZhLocale(locale) ? AppLocale.zhHantTw : AppLocale.zhHans,
-      'ja' => AppLocale.ja,
-      'de' => AppLocale.de,
-      'pt' => AppLocale.ptBr,
-      _ => AppLocale.en,
-    };
-  }
-
   static AppLocale _appLocaleFor(AppLanguage language) {
-    return switch (language) {
-      AppLanguage.system => _deviceLocaleToAppLocale(
-        WidgetsBinding.instance.platformDispatcher.locale,
-      ),
-      AppLanguage.zhHans => AppLocale.zhHans,
-      AppLanguage.zhHantTw => AppLocale.zhHantTw,
-      AppLanguage.en => AppLocale.en,
-      AppLanguage.ja => AppLocale.ja,
-      AppLanguage.de => AppLocale.de,
-      AppLanguage.ptBr => AppLocale.ptBr,
-    };
+    return appLocaleForLanguage(language);
   }
 
   static ThemeMode _themeModeFor(AppThemeMode mode) {

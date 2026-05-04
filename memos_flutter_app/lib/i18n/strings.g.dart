@@ -3,10 +3,10 @@
 /// Original: lib/i18n
 /// To regenerate, run: `dart run slang`
 ///
-/// Locales: 6
-/// Strings: 11868 (1978 per locale)
+/// Locales: 7
+/// Strings: 13910 (1987 per locale)
 ///
-/// Built on 2026-05-03 at 12:27 UTC
+/// Built on 2026-05-04 at 01:14 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -28,6 +28,7 @@ enum AppLocale with BaseAppLocale<AppLocale, Translations> {
 	en(languageCode: 'en', build: Translations.build),
 	de(languageCode: 'de', build: _StringsDe.build),
 	ja(languageCode: 'ja', build: _StringsJa.build),
+	ko(languageCode: 'ko', build: _StringsKo.build),
 	ptBr(languageCode: 'pt', countryCode: 'BR', build: _StringsPtBr.build),
 	zhHans(languageCode: 'zh', scriptCode: 'Hans', build: _StringsZhHans.build),
 	zhHantTw(languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW', build: _StringsZhHantTw.build);
@@ -214,6 +215,7 @@ class _StringsStringsLanguagesEn {
 	String get ja => 'Japanese';
 	String get de => 'German';
 	String get ptBr => 'Portuguese (Brazil)';
+	String get ko => 'Korean';
 }
 
 // Path: strings.languagesNative
@@ -230,6 +232,7 @@ class _StringsStringsLanguagesNativeEn {
 	String get ja => '日本語';
 	String get de => 'Deutsch';
 	String get ptBr => 'Português (Brasil)';
+	String get ko => '한국어';
 }
 
 // Path: strings.onboarding
@@ -2227,6 +2230,7 @@ class _StringsStringsLegacyAppLanguageEn {
 	String get ja => 'Japanese';
 	String get de => 'German';
 	String get pt_br => 'Portuguese (Brazil)';
+	String get ko => 'Korean';
 }
 
 // Path: strings.legacy.app_theme
@@ -2813,6 +2817,7 @@ class _StringsStringsLanguagesDe extends _StringsStringsLanguagesEn {
 	@override String get ja => 'Japanisch';
 	@override String get de => 'Deutsch';
 	@override String get ptBr => 'Portugiesisch (Brasilien)';
+	@override String get ko => 'Koreanisch';
 }
 
 // Path: strings.languagesNative
@@ -2829,6 +2834,7 @@ class _StringsStringsLanguagesNativeDe extends _StringsStringsLanguagesNativeEn 
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
 	@override String get ptBr => 'Português (Brasil)';
+	@override String get ko => '한국어';
 }
 
 // Path: strings.onboarding
@@ -4710,6 +4716,7 @@ class _StringsStringsLegacyAppLanguageDe extends _StringsStringsLegacyAppLanguag
 	@override String get ja => 'Japanisch';
 	@override String get de => 'Deutsch';
 	@override String get pt_br => 'Portugiesisch (Brasilien)';
+	@override String get ko => 'Koreanisch';
 }
 
 // Path: strings.legacy.app_theme
@@ -5296,6 +5303,7 @@ class _StringsStringsLanguagesJa extends _StringsStringsLanguagesEn {
 	@override String get ja => '日本語';
 	@override String get de => 'ドイツ語';
 	@override String get ptBr => 'ポルトガル語（ブラジル）';
+	@override String get ko => '韓国語';
 }
 
 // Path: strings.languagesNative
@@ -5312,6 +5320,7 @@ class _StringsStringsLanguagesNativeJa extends _StringsStringsLanguagesNativeEn 
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
 	@override String get ptBr => 'Português (Brasil)';
+	@override String get ko => '한국어';
 }
 
 // Path: strings.onboarding
@@ -7193,6 +7202,7 @@ class _StringsStringsLegacyAppLanguageJa extends _StringsStringsLegacyAppLanguag
 	@override String get ja => '日本語';
 	@override String get de => 'ドイツ語';
 	@override String get pt_br => 'ポルトガル語（ブラジル）';
+	@override String get ko => '韓国語';
 }
 
 // Path: strings.legacy.app_theme
@@ -7692,6 +7702,2608 @@ class _StringsStringsSettingsPreferencesEditorToolbarActionsJa extends _StringsS
 }
 
 // Path: <root>
+class _StringsKo extends Translations {
+	/// You can call this constructor and build your own translation instance of this locale.
+	/// Constructing via the enum [AppLocale.build] is preferred.
+	_StringsKo.build({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver})
+		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
+		  $meta = TranslationMetadata(
+		    locale: AppLocale.ko,
+		    overrides: overrides ?? {},
+		    cardinalResolver: cardinalResolver,
+		    ordinalResolver: ordinalResolver,
+		  ),
+		  super.build(cardinalResolver: cardinalResolver, ordinalResolver: ordinalResolver) {
+		super.$meta.setFlatMapFunction($meta.getTranslation); // copy base translations to super.$meta
+		$meta.setFlatMapFunction(_flatMapFunction);
+	}
+
+	/// Metadata for the translations of <ko>.
+	@override final TranslationMetadata<AppLocale, Translations> $meta;
+
+	/// Access flat map
+	@override dynamic operator[](String key) => $meta.getTranslation(key) ?? super.$meta.getTranslation(key);
+
+	@override late final _StringsKo _root = this; // ignore: unused_field
+
+	// Translations
+	@override late final _StringsStringsKo strings = _StringsStringsKo._(_root);
+}
+
+// Path: strings
+class _StringsStringsKo extends _StringsStringsEn {
+	_StringsStringsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override late final _StringsStringsCommonKo common = _StringsStringsCommonKo._(_root);
+	@override late final _StringsStringsLanguagesKo languages = _StringsStringsLanguagesKo._(_root);
+	@override late final _StringsStringsLanguagesNativeKo languagesNative = _StringsStringsLanguagesNativeKo._(_root);
+	@override late final _StringsStringsOnboardingKo onboarding = _StringsStringsOnboardingKo._(_root);
+	@override late final _StringsStringsLegalConsentKo legalConsent = _StringsStringsLegalConsentKo._(_root);
+	@override late final _StringsStringsLoginKo login = _StringsStringsLoginKo._(_root);
+	@override late final _StringsStringsSettingsKo settings = _StringsStringsSettingsKo._(_root);
+	@override late final _StringsStringsLocationPickerKo locationPicker = _StringsStringsLocationPickerKo._(_root);
+	@override late final _StringsStringsAiInsightKo aiInsight = _StringsStringsAiInsightKo._(_root);
+	@override late final _StringsStringsAiProxyKo aiProxy = _StringsStringsAiProxyKo._(_root);
+	@override late final _StringsStringsLegacyKo legacy = _StringsStringsLegacyKo._(_root);
+	@override late final _StringsStringsShareClipKo shareClip = _StringsStringsShareClipKo._(_root);
+	@override late final _StringsStringsMemoTimeAdjustmentKo memoTimeAdjustment = _StringsStringsMemoTimeAdjustmentKo._(_root);
+	@override late final _StringsStringsCollectionsKo collections = _StringsStringsCollectionsKo._(_root);
+}
+
+// Path: strings.common
+class _StringsStringsCommonKo extends _StringsStringsCommonEn {
+	_StringsStringsCommonKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get back => '뒤로';
+	@override String get cancel => '취소';
+	@override String get confirm => '확인';
+	@override String get save => '저장';
+	@override String get saveSettings => '설정 저장';
+	@override String get auto => '자동';
+	@override String get manual => '수동';
+	@override String get copiedToClipboard => '클립보드에 복사했습니다';
+	@override String get serverVersion => '서버 버전';
+	@override String get selectValidServerVersion => '유효한 서버 버전을 선택하세요';
+	@override String serverVersionValue({required Object version}) => '서버 버전: ${version}';
+	@override String get serverVersionProbeHint => '로그인 전에는 선택한 서버 버전의 핵심 API만 확인합니다.';
+	@override String get selectServerVersionRange021To026 => '0.21~0.26 사이의 서버 버전을 수동으로 선택하세요';
+}
+
+// Path: strings.languages
+class _StringsStringsLanguagesKo extends _StringsStringsLanguagesEn {
+	_StringsStringsLanguagesKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => '시스템 설정 따르기';
+	@override String get zhHans => '중국어(간체)';
+	@override String get zhHantTw => '중국어(번체, 대만)';
+	@override String get en => '영어';
+	@override String get ja => '일본어';
+	@override String get de => '독일어';
+	@override String get ptBr => '포르투갈어(브라질)';
+	@override String get ko => '한국어';
+}
+
+// Path: strings.languagesNative
+class _StringsStringsLanguagesNativeKo extends _StringsStringsLanguagesNativeEn {
+	_StringsStringsLanguagesNativeKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => '시스템';
+	@override String get zhHans => '简体中文';
+	@override String get zhHantTw => '繁體中文（中國台灣）';
+	@override String get en => 'English';
+	@override String get ja => '日本語';
+	@override String get de => 'Deutsch';
+	@override String get ptBr => 'Português (Brasil)';
+	@override String get ko => '한국어';
+}
+
+// Path: strings.onboarding
+class _StringsStringsOnboardingKo extends _StringsStringsOnboardingEn {
+	_StringsStringsOnboardingKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get tagline => '간결하고 강력한 노트 스트림';
+	@override String get selectLanguage => '언어 선택';
+	@override String get selectMode => '모드 선택';
+	@override String get modeHint => '나중에 설정에서 변경할 수 있습니다.';
+	@override String get modeLocalTitle => '로컬 모드';
+	@override String get modeLocalLabel => '로컬 모드';
+	@override String get modeLocalDesc => '데이터가 기기에만 저장됩니다. 서버 설정이 필요 없어 개인정보 보호와 오프라인 사용에 적합합니다.';
+	@override String get modeServerTitle => '서버 모드';
+	@override String get modeServerLabel => '서버 모드';
+	@override String get modeServerDesc => '실시간 다중 기기 동기화를 위해 Memos 백엔드에 연결합니다.';
+	@override String get localLibraryNameTitle => '로컬 라이브러리 이름';
+	@override String get localLibraryNameHint => '이름 입력';
+	@override String get localLibraryDefaultName => '로컬 라이브러리';
+	@override String get getStarted => '시작하기';
+}
+
+// Path: strings.legalConsent
+class _StringsStringsLegalConsentKo extends _StringsStringsLegalConsentEn {
+	_StringsStringsLegalConsentKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '계약 검토';
+	@override String get description => 'MemoFlow를 사용하기 전에 사용자 계약 및 개인 정보 보호 정책을 읽고 동의하십시오.';
+	@override String get linksHint => '전체 내용을 검토하려면 아래 문서를 열어보세요.';
+	@override String get acknowledge => '나는 사용자 계약 및 개인 정보 보호 정책을 읽었으며 이에 동의합니다.';
+	@override String get continueAction => '동의하고 계속하세요';
+	@override String get exitAction => '앱 종료';
+}
+
+// Path: strings.login
+class _StringsStringsLoginKo extends _StringsStringsLoginEn {
+	_StringsStringsLoginKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Memos에 연결';
+	@override late final _StringsStringsLoginModeKo mode = _StringsStringsLoginModeKo._(_root);
+	@override late final _StringsStringsLoginFieldKo field = _StringsStringsLoginFieldKo._(_root);
+	@override late final _StringsStringsLoginValidationKo validation = _StringsStringsLoginValidationKo._(_root);
+	@override late final _StringsStringsLoginDialogsKo dialogs = _StringsStringsLoginDialogsKo._(_root);
+	@override late final _StringsStringsLoginCompatibilityKo compatibility = _StringsStringsLoginCompatibilityKo._(_root);
+	@override late final _StringsStringsLoginConnectKo connect = _StringsStringsLoginConnectKo._(_root);
+	@override late final _StringsStringsLoginErrorsKo errors = _StringsStringsLoginErrorsKo._(_root);
+}
+
+// Path: strings.settings
+class _StringsStringsSettingsKo extends _StringsStringsSettingsEn {
+	_StringsStringsSettingsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override late final _StringsStringsSettingsPreferencesKo preferences = _StringsStringsSettingsPreferencesKo._(_root);
+}
+
+// Path: strings.locationPicker
+class _StringsStringsLocationPickerKo extends _StringsStringsLocationPickerEn {
+	_StringsStringsLocationPickerKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get searchNearbyPlaces => '주변 장소 검색';
+	@override String latitudeValue({required Object value}) => '위도 ${value}';
+	@override String longitudeValue({required Object value}) => '경도 ${value}';
+	@override String get noPlacesFound => '장소를 찾을 수 없습니다.';
+	@override String get mapInitializeFailed => '지도를 초기화하지 못했습니다.';
+	@override String get providerNotReady => '위치 제공업체가 준비되지 않았습니다.';
+	@override String get providerMissingAmapKeys => '위치를 선택하기 전에 Amap Web API 키와 보안 키가 필요합니다.';
+	@override String get providerMissingBaiduKey => '위치를 선택하려면 Baidu AK가 필요합니다.';
+	@override String get providerMissingGoogleKey => '위치를 선택하려면 Google 지도 API 키가 필요합니다.';
+	@override String get providerUnsupportedPlatform => '내장된 지도 선택기는 Android 및 Windows에서만 사용할 수 있습니다.';
+}
+
+// Path: strings.aiInsight
+class _StringsStringsAiInsightKo extends _StringsStringsAiInsightEn {
+	_StringsStringsAiInsightKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'AI 인사이트 스튜디오';
+	@override String get subtitle => 'AI는 다양한 각도에서 메모를 이해할 수 있도록 도와드립니다.';
+	@override String get settingsTitle => 'AI 분석 설정';
+	@override String get startAnalysis => '분석 시작';
+	@override late final _StringsStringsAiInsightCommonKo common = _StringsStringsAiInsightCommonKo._(_root);
+	@override late final _StringsStringsAiInsightTimeRangeKo timeRange = _StringsStringsAiInsightTimeRangeKo._(_root);
+	@override late final _StringsStringsAiInsightPrivacyScopeKo privacyScope = _StringsStringsAiInsightPrivacyScopeKo._(_root);
+	@override late final _StringsStringsAiInsightPromptSettingsKo promptSettings = _StringsStringsAiInsightPromptSettingsKo._(_root);
+	@override late final _StringsStringsAiInsightContentPreviewKo contentPreview = _StringsStringsAiInsightContentPreviewKo._(_root);
+	@override late final _StringsStringsAiInsightTemplatesKo templates = _StringsStringsAiInsightTemplatesKo._(_root);
+	@override late final _StringsStringsAiInsightCardsKo cards = _StringsStringsAiInsightCardsKo._(_root);
+}
+
+// Path: strings.aiProxy
+class _StringsStringsAiProxyKo extends _StringsStringsAiProxyEn {
+	_StringsStringsAiProxyKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '프록시 설정';
+	@override String get notConfigured => '구성되지 않음';
+	@override String statusHttp({required Object host, required Object port}) => 'HTTP · ${host}:${port}';
+	@override String statusSocks5({required Object host, required Object port}) => 'SOCKS5 · ${host}:${port}';
+	@override String get protocol => '규약';
+	@override String get host => '주인';
+	@override String get port => '포트';
+	@override String get username => '사용자 이름';
+	@override String get password => '비밀번호';
+	@override String get bypassLocalAddresses => '로컬/개인 주소를 자동으로 우회';
+	@override String get description => '공유 프록시를 활성화하는 AI 서비스에만 영향을 미칩니다. Ollama 및 127.0.0.1과 같은 로컬 모델은 기본적으로 직접 유지됩니다.';
+	@override String get useSharedProxy => '공유 프록시 사용';
+	@override String get useSharedProxyDescription => '이 서비스는 AI 설정에 구성된 프록시를 사용합니다.';
+	@override String get incompleteWarning => '이 서비스에는 프록시가 활성화되어 있지만 공유 프록시 설정이 불완전합니다.';
+	@override String get openSettings => '프록시 설정 열기';
+	@override String get saveSuccess => '프록시 설정이 저장되었습니다.';
+	@override String get clearSuccess => '프록시 설정이 지워졌습니다.';
+	@override String get invalidHost => '프록시 호스트를 입력하세요.';
+	@override String get invalidPort => '1~65535 사이의 유효한 프록시 포트를 입력하세요.';
+	@override String get incompleteError => '该服务已启 이용대리，但 AI 代理设置尚未配置完整';
+	@override String get testSectionTitle => '프록시 테스트';
+	@override String get testSectionDescription => '현재 양식 값을 사용하여 프록시가 대상 웹 사이트에 도달할 수 있는지 테스트합니다.';
+	@override String get testUrl => 'URL 테스트';
+	@override String get testAction => '연결 테스트';
+	@override String get testing => '테스트 중...';
+	@override String get invalidTestUrl => '유효한 HTTP 또는 HTTPS URL를 입력하세요.';
+	@override String testSuccess({required Object statusCode, required Object elapsedMs}) => '연결 성공 · HTTP ${statusCode} · ${elapsedMs} ms';
+	@override String testFailure({required Object message}) => '연결 실패: ${message}';
+}
+
+// Path: strings.legacy
+class _StringsStringsLegacyKo extends _StringsStringsLegacyEn {
+	_StringsStringsLegacyKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get msg_memos_backend_docs => 'Memos 백엔드 문서';
+	@override String get msg_remember_moment_feel_warmth_life_take => '순간을 기억하고, 삶의 따뜻함을 느껴보세요.\\n매일 간단한 복습을 해보세요.';
+	@override String get msg_sure_want_delete_shortcut => '이 바로가기를 삭제하시겠습니까?';
+	@override String get msg_scan_completed => '스캔 완료';
+	@override String get msg_confirm => '확인하다';
+	@override String get msg_unable_open_browser_install_browser_app => '브라우저를 열 수 없습니다. 브라우저 앱을 설치해주세요.';
+	@override String get msg_contributors => '기여자';
+	@override String get msg_feature_in_progress => '기능이 진행 중입니다. 곧 출시됩니다.';
+	@override String get msg_version_description_unknown => '버전: 알 수 없음';
+	@override String msg_version_description_v({required Object version}) => '버전: v${version}';
+	@override String msg_version_description_v_build({required Object version, required Object build}) => '버전: v${version} (${build})';
+	@override String get msg_about_website_link => '공식 홈페이지';
+	@override String get msg_about_website_link_subtitle => 'MemoFlow 공식 웹사이트를 방문하세요';
+	@override String get msg_about_privacy_policy => '개인 정보 보호 정책';
+	@override String get msg_about_privacy_policy_subtitle => '개인정보 보호 및 데이터 사용 세부정보 보기';
+	@override String get msg_about_user_agreement => '사용자 계약';
+	@override String get msg_about_user_agreement_subtitle => '서비스 약관 및 사용 규칙 보기';
+	@override String get msg_about_help_center => '도움말 센터';
+	@override String get msg_about_help_center_subtitle => 'FAQ 및 사용 가이드';
+	@override String get msg_about_release_notes_subtitle => '버전 업데이트 및 변경 세부정보 보기';
+	@override String get msg_about_submit_feedback => '피드백 제출';
+	@override String get msg_about_submit_feedback_subtitle => '문제점 및 개선 제안 제출';
+	@override String get msg_about_contributors_subtitle => '기부자 및 기부자 목록 보기';
+	@override String get msg_status_available => '살다';
+	@override String get msg_status_placeholder => '곧';
+	@override String get msg_debug_tap_logo_enter_debug_tools => '디버그: 로고를 5번 탭하면 디버그 도구가 열립니다.';
+	@override String get msg_donors_intro_thanks => 'MemoFlow를 지원하는 모든 사용자에게 감사드립니다.\n귀하의 기부는 프로젝트를 유지하고 개선하는 데 도움이 됩니다.\n\n아래에 확인되었습니다.';
+	@override String get msg_enter_keywords_search_box_query_local => '로컬 콘텐츠와 태그를 쿼리하려면 검색 상자에 키워드를 입력하세요. 오프라인으로 작동합니다. 처음 사용하려면 로컬 인덱싱이 완료될 때까지 기다리세요.';
+	@override String get msg_memo_not_found_locally => '로컬에서 메모를 찾을 수 없습니다.';
+	@override String get msg_token => '토큰';
+	@override String get msg_last_7_days => '지난 7일';
+	@override String get msg_search_memo_content => '메모 내용 검색';
+	@override String get msg_retry_started => '재시도가 시작되었습니다';
+	@override String msg_last_year_memos({required Object lastYearMemos}) => '작년: ${lastYearMemos} 메모';
+	@override String get msg_no_content_yet => '아직 콘텐츠가 없습니다.';
+	@override String get msg_no_summary_yet => '아직 요약이 없습니다.';
+	@override String get msg_sooner => '빨리!';
+	@override String get msg_token_copied => '토큰이 복사되었습니다.';
+	@override String get msg_share => '공유하다';
+	@override String get msg_gallery_permission_required => '갤러리 권한이 필요합니다';
+	@override String get msg_basic_settings => '기본 설정';
+	@override String get msg_bad_ssl_certificate => 'SSL 인증서가 잘못되었습니다.';
+	@override String get msg_no_notifications => '알림 없음';
+	@override String get msg_import_markdown => 'Markdown에서 가져오기';
+	@override String get msg_upload_zip_package_md_files => '.md 파일이 포함된 .zip 패키지 업로드';
+	@override String get msg_request_send_timeout_try => '전송 시간 초과를 요청합니다. 다시 시도해 보세요.';
+	@override String get msg_select_date_range => '기간 선택';
+	@override String get msg_delete_shortcut => '바로가기 삭제';
+	@override String get msg_auto_lock_time => '자동 잠금 시간';
+	@override String get msg_replacing_delete_original_attachment_continue => '교체하면 원본 첨부파일이 삭제됩니다. 계속하다?';
+	@override String get msg_add_least_one_condition => '조건을 하나 이상 추가하세요.';
+	@override String get msg_upload_images_image_bed_append_links => '이미지베드에 이미지를 업로드하고 메모에 링크를 추가하세요.';
+	@override String get msg_request_cancelled => '요청이 취소되었습니다.';
+	@override String get msg_generating => '생성 중이신가요?';
+	@override String get msg_permissions_denied_reminders_disabled => '권한이 거부되었습니다. 알림이 비활성화되었습니다.';
+	@override String get msg_memoflow_local_reminders => 'MemoFlow 지역 알림';
+	@override String get msg_use_legacy_endpoints_older_memos_servers => '레거시 엔드포인트를 사용합니다(이전 Memos 서버의 경우).';
+	@override String get msg_no_comments_yet => '아직 댓글이 없습니다';
+	@override String get msg_open => '열려 있는';
+	@override String get msg_microphone_permission_required => '마이크 권한이 필요합니다';
+	@override String msg_failed_react({required Object e}) => '반응 실패: ${e}';
+	@override String get msg_restore_backup => '백업을 복원하시겠습니까?';
+	@override String get msg_qr_saved_gallery => 'QR이 갤러리에 저장되었습니다.';
+	@override String get msg_no_attachments => '첨부파일 없음';
+	@override String get msg_enable_reminder_permissions => '알림 권한 활성화';
+	@override String get msg_created_time => '생성시간 ↑';
+	@override String get msg_prompt_saved_quick_prompts => '프롬프트가 빠른 프롬프트에 저장됩니다.';
+	@override String get msg_remember_password => '비밀번호 기억하기';
+	@override String get msg_enter_valid_url => '유효한 URL를 입력하세요.';
+	@override String get msg_may_take_few_seconds => '몇 초 정도 걸릴 수 있습니다.';
+	@override String msg_local_sync_failed({required Object type, required Object memoError}) => '로컬 동기화 실패(${type}): ${memoError}';
+	@override String get msg_webdav_sync => 'WebDAV 백업';
+	@override String get msg_clear => '분명한';
+	@override String get msg_clear_recycle_bin_confirm => '휴지통을 비우시겠어요? 모든 항목이 영구적으로 삭제됩니다.';
+	@override String get msg_save_failed => '저장 실패';
+	@override String get msg_endpoint_not_found_version_mismatch => '엔드포인트를 찾을 수 없습니다(버전 불일치?)';
+	@override String get msg_enable_webdav_sync => 'WebDAV 백업 활성화';
+	@override String get msg_local_libraries => '지역 도서관';
+	@override String get msg_apply => '적용하다';
+	@override String get msg_restore_only_available_local_libraries => '복원은 로컬 라이브러리에만 사용할 수 있습니다.';
+	@override String get msg_sign => '로그아웃하시겠습니까?';
+	@override String get msg_reminders_disabled => '알림이 비활성화되었습니다.';
+	@override String get msg_downloading => '다운로드 중...';
+	@override String get msg_path => '길';
+	@override String get msg_match_any => '무엇이든 일치';
+	@override String get msg_local_db_pending_queue => '로컬 DB + 보류 중인 대기열';
+	@override String msg_scan_failed({required Object e}) => '스캔 실패: ${e}';
+	@override String get msg_user => '사용자';
+	@override String get msg_pick_future_time => '미래의 시간을 선택하세요';
+	@override String get msg_include_pending_queue => '보류 중인 대기열 포함';
+	@override String get msg_enter_days => '요일을 입력하세요';
+	@override String get msg_times => '타임스';
+	@override String get msg_token_returned_only_once_cannot_fetched => '토큰은 한 번만 반환되며 다시 가져올 수 없습니다.';
+	@override String msg_quoted_lines({required Object quoteLines}) => '인용된 ${quoteLines} 라인';
+	@override String get msg_use_remote => '원격 사용';
+	@override String get msg_enable_memo_location => '메모 위치 활성화';
+	@override String get msg_failed_get_location => '위치를 가져오지 못했습니다.';
+	@override String get msg_after_import_memos_sync_list_automatically => '가져온 후 메모는 자동으로 목록에 동기화됩니다. ZIP 가져오기의 경우 파일 구조가 손상되지 않았는지 확인하세요.';
+	@override String get msg_legacy_mode => '레거시 모드';
+	@override String get msg_signed => '로그인됨';
+	@override String get msg_shortcut_includes_advanced_conditions_saving_overwrite => '이 바로가기에는 고급 조건이 포함되어 있습니다. 저장하면 덮어쓰게 됩니다.';
+	@override String get msg_no_results_found => '검색결과가 없습니다';
+	@override String msg_reply({required Object replyName}) => '답장 ${replyName}...';
+	@override String get msg_copy => '복사';
+	@override String get msg_enable_reminders_memos => '메모에 대한 알림을 활성화합니다.';
+	@override String get msg_comment => '논평';
+	@override String get msg_added_voice_attachment => '음성 첨부가 추가되었습니다.';
+	@override String get msg_customize_sidebar => '사이드바 사용자 정의';
+	@override String get msg_customize_quick_entries => '빠른 항목 사용자 정의';
+	@override String get msg_navigation_mode => '탐색 모드';
+	@override String get msg_navigation_mode_classic => '클래식 모드(하단 탐색 없음)';
+	@override String get msg_navigation_mode_bottom_bar => '하단 탐색 모드';
+	@override String get msg_navigation_preview => '시사';
+	@override String get msg_navigation_slot_left_1 => '왼쪽 슬롯 1';
+	@override String get msg_navigation_slot_left_2 => '왼쪽 슬롯 2';
+	@override String get msg_navigation_slot_center => '센터 액션';
+	@override String get msg_navigation_slot_right_1 => '오른쪽 슬롯 1';
+	@override String get msg_navigation_slot_right_2 => '오른쪽 슬롯 2';
+	@override String get msg_quick_entry_slot_1 => '빠른 입력 1';
+	@override String get msg_quick_entry_slot_2 => '빠른 입력 2';
+	@override String get msg_quick_entry_slot_3 => '빠른 입력 3';
+	@override String get msg_coffee_add_drumstick => '😄 커피예요 / 드럼스틱 추가';
+	@override String get msg_pin => '핀';
+	@override String get msg_enter_password_continue => '계속하려면 비밀번호를 입력하세요';
+	@override String get msg_remove_local_library => '로컬 라이브러리를 삭제하시겠습니까?';
+	@override String get msg_comment_2 => '새 댓글';
+	@override String get msg_sync_all => '모두 동기화';
+	@override String get msg_backup_schedule => '백업 일정';
+	@override String get msg_server_error => '서버 오류';
+	@override String get msg_analyzing_memos => '메모 분석 중...';
+	@override String get msg_notification => '공고';
+	@override String get msg_policy => '정책';
+	@override String msg_failed_load({required Object error}) => '로드 실패: ${error}';
+	@override String get msg_default_visibility => '기본 공개 상태';
+	@override String get msg_filter => '필터';
+	@override String get msg_advanced_search => '고급 검색';
+	@override String get msg_imported_memos => '가져온 메모';
+	@override String get msg_token_created => '토큰이 생성되었습니다.';
+	@override String get msg_server_response_timeout_try => '서버 응답 시간이 초과되었습니다. 다시 시도해 보세요.';
+	@override String get msg_expiring => '만료 예정';
+	@override String get msg_delete_task => '할 일 삭제';
+	@override String get msg_body_must_json => '본문은 JSON여야 합니다.';
+	@override String get msg_enable => '할 수 있게 하다';
+	@override String get msg_referenced => '참조자';
+	@override String get msg_replace_image => '이미지를 교체하시겠습니까?';
+	@override String get msg_debug_logs => '디버그 로그';
+	@override String get msg_active_tasks => '활성 작업';
+	@override String get msg_attachments => '첨부파일';
+	@override String get msg_range => '범위';
+	@override String get msg_no_backups_found => '백업을 찾을 수 없습니다.';
+	@override String get msg_create_memo => '메모 작성';
+	@override String get msg_street => '거리';
+	@override String get msg_display_name => '표시 이름';
+	@override String get msg_full_text_search => '전체 텍스트 검색';
+	@override String get msg_create_edit_delete_actions_offline_stored => '오프라인으로 생성/편집/삭제 작업은 로컬에 저장되고 동기화를 위해 대기열에 추가됩니다. 온라인일 경우 순서대로 발송됩니다. 실수를 방지하기 위해 제출되지 않은 수정사항을 초안으로 보관할 수 있습니다.';
+	@override String get msg_sign_2 => '로그아웃';
+	@override String get msg_end_time => '종료 시간';
+	@override String get msg_sync_recent_content => '최근 콘텐츠 동기화';
+	@override String get msg_resetting_local_data => '로컬 데이터 재설정 중...';
+	@override String get msg_incorrect_password => '잘못된 비밀번호';
+	@override String get msg_content_cannot_empty => '콘텐츠는 비워둘 수 없습니다.';
+	@override String get msg_preparing => '준비 중';
+	@override String msg_ai_summary_failed({required Object formatSummaryError_e}) => 'AI 요약 실패: ${formatSummaryError_e}';
+	@override String get msg_manage => '관리하다';
+	@override String get msg_keep_data_consistent_across_devices => '복구를 위해 데이터를 WebDAV에 백업하세요.';
+	@override String msg_playback_failed({required Object e}) => '재생 실패: ${e}';
+	@override String get msg_path_copied => '경로가 복사되었습니다.';
+	@override String get msg_auth_settings => '인증 설정';
+	@override String get msg_randomly_draw_memo_cards => '메모카드를 무작위로 뽑으세요';
+	@override String get msg_copy_log_text => '로그 텍스트 복사';
+	@override String get msg_yes => '예';
+	@override String get msg_save_open_alipay_scan => 'Alipay를 저장하고 열어서 스캔하세요';
+	@override String get msg_signed_but_no_token_returned => '로그인했지만 토큰이 반환되지 않았습니다.';
+	@override String msg_create_failed({required Object formatError_e_context}) => '생성 실패: ${formatError_e_context}';
+	@override String get msg_expand => '확장하다';
+	@override String get msg_local_library_only => '지역 도서관 전용';
+	@override String get msg_reminder_channel => '알림 채널';
+	@override String get msg_grant => '승인하다';
+	@override String get msg_import_canceled => '가져오기가 취소되었습니다.';
+	@override String get msg_never => '절대';
+	@override String get msg_release_notes => '릴리스 노트';
+	@override String get msg_failed_load_references => '참조를 로드하지 못했습니다.';
+	@override String get msg_select_tags => '태그 선택';
+	@override String get msg_failed_load_try => '로드하지 못했습니다. 다시 시도해 주세요.';
+	@override String get msg_logs_copied => '로그가 복사되었습니다.';
+	@override String get msg_shortcuts_not_supported_server => '이 서버에서는 바로가기가 지원되지 않습니다.';
+	@override String msg_reply_2({required Object name}) => '답장 ${name}...';
+	@override String get msg_anonymous => '익명의';
+	@override String get msg_username => '사용자 이름';
+	@override String get msg_update_memo => '메모 업데이트';
+	@override String msg_saved({required Object targetPath}) => '저장 위치: ${targetPath}';
+	@override String get msg_chinese_simplified => '중국어(간체)';
+	@override String get msg_memo_copied => '메모가 복사되었습니다.';
+	@override String get msg_collapse => '무너지다';
+	@override String get msg_retry_count_controls_how_many_extra => '재시도 횟수는 실패 시 추가 시도 횟수를 제어합니다. 값이 높을수록 성공률이 높아질 수 있지만 시간이 더 오래 걸립니다.';
+	@override String get msg_recording_info_missing => '녹음 정보가 누락되었습니다.';
+	@override String get msg_sync_task => '동기화 작업';
+	@override String get msg_clear_all_debug_logs => '디버그 로그를 모두 지우시겠습니까?';
+	@override String get msg_clear_all_logs => '이 기기의 모든 로그 데이터를 삭제하시겠습니까? 내보낸 파일은 삭제되지 않습니다.';
+	@override String get msg_export_finished => '수출 완료';
+	@override String msg_failed_stop_recording({required Object e}) => '녹화를 중지하지 못했습니다: ${e}';
+	@override String get msg_my_profile => '내 프로필';
+	@override String get msg_image_bed => '이미지베드';
+	@override String msg_failed_open_notification({required Object e}) => '알림을 열지 못했습니다: ${e}';
+	@override String get msg_manual => '수동';
+	@override String get msg_no_html_file_found_zip => 'ZIP에 HTML 파일이 없습니다.';
+	@override String get msg_also_clear_local_cache_account_offline => '그러면 이 계정의 로컬 캐시(오프라인 데이터/초안/보류 중인 동기화 대기열)도 지워집니다. 이 작업은 취소할 수 없습니다.';
+	@override String get msg_restore => '복원하다';
+	@override String get msg_auto_backup => '자동 백업';
+	@override String get msg_generate_summary => '요약 생성';
+	@override String msg_days({required Object stats_activeDays}) => '${stats_activeDays}일';
+	@override String get msg_count => '- 세다';
+	@override String get msg_weekly => '주간';
+	@override String get msg_notifications => '알림';
+	@override String get msg_backup_failed => '백업 실패';
+	@override String get msg_private => '사적인';
+	@override String get msg_filter_tags => '태그로 필터링';
+	@override String get msg_clear_logs => '로그 지우기';
+	@override String get msg_logs_cleared => '로그가 지워졌습니다.';
+	@override String get msg_unable_open_browser => '브라우저를 열 수 없습니다';
+	@override String get msg_attachment_too_large => '첨부파일이 너무 큼';
+	@override String get msg_query => '질문';
+	@override String get msg_match_all => '모두 일치';
+	@override String get msg_record_request_response_logs => '요청/응답 로그 기록';
+	@override String get msg_import_file => '파일 가져오기';
+	@override String get msg_content_tags => '콘텐츠 + 태그';
+	@override String get msg_feature_not_available_local_library_mode => '이 기능은 로컬 라이브러리 모드에서는 사용할 수 없습니다.';
+	@override String msg_import_failed({required Object e}) => '가져오기 실패: ${e}';
+	@override String get msg_save_memo => '메모로 저장';
+	@override String get msg_scan_disk_directory_merge_local_database => '디스크 디렉터리를 스캔하고 로컬 데이터베이스에 병합하시겠습니까? 누락된 파일은 삭제된 것으로 처리됩니다.';
+	@override String get msg_passwords_not_match => '비밀번호가 일치하지 않습니다.';
+	@override String msg_signed_2({required Object lastLoginUser}) => '다음 계정으로 로그인: ${lastLoginUser}';
+	@override String get msg_made_love_note_taking => '메모 작성에 대한 애정으로 제작됨';
+	@override String get msg_password_updated_local => '비밀번호 업데이트됨(로컬)';
+	@override String get msg_retry => '다시 해 보다';
+	@override String get msg_memo_stats => '메모 통계';
+	@override String get msg_shown_only_once_copy_keep_safe => '한 번만 표시되므로 복사하여 안전하게 보관하세요.';
+	@override String get msg_describe_issue_time_repro_steps_etc => '문제, 시간, 재현 단계 등을 설명합니다.';
+	@override String get msg_how_many_days_back => '며칠 전';
+	@override String get msg_local_cache_cleared => '로컬 캐시가 지워졌습니다.';
+	@override String get msg_none => '없음';
+	@override String get msg_body_json => '본체(JSON)';
+	@override String msg_download_failed({required Object e}) => '다운로드 실패: ${e}';
+	@override String get msg_recycle_bin => '휴지통';
+	@override String get msg_unpin => '고정 해제';
+	@override String get msg_advanced_security => '고급 및 보안';
+	@override String get msg_run_issues_memoflow_e_g_sync => 'MemoFlow에서 문제가 발생하는 경우(예: 동기화 실패, 충돌) 아래 단계에 따라 문제를 더 빠르게 진단하고 해결할 수 있습니다.\\n\\n';
+	@override String get msg_remove_all_reminder_times_memo => '이 메모의 모든 알림 시간을 삭제하세요.';
+	@override String get msg_no_summary_save => '저장할 요약이 없습니다.';
+	@override String get msg_reset_language_selection => '언어 선택 재설정';
+	@override String get msg_v_30_days => '30일';
+	@override String get msg_e_g_mood_check => '예를 들어 기분 체크';
+	@override String get msg_note_some_tokens_returned_only_once => '팁: 일부 토큰은 한 번만 표시됩니다. 처음 표시될 때 안전하게 저장하세요.';
+	@override String get msg_probe_memo_can_delete => '이 메모는 MemoFlow API 프로브에 의해 생성되었으며 안전하게 삭제할 수 있습니다.';
+	@override String get msg_syncing => '동기화 중...';
+	@override String get msg_retention => '보유';
+	@override String get msg_open_login_screen => '로그인 화면 열기';
+	@override String get msg_apply_all => '모두에게 적용';
+	@override String get msg_write_something_supports_tag_tasks_x => '뭔가를 쓰세요... #tag 및 작업 [ ] / [x] 지원';
+	@override String msg_http({required Object base, required Object status, required Object msg}) => '${base} (HTTP ${status}): ${msg}';
+	@override String get msg_single => '하나의';
+	@override String get msg_delete_memo => '메모를 삭제하시겠습니까?';
+	@override String get msg_ai_provider => 'AI 공급자';
+	@override String msg_release_notes_v({required Object version}) => '릴리스 노트 v${version}';
+	@override String get msg_info_only_used_background_ai_summaries => '이 정보는 AI 요약/보고서의 배경으로만 사용되며 백엔드와 동기화되지 않습니다.';
+	@override String get msg_not_disturb => '방해하지 마세요';
+	@override String msg_local_library_import_failed({required Object e}) => '로컬 라이브러리 가져오기 실패: ${e}';
+	@override String get msg_key_insights => '주요 통찰력';
+	@override String get msg_additional_notes_optional => '추가 참고사항(선택사항)';
+	@override String get msg_server_response_error => '서버 응답 오류입니다.';
+	@override String get msg_sort => '종류';
+	@override String get msg_newest_first => '최신순';
+	@override String get msg_oldest_first => '오래된 것부터';
+	@override String get msg_open_memo => '메모 열기';
+	@override String get msg_api_call => 'API 통화';
+	@override String get msg_webhooks => '웹훅';
+	@override String get msg_local_library => '지역 도서관';
+	@override String get msg_log_copied => '로그가 복사되었습니다.';
+	@override String get msg_last_success => '마지막 성공';
+	@override String get msg_restore_cloud => '클라우드에서 복원';
+	@override String get msg_search_public_memos => '공개 메모 검색';
+	@override String get msg_cancel => '취소';
+	@override String msg_processing({required Object processed, required Object total}) => '${processed} / ${total} 처리 중';
+	@override String get msg_failed_items => '실패한 항목';
+	@override String get msg_recording_file_not_found => '녹음 파일을 찾을 수 없습니다';
+	@override String get msg_local_db_outbox_queue => '로컬 DB + 발신함 대기열';
+	@override String get msg_remove => '제거하다';
+	@override String get msg_export_format => '내보내기 형식';
+	@override String get msg_idle => '게으른';
+	@override String msg_ago({required Object months}) => '${months} 전';
+	@override String get msg_no_tags_yet => '아직 태그가 없습니다.';
+	@override String msg_version_v({required Object version}) => '버전 v${version}';
+	@override String get msg_sync => '동조';
+	@override String get msg_done => '완료';
+	@override String get msg_gallery_permission_required_2 => '갤러리 권한이 필요합니다';
+	@override String get msg_insufficient_permissions => '권한이 부족합니다.';
+	@override String get msg_no_download_url_available => '다운로드 가능한 URL가 없습니다.';
+	@override String get msg_record_create_memos => '메모를 작성하려면 녹음하세요';
+	@override String get msg_signing => '로그인 중...';
+	@override String get msg_memoflow_uses_system_location_permission_get => 'MemoFlow는 시스템 위치 권한을 사용하여 좌표를 얻은 다음 선택한 공급자 서비스(예: Amap, Baidu 또는 Google)를 통해 역지오코딩합니다. 위에서 표시 정밀도를 선택할 수 있습니다.';
+	@override String get msg_continue => '계속하다';
+	@override String get msg_notification_content_unavailable => '알림 내용을 사용할 수 없습니다.';
+	@override String get msg_unable_read_file_path => '파일 경로를 읽을 수 없습니다.';
+	@override String get msg_all_memos => '모든 Memos';
+	@override String get msg_keywords => '키워드';
+	@override String get msg_ai_search_loading_title => 'AI 검색으로 관련 메모를 찾고 있습니다';
+	@override String get msg_ai_search_loading_message => '이 쿼리에 대한 로컬 메모를 색인화하고 삽입하고 순위를 매깁니다.';
+	@override String get msg_ai_search_needs_embedding_model => 'AI 검색에는 임베딩 모델이 필요합니다.';
+	@override String get msg_ai_search_failed => 'AI 검색 실패';
+	@override String get msg_ai_search_configure_embedding_model => 'AI 설정에서 임베딩 모델을 구성한 후 다시 시도하세요.';
+	@override String get msg_ai_search_back_to_keyword_search => '키워드 검색으로 돌아가기';
+	@override String get msg_ai_search_no_matches => 'AI 일치 항목이 없습니다.';
+	@override String get msg_ai_search_keyword_available => '정확한 텍스트 일치에 대한 키워드 검색은 계속 가능합니다.';
+	@override String get msg_ai_search_try_related_memos => 'AI 검색을 통해 의미적으로 관련된 메모를 찾아보세요.';
+	@override String get msg_ai_search_use_ai_search => 'AI 검색 사용';
+	@override String get msg_ai_search_results_label => 'AI 의미론적 결과';
+	@override String get msg_ai_search_keyword => '예어';
+	@override String get msg_ai_search_use_for_related_memos => '관련 메모는 AI 검색을 이용하세요';
+	@override String get msg_ai_search_index_confirm_title => 'AI 검색 색인을 구축하시겠습니까?';
+	@override String get msg_ai_search_index_confirm_remote_message => 'AI 검색은 적합한 메모 청크를 먼저 색인화해야 합니다. 이렇게 하면 해당 청크가 구성된 임베딩 모델로 전송되고 공급자 할당량 또는 비용이 소비될 수 있습니다.';
+	@override String get msg_ai_search_index_confirm_local_message => 'AI 검색은 적합한 메모 청크를 먼저 색인화해야 합니다. 그러면 로컬 임베딩 모델로 처리되며 로컬 리소스가 사용될 수 있습니다.';
+	@override String msg_ai_search_index_confirm_token_estimate({required Object count}) => '예상 인덱싱 토큰: ${count}';
+	@override String get msg_ai_search_index_confirm_continue => 'AI 검색 계속하기';
+	@override String get msg_import_result => '가져오기 결과';
+	@override String get msg_offline_sync => '오프라인 동기화';
+	@override String get msg_imported_memos_local_library => '지역 도서관에서 가져온 메모';
+	@override String get msg_request_failed => '요청 실패';
+	@override String get msg_log_file => '내보낸 파일';
+	@override String get msg_after_confirming_support_unlock_limited_gold => '지원을 확인한 후 제한된 골드 배지를 잠금 해제하거나 영원히 광고 없는 약속을 받을 수 있습니다(광고는 없었지만).';
+	@override String get msg_failed_open_system_settings => '시스템 설정을 열지 못했습니다.';
+	@override String get msg_no_mood_trend => '기분 추세 없음';
+	@override String get msg_memoflow_export => '# MemoFlow 내보내기';
+	@override String get msg_sync_queue => '동기화 대기열';
+	@override String get msg_only_delete_sync_task_memo_kept => '동기화 작업만 삭제하세요. 메모는 보관됩니다.';
+	@override String get msg_add_home_screen => '홈 화면에 추가';
+	@override String get msg_past_days => '지난 날';
+	@override String get msg_poster_generation_failed => '포스터 생성 실패';
+	@override String msg_failed_load_stats({required Object e}) => '통계를 로드하지 못했습니다: ${e}';
+	@override String get msg_customize_notification => '알림 사용자 정의';
+	@override String get msg_updated_time => '업데이트 시간 ↓';
+	@override String get msg_network_connection_failed_check_network => '네트워크 연결에 실패했습니다. 네트워크를 확인하세요.';
+	@override String get msg_special_thanks => '특별한 감사:';
+	@override String msg_failed_comment({required Object e}) => '댓글 작성 실패: ${e}';
+	@override String get msg_security_key_sig => '보안 키(서명)';
+	@override String get msg_save_gallery => '갤러리에 저장';
+	@override String get msg_request_sent_confirm_system_prompt => '요청이 전송되었습니다. 시스템 프롬프트에서 확인';
+	@override String get msg_server_url => '서버 URL';
+	@override String get msg_period_review => '기간 검토';
+	@override String get msg_settings_updated => '설정이 업데이트되었습니다.';
+	@override String get msg_backend_0_21_not_supported_import => '백엔드 0.21은 가져오기가 지원되지 않습니다. 업그레이드하고 다시 시도해 보세요.';
+	@override String msg_failed_load_tags({required Object e}) => '태그를 로드하지 못했습니다: ${e}';
+	@override String get msg_enter_email => '이메일을 입력하세요';
+	@override String get msg_add_webhook => '웹훅 추가';
+	@override String get msg_read => '읽다';
+	@override String get msg_widgets => '위젯';
+	@override String get msg_default => '기본';
+	@override String get msg_memo_reminders => '메모 알림';
+	@override String get msg_import_flomo => '플로모에서 수입하기';
+	@override String get msg_import_swashbuckler_diary => '스워시버클러 다이어리에서 가져오기';
+	@override String get msg_supported_json_markdown_txt_zip => 'JSON / Markdown / TXT 우편번호';
+	@override String get msg_format_fixed_markdown_zip => '형식은 Markdown + ZIP으로 고정됩니다.';
+	@override String get msg_enter_username_password => '사용자 이름과 비밀번호를 입력하세요';
+	@override String get msg_loading => '로드 중...';
+	@override String msg_test_scheduled({required Object timeLabel, required Object suffix, required Object pendingLabel}) => '${timeLabel}${suffix}${pendingLabel}에 테스트 예정';
+	@override String get msg_edit_memo => '메모 편집';
+	@override String get msg_save => '구하다';
+	@override String get msg_laboratory => '실혐실';
+	@override String get msg_use_local => '로컬 사용';
+	@override String get msg_retry_sync => '동기화 재시도';
+	@override String get msg_e_g_my_role_topics_interest => '예를 들어 내 역할 / 관심 주제 / 선호하는 글쓰기 스타일?';
+	@override String get msg_confirm_password => '비밀번호 확인';
+	@override String get msg_not_set => '설정되지 않음';
+	@override String get msg_no_memos_day => '이 날에는 메모가 없습니다.';
+	@override String get msg_shortcut_name => '바로가기 이름';
+	@override String get msg_edit_shortcut => '바로가기 편집';
+	@override String get msg_days_memos => '메모가 있는 날';
+	@override String get msg_delete => '삭제';
+	@override String get msg_test_reminder => '테스트 알림';
+	@override String get msg_enable_reminders => '알림 활성화';
+	@override String get msg_links => '모래밭';
+	@override String get msg_location => '위치';
+	@override String get msg_import_file_2 => '파일에서 가져오기';
+	@override String msg_reply_3({required Object creatorDisplayName_commentCreator_commentMemo_creator}) => '답장 ${creatorDisplayName_commentCreator_commentMemo_creator}...';
+	@override String msg_created({required Object widget_createdAtLabel}) => '${widget_createdAtLabel}를 생성했습니다.';
+	@override String get msg_notifications_coming_soon => '알림: 곧 제공 예정';
+	@override String get msg_view_full_contributors => '전체 기여자 보기';
+	@override String get msg_no_times_set => '시간이 설정되지 않았습니다.';
+	@override String get msg_ignore_tls_errors => 'TLS 오류 무시';
+	@override String get msg_no_content => '콘텐츠 없음';
+	@override String get msg_about_15_seconds_left => '약 15초 남았습니다';
+	@override String get msg_view_imported_memos => '가져온 메모 보기';
+	@override String get msg_load_failed => '로드 실패';
+	@override String get msg_disk_content_conflicts_local_pending_changes => '디스크 내용이 로컬 보류 중인 변경 사항과 충돌합니다. 디스크를 사용하여 로컬 콘텐츠를 덮어씁니다.';
+	@override String get msg_all_history_so_far_memoflow_since => '이것이 지금까지의 모든 기록입니다.\\n2023년 이후 MEMOFLOW';
+	@override String get msg_cancelling => '취소 중';
+	@override String get msg_reading_file => '파일을 읽는 중...';
+	@override String get msg_switch_workspace => '작업공간 전환';
+	@override String get msg_optional_leave_empty_default => '선택 과목. 기본값으로 비워 두세요.';
+	@override String get msg_memo_reminders_2 => '메모 알림';
+	@override String msg_save_failed_2({required Object e}) => '저장 실패: ${e}';
+	@override String get msg_record_create_memos_sync_later => '메모 기록 및 작성(나중에 동기화)';
+	@override String get msg_use_https_avoid_ignoring_tls_errors => '자격 증명을 보호하려면 HTTPS를 사용하고 TLS 오류를 무시하지 마십시오.';
+	@override String get msg_failed_load_announcement_config => '공지 구성을 로드하지 못했습니다.';
+	@override String get msg_shortcuts => '단축키';
+	@override String get msg_memo => '메모';
+	@override String get msg_maybe_later => '이 버전에 대해 알림 안 함';
+	@override String get msg_server_connection => '서버 연결';
+	@override String get msg_days_2 => '날';
+	@override String get msg_include_archived => '보관된 항목 포함';
+	@override String get msg_during_quiet_hours_reminders_silenced => '조용한 시간에는 알림이 무음으로 설정됩니다.';
+	@override String get msg_preview_not_supported_type => '이 유형에는 미리보기가 지원되지 않습니다.';
+	@override String get msg_failed_load_2 => '로드하지 못했습니다.';
+	@override String get msg_create_token => '새 토큰 생성';
+	@override String get msg_enter_name => '이름을 입력하세요.';
+	@override String get msg_api_url_incorrect => 'API URL가 올바르지 않습니다.';
+	@override String get msg_user_general_settings => '사용자 일반 설정';
+	@override String get msg_saved_memo => '메모로 저장됨';
+	@override String msg_restore_failed({required Object e}) => '복원 실패: ${e}';
+	@override String msg_token_tail({required Object tail}) => '토큰 테일 ${tail}';
+	@override String get msg_manual_token => '수동 토큰';
+	@override String msg_ago_2({required Object years}) => '${years} 전';
+	@override String get msg_recent_searches => '최근 검색어';
+	@override String get msg_restored => '복원됨';
+	@override String get msg_no_contributors_yet => '아직 참여자가 없습니다.';
+	@override String get msg_no_record_yet => '아직 기록이 없습니다';
+	@override String get msg_reminder => '알림';
+	@override String get msg_enter_api_key_ai_settings => 'AI 설정에 API 키를 입력하세요.';
+	@override String get msg_reminder_settings => '알림 설정';
+	@override String msg_http_2({required Object base, required Object status}) => '${base} (HTTP ${status})';
+	@override String get msg_edit_webhook => '웹훅 편집';
+	@override String get msg_generate_share_poster => '공유 포스터 생성';
+	@override String msg_archive_failed({required Object e}) => '보관 실패: ${e}';
+	@override String msg_comments({required Object widget_commentCount}) => '${widget_commentCount} 댓글';
+	@override String get msg_remove_account => '계정을 삭제하시겠습니까?';
+	@override String get msg_chinese_traditional => '중국어(번체)';
+	@override String get msg_private_2 => '사적인';
+	@override String get msg_current_streak => '현재 연속';
+	@override String get msg_generated_ai_memoflow => 'AI · MemoFlow에 의해 생성됨';
+	@override String get msg_edit_completed => '수정 완료';
+	@override String get msg_local => '현지의';
+	@override String get msg_edit => '편집하다';
+	@override String msg_text({required Object shortUserName_item_sender}) => '${shortUserName_item_sender}에서';
+	@override String get msg_got => '알았어요';
+	@override String get msg_web_api_key => '웹 API 키';
+	@override String get msg_preview => '시사';
+	@override String get msg_enter_password => '비밀번호를 입력해주세요';
+	@override String get msg_api => 'API';
+	@override String get msg_ok => '좋아요';
+	@override String get msg_failed_load_shortcuts => '바로가기를 로드하지 못했습니다.';
+	@override String get msg_after_recording_audio_added_current_draft => '녹음 후 오디오는 현재 초안에 첨부 파일로 추가되므로 보내기 전에 편집할 수 있습니다. 최대 길이는 60분입니다. 나중에 타사 서비스를 통해 전사를 추가할 수 있습니다.';
+	@override String get msg_pull_refresh => '당겨서 새로고침';
+	@override String get msg_unable_open_photo => '사진을 열 수 없습니다.';
+	@override String get msg_existing_tokens => '기존 토큰';
+	@override String get msg_ai_settings => 'AI 설정';
+	@override String get msg_app_lock => '앱 잠금';
+	@override String get msg_total_notes => '총 메모';
+	@override String get msg_stats_loading => '통계를 로드하는 중입니다.';
+	@override String get msg_enter_token_description => '토큰 설명을 입력하세요.';
+	@override String get msg_enter_token => '토큰을 입력하세요';
+	@override String get msg_api_plugins => 'API 및 플러그인';
+	@override String get msg_parsing_file => '파일을 구문 분석하는 중...';
+	@override String get msg_english => '영어';
+	@override String get msg_activity_heatmap => '활동 히트맵';
+	@override String get msg_mark_read => '읽음으로 표시';
+	@override String get msg_request => '요구';
+	@override String msg_sync_failed({required Object type, required Object memoError}) => '동기화 실패(${type}): ${memoError}';
+	@override String get msg_error_copied => '오류가 복사되었습니다.';
+	@override String get msg_only_local_index_removed_disk_files => '로컬 인덱스만 제거됩니다. 디스크 파일이 보관됩니다. 이 작업은 취소할 수 없습니다.';
+	@override String get msg_switch_account => '계정 전환';
+	@override String get msg_invalid_download_link => '잘못된 다운로드 링크';
+	@override String get msg_about => '에 대한';
+	@override String get msg_icon => '상';
+	@override String get msg_reset_done_syncing => '재설정이 완료되었습니다. 동기화 중...';
+	@override String get msg_enter_amap_web_api_key => 'Amap Web API 키를 입력하세요';
+	@override String get msg_recycle_bin_coming_soon => '휴지통: 곧 제공 예정';
+	@override String get msg_empty_content => '(빈 콘텐츠)';
+	@override String get msg_note_most_features_offline_stats_ai => '참고: 대부분의 기능(오프라인/통계/AI 보고서/내보내기)은 백엔드 변경 없이 작동하지만 토큰은 한 번만 반환되므로 안전하게 보관하십시오.';
+	@override String get msg_fixed => '결정된:';
+	@override String get msg_allow_sharing_links_images_other_apps => '다른 앱의 링크나 이미지를 MemoFlow로 공유하도록 허용합니다.';
+	@override String get msg_invalid_request_parameters => '잘못된 요청 매개변수';
+	@override String get msg_enter_api_url => 'API URL를 입력하세요.';
+	@override String msg_pending({required Object result_pendingCount}) => '(${result_pendingCount} 보류 중)';
+	@override String msg_days_3({required Object currentStreak}) => '${currentStreak}일';
+	@override String get msg_poster_not_ready_yet => '포스터가 아직 준비되지 않았습니다.';
+	@override String get msg_generated_memoflow => 'MemoFlow에 의해 생성됨';
+	@override String get msg_enter_name_2 => '이름을 입력하세요';
+	@override String get msg_version => '버전';
+	@override String get msg_memo_missing_disk_but_has_local => '메모가 디스크에 없지만 로컬에 보류 중인 변경 사항이 있습니다. 로컬에서 삭제하려면 디스크를 사용하세요.';
+	@override String get msg_legacy_api_compatibility => '레거시 API 호환성';
+	@override String get msg_sync_parameters => '동기화 매개변수';
+	@override String get msg_quick_prompts => '빠른 프롬프트';
+	@override String msg_share_failed({required Object e}) => '공유 실패: ${e}';
+	@override String get msg_no_memos_summarize_range => '이 범위에 요약할 메모가 없습니다.';
+	@override String get msg_characters => '캐릭터';
+	@override String get msg_capture_every_moment_record => '녹음하는 모든 순간을 포착하세요';
+	@override String get msg_vibration => '진동';
+	@override String get msg_days_4 => '날';
+	@override String get msg_prompt_title => '프롬프트 제목';
+	@override String get msg_show_all => '모두 표시';
+	@override String get msg_no_memos_available => '사용할 수 있는 메모가 없습니다.';
+	@override String get msg_comment_unavailable => '댓글을 사용할 수 없습니다.';
+	@override String get msg_refresh => '새로 고치다';
+	@override String get msg_syncing_2 => '동기화 중';
+	@override String get msg_body => '몸';
+	@override String get msg_clear_2 => '분명한';
+	@override String get msg_third_party_share => '제3자 공유';
+	@override String get msg_charging_station => '충전소';
+	@override String get msg_attachments_2 => '첨부파일';
+	@override String get msg_when_enabled_must_verify_each_app => '활성화되면 앱을 시작할 때마다 확인해야 합니다. 자동 잠금 시간은 앱이 백그라운드로 전환된 후 확인이 필요한 기간을 제어합니다.';
+	@override String get msg_add_prompt => '프롬프트 추가';
+	@override String get msg_include => '포함하다';
+	@override String get msg_created_time_2 => '생성시간 ↓';
+	@override String get msg_choose_data_source_start_importing_memos => '메모 가져오기를 시작하려면 데이터 소스를 선택하세요.';
+	@override String get msg_describe_how_want_summary => '요약을 원하는 방식을 설명하세요...';
+	@override String get msg_keep_token_safe_not_share_api => '토큰을 안전하게 보관하고 공유하지 마세요.\\nAPI 속도 제한은 분당 요청 60개입니다.';
+	@override String get msg_open_2 => '열려 있는';
+	@override String get msg_e_g_claude_3_5_sonnet => '예를 들어 클로드-3-5-소네트-20241022';
+	@override String get msg_failed_request_whitelist => '화이트리스트를 요청하지 못했습니다.';
+	@override String get msg_notification_deleted => '알림이 삭제되었습니다.';
+	@override String get msg_accounts => '계정';
+	@override String get msg_add_local_library => '로컬 라이브러리 추가';
+	@override String get msg_sign_first => '먼저 로그인하세요.';
+	@override String get msg_failed_parse_query => '쿼리를 구문 분석하지 못했습니다.';
+	@override String get msg_note_logs_sanitized_automatically_sensitive_data => '참고: 로그는 자동으로 삭제됩니다. 민감한 데이터가 남아 있으면 제출하기 전에 수정하세요.';
+	@override String get msg_add => '추가하다';
+	@override String msg_failed_load_3({required Object memosError}) => '로드 실패: ${memosError}';
+	@override String get msg_max_chars_day => '최대 문자/일';
+	@override String get msg_choose_what_edited_image => '편집된 이미지를 어떻게 처리할지 선택하세요.';
+	@override String get msg_select => '선택하다';
+	@override String get msg_unnamed_token => '(이름 없는 토큰)';
+	@override String get msg_name => '이름';
+	@override String get msg_sure_want_delete_webhook => '이 웹훅을 삭제하시겠습니까?';
+	@override String get msg_back => '뒤쪽에';
+	@override String get msg_no => '아니요';
+	@override String get msg_untitled => '제목 없음';
+	@override String get msg_open_language_onboarding => '개방형 언어 온보딩';
+	@override String get msg_voice_memos => '음성 Memos';
+	@override String get msg_unable_open_browser_try => '브라우저를 열 수 없습니다. 다시 시도해 주세요.';
+	@override String get msg_date_range => '기간';
+	@override String get msg_not_authenticated => '인증되지 않음';
+	@override String get msg_back_2 => '뒤쪽에';
+	@override String get msg_local_library_removed => '로컬 라이브러리가 제거되었습니다.';
+	@override String get msg_exact_alarm_permission_required => '정확한 알람 권한이 필요합니다';
+	@override String get msg_visibility => '시계';
+	@override String msg_failed_start_recording({required Object e}) => '녹화 시작 실패: ${e}';
+	@override String get msg_mood_trend => '기분 추세';
+	@override String get msg_local_library_name => '지역 도서관 이름';
+	@override String get msg_no_tokens_yet => '아직 토큰이 없습니다.';
+	@override String get msg_loading_2 => '로드 중이신가요?';
+	@override String get msg_location_permission_denied_permanently => '위치 권한이 영구적으로 거부되었습니다.';
+	@override String get msg_download => '다운로드';
+	@override String get msg_export_time => '- 수출 시간';
+	@override String get msg_enter_password_2 => '비밀번호를 입력하세요';
+	@override String get msg_no_image_available => '사용 가능한 이미지가 없습니다.';
+	@override String get msg_daily => '일일';
+	@override String get msg_no_likes_yet => '아직 좋아요가 없습니다.';
+	@override String get msg_basics => '기초';
+	@override String get msg_shortcut => '새로운 단축키';
+	@override String get msg_debug_tools => '디버그 도구';
+	@override String get msg_save_settings => '설정 저장';
+	@override String get msg_date_range_2 => '기간';
+	@override String get msg_feedback => '피드백';
+	@override String get msg_image_bed_2 => '이미지베드';
+	@override String get msg_image_compression => '이미지 압축';
+	@override String get msg_enable_image_compression => '이미지 압축 활성화';
+	@override String get msg_image_compression_desc => '업로드하기 전에 새로 추가된 이미지 첨부 파일을 압축하세요.';
+	@override String get msg_image_compression_scope => '새로 추가된 첨부 파일에만 적용됩니다.';
+	@override String get msg_max_side => '최대면';
+	@override String get msg_quality => '품질';
+	@override String get msg_output_format => '출력 형식';
+	@override String get msg_compression_mode => '압축 모드';
+	@override String get msg_mode_quality => '품질';
+	@override String get msg_mode_size => '크기';
+	@override String get msg_lossless => '무손실';
+	@override String get msg_keep_metadata => '메타데이터 유지';
+	@override String get msg_skip_if_bigger => '더 크면 건너뛰세요';
+	@override String get msg_resize => '크기 조정';
+	@override String get msg_enable_resize => '크기 조정 활성화';
+	@override String get msg_resize_mode => '크기 조정 모드';
+	@override String get msg_resize_width => '너비';
+	@override String get msg_resize_height => '키';
+	@override String get msg_resize_edge => '가장자리';
+	@override String get msg_do_not_enlarge => '확대하지 마세요';
+	@override String get msg_resize_mode_no_resize => '크기 조정 없음';
+	@override String get msg_resize_mode_dimensions => '치수';
+	@override String get msg_resize_mode_percentage => '백분율';
+	@override String get msg_resize_mode_short_edge => '짧은 가장자리';
+	@override String get msg_resize_mode_long_edge => '긴 가장자리';
+	@override String get msg_resize_mode_fixed_width => '고정폭';
+	@override String get msg_resize_mode_fixed_height => '고정 높이';
+	@override String get msg_jpeg => 'JPEG';
+	@override String get msg_png => 'PNG';
+	@override String get msg_webp => '웹P';
+	@override String get msg_tiff => '사소한 말다툼';
+	@override String get msg_chroma_subsampling => '크로마 서브샘플링';
+	@override String get msg_chroma_auto => '자동';
+	@override String get msg_chroma_444 => '4:4:4';
+	@override String get msg_chroma_422 => '4:2:2';
+	@override String get msg_chroma_420 => '4:2:0';
+	@override String get msg_chroma_411 => '4:1:1';
+	@override String get msg_progressive => '프로그레시브';
+	@override String get msg_optimization_level => '최적화 수준';
+	@override String get msg_method => '방법';
+	@override String get msg_uncompressed => '비압축';
+	@override String get msg_lzw => 'LZW';
+	@override String get msg_deflate => '꺾다';
+	@override String get msg_packbits => '팩비트';
+	@override String get msg_deflate_preset => '수축 사전 설정';
+	@override String get msg_fast => '빠른';
+	@override String get msg_balanced => '균형 잡힌';
+	@override String get msg_best => '최상의';
+	@override String get msg_size_target => '대상 크기';
+	@override String get msg_output_size_unit => '크기 단위';
+	@override String get msg_format_auto => '자동';
+	@override String get msg_output_format_same_as_input => '입력과 동일';
+	@override String get msg_format_jpeg => 'JPEG';
+	@override String get msg_format_png => 'PNG';
+	@override String get msg_format_webp => '웹P';
+	@override String get msg_format_tiff => '사소한 말다툼';
+	@override String get msg_bytes => '바이트';
+	@override String get msg_kb => 'KB';
+	@override String get msg_mb => 'MB';
+	@override String get msg_percentage => '백분율';
+	@override String get msg_lossless_warning => '무손실이 활성화된 경우에도 새 형식으로 변환하거나 크기를 조정하면 품질이 저하될 수 있습니다.';
+	@override String get msg_restoring => '복원 중…';
+	@override String get msg_export => '내보내다';
+	@override String get msg_enter_token_name => '토큰 이름을 입력하세요.';
+	@override String get msg_start_time => '시작 시간';
+	@override String get msg_preparing_file_structure => '파일 구조 준비 중';
+	@override String get msg_sign_3 => '로그인';
+	@override String get msg_scan_local_library => '로컬 라이브러리 스캔';
+	@override String get msg_lsky_pro => 'Lsky 프로';
+	@override String get msg_exact_alarm_permission_off_reminders_may => '정확한 알람 권한이 꺼져 있습니다. 알림은 제 시간에 실행되지 않을 수 있습니다. 지금 설정을 여시겠어요?';
+	@override String get msg_last_30_days => '지난 30일';
+	@override String get msg_match => '성냥';
+	@override String get msg_auth_mode => '인증 모드';
+	@override String get msg_unsupported_file_type => '지원되지 않는 파일 형식입니다.';
+	@override String get msg_only_delete_sync_task => '동기화 작업만 삭제하세요.';
+	@override String get msg_change_password => '비밀번호 변경';
+	@override String get msg_saved_2 => '저장됨';
+	@override String get msg_import_export => '가져오기/내보내기';
+	@override String get msg_created_2 => '생성됨';
+	@override String get msg_ai_summary => 'AI 요약';
+	@override String get msg_progress => '진전';
+	@override String get msg_replace_memo_image => '메모 이미지 교체';
+	@override String get msg_app_settings => '앱 설정';
+	@override String get msg_copy_path => '경로 복사';
+	@override String get msg_components => '구성요소';
+	@override String get msg_no_shortcuts => '단축키 없음';
+	@override String get msg_location_timed_try => '위치 시간이 초과되었습니다. 다시 시도해 주세요.';
+	@override String get msg_attach_location_info_memos_show_subtle => '메모에 위치 정보를 첨부하고 미묘한 장소 이름을 표시합니다.';
+	@override String msg_send_failed({required Object e}) => '보내기 실패: ${e}';
+	@override String get msg_repeat => '반복하다';
+	@override String get msg_not_signed => '로그인되지 않음';
+	@override String get msg_no_webhooks_configured => '구성된 웹훅이 없습니다.';
+	@override String get msg_apply_token => '토큰 적용';
+	@override String get msg_enable_reminder_permissions_2 => '알림 권한 활성화';
+	@override String get msg_enter_backup_password => '백업 비밀번호를 입력하세요';
+	@override String get msg_start_backup => '백업 시작';
+	@override String get msg_last_sync => '마지막 동기화';
+	@override String get msg_note_export_includes_content_already_synced => '참고: 내보내기에는 로컬 데이터베이스에 이미 동기화된 콘텐츠가 포함됩니다(오프라인 데이터 포함).';
+	@override String get msg_enter_username => '사용자 이름을 입력하세요';
+	@override String get msg_settings_saved => '설정이 저장되었습니다.';
+	@override String get msg_no_keywords => '키워드 없음';
+	@override String get msg_these_settings_apply_newly_created_memos => '이 설정은 새로 생성된 메모에 적용됩니다.';
+	@override String get msg_back_home => '홈으로 돌아가기';
+	@override String get msg_quiet_hours => '조용한 시간';
+	@override String get msg_add_account => '계정 추가';
+	@override String get msg_reset_complete => '재설정 완료';
+	@override String get msg_no_shortcuts_configured => '구성된 바로가기가 없습니다.';
+	@override String get msg_password => '비밀번호';
+	@override String get msg_importing => '가져오기';
+	@override String msg_visibility_2({required Object visibilityLabel}) => '가시성 : ${visibilityLabel}';
+	@override String get msg_no_logs_yet => '아직 로그가 없습니다.';
+	@override String get msg_v_9_times_allowed => '최대 9회까지 허용';
+	@override String get msg_last_14_days => '지난 14일';
+	@override String get msg_location_disabled_enable_settings_first => '위치가 비활성화되었습니다. 먼저 설정에서 활성화하세요.';
+	@override String get msg_add_2 => '추가하다';
+	@override String get msg_logs => '로그';
+	@override String get msg_references => '참고자료';
+	@override String get msg_importing_memos => '메모 가져오는 중...';
+	@override String get msg_account_security => '계정 및 보안';
+	@override String get msg_reminder_2 => '알림';
+	@override String get msg_enable_scheduled_reminder_notifications => '예약된 미리 알림을 활성화합니다.';
+	@override String get msg_no_links => '링크 없음';
+	@override String get msg_delete_memo_2 => '메모 삭제';
+	@override String get msg_one_tap_add_not_supported_add => '원터치 추가는 지원되지 않습니다. 위젯 선택기에서 추가하세요.';
+	@override String get msg_password_2 => '새 비밀번호';
+	@override String get msg_processing_content => '콘텐츠 처리 중...';
+	@override String get msg_status => '상태';
+	@override String get msg_local_library_added => '로컬 라이브러리가 추가되었습니다.';
+	@override String get msg_failed_open_try => '열지 못했습니다. 다시 시도해 주세요.';
+	@override String get msg_removed_locally_now_deleted_server_when => '이제 로컬에서 제거되고 온라인일 때 서버에서 삭제됩니다.';
+	@override String get msg_server_url_unavailable => '서버 URL를 사용할 수 없습니다.';
+	@override String get msg_no_release_notes_yet => '아직 출시 노트가 없습니다.';
+	@override String get msg_cancelling_2 => '취소 중...';
+	@override String get msg_summaries_selected_range => '선택한 범위에 대한 요약';
+	@override String get msg_expand_2 => '확장하다';
+	@override String get msg_close => '닫다';
+	@override String msg_more_comments({required Object remainingComments}) => '${remainingComments} 더 많은 댓글';
+	@override String get msg_backing => '백업 중…';
+	@override String get msg_view_debug_logs => '디버그 로그 보기';
+	@override String get msg_location_permission_denied => '위치 권한이 거부되었습니다.';
+	@override String get msg_self_repair_reset_heatmap => '자가 수리: 히트맵 재설정';
+	@override String get msg_these_settings_changed_locally_remotely_choose => '이러한 설정은 로컬 및 원격으로 변경되었습니다. 유지할 버전을 선택하세요.';
+	@override String get msg_not_authenticated_2 => '인증되지 않았습니다.';
+	@override String msg_action_failed({required Object e}) => '작업 실패: ${e}';
+	@override String get msg_shortcut_2 => '새로운 바로가기';
+	@override String get msg_url => 'URL';
+	@override String get msg_no_memos_found_html => 'HTML에서 메모를 찾을 수 없습니다.';
+	@override String get msg_enter_what_want_summarize => '요약하고 싶은 내용을 입력하세요...';
+	@override String get msg_unable_load_audio_source => '오디오 소스를 로드할 수 없습니다.';
+	@override String get msg_strategy_id => '전략 ID';
+	@override String msg_copy_failed({required Object e}) => '복사 실패: ${e}';
+	@override String get msg_enable_image_bed => '이미지 베드 활성화';
+	@override String get msg_active => '활동적인';
+	@override String get msg_account => '계정';
+	@override String get msg_invalid_webdav_server_url => '잘못된 WebDAV 서버 URL';
+	@override String get msg_keep_local => '로컬 유지';
+	@override String get msg_within_range => '범위 내';
+	@override String get msg_generate_log_file => '로그 번들 내보내기';
+	@override String get msg_ai_reports => 'AI 보고서';
+	@override String get msg_battery_optimization => '배터리 최적화';
+	@override String get msg_sync_overview => '동기화 개요';
+	@override String get msg_legacy_servers_not_support_search_filters => '레거시 서버는 검색 필터를 지원하지 않습니다. 결과가 불완전할 수 있습니다.';
+	@override String get msg_conflicts_detected_run_manual_sync => '충돌이 감지되었습니다. 수동 동기화를 실행하세요.';
+	@override String get msg_authentication_failed_check_token => '인증에 실패했습니다. 토큰을 확인하세요.';
+	@override String get msg_date_range_3 => '기간';
+	@override String get msg_help_ai_understand_better => 'AI가 당신을 더 잘 이해할 수 있도록 도와주세요';
+	@override String get msg_no_search_history => '검색 기록이 없습니다';
+	@override String get msg_enter_api_path => 'API 경로를 입력하세요';
+	@override String get msg_stats => '통계';
+	@override String get msg_text_2 => '새로운:';
+	@override String get msg_removing_signing_clear_local_cache_account => '제거/로그아웃하면 이 계정의 로컬 캐시(오프라인 데이터/초안/보류 중인 동기화 대기열)가 지워집니다.';
+	@override String get msg_updated_time_2 => '업데이트 시간 ↑';
+	@override String get msg_province => '주';
+	@override String get msg_submitting_sync_queue => '동기화 대기열 제출 중';
+	@override String get msg_failed => '실패한';
+	@override String get msg_set_time => '시간 설정';
+	@override String get msg_enable_local_library_backup => '로컬 라이브러리 백업 활성화';
+	@override String get msg_cancel_2 => '취소';
+	@override String get msg_week => '이번 주';
+	@override String get msg_like => '좋다';
+	@override String get msg_location_services_disabled => '위치 서비스가 비활성화되었습니다';
+	@override String get msg_clears_local_cache_offline_memos_pending => '이렇게 하면 로컬 캐시(오프라인 메모/보류 중인 대기열)가 지워지고 전체 재동기화가 트리거됩니다. 동기화되지 않은 콘텐츠는 손실되며 시간이 다소 걸릴 수 있습니다. 계속하다?';
+	@override String get msg_load_more => '더 로드하기';
+	@override String get msg_pull_up_to_load_more => '더 많은 것을 로드하려면 위로 당기세요.';
+	@override String get msg_release_to_load_more => '더 많은 것을 로드하려면 손을 떼세요';
+	@override String get msg_scroll_down_to_load_more => '더 로드하려면 아래로 스크롤하세요.';
+	@override String get msg_loaded_all_content => '모든 콘텐츠가 로드되었습니다.';
+	@override String get msg_pull_memo_list_refresh_sync_sync => '메모 목록을 아래로 당겨 새로고침하고 동기화하세요. 동기화는 가장 최근 항목을 먼저 가져옵니다. 통계/히트맵을 완전하게 유지하려면 주기적으로 전체 동기화를 실행하세요.';
+	@override String msg_server_returned_error({required Object code}) => '서버에서 오류(${code})를 반환했습니다.';
+	@override String get msg_sound_feedback => '사운드 및 피드백';
+	@override String msg_memos_skipped_attachments_skipped({required Object exportedMemoCount, required Object skippedMemoCount, required Object exportedAttachmentCount, required Object skippedAttachmentCount}) => '${exportedMemoCount} 메모(${skippedMemoCount} 건너뛰기), ${exportedAttachmentCount} 첨부 파일(${skippedAttachmentCount} 건너뛰기).';
+	@override String get msg_import_complete => '가져오기 완료';
+	@override String get msg_text_3 => '새로운';
+	@override String get msg_max_per_day => '일일 최대';
+	@override String get msg_permissions_denied => '권한이 거부되었습니다.';
+	@override String get msg_memo_2 => '새 메모';
+	@override String get msg_delete_reminder => '알림 삭제';
+	@override String get msg_select_month => '월 선택';
+	@override String get msg_select_backup => '백업 선택';
+	@override String get msg_no_keywords_2 => '#키워드 없음';
+	@override String get msg_preparing_memo_content => '메모 내용 준비 중';
+	@override String get msg_prompt_content => '프롬프트 내용';
+	@override String get msg_default_prompt_ai_summaries_reports => 'AI 요약/보고서에 대한 기본 프롬프트';
+	@override String get msg_intro => '소개';
+	@override String get msg_monthly_stats => '월별 통계';
+	@override String get msg_times_2 => '타임스';
+	@override String get msg_file_has_already_been_imported_skipped => '이 파일은 이미 가져왔습니다. 건너뛰었습니다.';
+	@override String get msg_token_tail_unknown => '토큰 테일을 알 수 없음';
+	@override String get msg_press_back_exit => '종료하려면 뒤로를 다시 누르세요.';
+	@override String get msg_enter_password_3 => '비밀번호를 입력하세요';
+	@override String get msg_sync_conflicts => '동기화 충돌';
+	@override String get msg_locale => '장소';
+	@override String get msg_any => '어느';
+	@override String get msg_provider => '공급자';
+	@override String get msg_preview_2 => '시사';
+	@override String get msg_automatically_upload_images_append_links_memo => '자동으로 이미지를 업로드하고 메모에 링크를 추가합니다.';
+	@override String get msg_import_file_not_found => '가져오기 파일을 찾을 수 없습니다.';
+	@override String get msg_today => '오늘';
+	@override String get msg_link_card => '링크 카드';
+	@override String get msg_expiration => '만료';
+	@override String get msg_summary_prompt_optional => '요약 프롬프트(선택 사항)';
+	@override String get msg_memos => 'Memos';
+	@override String get msg_recording_file_not_found_2 => '녹화 파일을 찾을 수 없습니다.';
+	@override String get msg_backup_settings => '백업 설정';
+	@override String get msg_mode => '방법';
+	@override String get msg_no_markdown_memos_found_zip => 'ZIP에서 Markdown 메모를 찾을 수 없습니다.';
+	@override String get msg_archived => '보관됨';
+	@override String msg_update_failed({required Object e}) => '업데이트 실패: ${e}';
+	@override String get msg_enable_app_lock => '앱 잠금 활성화';
+	@override String get msg_html_zip => 'HTML/ZIP';
+	@override String get msg_all => '모두';
+	@override String get msg_model => '모델';
+	@override String get msg_title => '제목';
+	@override String get msg_amap_web_api => 'Amap 웹 API';
+	@override String get msg_saved_gallery => '갤러리에 저장됨';
+	@override String get msg_gallery_mobile_only => '갤러리는 모바일에서만 이용 가능합니다.';
+	@override String get msg_unread => '읽히지 않는';
+	@override String get msg_exporting => '내보내는 중...';
+	@override String get msg_network_timeout_try => '네트워크 시간 초과. 다시 시도해 주세요.';
+	@override String get msg_unlock => '터놓다';
+	@override String msg_ago_3({required Object diff_inDays}) => '${diff_inDays} 전';
+	@override String msg_random_walk_days_ago_exact({required Object days}) => '${days}일 전';
+	@override String get msg_random_walk_day_period_dawn => '새벽';
+	@override String get msg_random_walk_day_period_morning => '아침';
+	@override String get msg_random_walk_day_period_noon => '정오';
+	@override String get msg_random_walk_day_period_afternoon => '오후';
+	@override String get msg_random_walk_day_period_dusk => '황혼';
+	@override String get msg_random_walk_day_period_night => '밤';
+	@override String get msg_deserve_coffee_i_m_pulling_all => '이 커피를 마실 자격이 있기 위해 나는 밤새도록 100줄의 코드를 작성하고 있습니다!';
+	@override String get msg_token_name => '토큰 이름';
+	@override String get msg_restore_completed => '복원 완료';
+	@override String msg_restore_completed_to_path({required Object path}) => '복원이 완료되었습니다. ${path}에 저장된 파일';
+	@override String msg_restore_missing_attachments({required Object count}) => '일부 첨부 파일을 다운로드하지 못했습니다: ${count}';
+	@override String get msg_restore_to_directory => '디렉터리로 복원';
+	@override String get msg_restore_export_only_notice => '서버 모드 복원은 선택한 디렉터리에만 파일을 다운로드하고 서버에 다시 쓰지 않습니다.';
+	@override String get msg_restore_config_confirm_title => '민감한 설정을 복원하시겠습니까?';
+	@override String get msg_restore_config_confirm_hint => '적용할 민감한 설정을 선택하세요. 다른 설정은 자동으로 복원됩니다.';
+	@override String get msg_restore_config_item_webdav => 'WebDAV 설정';
+	@override String get msg_restore_config_item_image_bed => '이미지 침대 설정';
+	@override String get msg_restore_config_item_image_compression => '이미지 압축 설정';
+	@override String get msg_restore_config_item_app_lock => '앱 잠금 설정';
+	@override String get msg_restore_config_item_ai => 'AI 설정';
+	@override String get msg_backup_plain_risk_title => '일반 텍스트 백업';
+	@override String get msg_backup_plain_risk_body => '일반 텍스트 백업은 암호화되지 않으며 민감한 데이터가 노출될 수 있습니다. 계속하다?';
+	@override String get msg_backup_config_scope => '백업 구성';
+	@override String get msg_backup_config_none => '구성을 백업하지 마십시오';
+	@override String get msg_backup_config_none_desc => '메모와 첨부파일만 백업하세요.';
+	@override String get msg_backup_config_safe => '안전한 구성만';
+	@override String get msg_backup_config_safe_desc => '전체 기본 설정, 미리 알림, 템플릿 및 위치를 백업하세요.';
+	@override String get msg_backup_config_full => '모든 구성(민감함)';
+	@override String get msg_backup_config_full_desc => 'WebDAV, AI, 앱 잠금, 이미지 베드, 초안이 포함되어 있습니다.';
+	@override String get msg_backup_config_full_requires_encryption => '모든 구성에는 암호화된 백업이 필요합니다.';
+	@override String get msg_skip => '건너뛰다';
+	@override String get msg_copied_clipboard => '클립보드에 복사됨';
+	@override String msg_failed_2({required Object attempts}) => '${attempts} 실패';
+	@override String get msg_too_many_requests_try_later => '요청이 너무 많습니다. 나중에 다시 시도하세요.';
+	@override String get msg_more => '더';
+	@override String get msg_already_whitelisted => '이미 허용 목록에 추가됨';
+	@override String get msg_local_library_backup => '로컬 라이브러리 백업';
+	@override String get msg_awesome => '엄청난! ❤️';
+	@override String get msg_now => '지금';
+	@override String get msg_select_reminder_time => '알림 시간 선택';
+	@override String get msg_protected => '보호됨';
+	@override String msg_failed_load_4({required Object e}) => '로드 실패: ${e}';
+	@override String msg_operation_failed({required Object e}) => '작업 실패: ${e}';
+	@override String get msg_no_tags => '태그 없음';
+	@override String get msg_create_tag => '태그 만들기';
+	@override String get msg_edit_tag => '태그 수정';
+	@override String get msg_tag_name => '태그 이름';
+	@override String get msg_tag_name_required => '태그 이름은 필수 항목입니다.';
+	@override String get msg_tag_name_invalid => '태그 이름에는 /를 포함할 수 없습니다.';
+	@override String get msg_parent_tag => '상위 태그';
+	@override String get msg_no_parent => '부모 없음';
+	@override String get msg_tag_color => '태그 색상';
+	@override String get msg_inherit => '상속';
+	@override String get msg_inherit_color => '상위 색상 상속';
+	@override String get msg_tag_pinned => '핀 태그';
+	@override String get msg_delete_tag => '태그 삭제';
+	@override String get msg_delete_tag_confirm => '이 태그를 삭제하시겠습니까?';
+	@override String get msg_delete_tag_warning => '하위 태그는 상위 태그로 이동되며 이 태그는 메모에서 제거됩니다.';
+	@override String get msg_server => '섬기는 사람';
+	@override String get msg_improved => '개선됨';
+	@override String get msg_request_2 => '요구';
+	@override String msg_export_failed({required Object e}) => '내보내기 실패: ${e}';
+	@override String get msg_notification_settings => '알림 설정';
+	@override String get msg_related_memo_was_deleted => '관련 메모가 삭제되었습니다';
+	@override String get msg_email => '이메일';
+	@override String get msg_enter_password_4 => '비밀번호를 입력해주세요';
+	@override String get msg_retry_count => '재시도 횟수';
+	@override String get msg_import_exported_html_zip_package => '내보낸 HTML 또는 ZIP 패키지 가져오기';
+	@override String get msg_archive => '보관소';
+	@override String get msg_reset_heatmap => '히트맵을 재설정하시겠습니까?';
+	@override String get msg_token_applied => '토큰이 적용됨';
+	@override String get msg_log_file_created => '로그 번들을 내보냈습니다.';
+	@override String get msg_delete_sync_task => '동기화 작업 삭제';
+	@override String get msg_include_archived_2 => '- 보관된 내용 포함';
+	@override String get msg_memoflow_side_project_i_build_my => 'MemoFlow는 여가 시간에 만드는 사이드 프로젝트입니다. 늦게까지 버그를 고치느라 아이스 아메리카노가 정말 먹고 싶었습니다. 귀하의 지원은 배터리에 활력을 불어넣고 새로운 기능 출시에 도움이 됩니다';
+	@override String msg_failed_generate({required Object e}) => '생성 실패: ${e}';
+	@override String get msg_search_logs => '로그 검색';
+	@override String get msg_active_days => '활동적인 날';
+	@override String get msg_back_top => '맨 위로 돌아가기';
+	@override String get msg_month => '이번 달';
+	@override String get msg_loading_references => '참조 로드 중';
+	@override String get msg_silent => '조용한';
+	@override String get msg_settings => '설정';
+	@override String get msg_locating => '찾는 중...';
+	@override String get msg_scan => '주사';
+	@override String get msg_recording_path_missing => '녹음 경로가 없습니다.';
+	@override String get msg_date_range_4 => '- 기간';
+	@override String get msg_suggested_tags => '추천 태그';
+	@override String get msg_energy_restored => '⚡ 에너지가 복원되었습니다';
+	@override String get msg_username_2 => '사용자 이름';
+	@override String get msg_ai_summary_report => 'AI 요약 보고서';
+	@override String get msg_all_tags => '모든 태그';
+	@override String get msg_preferences => '환경설정';
+	@override String get msg_image_bed_3 => '이미지베드';
+	@override String get msg_quick_input => '빠른 입력';
+	@override String get msg_tags => '태그';
+	@override String get msg_energy_critically_low => '에너지가 매우 낮습니다!';
+	@override String msg_delete_failed({required Object e}) => '삭제 실패: ${e}';
+	@override String get msg_server_login => '서버 로그인';
+	@override String get msg_like_2 => '좋다';
+	@override String get msg_save_2 => '구하다';
+	@override String get msg_unknown => '알려지지 않은';
+	@override String get msg_release_notes_2 => '릴리스 노트';
+	@override String get msg_include_error_details => '오류 세부정보 포함';
+	@override String get msg_write_comment => '댓글을 쓰세요...';
+	@override String get msg_write_thoughts => '당신의 생각을 적어보세요...';
+	@override String get msg_draft_box_title => '초안 상자';
+	@override String get msg_draft_box_empty_desc => '아직 저장된 초안이 없습니다.';
+	@override String msg_draft_box_pending_hint({required Object count}) => '초안 상자에 완료되지 않은 초안이 있습니다(${count}). 초안 상자를 눌러 확인하세요.';
+	@override String get msg_empty_draft => '빈 초안';
+	@override String get msg_editing => '편집';
+	@override String get msg_delete_draft => '초안 삭제';
+	@override String get msg_delete_draft_confirm => '이 초안을 삭제하시겠습니까?';
+	@override String get msg_draft_deleted => '초안이 삭제되었습니다.';
+	@override String get msg_local_2 => '현지의';
+	@override String get msg_expired => '만료됨';
+	@override String get msg_fixed_2 => '결정된';
+	@override String get msg_upload_attachment => '첨부파일 업로드';
+	@override String get msg_battery_whitelist => '배터리 화이트리스트';
+	@override String get msg_district => '구역';
+	@override String get msg_voice_memo => '🎙️ 음성 메모\\n';
+	@override String get msg_system_default => '시스템 기본값';
+	@override String get msg_all_memos_2 => '모든 메모';
+	@override String get msg_network_request_failed => '네트워크 요청이 실패했습니다.';
+	@override String get msg_memo_not_found => '메모를 찾을 수 없습니다';
+	@override String msg_playback_failed_2({required Object e}) => '재생 실패: ${e}';
+	@override String get msg_sync_settings_webdav_across_devices => '복구를 위해 설정을 WebDAV에 백업하세요.';
+	@override String get msg_offline_first_client_memos_backend => 'Memos 백엔드를 위한 오프라인 우선 클라이언트입니다.';
+	@override String get msg_user_guide => '사용자 가이드';
+	@override String get msg_notice => '알아채다';
+	@override String get msg_exact_alarms => '정확한 알람';
+	@override String get msg_restoring_overwrite_local_library_files_rebuild => '복원하면 로컬 라이브러리 파일을 덮어쓰고 데이터베이스를 다시 작성합니다. 이 작업은 취소할 수 없습니다.';
+	@override String get msg_enter_api_url_ai_settings => 'AI 설정에 API URL를 입력하세요.';
+	@override String msg_create_failed_2({required Object e}) => '생성 실패: ${e}';
+	@override String get msg_close_search => '검색 닫기';
+	@override String get msg_imported_memos_2 => '가져온 메모';
+	@override String get msg_explore => '탐구하다';
+	@override String get msg_network_connection_failed => '네트워크 연결에 실패했습니다.';
+	@override String msg_save_failed_3({required Object e}) => '저장 실패: ${e}';
+	@override String get msg_no_summary_share => '공유할 요약이 없습니다.';
+	@override String get msg_custom_model => '맞춤형 모델';
+	@override String msg_sign_failed({required Object message}) => '로그인 실패: ${message}';
+	@override String get msg_notification_exact_alarm_permissions_required_send => '알림을 제때 보내려면 알림 및 정확한 알람 권한이 필요합니다.';
+	@override String get msg_random_review => '무작위 검토';
+	@override String get msg_random_review_source_scope => '참고 출처';
+	@override String get msg_random_review_source_all_notes => '모든 메모';
+	@override String get msg_random_review_source_explore_notes => '노트 탐색';
+	@override String get msg_random_review_source_ai_history => 'AI 역사';
+	@override String get msg_random_review_ai_history_date_range => 'AI 요약 시간';
+	@override String get msg_public => '공공의';
+	@override String get msg_all_2 => '모두';
+	@override String get msg_add_custom_model => '맞춤 모델 추가';
+	@override String get msg_backup_password => '백업 비밀번호';
+	@override String get msg_optional_used_sign_requests => '선택 과목. 요청에 서명하는 데 사용됩니다.';
+	@override String get msg_search => '찾다';
+	@override String get msg_set_password => '비밀번호 설정';
+	@override String get msg_submit_logs => '로그 내보내기';
+	@override String get msg_logs_export_local_only => '내보내기는 로그를 로컬에만 저장합니다. 앱은 자동으로 메모를 업로드하거나 메모를 생성하지 않습니다.';
+	@override String get msg_enable_network_logging_before_exporting => '로그인/동기화/백업 문제의 경우 내보내기 전에 네트워크 로깅을 활성화하세요.';
+	@override String get msg_activity_heatmap_2 => '활동 히트맵';
+	@override String get msg_invalid_api_key_insufficient_permissions => 'API 키가 잘못되었거나 권한이 부족합니다.';
+	@override String get msg_data_has_been_migrated_app_successfully => '귀하의 데이터가 이 앱으로 성공적으로 이전되었습니다.';
+	@override String get msg_get_version => '새 버전 받기';
+	@override String get msg_token_source => '토큰 소스';
+	@override String get msg_send => '보내다';
+	@override String get msg_no_pending_sync_tasks => '보류 중인 동기화 작업이 없습니다.';
+	@override String get msg_locating_memo_content => '메모 내용 찾기';
+	@override String get msg_offline_ready => '오프라인 준비';
+	@override String get msg_use_relative_path => '상대 경로 사용';
+	@override String get msg_total => '총';
+	@override String get msg_location_2 => '위치';
+	@override String get msg_location_contains => '위치에 다음이 포함됨';
+	@override String get msg_show_location_metadata_memos_not_configured => '메모에 위치 메타데이터를 표시합니다. 구성되지 않은 경우 좌표가 대신 표시됩니다.';
+	@override String get msg_api_url => 'API URL';
+	@override String get msg_parsing_progress => '파싱 ​​진행';
+	@override String get msg_parsing => '파싱';
+	@override String get msg_custom => '관습';
+	@override String get msg_tags_created => '새 태그가 생성되었습니다.';
+	@override String get msg_third_party_share_disabled => '타사 공유가 비활성화되었습니다.';
+	@override String get msg_loading_links => '링크 로드 중...';
+	@override String get msg_how_report => '신고하는 방법?';
+	@override String get msg_confirm_password_2 => '비밀번호 확인';
+	@override String get msg_search_title_content_tags => '제목, 콘텐츠, 태그로 검색';
+	@override String msg_reset_failed({required Object e}) => '재설정 실패: ${e}';
+	@override String get msg_debug_preview_update_dialog => '디버그: 업데이트 미리보기 대화상자';
+	@override String get msg_what_s => '새로운 소식은 무엇인가요?';
+	@override String get msg_ringtone => '벨소리';
+	@override String get msg_unable_detect_backend_version_check_server => '백엔드 버전을 감지할 수 없습니다. 서버 URL 또는 네트워크를 확인하세요.';
+	@override String get msg_pending_2 => '보류 중';
+	@override String get msg_parsing_html => 'HTML을 구문 분석하는 중...';
+	@override String get msg_actions => '행위';
+	@override String get msg_import_complete_2 => '가져오기 완료';
+	@override String get msg_use_disk => '디스크 사용';
+	@override String get msg_root_path => '루트 경로';
+	@override String get msg_disabled => '장애가 있는';
+	@override String get msg_improved_2 => '개선됨:';
+	@override String get msg_city => '도시';
+	@override String get msg_decoding_zip => 'ZIP 디코딩 중...';
+	@override String get msg_notification_content => '알림 내용';
+	@override String get msg_resolve_conflict => '갈등 해결';
+	@override String get msg_webhooks_not_supported_server => '이 서버에서는 웹후크가 지원되지 않습니다.';
+	@override String get msg_may_delayed => '(지연될 수도 있습니다)';
+	@override String get msg_permissions_system_settings => '권한 및 시스템 설정';
+	@override String get msg_waiting_tasks_stop => '작업이 중지되기를 기다리는 중';
+	@override String get msg_done_2 => '완료';
+	@override String get msg_parsing_memoflow_export => 'MemoFlow 내보내기 구문 분석 중...';
+	@override String msg_location_updated({required Object next_displayText_fractionDigits_6}) => '업데이트된 위치: ${next_displayText_fractionDigits_6}';
+	@override String get msg_checking_server_version => '서버 버전 확인 중...';
+	@override String get msg_next_time_back_fixing_bugs => '🙌 다음에는 버그 수정으로 다시 돌아오겠습니다';
+	@override String msg_ago_4({required Object weeks}) => '${weeks} 전';
+	@override String get msg_import => '수입';
+	@override String get msg_create_token_2 => '토큰 생성';
+	@override String get msg_marked_read => '읽음으로 표시됨';
+	@override String get msg_pinned => '고정됨';
+	@override String get msg_version_update => '버전 업데이트';
+	@override String get msg_allow_private_memos => '비공개 메모 허용';
+	@override String get msg_token_copied_clipboard => '토큰이 클립보드에 복사되었습니다.';
+	@override String get msg_keeping_more_versions_uses_more_storage => '더 많은 버전을 유지하면 더 많은 저장용량을 사용합니다. 이전 버전을 정리하는 것이 좋습니다.';
+	@override String get msg_delete_webhook => '웹훅 삭제';
+	@override String get msg_prompt => '즉각적인';
+	@override String get msg_location_precision => '위치 정밀도';
+	@override String get msg_password_required => '비밀번호가 필요합니다';
+	@override String get msg_exit_app => '앱 종료';
+	@override String get msg_thanks_energy_fully_restored => '감사해요! 에너지가 완전히 회복되었습니다 ⚡';
+	@override String get msg_connection_timeout_check_network_api_url => '연결 시간이 초과되었습니다. 네트워크 또는 API URL를 확인하세요.';
+	@override String get msg_local_network_migration => '로컬 네트워크 마이그레이션';
+	@override String get msg_local_network_migration_desc => '로컬 네트워크 마이그레이션을 사용하여 LAN을 통해 MemoFlow 장치와 타사 메모 도구를 연결하세요. MemoFlow 마이그레이션 및 Obsidian은 현재 지원됩니다.';
+	@override String get msg_connect_obsidian => '흑요석 연결';
+	@override String get msg_connect_obsidian_desc => '로컬 네트워크를 통해 Obsidian과 노트 콘텐츠를 페어링하고 동기화하세요.';
+	@override String get msg_local_network_migration_more_targets => '나중에 SiYuan 및 기타 타사 도구를 포함한 더 많은 대상이 여기에 추가될 예정입니다.';
+	@override String get msg_memoflow_migration => 'MemoFlow 마이그레이션';
+	@override String get msg_memoflow_migration_target_desc => '로컬 네트워크를 통해 로컬 작업 공간 메모 및 설정을 다른 MemoFlow 장치로 마이그레이션하세요.';
+	@override String get msg_memoflow_migration_targets_summary => 'MemoFlow / 흑요석';
+	@override String get msg_memoflow_migration_role_desc => '이 기기가 일회성 로컬 마이그레이션 세션을 보낼지 받을지 선택하세요. 두 장치를 동일한 LAN에 유지하고 전송 중에 MemoFlow를 포그라운드에 유지하세요.';
+	@override String get msg_memoflow_migration_sender => '나는 보낸 사람이다';
+	@override String get msg_memoflow_migration_sender_desc => '현재 로컬 작업 공간에서 메모와 설정을 선택한 다음 근처 수신기에 연결하세요.';
+	@override String get msg_memoflow_migration_sender_only_local_mode => '보낸 사람 역할은 이 장치가 로컬 작업 공간을 사용하는 경우에만 사용할 수 있습니다.';
+	@override String get msg_memoflow_migration_receiver => '나는 수신기입니다';
+	@override String get msg_memoflow_migration_receiver_desc => '수신 세션을 만들고, QR 코드를 표시하고, 들어오는 메모나 설정을 가져옵니다.';
+	@override String get msg_memoflow_migration_select_content => '콘텐츠 선택';
+	@override String get msg_memoflow_migration_notes => '메모 내용';
+	@override String get msg_memoflow_migration_notes_desc => '현재 로컬 작업공간에서 모든 메모와 첨부 파일을 보냅니다.';
+	@override String get msg_memoflow_migration_settings => '설정 내용';
+	@override String get msg_memoflow_migration_settings_desc => '휴대용 기본 설정과 선택적 민감한 설정을 보냅니다.';
+	@override String get msg_memoflow_migration_safe_config => '안전한 설정';
+	@override String get msg_memoflow_migration_sensitive_config => '민감한 설정';
+	@override String get msg_memoflow_migration_prepare_package => '마이그레이션 패키지 준비';
+	@override String get msg_memoflow_migration_prepare_send => '보낼 준비를 하세요';
+	@override String get msg_memoflow_migration_send_method => '전송 방법';
+	@override String get msg_memoflow_migration_send_method_desc => '패키지가 준비된 후 수신기에 연결하는 방법을 선택하십시오.';
+	@override String get msg_memoflow_migration_prepare_send_first => '전송 방법을 선택하기 전에 이전 화면에서 패키지를 준비하세요.';
+	@override String get msg_memoflow_migration_package_ready => '패키지 준비';
+	@override String msg_memoflow_migration_package_summary({required Object memoCount, required Object attachmentCount, required Object size}) => '${memoCount} 메모 · ${attachmentCount} 첨부파일 · ${size}';
+	@override String get msg_memoflow_migration_scan_receiver => '스캔 수신기';
+	@override String get msg_memoflow_migration_search_receiver => '주변 수신기 검색';
+	@override String get msg_memoflow_migration_discovered_receivers => '근처 수신기';
+	@override String get msg_memoflow_migration_waiting_receiver => '발신자 연결을 기다리는 중…';
+	@override String get msg_memoflow_migration_review_proposal => '마이그레이션 제안 검토';
+	@override String get msg_memoflow_migration_receive_mode => '수신 모드';
+	@override String get msg_memoflow_migration_receive_as_new_workspace => '새 로컬 작업공간으로 가져오기';
+	@override String get msg_memoflow_migration_overwrite_current_workspace => '현재 로컬 작업공간 덮어쓰기';
+	@override String get msg_memoflow_migration_sensitive_config_confirm => '민감한 설정에는 확인이 필요합니다.';
+	@override String get msg_memoflow_migration_accept => '수락하고 받기';
+	@override String get msg_memoflow_migration_reject => '거부하다';
+	@override String get msg_memoflow_migration_start_receive => '수신 시작';
+	@override String get msg_memoflow_migration_completed => '마이그레이션 완료';
+	@override String get msg_memoflow_migration_view_result => '결과 보기';
+	@override String get msg_memoflow_migration_result => '마이그레이션 결과';
+	@override String get msg_memoflow_migration_sender_device => '발신 장치';
+	@override String get msg_memoflow_migration_size => '예상 크기';
+	@override String msg_memoflow_migration_received_bytes({required Object size}) => '수신됨: ${size}';
+	@override String get msg_memoflow_migration_applied_configs => '적용된 설정';
+	@override String get msg_memoflow_migration_skipped_configs => '건너뛴 설정';
+	@override String get msg_memoflow_migration_workspace_name => '작업공간';
+	@override String get msg_memoflow_migration_scan_title => '스캔 수신기 QR';
+	@override String get msg_memoflow_migration_scan_hint => '수신 장치에 표시된 QR 코드를 스캔하세요.';
+	@override String get msg_memoflow_migration_foreground_notice => '마이그레이션 중에 두 장치 모두에서 MemoFlow를 포그라운드로 유지합니다.';
+	@override String get msg_bridge_component_title => 'MemoFlow 다리';
+	@override String get msg_bridge_component_desc => '로컬 동기화를 위해 Obsidian 플러그인과 페어링하세요.';
+	@override String get msg_bridge_title => '흑요석 연결';
+	@override String get msg_bridge_local_mode_only => '로컬 네트워크를 통해 Obsidian과 페어링하세요. 나중에 다른 목표가 올 수도 있습니다.';
+	@override String msg_bridge_paired_target({required Object target}) => '페어링됨: ${target}';
+	@override String get msg_bridge_unpaired => '페어링되지 않음';
+	@override String msg_bridge_server({required Object server}) => '서버: ${server}';
+	@override String msg_bridge_device({required Object device}) => '장치: ${device}';
+	@override String get msg_bridge_processing => '처리 중...';
+	@override String get msg_bridge_action_scan_pair => '스캔하여 페어링';
+	@override String get msg_bridge_action_mdns_discover => 'mDNS 검색';
+	@override String get msg_bridge_action_searching => '수색...';
+	@override String get msg_bridge_pair_code_label => '페어 코드';
+	@override String get msg_bridge_pair_code_hint => 'Obsidian에 표시된 6자리 코드를 입력하세요.';
+	@override String get msg_bridge_action_pairing => '편성...';
+	@override String get msg_bridge_action_confirm_pair => '페어링 확인';
+	@override String get msg_bridge_action_checking => '확인 중...';
+	@override String get msg_bridge_action_health_check => '건강검진';
+	@override String get msg_bridge_enable => '브리지 활성화';
+	@override String get msg_bridge_pair_cleared => '페어링이 삭제되었습니다.';
+	@override String get msg_bridge_clear_pair => '페어 지우기';
+	@override String get msg_bridge_discovery_results => '발견 결과';
+	@override String get msg_bridge_scan_title => 'QR 스캔';
+	@override String get msg_bridge_scan_hint => 'Obsidian 플러그인에 표시된 QR 코드를 스캔하세요.';
+	@override String get msg_bridge_qr_invalid => '잘못된 페어링 QR 코드';
+	@override String get msg_bridge_pair_response_missing_token => '쌍 응답 누락 토큰';
+	@override String get msg_bridge_pair_success => '페어링 성공';
+	@override String msg_bridge_pair_failed({required Object e}) => '페어링 실패: ${e}';
+	@override String get msg_bridge_mdns_searching => 'mDNS 서비스 검색 중...';
+	@override String msg_bridge_mdns_failed({required Object e}) => 'mDNS 검색 실패: ${e}';
+	@override String get msg_bridge_mdns_not_found => '브리지 서비스를 찾을 수 없습니다.';
+	@override String msg_bridge_mdns_found_count({required Object count}) => '${count} 서비스를 찾았습니다.';
+	@override String get msg_bridge_input_host_required => '호스트는 필수 항목입니다.';
+	@override String get msg_bridge_input_port_invalid => '포트가 유효하지 않습니다';
+	@override String get msg_bridge_input_pair_code_required => '쌍 코드가 필요합니다';
+	@override String get msg_bridge_status_pairing => '편성...';
+	@override String get msg_bridge_need_pair_first => '먼저 페어링해주세요';
+	@override String get msg_bridge_status_health_checking => '브릿지 상태 확인 중...';
+	@override String get msg_bridge_status_health_ok => '브릿지는 건강해요';
+	@override String msg_bridge_status_health_failed({required Object e}) => '상태 확인 실패: ${e}';
+	@override late final _StringsStringsLegacyAppLanguageKo app_language = _StringsStringsLegacyAppLanguageKo._(_root);
+	@override late final _StringsStringsLegacyAppThemeKo app_theme = _StringsStringsLegacyAppThemeKo._(_root);
+	@override late final _StringsStringsLegacyAppFontSizeKo app_font_size = _StringsStringsLegacyAppFontSizeKo._(_root);
+	@override late final _StringsStringsLegacyAppLineHeightKo app_line_height = _StringsStringsLegacyAppLineHeightKo._(_root);
+	@override late final _StringsStringsLegacyLaunchActionKo launch_action = _StringsStringsLegacyLaunchActionKo._(_root);
+	@override late final _StringsStringsLegacyAutoLockTimeKo auto_lock_time = _StringsStringsLegacyAutoLockTimeKo._(_root);
+	@override late final _StringsStringsLegacyReminderKo reminder = _StringsStringsLegacyReminderKo._(_root);
+	@override late final _StringsStringsLegacyLocationKo location = _StringsStringsLegacyLocationKo._(_root);
+	@override late final _StringsStringsLegacyWebdavKo webdav = _StringsStringsLegacyWebdavKo._(_root);
+	@override String import_count_memos({required Object count}) => '${count}';
+	@override String import_count_attachments({required Object count}) => '${count}';
+	@override String get msg_version_probe_complete => '버전 조사 완료';
+	@override String msg_currently_using_api({required Object version}) => '현재 API ${version}를 사용하고 있습니다.';
+	@override String get msg_version_probe_failed => '버전 조사 실패';
+	@override String get msg_copy_diagnostics => '진단 복사';
+	@override String get msg_diagnostics_copied => '진단이 복사되었습니다.';
+	@override String msg_probe_failed({required Object error}) => '프로브 실패: ${error}';
+	@override String get msg_no_active_session_after_sign_in => '로그인 후 활성 세션이 없습니다.';
+	@override String get msg_request_headers => '요청 헤더';
+	@override String get msg_request_body => '요청 본문';
+	@override String get msg_response_headers => '응답 헤더';
+	@override String get msg_response_body => '응답 본문';
+	@override String get msg_error => '오류';
+	@override String get msg_system_logs => '시스템 로그';
+	@override String msg_copy_last_lines({required Object lines}) => '마지막 ${lines} 줄 복사';
+	@override String get msg_export_logs_bundle => '로그 번들 내보내기';
+	@override String msg_showing_last_lines({required Object lines}) => '마지막 ${lines} 라인 표시';
+	@override String get msg_no_system_logs_yet => '아직 시스템 로그가 없습니다.';
+	@override String msg_system_logs_copied({required Object lines}) => '시스템 로그 복사됨(${lines} 행)';
+	@override String msg_log_bundle_created({required Object path, required Object exportId}) => '생성된 로그 번들: ${path}(ExportId: ${exportId})';
+	@override String msg_failed_export_logs({required Object error}) => '로그 내보내기 실패: ${error}';
+	@override String get msg_api_route => 'API 노선';
+	@override String get msg_screenshot_mode => '스크린샷 모드';
+	@override String get msg_screenshot_mode_detail => '깔끔한 캡처를 위해 상태/탐색 표시줄 숨기기';
+	@override String get msg_template => '주형';
+	@override String get msg_no_templates_yet => '아직 템플릿이 없습니다.';
+	@override String get msg_quick_search => '빠른 검색...';
+	@override String get msg_minimize => '최소화';
+	@override String get msg_maximize => '최대화';
+	@override String get msg_restore_window => '복원하다';
+	@override String msg_windows_enable_location_access({required Object message}) => '${message}. Windows 설정에서 위치 액세스를 활성화합니다.';
+	@override String get msg_camera_file_missing => '카메라 파일이 없습니다.';
+	@override String get msg_no_camera_detected => '카메라가 감지되지 않았습니다.';
+	@override String msg_camera_failed({required Object error}) => '카메라 실패: ${error}';
+	@override String get msg_camera_permission_denied_windows => '카메라 권한이 거부되었습니다. Windows 설정에서 카메라 액세스를 활성화하세요.';
+	@override String msg_file_selection_failed({required Object error}) => '파일 선택 실패: ${error}';
+	@override String get msg_files_unavailable_from_picker => '선택기에서 파일을 사용할 수 없습니다.';
+	@override String get msg_no_files_selected => '선택한 파일이 없습니다.';
+	@override String get msg_original_image => '원래의';
+	@override String get msg_gallery_system_picker_original_desc => '선택한 이미지를 업로드하기 전에 압축을 건너뛸지 여부를 선택하세요.';
+	@override String get msg_gallery_system_picker_original_switch => '선택한 이미지를 원본 품질로 업로드';
+	@override String msg_gallery_original_selection_summary({required Object selectedCount, required Object originalCount}) => '선택된 ${selectedCount} · 원본 ${originalCount}';
+	@override String msg_added_files({required Object count}) => '${count} 파일을 추가했습니다.';
+	@override String msg_unavailable_file_count({required Object count}) => '${count}를 사용할 수 없습니다';
+	@override String msg_added_files_with_skipped({required Object count, required Object details}) => '${count} 파일을 추가했습니다. ${details}를 건너뛰었습니다.';
+	@override String get msg_added_photo_attachment => '사진 첨부를 추가했습니다.';
+	@override String get msg_enter_content_before_creating_link => '링크를 만들기 전에 내용을 입력해주세요.';
+	@override String get msg_checkbox => '체크박스';
+	@override String get msg_code_block => '코드 블록';
+	@override String get msg_no_recording_input_device_found => '녹음 입력 장치를 찾을 수 없습니다.';
+	@override String get msg_write_current_thought => '당신이 생각하는 것을 적어보세요 ...';
+	@override String get msg_tag => '꼬리표';
+	@override String get msg_attachment => '부착';
+	@override String get msg_todo => '토도';
+	@override String get msg_link => '링크';
+	@override String get msg_capture_photo => '사진 캡처';
+	@override String get msg_open_camera_settings => '카메라 설정 열기';
+	@override String get msg_unable_open_windows_camera_settings => 'Windows 카메라 설정을 열 수 없습니다.';
+	@override String get msg_qr_scan_not_supported_use_manual_pairing => '이 플랫폼에서는 QR 스캔이 지원되지 않습니다.\n대신 수동 페어링을 사용하세요.';
+	@override String get msg_qr_scan_not_supported_pair_manually => '이 플랫폼에서는 QR 스캔이 지원되지 않습니다. 호스트, 포트, 페어링 코드를 수동으로 페어링하세요.';
+	@override String get msg_loading_memos => '메모 로드 중...';
+	@override String get msg_encryption_feature_placeholder => '암호화는 현재 자리 표시자이며 아직 시행되지 않습니다.';
+	@override String get msg_password_feature_placeholder => '비밀번호 지원은 현재 자리 표시자이며 아직 시행되지 않습니다.';
+	@override String get msg_template_feature_manage_desc => '템플릿 이름, 콘텐츠, 변수를 관리하려면 템플릿을 활성화하세요.';
+	@override String get msg_shortcuts_overview => '바로가기 개요';
+	@override String get msg_restore_defaults => '기본값 복원';
+	@override String get msg_default_shortcuts_restored => '기본 단축키가 복원되었습니다.';
+	@override String get msg_file_save_location => '파일 저장 위치';
+	@override String get msg_select_location => '위치 선택';
+	@override String get msg_repository_name => '저장소 이름';
+	@override String get msg_enter_repository_name_hint => '저장소 이름을 입력하세요';
+	@override String get msg_not_selected => '선택되지 않음';
+	@override String get msg_select_file_save_location => '파일 저장 위치를 ​​선택해주세요.';
+	@override String get msg_enter_repository_name_prompt => '저장소 이름을 입력하세요.';
+	@override String get msg_enter_and_confirm_password => '비밀번호를 입력하고 확인해 주세요.';
+	@override String get msg_encrypt_save_placeholder => '암호화된 저장(자리 표시자)';
+	@override String get msg_windows_related_settings => 'Windows 관련 설정';
+	@override String get msg_only_windows_desktop_supports_this_setting => 'Windows 데스크톱만 이 설정을 지원합니다.';
+	@override String get msg_shortcut_settings => '바로가기 설정';
+	@override String get msg_configure_windows_desktop_shortcuts => 'Windows 바탕 화면 바로 가기 구성';
+	@override String get msg_close_window_minimize_to_tray => '창을 닫을 때 트레이로 최소화';
+	@override String get msg_close_window_minimize_to_tray_desc => '활성화되면 오른쪽 상단 닫기 버튼을 클릭해도 앱이 종료되지 않습니다. 시스템 트레이에서 창을 복원할 수 있습니다.';
+	@override String get msg_local_storage_unavailable => '로컬 저장소를 사용할 수 없습니다';
+	@override String get msg_check_system_permissions_or_retry_later => '시스템 권한을 확인하거나 나중에 다시 시도하세요.';
+	@override String msg_source_value({required Object source}) => '출처: ${source}';
+	@override String get msg_enable_sync_bridge_first => '먼저 동기화 브리지를 활성화하세요.';
+	@override String get msg_sync_to_obsidian => '흑요석과 동기화';
+	@override String get msg_sync_to_obsidian_confirm => '첨부 파일을 포함하여 현재 로컬 라이브러리에 있는 모든 메모를 페어링된 Obsidian에 한 번에 동기화하세요. 계속하다?';
+	@override String msg_sync_completed_summary({required Object succeeded, required Object total, required Object failed}) => '동기화 완료: ${succeeded}/${total} 성공, ${failed} 실패.';
+	@override String msg_sync_failed_with_error({required Object error}) => '동기화 실패: ${error}';
+	@override String get msg_sync_to_obsidian_in_progress => 'Obsidian과 동기화하는 중...';
+	@override String get msg_action_shortcut => '작업 - 바로가기';
+	@override String get msg_global => '글로벌';
+	@override String get msg_editor => '편집자';
+	@override String get msg_paste => '반죽';
+	@override String get msg_cut => '자르다';
+	@override String get msg_previous_page => '이전 페이지';
+	@override String get msg_next_page => '다음 페이지';
+	@override String get msg_shift_enter_supported => 'Shift + Enter도 지원합니다.';
+	@override String get msg_shortcuts_supported_windows_macos => 'Windows 및 macOS만 바로가기 설정을 지원합니다.';
+	@override String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding}는 이미 "${action}"에서 사용되고 있습니다.';
+	@override String get msg_windows_paging_note => 'Windows 페이징: PageUp 이전 페이지, PageDown 다음 페이지.';
+	@override String get msg_system_edit_shortcuts_note => '복사/붙여넣기/잘라내기는 시스템 기본 단축키를 사용합니다.';
+	@override String get msg_shortcut_requires_modifier => '최소한 하나의 수정자 키(Ctrl/Cmd/Shift/Alt)를 포함하세요.';
+	@override String msg_current_shortcut({required Object binding}) => '현재: ${binding}';
+	@override String get msg_press_new_shortcut => '새 단축키를 누르세요...';
+	@override String get msg_quick_record => '빠른 기록';
+	@override String get msg_focus_input_area => '초점 입력 영역';
+	@override String get msg_toggle_sidebar => '사이드바 전환';
+	@override String get msg_open_settings => '설정 열기';
+	@override String get msg_show_hide_memoflow => 'MemoFlow 표시 / 숨기기';
+	@override String get msg_publish_memo => '메모 게시';
+	@override String get msg_bold => '용감한';
+	@override String get msg_underline => '밑줄';
+	@override String get msg_highlight => '가장 밝은 부분';
+	@override String get msg_unordered_list => '순서가 없는 목록';
+	@override String get msg_ordered_list => '주문목록';
+	@override String get msg_undo => '끄르다';
+	@override String get msg_redo => '다시 하다';
+	@override String get msg_no_templates_click_add => '아직 템플릿이 없습니다. 템플릿을 만들려면 \'템플릿 추가\'를 클릭하세요.';
+	@override String get msg_weather_variables_enabled_city_not_set => '날씨 변수 활성화됨(도시가 설정되지 않음)';
+	@override String msg_weather_variables_city({required Object city}) => '날씨 변수: ${city}';
+	@override String get msg_weather_variables_disabled => '날씨 변수가 비활성화되었습니다.';
+	@override String get msg_template_feature_title => '템플릿 활성화';
+	@override String get msg_template_feature_desc => '활성화한 후 편집기 도구 모음에서 템플릿을 선택할 수 있습니다. 하나를 선택하면 편집기 콘텐츠가 대체됩니다.';
+	@override String get msg_template_list => '템플릿 목록';
+	@override String get msg_many_templates_support_scroll => '템플릿이 많은 경우 이 영역에서는 세로 스크롤을 지원합니다.';
+	@override String get msg_variable_settings => '변수 설정';
+	@override String get msg_template_variables => '템플릿 변수';
+	@override String get msg_available_variable_docs => '사용 가능한 변수 문서';
+	@override String get msg_available_variable_docs_desc => '탭하면 중앙 대화 상자에 변수 테이블과 의미 메모가 표시됩니다.';
+	@override String get msg_date_time_weather_variable_desc => '날짜/시간 변수는 변수 설정의 형식을 따릅니다. 날씨 변수는 AMap 날씨 구성에 따라 달라집니다.';
+	@override String get msg_variable => '변하기 쉬운';
+	@override String get msg_meaning => '의미';
+	@override String get msg_example => '예';
+	@override String get msg_got_it => '알았어요';
+	@override String get msg_scene_micro_guide_list_gestures => '메모를 복사하려면 길게 누르고, 빠르게 편집하려면 두 번 탭하세요.';
+	@override String get msg_scene_micro_guide_list_search_shortcuts => '제목, 콘텐츠, 태그 검색을 탭하세요. 바로가기 필터 제목을 탭하세요';
+	@override String get msg_scene_micro_guide_editor_tag_autocomplete_desktop => '태그 제안에 #을 입력하고 ??를 사용하세요. 선택하고 Enter를 눌러 삽입하세요.';
+	@override String get msg_scene_micro_guide_editor_tag_autocomplete_mobile => '#을 입력하거나 태그 버튼을 탭하여 추천 태그를 선택하세요.';
+	@override String get msg_scene_micro_guide_gallery_controls_desktop => '?/? 스위치? Esc가 닫히나요? 두 번 탭하여 재설정';
+	@override String get msg_scene_micro_guide_gallery_controls_mobile => '재설정하려면 두 번 탭하세요.';
+	@override String msg_scene_micro_guide_desktop_global_shortcuts({required Object search, required Object quickRecord, required Object overview}) => '${search} 검색 ? ${quickRecord} 빠른 기록 ? ${overview} 바로가기 보기';
+	@override String get msg_new_template => '템플릿 추가';
+	@override String get msg_edit_template => '템플릿 편집';
+	@override String get msg_template_name => '템플릿 이름';
+	@override String get msg_template_name_example => '예: 아침 복습';
+	@override String get msg_template_content => '템플릿 내용';
+	@override String get msg_template_content_example => '예를 들어 다음과 같은 변수를 사용할 수 있습니다. {{date}} {{weather}}';
+	@override String get msg_template_variable_settings => '템플릿 변수 설정';
+	@override String get msg_date_format_variable => '날짜 형식({{date}})';
+	@override String get msg_time_format_variable => '시간 형식({{time}})';
+	@override String get msg_datetime_format_variable => '날짜/시간 형식({{datetime}})';
+	@override String get msg_enable_weather_variables => '날씨 변수 활성화';
+	@override String get msg_weather_variable_tokens => '변수: {{weather}} / {{weather.*}}';
+	@override String get msg_weather_city_adcode_or_name => '날씨 도시(애드코드 또는 도시 이름)';
+	@override String get msg_weather_city_example => '예: 110000';
+	@override String get msg_weather_fallback_text => '날씨 대체 텍스트';
+	@override String get msg_keep_unknown_variables_raw => '알 수 없는 변수를 그대로 유지';
+	@override String get msg_keep_unknown_variables_raw_desc => '비활성화되면 알 수 없는 변수가 빈 문자열로 대체됩니다.';
+	@override String get msg_delete_template => '템플릿 삭제';
+	@override String msg_delete_template_confirm_with_name({required Object name}) => '\'${name}\'를 삭제하시겠습니까?';
+	@override String get msg_current_date => '현재 날짜';
+	@override String get msg_current_time => '현재 시간';
+	@override String get msg_current_datetime => '현재 날짜 및 시간';
+	@override String get msg_weekday_name => '요일 이름';
+	@override String get msg_weather_plus_temperature_without_city => '날씨 + 기온(도시 제외)';
+	@override String get msg_city_plus_weather_plus_temperature => '도시 + 날씨 + 기온';
+	@override String get msg_weather_city_label => '날씨 도시';
+	@override String get msg_weather_province => '날씨 지방';
+	@override String get msg_weather_condition => '기상 조건';
+	@override String get msg_temperature_without_unit => '온도(장치 없음)';
+	@override String get msg_humidity_without_percent => '습도(% 기호 없음)';
+	@override String get msg_wind_direction => '풍향';
+	@override String get msg_wind_power => '풍력';
+	@override String get msg_weather_report_time => '일기 예보 시간';
+	@override String get msg_adcode => '행정구역번호';
+	@override String get msg_example_saturday => '토요일';
+	@override String get msg_example_sunny_25c => '맑음 25°C';
+	@override String get msg_example_beijing_sunny_25c => '베이징 맑음 25°C';
+	@override String get msg_example_beijing => '베이징';
+	@override String get msg_example_beijing_city => '베이징시';
+	@override String get msg_example_sunny => '화창한';
+	@override String get msg_example_northeast => '북동';
+	@override String msg_total_count_times({required Object count}) => '총 ${count}회';
+	@override String get msg_current_streak_days => '현재 연속 기록(일)';
+	@override String get msg_total_days => '총 일수';
+	@override String get msg_average_daily_characters => '일일 평균 문자';
+	@override String get msg_longest_streak_days => '최장 연속 기록(일)';
+	@override String get msg_total_memos_metric => '총 메모';
+	@override String get msg_total_characters_metric => '총 문자수';
+	@override String get msg_common_writing_time => '일반적인 작성 시간';
+	@override String get msg_most_active_day => '가장 활동적인 날';
+	@override String get msg_memo_count => '메모 개수';
+	@override String get msg_total_characters_short => '총 문자수';
+	@override String get msg_max_characters_single_day => '하루 최대 문자 수';
+	@override String get msg_image => '영상';
+	@override String get msg_video => '동영상';
+	@override String get msg_audio => '오디오';
+	@override String get msg_document => '문서';
+	@override String get msg_other => '다른';
+	@override String get msg_attachment_name_contains => '첨부파일 이름에 다음이 포함되어 있습니다.';
+	@override String get msg_attachment_type => '첨부파일 유형';
+	@override String get msg_linked_memos => '연결된 메모';
+	@override String get msg_clear_all_filters => '모든 필터 지우기';
+	@override String get msg_file => '파일';
+	@override String get msg_vs_last_month_same_memo_count => '지난달과 동일한 메모 개수';
+	@override String get msg_vs_last_month_increase_memo_count => '지난달보다 메모가 많아졌다';
+	@override String get msg_vs_last_month_decrease_memo_count => '지난달보다 메모가 적어요';
+	@override String get msg_weekday_monday => '월';
+	@override String get msg_weekday_tuesday => '화요일';
+	@override String get msg_weekday_wednesday => '수요일';
+	@override String get msg_weekday_thursday => '목';
+	@override String get msg_weekday_friday => '금';
+	@override String get msg_weekday_saturday => '앉았다';
+	@override String get msg_weekday_sunday => '해';
+	@override String get msg_current_window_pin_not_supported => '현재 창에서는 고정이 지원되지 않습니다.';
+	@override String get msg_no_valid_files_selected => '유효한 파일을 선택하지 않았습니다.';
+	@override String msg_added_attachment_count({required Object count}) => '${count} 첨부 파일을 추가했습니다.';
+	@override String get msg_save_failed_check_content_retry => '저장에 실패했습니다. 내용을 확인하신 후 다시 시도해 주세요.';
+	@override String get msg_quick_input_channel_not_ready_retry => '빠른 입력 채널이 준비되지 않았습니다. 기본 창을 다시 열고 다시 시도해 주세요.';
+	@override String msg_visibility_value({required Object value}) => '가시성 : ${value}';
+	@override String get msg_saved_to_memoflow => 'MemoFlow에 저장되었습니다.';
+	@override String msg_quick_input_failed_with_error({required Object error}) => '빠른 입력 실패: ${error}';
+	@override String get msg_feature => '특징';
+	@override String msg_feature_not_implemented_placeholder_with_label({required Object label}) => '"${label}"는 아직 구현되지 않았습니다(자리 표시자).';
+	@override String msg_quick_input_save_failed_with_error({required Object error}) => '빠른 입력 저장 실패: ${error}';
+	@override String msg_toggle_memoflow_failed_with_error({required Object error}) => 'MemoFlow 표시/숨기기 실패: ${error}';
+	@override String get msg_shortcuts_overview_opened => '바로가기 개요를 열었습니다.';
+	@override String msg_unsupported_version_value({required Object version}) => '지원되지 않는 버전: ${version}';
+	@override String msg_version_probe_passed_with_version({required Object version}) => 'v${version} 프로브 통과';
+	@override String get msg_startup_slogan => '기록이 자연스럽게 흐르도록 하세요';
+	@override String get msg_storage_read_failed_some_features_limited => '저장소 읽기에 실패했습니다. 일부 기능이 제한됩니다.';
+	@override String msg_monthly_overview({required Object month}) => '${month} 월간 개요';
+	@override String get msg_daily_memo_trend => '일일 메모 트렌드';
+	@override String msg_date_memo_count_tooltip({required Object date, required Object count}) => '${date}\n${count} 메모';
+	@override String msg_average_value({required Object value}) => '평균 ${value}';
+	@override String get msg_need_at_least_five_tags => '태그가 5개 미만입니다. 태그를 더 추가하고 다시 시도해 주세요.';
+	@override String msg_tag_cloud_tooltip({required Object count, required Object percent, required Object latest}) => '${count} 메모\n${percent}%\n최신: ${latest}';
+	@override String get msg_unnamed_tag => '이름 없는 태그';
+	@override String get msg_yearly_character_trend => '연간 캐릭터 동향';
+	@override String get msg_no_data => '데이터 없음';
+	@override String msg_month_characters_tooltip({required Object month, required Object chars}) => '${month}\n${chars} 문자';
+	@override String get msg_on_this_day => '이날';
+	@override String get msg_links_label => '모래밭';
+	@override late final _StringsStringsLegacyAppDrawerKo app_drawer = _StringsStringsLegacyAppDrawerKo._(_root);
+	@override late final _StringsStringsLegacyAiSummaryKo ai_summary = _StringsStringsLegacyAiSummaryKo._(_root);
+}
+
+// Path: strings.shareClip
+class _StringsStringsShareClipKo extends _StringsStringsShareClipEn {
+	_StringsStringsShareClipKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get videoDetected => '동영상 콘텐츠로 감지됨';
+	@override String get linkOnlyLabel => '링크만 저장';
+	@override String get originalLinkLabel => '원본 링크';
+	@override String get videoCandidatesTitle => '비디오 후보';
+	@override String get downloadAndAttach => '다운로드 및 첨부';
+	@override String get notSupportedLabel => '지원되지 않음';
+	@override String get directLinkLabel => '직접링크';
+	@override String get xiaohongshuLabel => '샤오홍슈';
+	@override String get unsupportedDash => '별도의 DASH 스트림은 지원되지 않습니다.';
+	@override String get unsupportedStream => '스트리밍 전용 리소스는 지원되지 않습니다.';
+	@override String get fileTooLargeTitle => '비디오가 30MB보다 큽니다.';
+	@override String fileTooLargeBody({required Object size}) => '본 영상은 ${size}로, 서버 첨부 제한을 초과하였습니다.';
+	@override String get compressAndSave => '압축 및 저장';
+	@override String get fallbackParseFailed => '동영상 파싱에 실패하여 앱이 링크만 저장했습니다.';
+	@override String get fallbackDownloadFailed => '동영상 다운로드에 실패하여 앱에 링크만 저장되었습니다.';
+	@override String get fallbackCompressionFailed => '동영상 압축에 실패하여 앱에 링크만 저장되었습니다.';
+	@override String get fallbackCompressionStillTooLarge => '압축된 비디오는 여전히 30MB보다 크기 때문에 앱은 링크만 저장했습니다.';
+	@override String get failureUnsupportedUrl => '지원되지 않는 URL 체계입니다.';
+	@override String get failureLoadTimeout => '페이지를 로드하는 동안 시간이 초과되었습니다.';
+	@override String get failureWebView => 'WebView가 페이지를 로드하지 못했습니다.';
+	@override String get failureDom => '페이지 콘텐츠를 읽을 수 없습니다.';
+	@override String get failureParserEmpty => '읽을 수 있는 콘텐츠를 추출할 수 없습니다.';
+	@override String get failureUnknown => '공유 미리보기를 준비하는 중에 문제가 발생했습니다.';
+	@override String get stageLoadingPage => '페이지 로드 중';
+	@override String get stageWaitingContent => '동적 콘텐츠를 기다리는 중';
+	@override String get stageDetectingMedia => '비디오 리소스 감지';
+	@override String get stageParsingArticle => '기사 분석 중';
+	@override String get stageBuildingPreview => '건물 미리보기';
+	@override String get stageDownloadingVideo => '비디오 다운로드 중';
+	@override String get stageCompressingVideo => '비디오 압축 중';
+	@override String get localSavedPendingSync => '로컬에 저장되었습니다. 가능한 경우 동기화가 계속됩니다.';
+}
+
+// Path: strings.memoTimeAdjustment
+class _StringsStringsMemoTimeAdjustmentKo extends _StringsStringsMemoTimeAdjustmentEn {
+	_StringsStringsMemoTimeAdjustmentKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get action => '생성 시간 변경';
+	@override String get saved => '생성 시간이 업데이트되었습니다.';
+	@override String get description => '저장 후 이 메모는 새로 생성된 시간을 기준으로 표시 및 정렬됩니다.';
+	@override String get dateField => '날짜';
+	@override String get timeField => '시간';
+	@override String selectedCreationTime({required Object value}) => '생성 시간: ${value}';
+	@override String failed({required Object error}) => '생성 시간 변경 실패: ${error}';
+}
+
+// Path: strings.collections
+class _StringsStringsCollectionsKo extends _StringsStringsCollectionsEn {
+	_StringsStringsCollectionsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get drawerLabel => '컬렉션';
+	@override String get title => '컬렉션';
+	@override String get collection => '수집';
+	@override String get pinned => '고정됨';
+	@override String get archived => '보관됨';
+	@override String get addToCollection => '컬렉션에 추가';
+	@override String get newManual => '새로운 매뉴얼';
+	@override String get create => '만들다';
+	@override String get createCollection => '컬렉션 만들기';
+	@override String get editCollection => '컬렉션 수정';
+	@override late final _StringsStringsCollectionsReaderKo reader = _StringsStringsCollectionsReaderKo._(_root);
+	@override String get createCollectionTooltip => '컬렉션 만들기';
+	@override String get reorderShelf => '선반 재정렬';
+	@override String get reorderShelfDescription => '선반에 표시된 순서를 드래그하여 조정하세요. 고정된 컬렉션은 여전히 ​​나머지 컬렉션보다 위에 있습니다.';
+	@override String get manageItems => '항목 관리';
+	@override String get searchCollections => '컬렉션 검색';
+	@override String get searchInsideCollection => '이 컬렉션 내에서 검색';
+	@override String get searchMemos => '메모 검색';
+	@override String get clearSearch => '검색 지우기';
+	@override String get collectionActions => '수집 작업';
+	@override String get openCollection => '오픈 컬렉션';
+	@override String get dragToReorder => '드래그하여 재정렬하세요.';
+	@override String get smart => '똑똑한';
+	@override String get smartCollectionSummary => '스마트 컬렉션';
+	@override String get manual => '수동';
+	@override String get manualCollectionSummary => '수동 수집';
+	@override String get shelf => '선반';
+	@override String get timeline => '타임라인';
+	@override String get list => '목록';
+	@override String get noGroups => '그룹 없음';
+	@override String get month => '월';
+	@override String get quarter => '4분의 1';
+	@override String get year => '년도';
+	@override String get autoCover => '자동커버';
+	@override String get coverReady => '커버 준비 완료';
+	@override String get pinToTop => '상단에 고정';
+	@override String get privateOnly => '비공개 전용';
+	@override String get publicOnly => '공개 전용';
+	@override String get hasAttachments => '첨부파일 있음';
+	@override String get noAttachments => '첨부파일 없음';
+	@override String get imagesOnly => '이미지만';
+	@override String get pinnedOnlySummary => '고정된 것만';
+	@override String lastDays({required Object days}) => '지난 ${days}일';
+	@override String get customRangeSummary => '맞춤 범위';
+	@override String get headerHeadline => '메모로 테마 선반을 만들어보세요';
+	@override String get headerDescription => '컬렉션은 로컬 우선으로 유지되고 태그에서 자동으로 업데이트되며 반복되는 주제에 자체 홈을 제공합니다.';
+	@override String countAll({required Object count}) => '${count} 컬렉션';
+	@override String countFiltered({required Object visible, required Object total}) => '${visible} / ${total} 컬렉션 표시 중';
+	@override String get noCollectionsTitle => '아직 컬렉션이 없습니다.';
+	@override String get noCollectionsDescription => '반복되는 태그를 엄선된 선반으로 바꾸는 스마트 컬렉션을 만드세요.';
+	@override String get noMatchingTitle => '일치하는 컬렉션이 없습니다.';
+	@override String get noMatchingDescription => '필요한 컬렉션을 찾으려면 다른 검색이나 필터를 사용해 보세요.';
+	@override String get resetFilters => '필터 재설정';
+	@override String get loadingCollections => '컬렉션 로드 중';
+	@override String get loadingCollection => '컬렉션 로드 중';
+	@override String get loadingMemos => '메모 로드 중';
+	@override String get unableToLoadCollections => '컬렉션을 로드할 수 없습니다.';
+	@override String get unableToLoadCollection => '컬렉션을 로드할 수 없습니다.';
+	@override String get unableToLoadCollectionItems => '컬렉션 항목을 로드할 수 없습니다.';
+	@override String get unableToLoadCurrentItems => '현재 항목을 로드할 수 없습니다.';
+	@override String get unableToLoadMemos => '메모를 로드할 수 없습니다.';
+	@override String get deleteTitle => '컬렉션을 삭제하시겠습니까?';
+	@override String deleteMessage({required Object title}) => '\'${title}\'을 삭제하시겠습니까?';
+	@override String memosCount({required Object count}) => '${count} 메모';
+	@override String imagesCount({required Object count}) => '이미지가 있는 ${count}';
+	@override String showingMemos({required Object visible, required Object total}) => '${visible} / ${total} 메모 표시 중';
+	@override String get noMemoMatchedYet => '아직 일치하는 메모가 없습니다.';
+	@override String updatedAt({required Object date}) => '${date}를 업데이트했습니다.';
+	@override String get addMemos => '메모 추가';
+	@override String get addMemo => '메모 추가';
+	@override String addSelected({required Object count}) => '(${count}) 추가';
+	@override String get remove => '제거하다';
+	@override String get noManualCollectionsTitle => '아직 수동 컬렉션이 없습니다.';
+	@override String get noManualCollectionsDescription => '이 메모를 저장하고 선반에 보관하려면 메모를 만드세요.';
+	@override String get manualCollectionNotFoundTitle => '수동 컬렉션을 찾을 수 없습니다.';
+	@override String get manualCollectionNotFoundDescription => '이 컬렉션이 누락되었거나 로컬 저장소에서 더 이상 사용할 수 없습니다.';
+	@override String get manualCollectionEmptyTitle => '이 컬렉션에는 아직 항목이 없습니다.';
+	@override String get manualCollectionEmptyDescription => '메모를 추가하여 이 수동 컬렉션을 계속해서 다시 방문할 수 있는 책장으로 바꾸세요.';
+	@override String get noMemosAvailableTitle => '추가할 수 있는 메모가 없습니다.';
+	@override String get noMemosAvailableDescription => '여기에 추가하기 전에 다른 키워드를 시도하거나 더 많은 메모를 작성하세요.';
+	@override String get collectionNotFound => '컬렉션을 찾을 수 없습니다';
+	@override String searchNoResultsTitle({required Object query}) => '"${query}"에 대한 검색결과가 없습니다.';
+	@override String get searchNoResultsDescription => '이 컬렉션 내에서 다른 키워드를 사용해 보세요.';
+	@override String get emptySmartDetail => '아직 현재 규칙과 일치하는 메모가 없습니다.';
+	@override String get emptyManualDetail => '이 컬렉션에는 아직 항목이 없습니다.';
+	@override String get basics => '기초';
+	@override String get titleRequired => '제목은 필수 항목입니다.';
+	@override String get ruleRequired => '저장하기 전에 규칙을 하나 이상 추가하세요.';
+	@override String get description => '설명';
+	@override String get type => '유형';
+	@override String get accentColor => '악센트 색상';
+	@override String get rules => '규칙';
+	@override String get tags => '태그';
+	@override String get selectTags => '태그 선택';
+	@override String get noTagsSelected => '선택한 태그가 없습니다.';
+	@override String get tagMatch => '태그 매치';
+	@override String get anyTag => '모든 태그';
+	@override String get allTags => '모든 태그';
+	@override String get includeDescendants => '하위 항목 포함';
+	@override String get includeDescendantsDescription => '프로젝트/알파와 같은 하위 태그를 일치시킵니다.';
+	@override String get attachments => '첨부파일';
+	@override String get attachmentAny => '어느';
+	@override String get attachmentRequired => '필수의';
+	@override String get attachmentNone => '없음';
+	@override String get attachmentImagesOnly => '이미지만';
+	@override String get dateRange => '기간';
+	@override String get allTime => '모든 시간';
+	@override String get last7Days => '지난 7일';
+	@override String get last30Days => '지난 30일';
+	@override String get customRange => '맞춤 범위';
+	@override String get chooseRange => '범위 선택';
+	@override String get pinnedOnly => '고정된 메모만';
+	@override String get manualItems => '수동 항목';
+	@override String get manualItemsDescription => '수동 컬렉션은 메모 카드, 메모 세부 사항 또는 세부 사항 페이지 항목 관리 모드에서 선별됩니다.';
+	@override String get display => '표시하다';
+	@override String get cover => '씌우다';
+	@override String get coverAttachment => '부착';
+	@override String get coverImage => '표지 이미지';
+	@override String get noCoverImageAvailable => '현재 미리보기에서는 아직 이미지 첨부를 사용할 수 없습니다.';
+	@override String get defaultLayout => '기본 레이아웃';
+	@override String get groupBy => '그룹화 기준';
+	@override String get manualOrder => '수동 주문';
+	@override String get displayTimeDesc => '표시시간 ↓';
+	@override String get displayTimeAsc => '표시 시간 ↑';
+	@override String get updatedTimeDesc => '업데이트 시간 ↓';
+	@override String get updatedTimeAsc => '업데이트 시간 ↑';
+	@override String get showDetailStats => '세부 통계 표시';
+	@override String get showDetailStatsDescription => '세부 헤더에 메모 개수, 이미지 개수, 최근 활동을 표시합니다.';
+	@override String get hideWhenEmpty => '비어 있으면 선반에 숨기세요';
+	@override String get hideWhenEmptyDescription => '메모와 다시 일치할 때까지 이 컬렉션을 기본 선반에 보관합니다.';
+	@override String get previewMemos => 'Memos';
+	@override String get previewImages => '이미지';
+	@override String get noPreviewSmart => '아직 일치하는 메모가 없습니다.';
+	@override String get noPreviewManual => '이 수동 컬렉션에는 아직 항목이 없습니다.';
+}
+
+// Path: strings.login.mode
+class _StringsStringsLoginModeKo extends _StringsStringsLoginModeEn {
+	_StringsStringsLoginModeKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get password => '사용자 이름 및 비밀번호';
+	@override String get token => '토큰';
+	@override String get descPassword => '사용자 이름과 비밀번호로 로그인';
+	@override String get descToken => '개인 액세스 토큰으로 로그인';
+	@override String get signInMethod => '로그인 방법';
+}
+
+// Path: strings.login.field
+class _StringsStringsLoginFieldKo extends _StringsStringsLoginFieldEn {
+	_StringsStringsLoginFieldKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get serverUrlLabel => '서버 URL';
+	@override String get serverUrlHint => '로컬호스트:5230';
+	@override String get protocolLabel => '규약';
+	@override String get usernameLabel => '사용자 이름';
+	@override String get usernameHint => '사용자 이름을 입력하세요';
+	@override String get passwordLabel => '비밀번호';
+	@override String get passwordHint => '비밀번호를 입력하세요';
+	@override String get tokenLabel => '토큰 (PAT)';
+	@override String get tokenHint => '토큰 (PAT)';
+}
+
+// Path: strings.login.validation
+class _StringsStringsLoginValidationKo extends _StringsStringsLoginValidationEn {
+	_StringsStringsLoginValidationKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get serverUrlRequired => '서버 URL를 입력하세요';
+	@override String get serverUrlInvalid => 'localhost:5230 또는 memos.example.com과 같은 유효한 서버 주소를 입력하세요.';
+	@override String get usernameRequired => '사용자 이름을 입력하세요';
+	@override String get passwordRequired => '비밀번호를 입력해주세요';
+	@override String get tokenRequired => '토큰을 입력해주세요';
+}
+
+// Path: strings.login.dialogs
+class _StringsStringsLoginDialogsKo extends _StringsStringsLoginDialogsEn {
+	_StringsStringsLoginDialogsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get insecureHttpTitle => 'HTTP를 사용하시겠습니까?';
+	@override String get insecureHttpMessage => 'HTTP는 안전하지 않으며 귀하의 계정, 비밀번호 또는 토큰을 노출할 수 있습니다. 그래도 계속하시겠습니까?';
+	@override String get httpsHandshakeFailedTitle => 'HTTPS 연결 실패';
+	@override String get httpsHandshakeFailedMessage => '현재 HTTPS를 사용하고 계십니다. 서버가 HTTP만 지원하는 경우 HTTP를 사용하고 다시 시도할 수 있습니다. 서버가 HTTPS를 지원해야 하는 경우 해당 인증서 또는 역방향 프록시 구성을 확인하세요.';
+	@override String get switchToHttp => 'HTTP를 사용하고 다시 시도하세요.';
+}
+
+// Path: strings.login.compatibility
+class _StringsStringsLoginCompatibilityKo extends _StringsStringsLoginCompatibilityEn {
+	_StringsStringsLoginCompatibilityKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '호환 모드';
+	@override String get description => '레거시 엔드포인트 사용(이전 Memos 서버의 경우)';
+}
+
+// Path: strings.login.connect
+class _StringsStringsLoginConnectKo extends _StringsStringsLoginConnectEn {
+	_StringsStringsLoginConnectKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get connecting => '연결 중…';
+	@override String get action => '연결하다';
+}
+
+// Path: strings.login.errors
+class _StringsStringsLoginErrorsKo extends _StringsStringsLoginErrorsEn {
+	_StringsStringsLoginErrorsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get authFailedToken => '인증에 실패했습니다. 토큰이 유효하고 만료되지 않았는지 확인하세요.';
+	@override String get authFailedPat => '인증에 실패했습니다. 새로운 Memos의 경우 memos_pat_로 시작하는 PAT를 사용하세요(Bearer 접두사를 붙여넣지 마세요).';
+	@override String connectionFailedWithMessage({required Object message}) => '연결 실패: ${message}';
+	@override String connectionFailed({required Object error}) => '연결 실패: ${error}';
+	@override String get signInFailed => '로그인에 실패했습니다. 사용자 이름과 비밀번호를 확인하세요.';
+	@override String signInFailedWithMessage({required Object message}) => '로그인 실패: ${message}';
+	@override String get invalidServerUrl => '잘못된 서버 URL';
+	@override String get serverUrlNormalized => '서버 URL 정규화됨(추가 경로 세그먼트 제거됨)';
+}
+
+// Path: strings.settings.preferences
+class _StringsStringsSettingsPreferencesKo extends _StringsStringsSettingsPreferencesEn {
+	_StringsStringsSettingsPreferencesKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '환경설정';
+	@override String get language => '언어';
+	@override String get fontSize => '글꼴 크기';
+	@override String get lineHeight => '라인 높이';
+	@override String get font => '세례반';
+	@override String get systemDefault => '시스템 기본값';
+	@override String get noSystemFonts => '시스템 글꼴을 찾을 수 없습니다.';
+	@override String loadFontsFailed({required Object error}) => '글꼴을 로드하지 못했습니다: ${error}';
+	@override String get collapseLongContent => '긴 콘텐츠 접기';
+	@override String get collapseReferences => '참조 축소';
+	@override String get showEngagementInAllMemoDetails => '모든 메모 세부정보에 좋아요와 댓글 표시';
+	@override String get launchAction => '실행 작업';
+	@override String get quickInputKeyboard => '빠른 입력을 위한 자동 열기 키보드';
+	@override String get confirmExitOnBack => '종료 시 확인';
+	@override late final _StringsStringsSettingsPreferencesEditorToolbarKo editorToolbar = _StringsStringsSettingsPreferencesEditorToolbarKo._(_root);
+	@override String get appearance => '모습';
+	@override String get themeColor => '테마 색상';
+	@override String get haptics => '햅틱';
+	@override String get customTheme => '맞춤 테마';
+	@override String get history => '역사';
+	@override String get lightMode => '라이트 모드';
+	@override String get darkMode => '다크 모드';
+	@override String get surfaces => '표면';
+	@override String get background => '배경';
+	@override String get backgroundColor => '배경색';
+	@override String get card => '카드';
+	@override String get cardColor => '카드 색상';
+	@override String get border => '국경';
+	@override String get borderColor => '테두리 색상';
+}
+
+// Path: strings.aiInsight.common
+class _StringsStringsAiInsightCommonKo extends _StringsStringsAiInsightCommonEn {
+	_StringsStringsAiInsightCommonKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get enabled => '활성화됨';
+	@override String get disabled => '장애가 있는';
+}
+
+// Path: strings.aiInsight.timeRange
+class _StringsStringsAiInsightTimeRangeKo extends _StringsStringsAiInsightTimeRangeEn {
+	_StringsStringsAiInsightTimeRangeKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '시간 범위';
+	@override String get last3Days => '지난 3일';
+	@override String get last7Days => '지난 7일';
+	@override String get last30Days => '지난 30일';
+	@override String get customRange => '맞춤 범위';
+}
+
+// Path: strings.aiInsight.privacyScope
+class _StringsStringsAiInsightPrivacyScopeKo extends _StringsStringsAiInsightPrivacyScopeEn {
+	_StringsStringsAiInsightPrivacyScopeKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '개인정보 보호 범위';
+	@override String get includePrivateNotes => '비공개 메모 포함';
+	@override String get description => '활성화되면 분석을 위해 비공개 메모도 AI 모델로 전송됩니다.';
+}
+
+// Path: strings.aiInsight.promptSettings
+class _StringsStringsAiInsightPromptSettingsKo extends _StringsStringsAiInsightPromptSettingsEn {
+	_StringsStringsAiInsightPromptSettingsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '프롬프트 설정';
+	@override String get editPromptTemplate => '프롬프트 템플릿 편집';
+	@override String get description => '고급 사용자가 이 통찰력에 사용되는 AI 프롬프트를 사용자 정의할 수 있습니다.';
+	@override String get emptyTemplateHint => '이 통계에는 아직 프롬프트 템플릿이 없습니다. 분석을 시작하기 전에 하나를 추가하세요.';
+	@override String editorDescription({required Object insight}) => '이 템플릿은 ${insight}를 실행할 때 사용됩니다.';
+	@override String get editorPlaceholder => 'AI가 무엇에 집중하고, 비교하고, 요약하고, 강조해야 하는지 설명하세요.';
+	@override String get clearTemplate => '분명한';
+}
+
+// Path: strings.aiInsight.contentPreview
+class _StringsStringsAiInsightContentPreviewKo extends _StringsStringsAiInsightContentPreviewEn {
+	_StringsStringsAiInsightContentPreviewKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '콘텐츠 미리보기';
+	@override String get sectionTitle => '콘텐츠 미리보기';
+	@override String get notesToSend => '보낼 메모';
+	@override String get estimatedTokens => '예상 토큰';
+	@override String get previewContent => '콘텐츠 미리보기';
+	@override String get timeRange => '시간 범위';
+	@override String get loading => '미리보기 준비 중…';
+	@override String get previewLoadFailed => '콘텐츠 미리보기를 준비하지 못했습니다.';
+	@override String get truncatedNotice => '현재 분석 제한을 유지하기 위해 콘텐츠가 잘렸습니다.';
+	@override String get emptyState => '현재 설정과 일치하는 메모가 없습니다. 시간 범위나 개인 정보 보호 범위를 변경해 보세요.';
+	@override String noteCount({required Object count}) => '${count} 노트';
+	@override String tokenCount({required Object count}) => '${count} 토큰';
+}
+
+// Path: strings.aiInsight.templates
+class _StringsStringsAiInsightTemplatesKo extends _StringsStringsAiInsightTemplatesEn {
+	_StringsStringsAiInsightTemplatesKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get defaultTitle => '기본 템플릿';
+	@override String get defaultSubtitle => '내장된 분석 보기로 시작하세요.';
+	@override String get showDefault => '기본 템플릿 표시';
+	@override String get hideDefault => '기본 템플릿 숨기기';
+	@override String get hiddenHint => '기본 템플릿은 숨겨져 있습니다.';
+	@override String get customTitle => '맞춤 템플릿';
+	@override String get customSubtitle => '다양한 분석 목표에 맞게 최대 10개의 템플릿을 생성하세요.';
+	@override String get newTemplate => '새 템플릿';
+	@override String get emptyTitle => '아직 맞춤 템플릿이 없습니다.';
+	@override String get emptyDescription => '다양한 통찰력 각도에 대해 최대 10개의 템플릿을 만듭니다.';
+	@override String maxTemplatesReached({required Object max}) => '최대 ${max} 템플릿을 추가할 수 있습니다.';
+	@override String get deleteDialogTitle => '맞춤 템플릿 삭제';
+	@override String get deleteDialogDescription => '이 템플릿을 삭제해도 기존 기록은 삭제되지 않습니다.';
+	@override String get moreActions => '추가 작업';
+	@override String get editAction => '편집하다';
+	@override String get deleteAction => '삭제';
+}
+
+// Path: strings.aiInsight.cards
+class _StringsStringsAiInsightCardsKo extends _StringsStringsAiInsightCardsEn {
+	_StringsStringsAiInsightCardsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override late final _StringsStringsAiInsightCardsTodayCluesKo todayClues = _StringsStringsAiInsightCardsTodayCluesKo._(_root);
+	@override late final _StringsStringsAiInsightCardsEmotionMapKo emotionMap = _StringsStringsAiInsightCardsEmotionMapKo._(_root);
+	@override late final _StringsStringsAiInsightCardsThemeResonanceKo themeResonance = _StringsStringsAiInsightCardsThemeResonanceKo._(_root);
+	@override late final _StringsStringsAiInsightCardsThoughtTraceKo thoughtTrace = _StringsStringsAiInsightCardsThoughtTraceKo._(_root);
+	@override late final _StringsStringsAiInsightCardsBlindSpotDiscoveryKo blindSpotDiscovery = _StringsStringsAiInsightCardsBlindSpotDiscoveryKo._(_root);
+	@override late final _StringsStringsAiInsightCardsRelationshipViewKo relationshipView = _StringsStringsAiInsightCardsRelationshipViewKo._(_root);
+	@override late final _StringsStringsAiInsightCardsActionExtractionKo actionExtraction = _StringsStringsAiInsightCardsActionExtractionKo._(_root);
+	@override late final _StringsStringsAiInsightCardsLongTermTrajectoryKo longTermTrajectory = _StringsStringsAiInsightCardsLongTermTrajectoryKo._(_root);
+}
+
+// Path: strings.legacy.app_language
+class _StringsStringsLegacyAppLanguageKo extends _StringsStringsLegacyAppLanguageEn {
+	_StringsStringsLegacyAppLanguageKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => '시스템 설정 따르기';
+	@override String get zh_hans => '중국어(간체)';
+	@override String get zh_hant_tw => '중국어(번체, 대만)';
+	@override String get en => '영어';
+	@override String get ja => '일본어';
+	@override String get de => '독일어';
+	@override String get pt_br => '포르투갈어(브라질)';
+	@override String get ko => '한국어';
+}
+
+// Path: strings.legacy.app_theme
+class _StringsStringsLegacyAppThemeKo extends _StringsStringsLegacyAppThemeEn {
+	_StringsStringsLegacyAppThemeKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => '체계';
+	@override String get light => '빛';
+	@override String get dark => '어두운';
+}
+
+// Path: strings.legacy.app_font_size
+class _StringsStringsLegacyAppFontSizeKo extends _StringsStringsLegacyAppFontSizeEn {
+	_StringsStringsLegacyAppFontSizeKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get standard => '기준';
+	@override String get large => '크기가 큰';
+	@override String get small => '작은';
+}
+
+// Path: strings.legacy.app_line_height
+class _StringsStringsLegacyAppLineHeightKo extends _StringsStringsLegacyAppLineHeightEn {
+	_StringsStringsLegacyAppLineHeightKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get classic => '권위 있는';
+	@override String get compact => '콤팩트';
+	@override String get relaxed => '편안한';
+}
+
+// Path: strings.legacy.launch_action
+class _StringsStringsLegacyLaunchActionKo extends _StringsStringsLegacyLaunchActionEn {
+	_StringsStringsLegacyLaunchActionKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get none => '없음';
+	@override String get sync => '동조';
+	@override String get quick_input => '빠른 입력';
+	@override String get daily_review => '무작위 검토';
+}
+
+// Path: strings.legacy.auto_lock_time
+class _StringsStringsLegacyAutoLockTimeKo extends _StringsStringsLegacyAutoLockTimeEn {
+	_StringsStringsLegacyAutoLockTimeKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get immediately => '즉시';
+	@override String get after_1_min => '1분';
+	@override String get after_5_min => '5분';
+	@override String get after_15_min => '15분';
+}
+
+// Path: strings.legacy.reminder
+class _StringsStringsLegacyReminderKo extends _StringsStringsLegacyReminderEn {
+	_StringsStringsLegacyReminderKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get default_title => '이 아이디어 기억나세요?';
+	@override String get default_body => '세부정보를 보려면 탭하세요.';
+}
+
+// Path: strings.legacy.location
+class _StringsStringsLegacyLocationKo extends _StringsStringsLegacyLocationEn {
+	_StringsStringsLegacyLocationKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get current => '현재 위치';
+}
+
+// Path: strings.legacy.webdav
+class _StringsStringsLegacyWebdavKo extends _StringsStringsLegacyWebdavEn {
+	_StringsStringsLegacyWebdavKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get not_configured => 'WebDAV가 구성되지 않았습니다.';
+	@override String get backup_disabled => '백업이 비활성화되었습니다.';
+	@override String get backup_account_missing => '백업할 계정이 없습니다.';
+	@override String get backup_local_only => '백업은 로컬 라이브러리에만 가능합니다.';
+	@override String get backup_password_missing => '백업 비밀번호가 없습니다.';
+	@override String get backup_no_memo_files => '로컬 라이브러리에 메모 파일이 없습니다. 백업이 취소되었습니다';
+	@override String get restore_account_missing => '복원할 계정이 없습니다.';
+	@override String get restore_local_only => '복원은 로컬 라이브러리에만 가능합니다.';
+	@override String get backup_empty => '백업이 비어 있습니다.';
+	@override String get backup_no_memos => '백업에서 메모를 찾을 수 없습니다.';
+	@override String get snapshot_missing => '백업 스냅샷 누락';
+	@override String get snapshot_corrupted => '백업 스냅샷이 손상되었습니다.';
+	@override String get object_missing => '백업 객체 누락';
+	@override String get config_corrupted => '백업 구성이 손상되었습니다.';
+	@override String get config_invalid => '잘못된 백업 구성';
+	@override String get password_invalid => '잘못된 백업 비밀번호';
+	@override String get data_corrupted => '백업 데이터가 손상되었습니다.';
+	@override String get server_url_invalid => '잘못된 WebDAV 서버 URL';
+	@override String get recover_password_title => '백업 비밀번호를 복구하세요';
+	@override String get recover_password_button => '다시 덮다';
+	@override String get recover_password_hint => '보안 코드로 백업 비밀번호 재설정';
+	@override String get recovery_code_title => '보안 코드';
+	@override String get recovery_code_enter => '보안 코드를 입력하세요';
+	@override String get recovery_code_enter_new_password => '새 비밀번호를 입력하세요';
+	@override String get recovery_code_setup_message => '백업 비밀번호가 설정되었습니다. 지금 이 보안 코드를 저장하세요. 비밀번호를 잊어버린 경우 이 코드로만 비밀번호를 재설정할 수 있습니다.';
+	@override String get recovery_code_reset_message => '백업 비밀번호가 재설정되었습니다. 새 보안 코드를 저장하세요. 이전 코드는 더 이상 유효하지 않습니다.';
+	@override String get recovery_code_copied => '보안 코드가 복사되었습니다.';
+	@override String get recovery_reset_success => '백업 비밀번호 재설정';
+	@override String get recovery_code_invalid => '잘못된 보안 코드입니다. 확인하신 후 다시 시도해 주세요.';
+	@override String get recovery_not_configured => '이 백업에는 아직 보안 코드 복구가 활성화되지 않았습니다.';
+}
+
+// Path: strings.legacy.app_drawer
+class _StringsStringsLegacyAppDrawerKo extends _StringsStringsLegacyAppDrawerEn {
+	_StringsStringsLegacyAppDrawerKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String tooltip_single({required Object date, required Object weekday, required Object count}) => '${date} (${weekday}) · ${count} 메모';
+	@override String tooltip_multi({required Object date, required Object weekday, required Object count}) => '${date} (${weekday}) · ${count} 메모';
+}
+
+// Path: strings.legacy.ai_summary
+class _StringsStringsLegacyAiSummaryKo extends _StringsStringsLegacyAiSummaryEn {
+	_StringsStringsLegacyAiSummaryKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get error_api_key_empty => 'API 키가 비어 있습니다.';
+	@override late final _StringsStringsLegacyAiSummarySystemKo system = _StringsStringsLegacyAiSummarySystemKo._(_root);
+	@override late final _StringsStringsLegacyAiSummaryUserKo user = _StringsStringsLegacyAiSummaryUserKo._(_root);
+	@override String get error_invalid_response => 'AI 응답의 형식이 잘못되었습니다.';
+	@override String get error_empty_response => 'AI 응답이 비어 있습니다.';
+	@override String get error_missing_content => 'AI 응답 콘텐츠가 누락되었습니다.';
+	@override String get default_prompt => '당신은 미니멀리스트 노트 도우미입니다. 핵심 포인트를 추출하여 깔끔한 형식으로 제시합니다. 전문적이고 따뜻하며 간결한 톤을 유지하세요. 목록과 짧은 단락을 선호합니다.';
+}
+
+// Path: strings.collections.reader
+class _StringsStringsCollectionsReaderKo extends _StringsStringsCollectionsReaderEn {
+	_StringsStringsCollectionsReaderKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get comingSoon => '곧 출시 예정';
+	@override String get manageCollectionItems => '컬렉션 아이템 관리';
+	@override String get currentMemoActions => '현재 메모 작업';
+	@override String get pageAnimationTooltip => '페이지 애니메이션';
+	@override String get pageAnimationNone => '애니메이션 없음';
+	@override String get pageAnimationSlide => '슬라이드';
+	@override String get pageAnimationSimulation => '시뮬레이션';
+	@override String progressPage({required Object current, required Object total}) => '페이지 ${current}/${total}';
+	@override String progressMemo({required Object current, required Object total}) => '메모 ${current}/${total}';
+	@override String get settingsTitle => '리더 설정';
+	@override String get themePreset => '테마 사전 설정';
+	@override String get themePaper => '종이';
+	@override String get themeEyeCare => '눈 관리';
+	@override String get themeDark => '어두운';
+	@override String get themeGray => '회색';
+	@override String get brightnessMode => '밝기 모드';
+	@override String get brightnessSystem => '체계';
+	@override String get brightnessManual => '수동';
+	@override String get readerBrightness => '리더 밝기';
+	@override String get textScale => '텍스트 규모';
+	@override String get lineSpacing => '줄 간격';
+	@override String get pagePadding => '페이지 패딩';
+	@override String get autoPageTitle => '자동 페이지';
+	@override String get autoPageStart => '시작';
+	@override String get autoPageStop => '멈추다';
+	@override String get autoPageSecondsPerPage => '초/페이지';
+	@override String get styleTitle => '독자 스타일';
+	@override String get backgroundStyle => '배경 스타일';
+	@override String get backgroundTypePreset => '프리셋';
+	@override String get backgroundTypeSolid => '단단한';
+	@override String get backgroundTypeImage => '영상';
+	@override String get backgroundAlpha => '배경 알파';
+	@override String get typography => '타이포그래피';
+	@override String get readerFont => '리더 글꼴';
+	@override String get fontSystemDefault => '시스템 기본값';
+	@override String get fontWeightNormal => '정상';
+	@override String get fontWeightMedium => '중간';
+	@override String get fontWeightBold => '용감한';
+	@override String get letterSpacing => '문자 간격';
+	@override String get paragraphSpacing => '단락 간격';
+	@override String get firstLineIndent => '첫 줄 들여쓰기';
+	@override String get tipSettingsTitle => '팁바 설정';
+	@override String get tipSettingsSubtitle => '제목, 머리글, 바닥글, 팁 색상';
+	@override String get paddingSettingsTitle => '패딩 설정';
+	@override String get paddingSettingsSubtitle => '본문/머리글/바닥글 패딩';
+	@override String get brightness => '명도';
+	@override String get customSolidColor => '맞춤형 단색';
+	@override String get backgroundColor => '배경색';
+	@override String get backgroundImage => '배경 이미지';
+	@override String get backgroundImageUnavailableWeb => '웹에서는 이미지 파일 배경을 사용할 수 없습니다.';
+	@override String get backgroundImagePickHint => '리더 배경으로 사용할 이미지 파일을 선택하세요.';
+	@override String get clearImageBackground => '이미지 배경 지우기';
+	@override String get titleSection => '제목';
+	@override String get titleModeLeft => '왼쪽';
+	@override String get titleModeCenter => '센터';
+	@override String get titleModeHidden => '숨겨진';
+	@override String get titleScale => '타이틀 스케일';
+	@override String get titleTopSpacing => '제목 상단 간격';
+	@override String get titleBottomSpacing => '제목 하단 간격';
+	@override String get headerFooterSection => '머리글/바닥글';
+	@override String get headerMode => '헤더 모드';
+	@override String get footerMode => '바닥글 모드';
+	@override String get headerLeft => '헤더 왼쪽';
+	@override String get headerCenter => '헤더 센터';
+	@override String get headerRight => '헤더 오른쪽';
+	@override String get footerLeft => '바닥글 왼쪽';
+	@override String get footerCenter => '바닥글 중심';
+	@override String get footerRight => '바닥글 오른쪽';
+	@override String get tipTextColor => '팁 텍스트 색상';
+	@override String get dividerColor => '구분선 색상';
+	@override String get useDefaultLongPressReset => '기본값 사용(재설정하려면 길게 누르세요)';
+	@override String get tipSlotNone => '없음';
+	@override String get tipSlotCollectionTitle => '컬렉션 제목';
+	@override String get tipSlotChapterTitle => '장 제목';
+	@override String get tipSlotTime => '시간';
+	@override String get tipSlotBattery => '배터리';
+	@override String get tipSlotBatteryPercentage => '배터리 %';
+	@override String get tipSlotPage => '페이지';
+	@override String get tipSlotTotalProgress => '진전';
+	@override String get tipSlotPageAndTotal => '페이지/전체';
+	@override String get tipSlotTimeBattery => '시간 + 배터리';
+	@override String get tipSlotTimeBatteryPercentage => '시간 + 배터리 %';
+	@override String get tipDisplayHidden => '숨겨진';
+	@override String get tipDisplayInline => '인라인';
+	@override String get tipDisplayReserved => '예약된';
+	@override String get paddingTitle => '페이지 패딩';
+	@override String get paddingBody => '몸';
+	@override String get paddingHeader => '헤더';
+	@override String get paddingFooter => '보행인';
+	@override String get paddingTop => '맨 위';
+	@override String get paddingBottom => '맨 아래';
+	@override String get paddingLeft => '왼쪽';
+	@override String get paddingRight => '오른쪽';
+	@override String get showHeaderDivider => '헤더 구분선 표시';
+	@override String get showFooterDivider => '바닥글 구분선 표시';
+	@override String get moreSettingsTitle => '추가 설정';
+	@override String get moreDisplay => '표시하다';
+	@override String get moreInput => '입력';
+	@override String get moreContent => '콘텐츠';
+	@override String get hideStatusBar => '상태 표시줄 숨기기';
+	@override String get hideNavigationBar => '탐색 모음 숨기기';
+	@override String get padDisplayCutouts => '패드 디스플레이 컷아웃';
+	@override String get keepScreenAwake => '화면을 활성 상태로 유지';
+	@override String get barsFollowPageStyle => '막대는 페이지 스타일을 따릅니다.';
+	@override String get showReadTitleAddition => '읽은 제목 추가 표시';
+	@override String get showBrightnessOverlay => '밝기 오버레이 표시';
+	@override String get mouseWheelPageTurn => '마우스 휠 페이지 넘기기';
+	@override String get volumeKeyPageTurn => '볼륨 키 페이지 넘기기';
+	@override String get longPressKeyPageTurn => '길게 누르기 키 페이지 넘기기';
+	@override String get touchSlop => '터치슬롭';
+	@override String get clickActionsTitle => '클릭 동작';
+	@override String get clickActionsSubtitle => '3×3 터치 영역 구성';
+	@override String get platformUnavailable => '이 플랫폼에서는 사용할 수 없습니다.';
+	@override String get allowTextSelection => '텍스트 선택 허용';
+	@override String get previewImageOnTap => '탭 시 이미지 미리보기';
+	@override String get tapRegionTopLeft => '왼쪽 위';
+	@override String get tapRegionTopCenter => '상단 중앙';
+	@override String get tapRegionTopRight => '오른쪽 상단';
+	@override String get tapRegionMiddleLeft => '가운데 왼쪽';
+	@override String get tapRegionMiddleCenter => '중간 센터';
+	@override String get tapRegionMiddleRight => '가운데 오른쪽';
+	@override String get tapRegionBottomLeft => '왼쪽 하단';
+	@override String get tapRegionBottomCenter => '하단 중앙';
+	@override String get tapRegionBottomRight => '오른쪽 하단';
+	@override String get tapActionNone => '없음';
+	@override String get tapActionMenu => '메뉴';
+	@override String get tapActionNextPage => '다음 페이지';
+	@override String get tapActionPrevPage => '이전 페이지';
+	@override String get tapActionNextChapter => '다음 장';
+	@override String get tapActionPrevChapter => '이전 장';
+	@override String get tapActionToc => '목차';
+	@override String get tapActionSearch => '찾다';
+	@override String get cancel => '취소';
+	@override String get apply => '적용하다';
+	@override String get styleCardsTitle => '스타일 카드';
+	@override String get styleCardNew => '새로운';
+	@override String get styleCardEditCurrent => '현재 편집';
+	@override String get styleCardCreateTitle => '스타일 카드 만들기';
+	@override String get styleCardEditTitle => '스타일 카드 수정';
+	@override String get styleCardSave => '구하다';
+	@override String get styleCardDelete => '삭제';
+	@override String get styleCardNameLabel => '스타일 이름';
+	@override String get styleCardBuiltIn => '프리셋';
+	@override String get styleCardCustom => '관습';
+}
+
+// Path: strings.settings.preferences.editorToolbar
+class _StringsStringsSettingsPreferencesEditorToolbarKo extends _StringsStringsSettingsPreferencesEditorToolbarEn {
+	_StringsStringsSettingsPreferencesEditorToolbarKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '편집기 도구 모음 사용자 정의';
+	@override String get description => '도구를 길게 눌러 순서를 바꾸거나 도구 상자와 도구 모음 사이에서 도구를 이동하세요.';
+	@override String get dragToSort => '실시간 미리보기';
+	@override String get toolbox => '도구 상자';
+	@override String get toolboxDescription => '제거된 도구는 여기에 남아 있습니다. +를 탭하여 다시 추가하거나 도구 모음으로 드래그하세요.';
+	@override String get createCustomButton => '관습';
+	@override String get toolbarPreview => '툴바';
+	@override String get toolbarDescription => '아래 도구 모음은 편집기와 일치합니다. -를 눌러 도구를 제거하거나 길게 눌러 도구를 끌어서 정렬하세요.';
+	@override String get toolboxEmpty => '지금은 도구 상자에 도구가 없습니다.';
+	@override String get topRow => '맨 윗줄';
+	@override String get bottomRow => '맨 아래 줄';
+	@override String get currentRow => '열';
+	@override String get visible => '보이는';
+	@override String get hidden => '숨겨진';
+	@override String get emptyRow => '여기에 버튼을 드래그하세요.';
+	@override String get createCustomDialogTitle => '사용자 정의 도구 모음 버튼 추가';
+	@override String get createCustomDialogDescription => '마크다운 스니펫과 자주 사용되는 텍스트에 대해 재사용 가능한 삽입 버튼을 만듭니다.';
+	@override String get customButtonIconLabel => '상';
+	@override String get customButtonNameLabel => '이름';
+	@override String get customButtonNameHint => 'H1';
+	@override String get customButtonNameRequired => '이름을 입력하세요.';
+	@override String get customButtonContentLabel => '콘텐츠 삽입';
+	@override String get customButtonContentHint => '예: 재사용 가능한 Markdown 또는 텍스트';
+	@override String get customButtonContentHelp => '이 도구 모음 버튼을 탭하면 이 내용이 현재 커서 위치에 삽입됩니다.';
+	@override String get customButtonContentRequired => '삽입할 내용을 입력해주세요.';
+	@override String get customButtonPreview => '시사';
+	@override late final _StringsStringsSettingsPreferencesEditorToolbarCustomIconsKo customIcons = _StringsStringsSettingsPreferencesEditorToolbarCustomIconsKo._(_root);
+	@override late final _StringsStringsSettingsPreferencesEditorToolbarActionsKo actions = _StringsStringsSettingsPreferencesEditorToolbarActionsKo._(_root);
+}
+
+// Path: strings.aiInsight.cards.todayClues
+class _StringsStringsAiInsightCardsTodayCluesKo extends _StringsStringsAiInsightCardsTodayCluesEn {
+	_StringsStringsAiInsightCardsTodayCluesKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '오늘의 단서';
+	@override String get description => 'AI는 먼저 주목해야 할 최근 사건, 긴장감 및 개방형 루프를 강조합니다.';
+}
+
+// Path: strings.aiInsight.cards.emotionMap
+class _StringsStringsAiInsightCardsEmotionMapKo extends _StringsStringsAiInsightCardsEmotionMapEn {
+	_StringsStringsAiInsightCardsEmotionMapKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '감정지도';
+	@override String get description => '메모의 감정 흐름을 분석하고 최근 귀하의 상태를 어떻게 형성했는지 확인하세요.';
+}
+
+// Path: strings.aiInsight.cards.themeResonance
+class _StringsStringsAiInsightCardsThemeResonanceKo extends _StringsStringsAiInsightCardsThemeResonanceEn {
+	_StringsStringsAiInsightCardsThemeResonanceKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '테마 공명';
+	@override String get description => '최근 메모에서 반복되는 주제를 찾고 계속해서 되돌아오는 내용을 표면화하세요.';
+}
+
+// Path: strings.aiInsight.cards.thoughtTrace
+class _StringsStringsAiInsightCardsThoughtTraceKo extends _StringsStringsAiInsightCardsThoughtTraceEn {
+	_StringsStringsAiInsightCardsThoughtTraceKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '생각의 흔적';
+	@override String get description => '숨겨진 가정, 해결되지 않은 질문, 더 깊이 탐구할 가치가 있는 사고방식을 밝혀보세요.';
+}
+
+// Path: strings.aiInsight.cards.blindSpotDiscovery
+class _StringsStringsAiInsightCardsBlindSpotDiscoveryKo extends _StringsStringsAiInsightCardsBlindSpotDiscoveryEn {
+	_StringsStringsAiInsightCardsBlindSpotDiscoveryKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '사각지대 발견';
+	@override String get description => '글을 쓰는 동안 놓치기 쉬운 간과된 신호나 미묘한 패턴을 찾아보세요.';
+}
+
+// Path: strings.aiInsight.cards.relationshipView
+class _StringsStringsAiInsightCardsRelationshipViewKo extends _StringsStringsAiInsightCardsRelationshipViewEn {
+	_StringsStringsAiInsightCardsRelationshipViewKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '관계 보기';
+	@override String get description => '사람, 상호 작용, 변화하는 관계 역학의 렌즈를 통해 노트를 재구성하세요.';
+}
+
+// Path: strings.aiInsight.cards.actionExtraction
+class _StringsStringsAiInsightCardsActionExtractionKo extends _StringsStringsAiInsightCardsActionExtractionEn {
+	_StringsStringsAiInsightCardsActionExtractionKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '액션 추출';
+	@override String get description => '반사된 내용을 시도, 테스트 또는 후속 조치가 가능한 구체적인 다음 작업으로 전환하세요.';
+}
+
+// Path: strings.aiInsight.cards.longTermTrajectory
+class _StringsStringsAiInsightCardsLongTermTrajectoryKo extends _StringsStringsAiInsightCardsLongTermTrajectoryEn {
+	_StringsStringsAiInsightCardsLongTermTrajectoryKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '장기 궤적';
+	@override String get description => '시간을 통해 살펴보고 의미 있는 변화, 반복 주기 및 장기적인 변화를 식별합니다.';
+}
+
+// Path: strings.legacy.ai_summary.system
+class _StringsStringsLegacyAiSummarySystemKo extends _StringsStringsLegacyAiSummarySystemEn {
+	_StringsStringsLegacyAiSummarySystemKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get require_json => 'JSON를 엄격하게 출력하십시오. 코드 블록이나 추가 텍스트를 사용하지 마세요.';
+	@override String get json_format => 'JSON 형식: {"insights":["..."],"moodTrend":"...","keywords":["#..."]}';
+	@override String get insights_rule => '인사이트는 2~5개 항목이어야 합니다. 키워드는 #이 포함된 4~8개 항목이어야 합니다.';
+}
+
+// Path: strings.legacy.ai_summary.user
+class _StringsStringsLegacyAiSummaryUserKo extends _StringsStringsLegacyAiSummaryUserEn {
+	_StringsStringsLegacyAiSummaryUserKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String range({required Object rangeLabel}) => '시간 범위: ${rangeLabel}';
+	@override String counts({required Object memoCount, required Object includedCount}) => 'Memos: ${memoCount}(요약을 위해 포함됨: ${includedCount})';
+	@override String profile({required Object profile}) => '사용자 프로필: ${profile}';
+	@override String custom_prompt({required Object customPrompt}) => '추가 지침: ${customPrompt}';
+	@override String get memo_content => '메모 내용:';
+}
+
+// Path: strings.settings.preferences.editorToolbar.customIcons
+class _StringsStringsSettingsPreferencesEditorToolbarCustomIconsKo extends _StringsStringsSettingsPreferencesEditorToolbarCustomIconsEn {
+	_StringsStringsSettingsPreferencesEditorToolbarCustomIconsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get heading1 => '제목 1';
+	@override String get heading2 => '제목 2';
+	@override String get heading3 => '제목 3';
+	@override String get quote => '인용하다';
+	@override String get inlineCode => '인라인 코드';
+	@override String get codeBlock => '코드 블록';
+	@override String get task => '일';
+	@override String get divider => '분할기';
+	@override String get table => '테이블';
+	@override String get note => '메모';
+}
+
+// Path: strings.settings.preferences.editorToolbar.actions
+class _StringsStringsSettingsPreferencesEditorToolbarActionsKo extends _StringsStringsSettingsPreferencesEditorToolbarActionsEn {
+	_StringsStringsSettingsPreferencesEditorToolbarActionsKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get italic => '이탤릭체';
+	@override String get strikethrough => '취소선';
+	@override String get inlineCode => '인라인 코드';
+	@override String get bulletedList => '글머리 기호 목록';
+	@override String get taskList => '작업 목록';
+	@override String get quote => '인용하다';
+	@override String get heading1 => '제목 1';
+	@override String get heading2 => '제목 2';
+	@override String get heading3 => '제목 3';
+	@override String get divider => '분할기';
+	@override String get inlineMath => '인라인 수학';
+	@override String get blockMath => '블록 수학';
+	@override String get table => '테이블';
+	@override String get cutParagraph => '단락 잘라내기';
+	@override String get gallery => '갱도';
+}
+
+// Path: <root>
 class _StringsPtBr extends Translations {
 	/// You can call this constructor and build your own translation instance of this locale.
 	/// Constructing via the enum [AppLocale.build] is preferred.
@@ -7779,6 +10391,7 @@ class _StringsStringsLanguagesPtBr extends _StringsStringsLanguagesEn {
 	@override String get ja => 'Japonês';
 	@override String get de => 'Alemão';
 	@override String get ptBr => 'Português (Brasil)';
+	@override String get ko => 'Coreano';
 }
 
 // Path: strings.languagesNative
@@ -7795,6 +10408,7 @@ class _StringsStringsLanguagesNativePtBr extends _StringsStringsLanguagesNativeE
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
 	@override String get ptBr => 'Português (Brasil)';
+	@override String get ko => '한국어';
 }
 
 // Path: strings.onboarding
@@ -9792,6 +12406,7 @@ class _StringsStringsLegacyAppLanguagePtBr extends _StringsStringsLegacyAppLangu
 	@override String get ja => 'Japonês';
 	@override String get de => 'Alemão';
 	@override String get pt_br => 'Português (Brasil)';
+	@override String get ko => 'Coreano';
 }
 
 // Path: strings.legacy.app_theme
@@ -10378,6 +12993,7 @@ class _StringsStringsLanguagesZhHans extends _StringsStringsLanguagesEn {
 	@override String get ja => '日语';
 	@override String get de => '德语';
 	@override String get ptBr => '葡萄牙语（巴西）';
+	@override String get ko => '韩语';
 }
 
 // Path: strings.languagesNative
@@ -10394,6 +13010,7 @@ class _StringsStringsLanguagesNativeZhHans extends _StringsStringsLanguagesNativ
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
 	@override String get ptBr => 'Português (Brasil)';
+	@override String get ko => '한국어';
 }
 
 // Path: strings.onboarding
@@ -12391,6 +15008,7 @@ class _StringsStringsLegacyAppLanguageZhHans extends _StringsStringsLegacyAppLan
 	@override String get ja => '日语';
 	@override String get de => '德语';
 	@override String get pt_br => '葡萄牙语（巴西）';
+	@override String get ko => '韩语';
 }
 
 // Path: strings.legacy.app_theme
@@ -12977,6 +15595,7 @@ class _StringsStringsLanguagesZhHantTw extends _StringsStringsLanguagesEn {
 	@override String get ja => '日文';
 	@override String get de => '德文';
 	@override String get ptBr => '葡萄牙文（巴西）';
+	@override String get ko => '韓語';
 }
 
 // Path: strings.languagesNative
@@ -12993,6 +15612,7 @@ class _StringsStringsLanguagesNativeZhHantTw extends _StringsStringsLanguagesNat
 	@override String get ja => '日本語';
 	@override String get de => 'Deutsch';
 	@override String get ptBr => 'Português (Brasil)';
+	@override String get ko => '한국어';
 }
 
 // Path: strings.onboarding
@@ -14934,6 +17554,7 @@ class _StringsStringsLegacyAppLanguageZhHantTw extends _StringsStringsLegacyAppL
 	@override String get ja => '日語';
 	@override String get de => '德語';
 	@override String get pt_br => '葡萄牙文（巴西）';
+	@override String get ko => '韓語';
 }
 
 // Path: strings.legacy.app_theme
@@ -15458,6 +18079,7 @@ extension on Translations {
 			case 'strings.languages.ja': return 'Japanese';
 			case 'strings.languages.de': return 'German';
 			case 'strings.languages.ptBr': return 'Portuguese (Brazil)';
+			case 'strings.languages.ko': return 'Korean';
 			case 'strings.languagesNative.system': return 'System';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
@@ -15465,6 +18087,7 @@ extension on Translations {
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
 			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
+			case 'strings.languagesNative.ko': return '한국어';
 			case 'strings.onboarding.tagline': return 'Minimal, powerful note stream';
 			case 'strings.onboarding.selectLanguage': return 'Select language';
 			case 'strings.onboarding.selectMode': return 'Choose a mode';
@@ -16833,6 +19456,7 @@ extension on Translations {
 			case 'strings.legacy.app_language.ja': return 'Japanese';
 			case 'strings.legacy.app_language.de': return 'German';
 			case 'strings.legacy.app_language.pt_br': return 'Portuguese (Brazil)';
+			case 'strings.legacy.app_language.ko': return 'Korean';
 			case 'strings.legacy.app_theme.system': return 'System';
 			case 'strings.legacy.app_theme.light': return 'Light';
 			case 'strings.legacy.app_theme.dark': return 'Dark';
@@ -17487,6 +20111,7 @@ extension on _StringsDe {
 			case 'strings.languages.ja': return 'Japanisch';
 			case 'strings.languages.de': return 'Deutsch';
 			case 'strings.languages.ptBr': return 'Portugiesisch (Brasilien)';
+			case 'strings.languages.ko': return 'Koreanisch';
 			case 'strings.languagesNative.system': return 'System';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
@@ -17494,6 +20119,7 @@ extension on _StringsDe {
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
 			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
+			case 'strings.languagesNative.ko': return '한국어';
 			case 'strings.onboarding.tagline': return 'Minimaler, leistungsstarker Notiz-Stream';
 			case 'strings.onboarding.selectLanguage': return 'Sprache auswählen';
 			case 'strings.onboarding.selectMode': return 'Modus wählen';
@@ -18794,6 +21420,7 @@ extension on _StringsDe {
 			case 'strings.legacy.app_language.ja': return 'Japanisch';
 			case 'strings.legacy.app_language.de': return 'Deutsch';
 			case 'strings.legacy.app_language.pt_br': return 'Portugiesisch (Brasilien)';
+			case 'strings.legacy.app_language.ko': return 'Koreanisch';
 			case 'strings.legacy.app_theme.system': return 'System';
 			case 'strings.legacy.app_theme.light': return 'Hell';
 			case 'strings.legacy.app_theme.dark': return 'Dunkel';
@@ -19410,6 +22037,7 @@ extension on _StringsJa {
 			case 'strings.languages.ja': return '日本語';
 			case 'strings.languages.de': return 'ドイツ語';
 			case 'strings.languages.ptBr': return 'ポルトガル語（ブラジル）';
+			case 'strings.languages.ko': return '韓国語';
 			case 'strings.languagesNative.system': return 'システム';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
@@ -19417,6 +22045,7 @@ extension on _StringsJa {
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
 			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
+			case 'strings.languagesNative.ko': return '한국어';
 			case 'strings.onboarding.tagline': return 'ミニマルで強力なノートストリーム';
 			case 'strings.onboarding.selectLanguage': return '言語を選択';
 			case 'strings.onboarding.selectMode': return 'モードを選択';
@@ -20716,6 +23345,7 @@ extension on _StringsJa {
 			case 'strings.legacy.app_language.ja': return '日本語';
 			case 'strings.legacy.app_language.de': return 'ドイツ語';
 			case 'strings.legacy.app_language.pt_br': return 'ポルトガル語（ブラジル）';
+			case 'strings.legacy.app_language.ko': return '韓国語';
 			case 'strings.legacy.app_theme.system': return 'システム';
 			case 'strings.legacy.app_theme.light': return 'ライト';
 			case 'strings.legacy.app_theme.dark': return 'ダーク';
@@ -21310,6 +23940,2038 @@ extension on _StringsJa {
 	}
 }
 
+extension on _StringsKo {
+	dynamic _flatMapFunction(String path) {
+		switch (path) {
+			case 'strings.common.back': return '뒤로';
+			case 'strings.common.cancel': return '취소';
+			case 'strings.common.confirm': return '확인';
+			case 'strings.common.save': return '저장';
+			case 'strings.common.saveSettings': return '설정 저장';
+			case 'strings.common.auto': return '자동';
+			case 'strings.common.manual': return '수동';
+			case 'strings.common.copiedToClipboard': return '클립보드에 복사했습니다';
+			case 'strings.common.serverVersion': return '서버 버전';
+			case 'strings.common.selectValidServerVersion': return '유효한 서버 버전을 선택하세요';
+			case 'strings.common.serverVersionValue': return ({required Object version}) => '서버 버전: ${version}';
+			case 'strings.common.serverVersionProbeHint': return '로그인 전에는 선택한 서버 버전의 핵심 API만 확인합니다.';
+			case 'strings.common.selectServerVersionRange021To026': return '0.21~0.26 사이의 서버 버전을 수동으로 선택하세요';
+			case 'strings.languages.system': return '시스템 설정 따르기';
+			case 'strings.languages.zhHans': return '중국어(간체)';
+			case 'strings.languages.zhHantTw': return '중국어(번체, 대만)';
+			case 'strings.languages.en': return '영어';
+			case 'strings.languages.ja': return '일본어';
+			case 'strings.languages.de': return '독일어';
+			case 'strings.languages.ptBr': return '포르투갈어(브라질)';
+			case 'strings.languages.ko': return '한국어';
+			case 'strings.languagesNative.system': return '시스템';
+			case 'strings.languagesNative.zhHans': return '简体中文';
+			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
+			case 'strings.languagesNative.en': return 'English';
+			case 'strings.languagesNative.ja': return '日本語';
+			case 'strings.languagesNative.de': return 'Deutsch';
+			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
+			case 'strings.languagesNative.ko': return '한국어';
+			case 'strings.onboarding.tagline': return '간결하고 강력한 노트 스트림';
+			case 'strings.onboarding.selectLanguage': return '언어 선택';
+			case 'strings.onboarding.selectMode': return '모드 선택';
+			case 'strings.onboarding.modeHint': return '나중에 설정에서 변경할 수 있습니다.';
+			case 'strings.onboarding.modeLocalTitle': return '로컬 모드';
+			case 'strings.onboarding.modeLocalLabel': return '로컬 모드';
+			case 'strings.onboarding.modeLocalDesc': return '데이터가 기기에만 저장됩니다. 서버 설정이 필요 없어 개인정보 보호와 오프라인 사용에 적합합니다.';
+			case 'strings.onboarding.modeServerTitle': return '서버 모드';
+			case 'strings.onboarding.modeServerLabel': return '서버 모드';
+			case 'strings.onboarding.modeServerDesc': return '실시간 다중 기기 동기화를 위해 Memos 백엔드에 연결합니다.';
+			case 'strings.onboarding.localLibraryNameTitle': return '로컬 라이브러리 이름';
+			case 'strings.onboarding.localLibraryNameHint': return '이름 입력';
+			case 'strings.onboarding.localLibraryDefaultName': return '로컬 라이브러리';
+			case 'strings.onboarding.getStarted': return '시작하기';
+			case 'strings.legalConsent.title': return '계약 검토';
+			case 'strings.legalConsent.description': return 'MemoFlow를 사용하기 전에 사용자 계약 및 개인 정보 보호 정책을 읽고 동의하십시오.';
+			case 'strings.legalConsent.linksHint': return '전체 내용을 검토하려면 아래 문서를 열어보세요.';
+			case 'strings.legalConsent.acknowledge': return '나는 사용자 계약 및 개인 정보 보호 정책을 읽었으며 이에 동의합니다.';
+			case 'strings.legalConsent.continueAction': return '동의하고 계속하세요';
+			case 'strings.legalConsent.exitAction': return '앱 종료';
+			case 'strings.login.title': return 'Memos에 연결';
+			case 'strings.login.mode.password': return '사용자 이름 및 비밀번호';
+			case 'strings.login.mode.token': return '토큰';
+			case 'strings.login.mode.descPassword': return '사용자 이름과 비밀번호로 로그인';
+			case 'strings.login.mode.descToken': return '개인 액세스 토큰으로 로그인';
+			case 'strings.login.mode.signInMethod': return '로그인 방법';
+			case 'strings.login.field.serverUrlLabel': return '서버 URL';
+			case 'strings.login.field.serverUrlHint': return '로컬호스트:5230';
+			case 'strings.login.field.protocolLabel': return '규약';
+			case 'strings.login.field.usernameLabel': return '사용자 이름';
+			case 'strings.login.field.usernameHint': return '사용자 이름을 입력하세요';
+			case 'strings.login.field.passwordLabel': return '비밀번호';
+			case 'strings.login.field.passwordHint': return '비밀번호를 입력하세요';
+			case 'strings.login.field.tokenLabel': return '토큰 (PAT)';
+			case 'strings.login.field.tokenHint': return '토큰 (PAT)';
+			case 'strings.login.validation.serverUrlRequired': return '서버 URL를 입력하세요';
+			case 'strings.login.validation.serverUrlInvalid': return 'localhost:5230 또는 memos.example.com과 같은 유효한 서버 주소를 입력하세요.';
+			case 'strings.login.validation.usernameRequired': return '사용자 이름을 입력하세요';
+			case 'strings.login.validation.passwordRequired': return '비밀번호를 입력해주세요';
+			case 'strings.login.validation.tokenRequired': return '토큰을 입력해주세요';
+			case 'strings.login.dialogs.insecureHttpTitle': return 'HTTP를 사용하시겠습니까?';
+			case 'strings.login.dialogs.insecureHttpMessage': return 'HTTP는 안전하지 않으며 귀하의 계정, 비밀번호 또는 토큰을 노출할 수 있습니다. 그래도 계속하시겠습니까?';
+			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'HTTPS 연결 실패';
+			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return '현재 HTTPS를 사용하고 계십니다. 서버가 HTTP만 지원하는 경우 HTTP를 사용하고 다시 시도할 수 있습니다. 서버가 HTTPS를 지원해야 하는 경우 해당 인증서 또는 역방향 프록시 구성을 확인하세요.';
+			case 'strings.login.dialogs.switchToHttp': return 'HTTP를 사용하고 다시 시도하세요.';
+			case 'strings.login.compatibility.title': return '호환 모드';
+			case 'strings.login.compatibility.description': return '레거시 엔드포인트 사용(이전 Memos 서버의 경우)';
+			case 'strings.login.connect.connecting': return '연결 중…';
+			case 'strings.login.connect.action': return '연결하다';
+			case 'strings.login.errors.authFailedToken': return '인증에 실패했습니다. 토큰이 유효하고 만료되지 않았는지 확인하세요.';
+			case 'strings.login.errors.authFailedPat': return '인증에 실패했습니다. 새로운 Memos의 경우 memos_pat_로 시작하는 PAT를 사용하세요(Bearer 접두사를 붙여넣지 마세요).';
+			case 'strings.login.errors.connectionFailedWithMessage': return ({required Object message}) => '연결 실패: ${message}';
+			case 'strings.login.errors.connectionFailed': return ({required Object error}) => '연결 실패: ${error}';
+			case 'strings.login.errors.signInFailed': return '로그인에 실패했습니다. 사용자 이름과 비밀번호를 확인하세요.';
+			case 'strings.login.errors.signInFailedWithMessage': return ({required Object message}) => '로그인 실패: ${message}';
+			case 'strings.login.errors.invalidServerUrl': return '잘못된 서버 URL';
+			case 'strings.login.errors.serverUrlNormalized': return '서버 URL 정규화됨(추가 경로 세그먼트 제거됨)';
+			case 'strings.settings.preferences.title': return '환경설정';
+			case 'strings.settings.preferences.language': return '언어';
+			case 'strings.settings.preferences.fontSize': return '글꼴 크기';
+			case 'strings.settings.preferences.lineHeight': return '라인 높이';
+			case 'strings.settings.preferences.font': return '세례반';
+			case 'strings.settings.preferences.systemDefault': return '시스템 기본값';
+			case 'strings.settings.preferences.noSystemFonts': return '시스템 글꼴을 찾을 수 없습니다.';
+			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => '글꼴을 로드하지 못했습니다: ${error}';
+			case 'strings.settings.preferences.collapseLongContent': return '긴 콘텐츠 접기';
+			case 'strings.settings.preferences.collapseReferences': return '참조 축소';
+			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return '모든 메모 세부정보에 좋아요와 댓글 표시';
+			case 'strings.settings.preferences.launchAction': return '실행 작업';
+			case 'strings.settings.preferences.quickInputKeyboard': return '빠른 입력을 위한 자동 열기 키보드';
+			case 'strings.settings.preferences.confirmExitOnBack': return '종료 시 확인';
+			case 'strings.settings.preferences.editorToolbar.title': return '편집기 도구 모음 사용자 정의';
+			case 'strings.settings.preferences.editorToolbar.description': return '도구를 길게 눌러 순서를 바꾸거나 도구 상자와 도구 모음 사이에서 도구를 이동하세요.';
+			case 'strings.settings.preferences.editorToolbar.dragToSort': return '실시간 미리보기';
+			case 'strings.settings.preferences.editorToolbar.toolbox': return '도구 상자';
+			case 'strings.settings.preferences.editorToolbar.toolboxDescription': return '제거된 도구는 여기에 남아 있습니다. +를 탭하여 다시 추가하거나 도구 모음으로 드래그하세요.';
+			case 'strings.settings.preferences.editorToolbar.createCustomButton': return '관습';
+			case 'strings.settings.preferences.editorToolbar.toolbarPreview': return '툴바';
+			case 'strings.settings.preferences.editorToolbar.toolbarDescription': return '아래 도구 모음은 편집기와 일치합니다. -를 눌러 도구를 제거하거나 길게 눌러 도구를 끌어서 정렬하세요.';
+			case 'strings.settings.preferences.editorToolbar.toolboxEmpty': return '지금은 도구 상자에 도구가 없습니다.';
+			case 'strings.settings.preferences.editorToolbar.topRow': return '맨 윗줄';
+			case 'strings.settings.preferences.editorToolbar.bottomRow': return '맨 아래 줄';
+			case 'strings.settings.preferences.editorToolbar.currentRow': return '열';
+			case 'strings.settings.preferences.editorToolbar.visible': return '보이는';
+			case 'strings.settings.preferences.editorToolbar.hidden': return '숨겨진';
+			case 'strings.settings.preferences.editorToolbar.emptyRow': return '여기에 버튼을 드래그하세요.';
+			case 'strings.settings.preferences.editorToolbar.createCustomDialogTitle': return '사용자 정의 도구 모음 버튼 추가';
+			case 'strings.settings.preferences.editorToolbar.createCustomDialogDescription': return '마크다운 스니펫과 자주 사용되는 텍스트에 대해 재사용 가능한 삽입 버튼을 만듭니다.';
+			case 'strings.settings.preferences.editorToolbar.customButtonIconLabel': return '상';
+			case 'strings.settings.preferences.editorToolbar.customButtonNameLabel': return '이름';
+			case 'strings.settings.preferences.editorToolbar.customButtonNameHint': return 'H1';
+			case 'strings.settings.preferences.editorToolbar.customButtonNameRequired': return '이름을 입력하세요.';
+			case 'strings.settings.preferences.editorToolbar.customButtonContentLabel': return '콘텐츠 삽입';
+			case 'strings.settings.preferences.editorToolbar.customButtonContentHint': return '예: 재사용 가능한 Markdown 또는 텍스트';
+			case 'strings.settings.preferences.editorToolbar.customButtonContentHelp': return '이 도구 모음 버튼을 탭하면 이 내용이 현재 커서 위치에 삽입됩니다.';
+			case 'strings.settings.preferences.editorToolbar.customButtonContentRequired': return '삽입할 내용을 입력해주세요.';
+			case 'strings.settings.preferences.editorToolbar.customButtonPreview': return '시사';
+			case 'strings.settings.preferences.editorToolbar.customIcons.heading1': return '제목 1';
+			case 'strings.settings.preferences.editorToolbar.customIcons.heading2': return '제목 2';
+			case 'strings.settings.preferences.editorToolbar.customIcons.heading3': return '제목 3';
+			case 'strings.settings.preferences.editorToolbar.customIcons.quote': return '인용하다';
+			case 'strings.settings.preferences.editorToolbar.customIcons.inlineCode': return '인라인 코드';
+			case 'strings.settings.preferences.editorToolbar.customIcons.codeBlock': return '코드 블록';
+			case 'strings.settings.preferences.editorToolbar.customIcons.task': return '일';
+			case 'strings.settings.preferences.editorToolbar.customIcons.divider': return '분할기';
+			case 'strings.settings.preferences.editorToolbar.customIcons.table': return '테이블';
+			case 'strings.settings.preferences.editorToolbar.customIcons.note': return '메모';
+			case 'strings.settings.preferences.editorToolbar.actions.italic': return '이탤릭체';
+			case 'strings.settings.preferences.editorToolbar.actions.strikethrough': return '취소선';
+			case 'strings.settings.preferences.editorToolbar.actions.inlineCode': return '인라인 코드';
+			case 'strings.settings.preferences.editorToolbar.actions.bulletedList': return '글머리 기호 목록';
+			case 'strings.settings.preferences.editorToolbar.actions.taskList': return '작업 목록';
+			case 'strings.settings.preferences.editorToolbar.actions.quote': return '인용하다';
+			case 'strings.settings.preferences.editorToolbar.actions.heading1': return '제목 1';
+			case 'strings.settings.preferences.editorToolbar.actions.heading2': return '제목 2';
+			case 'strings.settings.preferences.editorToolbar.actions.heading3': return '제목 3';
+			case 'strings.settings.preferences.editorToolbar.actions.divider': return '분할기';
+			case 'strings.settings.preferences.editorToolbar.actions.inlineMath': return '인라인 수학';
+			case 'strings.settings.preferences.editorToolbar.actions.blockMath': return '블록 수학';
+			case 'strings.settings.preferences.editorToolbar.actions.table': return '테이블';
+			case 'strings.settings.preferences.editorToolbar.actions.cutParagraph': return '단락 잘라내기';
+			case 'strings.settings.preferences.editorToolbar.actions.gallery': return '갱도';
+			case 'strings.settings.preferences.appearance': return '모습';
+			case 'strings.settings.preferences.themeColor': return '테마 색상';
+			case 'strings.settings.preferences.haptics': return '햅틱';
+			case 'strings.settings.preferences.customTheme': return '맞춤 테마';
+			case 'strings.settings.preferences.history': return '역사';
+			case 'strings.settings.preferences.lightMode': return '라이트 모드';
+			case 'strings.settings.preferences.darkMode': return '다크 모드';
+			case 'strings.settings.preferences.surfaces': return '표면';
+			case 'strings.settings.preferences.background': return '배경';
+			case 'strings.settings.preferences.backgroundColor': return '배경색';
+			case 'strings.settings.preferences.card': return '카드';
+			case 'strings.settings.preferences.cardColor': return '카드 색상';
+			case 'strings.settings.preferences.border': return '국경';
+			case 'strings.settings.preferences.borderColor': return '테두리 색상';
+			case 'strings.locationPicker.searchNearbyPlaces': return '주변 장소 검색';
+			case 'strings.locationPicker.latitudeValue': return ({required Object value}) => '위도 ${value}';
+			case 'strings.locationPicker.longitudeValue': return ({required Object value}) => '경도 ${value}';
+			case 'strings.locationPicker.noPlacesFound': return '장소를 찾을 수 없습니다.';
+			case 'strings.locationPicker.mapInitializeFailed': return '지도를 초기화하지 못했습니다.';
+			case 'strings.locationPicker.providerNotReady': return '위치 제공업체가 준비되지 않았습니다.';
+			case 'strings.locationPicker.providerMissingAmapKeys': return '위치를 선택하기 전에 Amap Web API 키와 보안 키가 필요합니다.';
+			case 'strings.locationPicker.providerMissingBaiduKey': return '위치를 선택하려면 Baidu AK가 필요합니다.';
+			case 'strings.locationPicker.providerMissingGoogleKey': return '위치를 선택하려면 Google 지도 API 키가 필요합니다.';
+			case 'strings.locationPicker.providerUnsupportedPlatform': return '내장된 지도 선택기는 Android 및 Windows에서만 사용할 수 있습니다.';
+			case 'strings.aiInsight.title': return 'AI 인사이트 스튜디오';
+			case 'strings.aiInsight.subtitle': return 'AI는 다양한 각도에서 메모를 이해할 수 있도록 도와드립니다.';
+			case 'strings.aiInsight.settingsTitle': return 'AI 분석 설정';
+			case 'strings.aiInsight.startAnalysis': return '분석 시작';
+			case 'strings.aiInsight.common.enabled': return '활성화됨';
+			case 'strings.aiInsight.common.disabled': return '장애가 있는';
+			case 'strings.aiInsight.timeRange.title': return '시간 범위';
+			case 'strings.aiInsight.timeRange.last3Days': return '지난 3일';
+			case 'strings.aiInsight.timeRange.last7Days': return '지난 7일';
+			case 'strings.aiInsight.timeRange.last30Days': return '지난 30일';
+			case 'strings.aiInsight.timeRange.customRange': return '맞춤 범위';
+			case 'strings.aiInsight.privacyScope.title': return '개인정보 보호 범위';
+			case 'strings.aiInsight.privacyScope.includePrivateNotes': return '비공개 메모 포함';
+			case 'strings.aiInsight.privacyScope.description': return '활성화되면 분석을 위해 비공개 메모도 AI 모델로 전송됩니다.';
+			case 'strings.aiInsight.promptSettings.title': return '프롬프트 설정';
+			case 'strings.aiInsight.promptSettings.editPromptTemplate': return '프롬프트 템플릿 편집';
+			case 'strings.aiInsight.promptSettings.description': return '고급 사용자가 이 통찰력에 사용되는 AI 프롬프트를 사용자 정의할 수 있습니다.';
+			case 'strings.aiInsight.promptSettings.emptyTemplateHint': return '이 통계에는 아직 프롬프트 템플릿이 없습니다. 분석을 시작하기 전에 하나를 추가하세요.';
+			case 'strings.aiInsight.promptSettings.editorDescription': return ({required Object insight}) => '이 템플릿은 ${insight}를 실행할 때 사용됩니다.';
+			case 'strings.aiInsight.promptSettings.editorPlaceholder': return 'AI가 무엇에 집중하고, 비교하고, 요약하고, 강조해야 하는지 설명하세요.';
+			case 'strings.aiInsight.promptSettings.clearTemplate': return '분명한';
+			case 'strings.aiInsight.contentPreview.title': return '콘텐츠 미리보기';
+			case 'strings.aiInsight.contentPreview.sectionTitle': return '콘텐츠 미리보기';
+			case 'strings.aiInsight.contentPreview.notesToSend': return '보낼 메모';
+			case 'strings.aiInsight.contentPreview.estimatedTokens': return '예상 토큰';
+			case 'strings.aiInsight.contentPreview.previewContent': return '콘텐츠 미리보기';
+			case 'strings.aiInsight.contentPreview.timeRange': return '시간 범위';
+			case 'strings.aiInsight.contentPreview.loading': return '미리보기 준비 중…';
+			case 'strings.aiInsight.contentPreview.previewLoadFailed': return '콘텐츠 미리보기를 준비하지 못했습니다.';
+			case 'strings.aiInsight.contentPreview.truncatedNotice': return '현재 분석 제한을 유지하기 위해 콘텐츠가 잘렸습니다.';
+			case 'strings.aiInsight.contentPreview.emptyState': return '현재 설정과 일치하는 메모가 없습니다. 시간 범위나 개인 정보 보호 범위를 변경해 보세요.';
+			case 'strings.aiInsight.contentPreview.noteCount': return ({required Object count}) => '${count} 노트';
+			case 'strings.aiInsight.contentPreview.tokenCount': return ({required Object count}) => '${count} 토큰';
+			case 'strings.aiInsight.templates.defaultTitle': return '기본 템플릿';
+			case 'strings.aiInsight.templates.defaultSubtitle': return '내장된 분석 보기로 시작하세요.';
+			case 'strings.aiInsight.templates.showDefault': return '기본 템플릿 표시';
+			case 'strings.aiInsight.templates.hideDefault': return '기본 템플릿 숨기기';
+			case 'strings.aiInsight.templates.hiddenHint': return '기본 템플릿은 숨겨져 있습니다.';
+			case 'strings.aiInsight.templates.customTitle': return '맞춤 템플릿';
+			case 'strings.aiInsight.templates.customSubtitle': return '다양한 분석 목표에 맞게 최대 10개의 템플릿을 생성하세요.';
+			case 'strings.aiInsight.templates.newTemplate': return '새 템플릿';
+			case 'strings.aiInsight.templates.emptyTitle': return '아직 맞춤 템플릿이 없습니다.';
+			case 'strings.aiInsight.templates.emptyDescription': return '다양한 통찰력 각도에 대해 최대 10개의 템플릿을 만듭니다.';
+			case 'strings.aiInsight.templates.maxTemplatesReached': return ({required Object max}) => '최대 ${max} 템플릿을 추가할 수 있습니다.';
+			case 'strings.aiInsight.templates.deleteDialogTitle': return '맞춤 템플릿 삭제';
+			case 'strings.aiInsight.templates.deleteDialogDescription': return '이 템플릿을 삭제해도 기존 기록은 삭제되지 않습니다.';
+			case 'strings.aiInsight.templates.moreActions': return '추가 작업';
+			case 'strings.aiInsight.templates.editAction': return '편집하다';
+			case 'strings.aiInsight.templates.deleteAction': return '삭제';
+			case 'strings.aiInsight.cards.todayClues.title': return '오늘의 단서';
+			case 'strings.aiInsight.cards.todayClues.description': return 'AI는 먼저 주목해야 할 최근 사건, 긴장감 및 개방형 루프를 강조합니다.';
+			case 'strings.aiInsight.cards.emotionMap.title': return '감정지도';
+			case 'strings.aiInsight.cards.emotionMap.description': return '메모의 감정 흐름을 분석하고 최근 귀하의 상태를 어떻게 형성했는지 확인하세요.';
+			case 'strings.aiInsight.cards.themeResonance.title': return '테마 공명';
+			case 'strings.aiInsight.cards.themeResonance.description': return '최근 메모에서 반복되는 주제를 찾고 계속해서 되돌아오는 내용을 표면화하세요.';
+			case 'strings.aiInsight.cards.thoughtTrace.title': return '생각의 흔적';
+			case 'strings.aiInsight.cards.thoughtTrace.description': return '숨겨진 가정, 해결되지 않은 질문, 더 깊이 탐구할 가치가 있는 사고방식을 밝혀보세요.';
+			case 'strings.aiInsight.cards.blindSpotDiscovery.title': return '사각지대 발견';
+			case 'strings.aiInsight.cards.blindSpotDiscovery.description': return '글을 쓰는 동안 놓치기 쉬운 간과된 신호나 미묘한 패턴을 찾아보세요.';
+			case 'strings.aiInsight.cards.relationshipView.title': return '관계 보기';
+			case 'strings.aiInsight.cards.relationshipView.description': return '사람, 상호 작용, 변화하는 관계 역학의 렌즈를 통해 노트를 재구성하세요.';
+			case 'strings.aiInsight.cards.actionExtraction.title': return '액션 추출';
+			case 'strings.aiInsight.cards.actionExtraction.description': return '반사된 내용을 시도, 테스트 또는 후속 조치가 가능한 구체적인 다음 작업으로 전환하세요.';
+			case 'strings.aiInsight.cards.longTermTrajectory.title': return '장기 궤적';
+			case 'strings.aiInsight.cards.longTermTrajectory.description': return '시간을 통해 살펴보고 의미 있는 변화, 반복 주기 및 장기적인 변화를 식별합니다.';
+			case 'strings.aiProxy.title': return '프록시 설정';
+			case 'strings.aiProxy.notConfigured': return '구성되지 않음';
+			case 'strings.aiProxy.statusHttp': return ({required Object host, required Object port}) => 'HTTP · ${host}:${port}';
+			case 'strings.aiProxy.statusSocks5': return ({required Object host, required Object port}) => 'SOCKS5 · ${host}:${port}';
+			case 'strings.aiProxy.protocol': return '규약';
+			case 'strings.aiProxy.host': return '주인';
+			case 'strings.aiProxy.port': return '포트';
+			case 'strings.aiProxy.username': return '사용자 이름';
+			case 'strings.aiProxy.password': return '비밀번호';
+			case 'strings.aiProxy.bypassLocalAddresses': return '로컬/개인 주소를 자동으로 우회';
+			case 'strings.aiProxy.description': return '공유 프록시를 활성화하는 AI 서비스에만 영향을 미칩니다. Ollama 및 127.0.0.1과 같은 로컬 모델은 기본적으로 직접 유지됩니다.';
+			case 'strings.aiProxy.useSharedProxy': return '공유 프록시 사용';
+			case 'strings.aiProxy.useSharedProxyDescription': return '이 서비스는 AI 설정에 구성된 프록시를 사용합니다.';
+			case 'strings.aiProxy.incompleteWarning': return '이 서비스에는 프록시가 활성화되어 있지만 공유 프록시 설정이 불완전합니다.';
+			case 'strings.aiProxy.openSettings': return '프록시 설정 열기';
+			case 'strings.aiProxy.saveSuccess': return '프록시 설정이 저장되었습니다.';
+			case 'strings.aiProxy.clearSuccess': return '프록시 설정이 지워졌습니다.';
+			case 'strings.aiProxy.invalidHost': return '프록시 호스트를 입력하세요.';
+			case 'strings.aiProxy.invalidPort': return '1~65535 사이의 유효한 프록시 포트를 입력하세요.';
+			case 'strings.aiProxy.incompleteError': return '该服务已启 이용대리，但 AI 代理设置尚未配置完整';
+			case 'strings.aiProxy.testSectionTitle': return '프록시 테스트';
+			case 'strings.aiProxy.testSectionDescription': return '현재 양식 값을 사용하여 프록시가 대상 웹 사이트에 도달할 수 있는지 테스트합니다.';
+			case 'strings.aiProxy.testUrl': return 'URL 테스트';
+			case 'strings.aiProxy.testAction': return '연결 테스트';
+			case 'strings.aiProxy.testing': return '테스트 중...';
+			case 'strings.aiProxy.invalidTestUrl': return '유효한 HTTP 또는 HTTPS URL를 입력하세요.';
+			case 'strings.aiProxy.testSuccess': return ({required Object statusCode, required Object elapsedMs}) => '연결 성공 · HTTP ${statusCode} · ${elapsedMs} ms';
+			case 'strings.aiProxy.testFailure': return ({required Object message}) => '연결 실패: ${message}';
+			case 'strings.legacy.msg_memos_backend_docs': return 'Memos 백엔드 문서';
+			case 'strings.legacy.msg_remember_moment_feel_warmth_life_take': return '순간을 기억하고, 삶의 따뜻함을 느껴보세요.\\n매일 간단한 복습을 해보세요.';
+			case 'strings.legacy.msg_sure_want_delete_shortcut': return '이 바로가기를 삭제하시겠습니까?';
+			case 'strings.legacy.msg_scan_completed': return '스캔 완료';
+			case 'strings.legacy.msg_confirm': return '확인하다';
+			case 'strings.legacy.msg_unable_open_browser_install_browser_app': return '브라우저를 열 수 없습니다. 브라우저 앱을 설치해주세요.';
+			case 'strings.legacy.msg_contributors': return '기여자';
+			case 'strings.legacy.msg_feature_in_progress': return '기능이 진행 중입니다. 곧 출시됩니다.';
+			case 'strings.legacy.msg_version_description_unknown': return '버전: 알 수 없음';
+			case 'strings.legacy.msg_version_description_v': return ({required Object version}) => '버전: v${version}';
+			case 'strings.legacy.msg_version_description_v_build': return ({required Object version, required Object build}) => '버전: v${version} (${build})';
+			case 'strings.legacy.msg_about_website_link': return '공식 홈페이지';
+			case 'strings.legacy.msg_about_website_link_subtitle': return 'MemoFlow 공식 웹사이트를 방문하세요';
+			case 'strings.legacy.msg_about_privacy_policy': return '개인 정보 보호 정책';
+			case 'strings.legacy.msg_about_privacy_policy_subtitle': return '개인정보 보호 및 데이터 사용 세부정보 보기';
+			case 'strings.legacy.msg_about_user_agreement': return '사용자 계약';
+			case 'strings.legacy.msg_about_user_agreement_subtitle': return '서비스 약관 및 사용 규칙 보기';
+			case 'strings.legacy.msg_about_help_center': return '도움말 센터';
+			case 'strings.legacy.msg_about_help_center_subtitle': return 'FAQ 및 사용 가이드';
+			case 'strings.legacy.msg_about_release_notes_subtitle': return '버전 업데이트 및 변경 세부정보 보기';
+			case 'strings.legacy.msg_about_submit_feedback': return '피드백 제출';
+			case 'strings.legacy.msg_about_submit_feedback_subtitle': return '문제점 및 개선 제안 제출';
+			case 'strings.legacy.msg_about_contributors_subtitle': return '기부자 및 기부자 목록 보기';
+			case 'strings.legacy.msg_status_available': return '살다';
+			case 'strings.legacy.msg_status_placeholder': return '곧';
+			case 'strings.legacy.msg_debug_tap_logo_enter_debug_tools': return '디버그: 로고를 5번 탭하면 디버그 도구가 열립니다.';
+			case 'strings.legacy.msg_donors_intro_thanks': return 'MemoFlow를 지원하는 모든 사용자에게 감사드립니다.\n귀하의 기부는 프로젝트를 유지하고 개선하는 데 도움이 됩니다.\n\n아래에 확인되었습니다.';
+			case 'strings.legacy.msg_enter_keywords_search_box_query_local': return '로컬 콘텐츠와 태그를 쿼리하려면 검색 상자에 키워드를 입력하세요. 오프라인으로 작동합니다. 처음 사용하려면 로컬 인덱싱이 완료될 때까지 기다리세요.';
+			case 'strings.legacy.msg_memo_not_found_locally': return '로컬에서 메모를 찾을 수 없습니다.';
+			case 'strings.legacy.msg_token': return '토큰';
+			case 'strings.legacy.msg_last_7_days': return '지난 7일';
+			case 'strings.legacy.msg_search_memo_content': return '메모 내용 검색';
+			case 'strings.legacy.msg_retry_started': return '재시도가 시작되었습니다';
+			case 'strings.legacy.msg_last_year_memos': return ({required Object lastYearMemos}) => '작년: ${lastYearMemos} 메모';
+			case 'strings.legacy.msg_no_content_yet': return '아직 콘텐츠가 없습니다.';
+			case 'strings.legacy.msg_no_summary_yet': return '아직 요약이 없습니다.';
+			case 'strings.legacy.msg_sooner': return '빨리!';
+			case 'strings.legacy.msg_token_copied': return '토큰이 복사되었습니다.';
+			case 'strings.legacy.msg_share': return '공유하다';
+			case 'strings.legacy.msg_gallery_permission_required': return '갤러리 권한이 필요합니다';
+			case 'strings.legacy.msg_basic_settings': return '기본 설정';
+			case 'strings.legacy.msg_bad_ssl_certificate': return 'SSL 인증서가 잘못되었습니다.';
+			case 'strings.legacy.msg_no_notifications': return '알림 없음';
+			case 'strings.legacy.msg_import_markdown': return 'Markdown에서 가져오기';
+			case 'strings.legacy.msg_upload_zip_package_md_files': return '.md 파일이 포함된 .zip 패키지 업로드';
+			case 'strings.legacy.msg_request_send_timeout_try': return '전송 시간 초과를 요청합니다. 다시 시도해 보세요.';
+			case 'strings.legacy.msg_select_date_range': return '기간 선택';
+			case 'strings.legacy.msg_delete_shortcut': return '바로가기 삭제';
+			case 'strings.legacy.msg_auto_lock_time': return '자동 잠금 시간';
+			case 'strings.legacy.msg_replacing_delete_original_attachment_continue': return '교체하면 원본 첨부파일이 삭제됩니다. 계속하다?';
+			case 'strings.legacy.msg_add_least_one_condition': return '조건을 하나 이상 추가하세요.';
+			case 'strings.legacy.msg_upload_images_image_bed_append_links': return '이미지베드에 이미지를 업로드하고 메모에 링크를 추가하세요.';
+			case 'strings.legacy.msg_request_cancelled': return '요청이 취소되었습니다.';
+			case 'strings.legacy.msg_generating': return '생성 중이신가요?';
+			case 'strings.legacy.msg_permissions_denied_reminders_disabled': return '권한이 거부되었습니다. 알림이 비활성화되었습니다.';
+			case 'strings.legacy.msg_memoflow_local_reminders': return 'MemoFlow 지역 알림';
+			case 'strings.legacy.msg_use_legacy_endpoints_older_memos_servers': return '레거시 엔드포인트를 사용합니다(이전 Memos 서버의 경우).';
+			case 'strings.legacy.msg_no_comments_yet': return '아직 댓글이 없습니다';
+			case 'strings.legacy.msg_open': return '열려 있는';
+			case 'strings.legacy.msg_microphone_permission_required': return '마이크 권한이 필요합니다';
+			case 'strings.legacy.msg_failed_react': return ({required Object e}) => '반응 실패: ${e}';
+			case 'strings.legacy.msg_restore_backup': return '백업을 복원하시겠습니까?';
+			case 'strings.legacy.msg_qr_saved_gallery': return 'QR이 갤러리에 저장되었습니다.';
+			case 'strings.legacy.msg_no_attachments': return '첨부파일 없음';
+			case 'strings.legacy.msg_enable_reminder_permissions': return '알림 권한 활성화';
+			case 'strings.legacy.msg_created_time': return '생성시간 ↑';
+			case 'strings.legacy.msg_prompt_saved_quick_prompts': return '프롬프트가 빠른 프롬프트에 저장됩니다.';
+			case 'strings.legacy.msg_remember_password': return '비밀번호 기억하기';
+			case 'strings.legacy.msg_enter_valid_url': return '유효한 URL를 입력하세요.';
+			case 'strings.legacy.msg_may_take_few_seconds': return '몇 초 정도 걸릴 수 있습니다.';
+			case 'strings.legacy.msg_local_sync_failed': return ({required Object type, required Object memoError}) => '로컬 동기화 실패(${type}): ${memoError}';
+			case 'strings.legacy.msg_webdav_sync': return 'WebDAV 백업';
+			case 'strings.legacy.msg_clear': return '분명한';
+			case 'strings.legacy.msg_clear_recycle_bin_confirm': return '휴지통을 비우시겠어요? 모든 항목이 영구적으로 삭제됩니다.';
+			case 'strings.legacy.msg_save_failed': return '저장 실패';
+			case 'strings.legacy.msg_endpoint_not_found_version_mismatch': return '엔드포인트를 찾을 수 없습니다(버전 불일치?)';
+			case 'strings.legacy.msg_enable_webdav_sync': return 'WebDAV 백업 활성화';
+			case 'strings.legacy.msg_local_libraries': return '지역 도서관';
+			case 'strings.legacy.msg_apply': return '적용하다';
+			case 'strings.legacy.msg_restore_only_available_local_libraries': return '복원은 로컬 라이브러리에만 사용할 수 있습니다.';
+			case 'strings.legacy.msg_sign': return '로그아웃하시겠습니까?';
+			case 'strings.legacy.msg_reminders_disabled': return '알림이 비활성화되었습니다.';
+			case 'strings.legacy.msg_downloading': return '다운로드 중...';
+			case 'strings.legacy.msg_path': return '길';
+			case 'strings.legacy.msg_match_any': return '무엇이든 일치';
+			case 'strings.legacy.msg_local_db_pending_queue': return '로컬 DB + 보류 중인 대기열';
+			case 'strings.legacy.msg_scan_failed': return ({required Object e}) => '스캔 실패: ${e}';
+			case 'strings.legacy.msg_user': return '사용자';
+			case 'strings.legacy.msg_pick_future_time': return '미래의 시간을 선택하세요';
+			case 'strings.legacy.msg_include_pending_queue': return '보류 중인 대기열 포함';
+			case 'strings.legacy.msg_enter_days': return '요일을 입력하세요';
+			case 'strings.legacy.msg_times': return '타임스';
+			case 'strings.legacy.msg_token_returned_only_once_cannot_fetched': return '토큰은 한 번만 반환되며 다시 가져올 수 없습니다.';
+			case 'strings.legacy.msg_quoted_lines': return ({required Object quoteLines}) => '인용된 ${quoteLines} 라인';
+			case 'strings.legacy.msg_use_remote': return '원격 사용';
+			case 'strings.legacy.msg_enable_memo_location': return '메모 위치 활성화';
+			case 'strings.legacy.msg_failed_get_location': return '위치를 가져오지 못했습니다.';
+			case 'strings.legacy.msg_after_import_memos_sync_list_automatically': return '가져온 후 메모는 자동으로 목록에 동기화됩니다. ZIP 가져오기의 경우 파일 구조가 손상되지 않았는지 확인하세요.';
+			case 'strings.legacy.msg_legacy_mode': return '레거시 모드';
+			case 'strings.legacy.msg_signed': return '로그인됨';
+			case 'strings.legacy.msg_shortcut_includes_advanced_conditions_saving_overwrite': return '이 바로가기에는 고급 조건이 포함되어 있습니다. 저장하면 덮어쓰게 됩니다.';
+			case 'strings.legacy.msg_no_results_found': return '검색결과가 없습니다';
+			case 'strings.legacy.msg_reply': return ({required Object replyName}) => '답장 ${replyName}...';
+			case 'strings.legacy.msg_copy': return '복사';
+			case 'strings.legacy.msg_enable_reminders_memos': return '메모에 대한 알림을 활성화합니다.';
+			case 'strings.legacy.msg_comment': return '논평';
+			case 'strings.legacy.msg_added_voice_attachment': return '음성 첨부가 추가되었습니다.';
+			case 'strings.legacy.msg_customize_sidebar': return '사이드바 사용자 정의';
+			case 'strings.legacy.msg_customize_quick_entries': return '빠른 항목 사용자 정의';
+			case 'strings.legacy.msg_navigation_mode': return '탐색 모드';
+			case 'strings.legacy.msg_navigation_mode_classic': return '클래식 모드(하단 탐색 없음)';
+			case 'strings.legacy.msg_navigation_mode_bottom_bar': return '하단 탐색 모드';
+			case 'strings.legacy.msg_navigation_preview': return '시사';
+			case 'strings.legacy.msg_navigation_slot_left_1': return '왼쪽 슬롯 1';
+			case 'strings.legacy.msg_navigation_slot_left_2': return '왼쪽 슬롯 2';
+			case 'strings.legacy.msg_navigation_slot_center': return '센터 액션';
+			case 'strings.legacy.msg_navigation_slot_right_1': return '오른쪽 슬롯 1';
+			case 'strings.legacy.msg_navigation_slot_right_2': return '오른쪽 슬롯 2';
+			case 'strings.legacy.msg_quick_entry_slot_1': return '빠른 입력 1';
+			case 'strings.legacy.msg_quick_entry_slot_2': return '빠른 입력 2';
+			case 'strings.legacy.msg_quick_entry_slot_3': return '빠른 입력 3';
+			case 'strings.legacy.msg_coffee_add_drumstick': return '😄 커피예요 / 드럼스틱 추가';
+			case 'strings.legacy.msg_pin': return '핀';
+			case 'strings.legacy.msg_enter_password_continue': return '계속하려면 비밀번호를 입력하세요';
+			case 'strings.legacy.msg_remove_local_library': return '로컬 라이브러리를 삭제하시겠습니까?';
+			case 'strings.legacy.msg_comment_2': return '새 댓글';
+			case 'strings.legacy.msg_sync_all': return '모두 동기화';
+			case 'strings.legacy.msg_backup_schedule': return '백업 일정';
+			case 'strings.legacy.msg_server_error': return '서버 오류';
+			case 'strings.legacy.msg_analyzing_memos': return '메모 분석 중...';
+			case 'strings.legacy.msg_notification': return '공고';
+			case 'strings.legacy.msg_policy': return '정책';
+			case 'strings.legacy.msg_failed_load': return ({required Object error}) => '로드 실패: ${error}';
+			case 'strings.legacy.msg_default_visibility': return '기본 공개 상태';
+			case 'strings.legacy.msg_filter': return '필터';
+			case 'strings.legacy.msg_advanced_search': return '고급 검색';
+			case 'strings.legacy.msg_imported_memos': return '가져온 메모';
+			case 'strings.legacy.msg_token_created': return '토큰이 생성되었습니다.';
+			case 'strings.legacy.msg_server_response_timeout_try': return '서버 응답 시간이 초과되었습니다. 다시 시도해 보세요.';
+			case 'strings.legacy.msg_expiring': return '만료 예정';
+			case 'strings.legacy.msg_delete_task': return '할 일 삭제';
+			case 'strings.legacy.msg_body_must_json': return '본문은 JSON여야 합니다.';
+			case 'strings.legacy.msg_enable': return '할 수 있게 하다';
+			case 'strings.legacy.msg_referenced': return '참조자';
+			case 'strings.legacy.msg_replace_image': return '이미지를 교체하시겠습니까?';
+			case 'strings.legacy.msg_debug_logs': return '디버그 로그';
+			case 'strings.legacy.msg_active_tasks': return '활성 작업';
+			case 'strings.legacy.msg_attachments': return '첨부파일';
+			case 'strings.legacy.msg_range': return '범위';
+			case 'strings.legacy.msg_no_backups_found': return '백업을 찾을 수 없습니다.';
+			case 'strings.legacy.msg_create_memo': return '메모 작성';
+			case 'strings.legacy.msg_street': return '거리';
+			case 'strings.legacy.msg_display_name': return '표시 이름';
+			case 'strings.legacy.msg_full_text_search': return '전체 텍스트 검색';
+			case 'strings.legacy.msg_create_edit_delete_actions_offline_stored': return '오프라인으로 생성/편집/삭제 작업은 로컬에 저장되고 동기화를 위해 대기열에 추가됩니다. 온라인일 경우 순서대로 발송됩니다. 실수를 방지하기 위해 제출되지 않은 수정사항을 초안으로 보관할 수 있습니다.';
+			case 'strings.legacy.msg_sign_2': return '로그아웃';
+			case 'strings.legacy.msg_end_time': return '종료 시간';
+			case 'strings.legacy.msg_sync_recent_content': return '최근 콘텐츠 동기화';
+			case 'strings.legacy.msg_resetting_local_data': return '로컬 데이터 재설정 중...';
+			case 'strings.legacy.msg_incorrect_password': return '잘못된 비밀번호';
+			case 'strings.legacy.msg_content_cannot_empty': return '콘텐츠는 비워둘 수 없습니다.';
+			case 'strings.legacy.msg_preparing': return '준비 중';
+			case 'strings.legacy.msg_ai_summary_failed': return ({required Object formatSummaryError_e}) => 'AI 요약 실패: ${formatSummaryError_e}';
+			case 'strings.legacy.msg_manage': return '관리하다';
+			case 'strings.legacy.msg_keep_data_consistent_across_devices': return '복구를 위해 데이터를 WebDAV에 백업하세요.';
+			case 'strings.legacy.msg_playback_failed': return ({required Object e}) => '재생 실패: ${e}';
+			case 'strings.legacy.msg_path_copied': return '경로가 복사되었습니다.';
+			case 'strings.legacy.msg_auth_settings': return '인증 설정';
+			case 'strings.legacy.msg_randomly_draw_memo_cards': return '메모카드를 무작위로 뽑으세요';
+			case 'strings.legacy.msg_copy_log_text': return '로그 텍스트 복사';
+			case 'strings.legacy.msg_yes': return '예';
+			case 'strings.legacy.msg_save_open_alipay_scan': return 'Alipay를 저장하고 열어서 스캔하세요';
+			case 'strings.legacy.msg_signed_but_no_token_returned': return '로그인했지만 토큰이 반환되지 않았습니다.';
+			case 'strings.legacy.msg_create_failed': return ({required Object formatError_e_context}) => '생성 실패: ${formatError_e_context}';
+			case 'strings.legacy.msg_expand': return '확장하다';
+			case 'strings.legacy.msg_local_library_only': return '지역 도서관 전용';
+			case 'strings.legacy.msg_reminder_channel': return '알림 채널';
+			case 'strings.legacy.msg_grant': return '승인하다';
+			case 'strings.legacy.msg_import_canceled': return '가져오기가 취소되었습니다.';
+			case 'strings.legacy.msg_never': return '절대';
+			case 'strings.legacy.msg_release_notes': return '릴리스 노트';
+			case 'strings.legacy.msg_failed_load_references': return '참조를 로드하지 못했습니다.';
+			case 'strings.legacy.msg_select_tags': return '태그 선택';
+			case 'strings.legacy.msg_failed_load_try': return '로드하지 못했습니다. 다시 시도해 주세요.';
+			case 'strings.legacy.msg_logs_copied': return '로그가 복사되었습니다.';
+			case 'strings.legacy.msg_shortcuts_not_supported_server': return '이 서버에서는 바로가기가 지원되지 않습니다.';
+			case 'strings.legacy.msg_reply_2': return ({required Object name}) => '답장 ${name}...';
+			case 'strings.legacy.msg_anonymous': return '익명의';
+			case 'strings.legacy.msg_username': return '사용자 이름';
+			case 'strings.legacy.msg_update_memo': return '메모 업데이트';
+			case 'strings.legacy.msg_saved': return ({required Object targetPath}) => '저장 위치: ${targetPath}';
+			case 'strings.legacy.msg_chinese_simplified': return '중국어(간체)';
+			case 'strings.legacy.msg_memo_copied': return '메모가 복사되었습니다.';
+			case 'strings.legacy.msg_collapse': return '무너지다';
+			case 'strings.legacy.msg_retry_count_controls_how_many_extra': return '재시도 횟수는 실패 시 추가 시도 횟수를 제어합니다. 값이 높을수록 성공률이 높아질 수 있지만 시간이 더 오래 걸립니다.';
+			case 'strings.legacy.msg_recording_info_missing': return '녹음 정보가 누락되었습니다.';
+			case 'strings.legacy.msg_sync_task': return '동기화 작업';
+			case 'strings.legacy.msg_clear_all_debug_logs': return '디버그 로그를 모두 지우시겠습니까?';
+			case 'strings.legacy.msg_clear_all_logs': return '이 기기의 모든 로그 데이터를 삭제하시겠습니까? 내보낸 파일은 삭제되지 않습니다.';
+			case 'strings.legacy.msg_export_finished': return '수출 완료';
+			case 'strings.legacy.msg_failed_stop_recording': return ({required Object e}) => '녹화를 중지하지 못했습니다: ${e}';
+			case 'strings.legacy.msg_my_profile': return '내 프로필';
+			case 'strings.legacy.msg_image_bed': return '이미지베드';
+			case 'strings.legacy.msg_failed_open_notification': return ({required Object e}) => '알림을 열지 못했습니다: ${e}';
+			case 'strings.legacy.msg_manual': return '수동';
+			case 'strings.legacy.msg_no_html_file_found_zip': return 'ZIP에 HTML 파일이 없습니다.';
+			case 'strings.legacy.msg_also_clear_local_cache_account_offline': return '그러면 이 계정의 로컬 캐시(오프라인 데이터/초안/보류 중인 동기화 대기열)도 지워집니다. 이 작업은 취소할 수 없습니다.';
+			case 'strings.legacy.msg_restore': return '복원하다';
+			case 'strings.legacy.msg_auto_backup': return '자동 백업';
+			case 'strings.legacy.msg_generate_summary': return '요약 생성';
+			case 'strings.legacy.msg_days': return ({required Object stats_activeDays}) => '${stats_activeDays}일';
+			case 'strings.legacy.msg_count': return '- 세다';
+			case 'strings.legacy.msg_weekly': return '주간';
+			case 'strings.legacy.msg_notifications': return '알림';
+			case 'strings.legacy.msg_backup_failed': return '백업 실패';
+			case 'strings.legacy.msg_private': return '사적인';
+			case 'strings.legacy.msg_filter_tags': return '태그로 필터링';
+			case 'strings.legacy.msg_clear_logs': return '로그 지우기';
+			case 'strings.legacy.msg_logs_cleared': return '로그가 지워졌습니다.';
+			case 'strings.legacy.msg_unable_open_browser': return '브라우저를 열 수 없습니다';
+			case 'strings.legacy.msg_attachment_too_large': return '첨부파일이 너무 큼';
+			case 'strings.legacy.msg_query': return '질문';
+			case 'strings.legacy.msg_match_all': return '모두 일치';
+			case 'strings.legacy.msg_record_request_response_logs': return '요청/응답 로그 기록';
+			case 'strings.legacy.msg_import_file': return '파일 가져오기';
+			case 'strings.legacy.msg_content_tags': return '콘텐츠 + 태그';
+			case 'strings.legacy.msg_feature_not_available_local_library_mode': return '이 기능은 로컬 라이브러리 모드에서는 사용할 수 없습니다.';
+			case 'strings.legacy.msg_import_failed': return ({required Object e}) => '가져오기 실패: ${e}';
+			case 'strings.legacy.msg_save_memo': return '메모로 저장';
+			case 'strings.legacy.msg_scan_disk_directory_merge_local_database': return '디스크 디렉터리를 스캔하고 로컬 데이터베이스에 병합하시겠습니까? 누락된 파일은 삭제된 것으로 처리됩니다.';
+			case 'strings.legacy.msg_passwords_not_match': return '비밀번호가 일치하지 않습니다.';
+			case 'strings.legacy.msg_signed_2': return ({required Object lastLoginUser}) => '다음 계정으로 로그인: ${lastLoginUser}';
+			case 'strings.legacy.msg_made_love_note_taking': return '메모 작성에 대한 애정으로 제작됨';
+			case 'strings.legacy.msg_password_updated_local': return '비밀번호 업데이트됨(로컬)';
+			case 'strings.legacy.msg_retry': return '다시 해 보다';
+			case 'strings.legacy.msg_memo_stats': return '메모 통계';
+			case 'strings.legacy.msg_shown_only_once_copy_keep_safe': return '한 번만 표시되므로 복사하여 안전하게 보관하세요.';
+			case 'strings.legacy.msg_describe_issue_time_repro_steps_etc': return '문제, 시간, 재현 단계 등을 설명합니다.';
+			case 'strings.legacy.msg_how_many_days_back': return '며칠 전';
+			case 'strings.legacy.msg_local_cache_cleared': return '로컬 캐시가 지워졌습니다.';
+			case 'strings.legacy.msg_none': return '없음';
+			case 'strings.legacy.msg_body_json': return '본체(JSON)';
+			case 'strings.legacy.msg_download_failed': return ({required Object e}) => '다운로드 실패: ${e}';
+			case 'strings.legacy.msg_recycle_bin': return '휴지통';
+			case 'strings.legacy.msg_unpin': return '고정 해제';
+			case 'strings.legacy.msg_advanced_security': return '고급 및 보안';
+			case 'strings.legacy.msg_run_issues_memoflow_e_g_sync': return 'MemoFlow에서 문제가 발생하는 경우(예: 동기화 실패, 충돌) 아래 단계에 따라 문제를 더 빠르게 진단하고 해결할 수 있습니다.\\n\\n';
+			case 'strings.legacy.msg_remove_all_reminder_times_memo': return '이 메모의 모든 알림 시간을 삭제하세요.';
+			case 'strings.legacy.msg_no_summary_save': return '저장할 요약이 없습니다.';
+			case 'strings.legacy.msg_reset_language_selection': return '언어 선택 재설정';
+			case 'strings.legacy.msg_v_30_days': return '30일';
+			case 'strings.legacy.msg_e_g_mood_check': return '예를 들어 기분 체크';
+			case 'strings.legacy.msg_note_some_tokens_returned_only_once': return '팁: 일부 토큰은 한 번만 표시됩니다. 처음 표시될 때 안전하게 저장하세요.';
+			case 'strings.legacy.msg_probe_memo_can_delete': return '이 메모는 MemoFlow API 프로브에 의해 생성되었으며 안전하게 삭제할 수 있습니다.';
+			case 'strings.legacy.msg_syncing': return '동기화 중...';
+			case 'strings.legacy.msg_retention': return '보유';
+			case 'strings.legacy.msg_open_login_screen': return '로그인 화면 열기';
+			case 'strings.legacy.msg_apply_all': return '모두에게 적용';
+			case 'strings.legacy.msg_write_something_supports_tag_tasks_x': return '뭔가를 쓰세요... #tag 및 작업 [ ] / [x] 지원';
+			case 'strings.legacy.msg_http': return ({required Object base, required Object status, required Object msg}) => '${base} (HTTP ${status}): ${msg}';
+			case 'strings.legacy.msg_single': return '하나의';
+			case 'strings.legacy.msg_delete_memo': return '메모를 삭제하시겠습니까?';
+			case 'strings.legacy.msg_ai_provider': return 'AI 공급자';
+			case 'strings.legacy.msg_release_notes_v': return ({required Object version}) => '릴리스 노트 v${version}';
+			case 'strings.legacy.msg_info_only_used_background_ai_summaries': return '이 정보는 AI 요약/보고서의 배경으로만 사용되며 백엔드와 동기화되지 않습니다.';
+			case 'strings.legacy.msg_not_disturb': return '방해하지 마세요';
+			case 'strings.legacy.msg_local_library_import_failed': return ({required Object e}) => '로컬 라이브러리 가져오기 실패: ${e}';
+			case 'strings.legacy.msg_key_insights': return '주요 통찰력';
+			case 'strings.legacy.msg_additional_notes_optional': return '추가 참고사항(선택사항)';
+			case 'strings.legacy.msg_server_response_error': return '서버 응답 오류입니다.';
+			case 'strings.legacy.msg_sort': return '종류';
+			case 'strings.legacy.msg_newest_first': return '최신순';
+			case 'strings.legacy.msg_oldest_first': return '오래된 것부터';
+			case 'strings.legacy.msg_open_memo': return '메모 열기';
+			case 'strings.legacy.msg_api_call': return 'API 통화';
+			case 'strings.legacy.msg_webhooks': return '웹훅';
+			case 'strings.legacy.msg_local_library': return '지역 도서관';
+			case 'strings.legacy.msg_log_copied': return '로그가 복사되었습니다.';
+			case 'strings.legacy.msg_last_success': return '마지막 성공';
+			case 'strings.legacy.msg_restore_cloud': return '클라우드에서 복원';
+			case 'strings.legacy.msg_search_public_memos': return '공개 메모 검색';
+			case 'strings.legacy.msg_cancel': return '취소';
+			case 'strings.legacy.msg_processing': return ({required Object processed, required Object total}) => '${processed} / ${total} 처리 중';
+			case 'strings.legacy.msg_failed_items': return '실패한 항목';
+			case 'strings.legacy.msg_recording_file_not_found': return '녹음 파일을 찾을 수 없습니다';
+			case 'strings.legacy.msg_local_db_outbox_queue': return '로컬 DB + 발신함 대기열';
+			case 'strings.legacy.msg_remove': return '제거하다';
+			case 'strings.legacy.msg_export_format': return '내보내기 형식';
+			case 'strings.legacy.msg_idle': return '게으른';
+			case 'strings.legacy.msg_ago': return ({required Object months}) => '${months} 전';
+			case 'strings.legacy.msg_no_tags_yet': return '아직 태그가 없습니다.';
+			case 'strings.legacy.msg_version_v': return ({required Object version}) => '버전 v${version}';
+			case 'strings.legacy.msg_sync': return '동조';
+			case 'strings.legacy.msg_done': return '완료';
+			case 'strings.legacy.msg_gallery_permission_required_2': return '갤러리 권한이 필요합니다';
+			case 'strings.legacy.msg_insufficient_permissions': return '권한이 부족합니다.';
+			case 'strings.legacy.msg_no_download_url_available': return '다운로드 가능한 URL가 없습니다.';
+			case 'strings.legacy.msg_record_create_memos': return '메모를 작성하려면 녹음하세요';
+			case 'strings.legacy.msg_signing': return '로그인 중...';
+			case 'strings.legacy.msg_memoflow_uses_system_location_permission_get': return 'MemoFlow는 시스템 위치 권한을 사용하여 좌표를 얻은 다음 선택한 공급자 서비스(예: Amap, Baidu 또는 Google)를 통해 역지오코딩합니다. 위에서 표시 정밀도를 선택할 수 있습니다.';
+			case 'strings.legacy.msg_continue': return '계속하다';
+			case 'strings.legacy.msg_notification_content_unavailable': return '알림 내용을 사용할 수 없습니다.';
+			case 'strings.legacy.msg_unable_read_file_path': return '파일 경로를 읽을 수 없습니다.';
+			case 'strings.legacy.msg_all_memos': return '모든 Memos';
+			case 'strings.legacy.msg_keywords': return '키워드';
+			case 'strings.legacy.msg_ai_search_loading_title': return 'AI 검색으로 관련 메모를 찾고 있습니다';
+			case 'strings.legacy.msg_ai_search_loading_message': return '이 쿼리에 대한 로컬 메모를 색인화하고 삽입하고 순위를 매깁니다.';
+			case 'strings.legacy.msg_ai_search_needs_embedding_model': return 'AI 검색에는 임베딩 모델이 필요합니다.';
+			case 'strings.legacy.msg_ai_search_failed': return 'AI 검색 실패';
+			case 'strings.legacy.msg_ai_search_configure_embedding_model': return 'AI 설정에서 임베딩 모델을 구성한 후 다시 시도하세요.';
+			case 'strings.legacy.msg_ai_search_back_to_keyword_search': return '키워드 검색으로 돌아가기';
+			case 'strings.legacy.msg_ai_search_no_matches': return 'AI 일치 항목이 없습니다.';
+			case 'strings.legacy.msg_ai_search_keyword_available': return '정확한 텍스트 일치에 대한 키워드 검색은 계속 가능합니다.';
+			case 'strings.legacy.msg_ai_search_try_related_memos': return 'AI 검색을 통해 의미적으로 관련된 메모를 찾아보세요.';
+			case 'strings.legacy.msg_ai_search_use_ai_search': return 'AI 검색 사용';
+			case 'strings.legacy.msg_ai_search_results_label': return 'AI 의미론적 결과';
+			case 'strings.legacy.msg_ai_search_keyword': return '예어';
+			case 'strings.legacy.msg_ai_search_use_for_related_memos': return '관련 메모는 AI 검색을 이용하세요';
+			case 'strings.legacy.msg_ai_search_index_confirm_title': return 'AI 검색 색인을 구축하시겠습니까?';
+			case 'strings.legacy.msg_ai_search_index_confirm_remote_message': return 'AI 검색은 적합한 메모 청크를 먼저 색인화해야 합니다. 이렇게 하면 해당 청크가 구성된 임베딩 모델로 전송되고 공급자 할당량 또는 비용이 소비될 수 있습니다.';
+			case 'strings.legacy.msg_ai_search_index_confirm_local_message': return 'AI 검색은 적합한 메모 청크를 먼저 색인화해야 합니다. 그러면 로컬 임베딩 모델로 처리되며 로컬 리소스가 사용될 수 있습니다.';
+			case 'strings.legacy.msg_ai_search_index_confirm_token_estimate': return ({required Object count}) => '예상 인덱싱 토큰: ${count}';
+			case 'strings.legacy.msg_ai_search_index_confirm_continue': return 'AI 검색 계속하기';
+			case 'strings.legacy.msg_import_result': return '가져오기 결과';
+			case 'strings.legacy.msg_offline_sync': return '오프라인 동기화';
+			case 'strings.legacy.msg_imported_memos_local_library': return '지역 도서관에서 가져온 메모';
+			case 'strings.legacy.msg_request_failed': return '요청 실패';
+			case 'strings.legacy.msg_log_file': return '내보낸 파일';
+			case 'strings.legacy.msg_after_confirming_support_unlock_limited_gold': return '지원을 확인한 후 제한된 골드 배지를 잠금 해제하거나 영원히 광고 없는 약속을 받을 수 있습니다(광고는 없었지만).';
+			case 'strings.legacy.msg_failed_open_system_settings': return '시스템 설정을 열지 못했습니다.';
+			case 'strings.legacy.msg_no_mood_trend': return '기분 추세 없음';
+			case 'strings.legacy.msg_memoflow_export': return '# MemoFlow 내보내기';
+			case 'strings.legacy.msg_sync_queue': return '동기화 대기열';
+			case 'strings.legacy.msg_only_delete_sync_task_memo_kept': return '동기화 작업만 삭제하세요. 메모는 보관됩니다.';
+			case 'strings.legacy.msg_add_home_screen': return '홈 화면에 추가';
+			case 'strings.legacy.msg_past_days': return '지난 날';
+			case 'strings.legacy.msg_poster_generation_failed': return '포스터 생성 실패';
+			case 'strings.legacy.msg_failed_load_stats': return ({required Object e}) => '통계를 로드하지 못했습니다: ${e}';
+			case 'strings.legacy.msg_customize_notification': return '알림 사용자 정의';
+			case 'strings.legacy.msg_updated_time': return '업데이트 시간 ↓';
+			case 'strings.legacy.msg_network_connection_failed_check_network': return '네트워크 연결에 실패했습니다. 네트워크를 확인하세요.';
+			case 'strings.legacy.msg_special_thanks': return '특별한 감사:';
+			case 'strings.legacy.msg_failed_comment': return ({required Object e}) => '댓글 작성 실패: ${e}';
+			case 'strings.legacy.msg_security_key_sig': return '보안 키(서명)';
+			case 'strings.legacy.msg_save_gallery': return '갤러리에 저장';
+			case 'strings.legacy.msg_request_sent_confirm_system_prompt': return '요청이 전송되었습니다. 시스템 프롬프트에서 확인';
+			case 'strings.legacy.msg_server_url': return '서버 URL';
+			case 'strings.legacy.msg_period_review': return '기간 검토';
+			case 'strings.legacy.msg_settings_updated': return '설정이 업데이트되었습니다.';
+			case 'strings.legacy.msg_backend_0_21_not_supported_import': return '백엔드 0.21은 가져오기가 지원되지 않습니다. 업그레이드하고 다시 시도해 보세요.';
+			case 'strings.legacy.msg_failed_load_tags': return ({required Object e}) => '태그를 로드하지 못했습니다: ${e}';
+			case 'strings.legacy.msg_enter_email': return '이메일을 입력하세요';
+			case 'strings.legacy.msg_add_webhook': return '웹훅 추가';
+			case 'strings.legacy.msg_read': return '읽다';
+			case 'strings.legacy.msg_widgets': return '위젯';
+			case 'strings.legacy.msg_default': return '기본';
+			case 'strings.legacy.msg_memo_reminders': return '메모 알림';
+			case 'strings.legacy.msg_import_flomo': return '플로모에서 수입하기';
+			case 'strings.legacy.msg_import_swashbuckler_diary': return '스워시버클러 다이어리에서 가져오기';
+			case 'strings.legacy.msg_supported_json_markdown_txt_zip': return 'JSON / Markdown / TXT 우편번호';
+			case 'strings.legacy.msg_format_fixed_markdown_zip': return '형식은 Markdown + ZIP으로 고정됩니다.';
+			case 'strings.legacy.msg_enter_username_password': return '사용자 이름과 비밀번호를 입력하세요';
+			case 'strings.legacy.msg_loading': return '로드 중...';
+			case 'strings.legacy.msg_test_scheduled': return ({required Object timeLabel, required Object suffix, required Object pendingLabel}) => '${timeLabel}${suffix}${pendingLabel}에 테스트 예정';
+			case 'strings.legacy.msg_edit_memo': return '메모 편집';
+			case 'strings.legacy.msg_save': return '구하다';
+			case 'strings.legacy.msg_laboratory': return '실혐실';
+			case 'strings.legacy.msg_use_local': return '로컬 사용';
+			case 'strings.legacy.msg_retry_sync': return '동기화 재시도';
+			case 'strings.legacy.msg_e_g_my_role_topics_interest': return '예를 들어 내 역할 / 관심 주제 / 선호하는 글쓰기 스타일?';
+			case 'strings.legacy.msg_confirm_password': return '비밀번호 확인';
+			case 'strings.legacy.msg_not_set': return '설정되지 않음';
+			case 'strings.legacy.msg_no_memos_day': return '이 날에는 메모가 없습니다.';
+			case 'strings.legacy.msg_shortcut_name': return '바로가기 이름';
+			case 'strings.legacy.msg_edit_shortcut': return '바로가기 편집';
+			case 'strings.legacy.msg_days_memos': return '메모가 있는 날';
+			case 'strings.legacy.msg_delete': return '삭제';
+			case 'strings.legacy.msg_test_reminder': return '테스트 알림';
+			case 'strings.legacy.msg_enable_reminders': return '알림 활성화';
+			case 'strings.legacy.msg_links': return '모래밭';
+			case 'strings.legacy.msg_location': return '위치';
+			case 'strings.legacy.msg_import_file_2': return '파일에서 가져오기';
+			case 'strings.legacy.msg_reply_3': return ({required Object creatorDisplayName_commentCreator_commentMemo_creator}) => '답장 ${creatorDisplayName_commentCreator_commentMemo_creator}...';
+			case 'strings.legacy.msg_created': return ({required Object widget_createdAtLabel}) => '${widget_createdAtLabel}를 생성했습니다.';
+			case 'strings.legacy.msg_notifications_coming_soon': return '알림: 곧 제공 예정';
+			case 'strings.legacy.msg_view_full_contributors': return '전체 기여자 보기';
+			case 'strings.legacy.msg_no_times_set': return '시간이 설정되지 않았습니다.';
+			case 'strings.legacy.msg_ignore_tls_errors': return 'TLS 오류 무시';
+			case 'strings.legacy.msg_no_content': return '콘텐츠 없음';
+			case 'strings.legacy.msg_about_15_seconds_left': return '약 15초 남았습니다';
+			case 'strings.legacy.msg_view_imported_memos': return '가져온 메모 보기';
+			case 'strings.legacy.msg_load_failed': return '로드 실패';
+			case 'strings.legacy.msg_disk_content_conflicts_local_pending_changes': return '디스크 내용이 로컬 보류 중인 변경 사항과 충돌합니다. 디스크를 사용하여 로컬 콘텐츠를 덮어씁니다.';
+			case 'strings.legacy.msg_all_history_so_far_memoflow_since': return '이것이 지금까지의 모든 기록입니다.\\n2023년 이후 MEMOFLOW';
+			case 'strings.legacy.msg_cancelling': return '취소 중';
+			case 'strings.legacy.msg_reading_file': return '파일을 읽는 중...';
+			case 'strings.legacy.msg_switch_workspace': return '작업공간 전환';
+			case 'strings.legacy.msg_optional_leave_empty_default': return '선택 과목. 기본값으로 비워 두세요.';
+			case 'strings.legacy.msg_memo_reminders_2': return '메모 알림';
+			case 'strings.legacy.msg_save_failed_2': return ({required Object e}) => '저장 실패: ${e}';
+			case 'strings.legacy.msg_record_create_memos_sync_later': return '메모 기록 및 작성(나중에 동기화)';
+			case 'strings.legacy.msg_use_https_avoid_ignoring_tls_errors': return '자격 증명을 보호하려면 HTTPS를 사용하고 TLS 오류를 무시하지 마십시오.';
+			case 'strings.legacy.msg_failed_load_announcement_config': return '공지 구성을 로드하지 못했습니다.';
+			case 'strings.legacy.msg_shortcuts': return '단축키';
+			case 'strings.legacy.msg_memo': return '메모';
+			case 'strings.legacy.msg_maybe_later': return '이 버전에 대해 알림 안 함';
+			case 'strings.legacy.msg_server_connection': return '서버 연결';
+			case 'strings.legacy.msg_days_2': return '날';
+			case 'strings.legacy.msg_include_archived': return '보관된 항목 포함';
+			case 'strings.legacy.msg_during_quiet_hours_reminders_silenced': return '조용한 시간에는 알림이 무음으로 설정됩니다.';
+			case 'strings.legacy.msg_preview_not_supported_type': return '이 유형에는 미리보기가 지원되지 않습니다.';
+			case 'strings.legacy.msg_failed_load_2': return '로드하지 못했습니다.';
+			case 'strings.legacy.msg_create_token': return '새 토큰 생성';
+			case 'strings.legacy.msg_enter_name': return '이름을 입력하세요.';
+			case 'strings.legacy.msg_api_url_incorrect': return 'API URL가 올바르지 않습니다.';
+			case 'strings.legacy.msg_user_general_settings': return '사용자 일반 설정';
+			case 'strings.legacy.msg_saved_memo': return '메모로 저장됨';
+			case 'strings.legacy.msg_restore_failed': return ({required Object e}) => '복원 실패: ${e}';
+			case 'strings.legacy.msg_token_tail': return ({required Object tail}) => '토큰 테일 ${tail}';
+			case 'strings.legacy.msg_manual_token': return '수동 토큰';
+			case 'strings.legacy.msg_ago_2': return ({required Object years}) => '${years} 전';
+			case 'strings.legacy.msg_recent_searches': return '최근 검색어';
+			case 'strings.legacy.msg_restored': return '복원됨';
+			case 'strings.legacy.msg_no_contributors_yet': return '아직 참여자가 없습니다.';
+			case 'strings.legacy.msg_no_record_yet': return '아직 기록이 없습니다';
+			case 'strings.legacy.msg_reminder': return '알림';
+			case 'strings.legacy.msg_enter_api_key_ai_settings': return 'AI 설정에 API 키를 입력하세요.';
+			case 'strings.legacy.msg_reminder_settings': return '알림 설정';
+			case 'strings.legacy.msg_http_2': return ({required Object base, required Object status}) => '${base} (HTTP ${status})';
+			case 'strings.legacy.msg_edit_webhook': return '웹훅 편집';
+			case 'strings.legacy.msg_generate_share_poster': return '공유 포스터 생성';
+			case 'strings.legacy.msg_archive_failed': return ({required Object e}) => '보관 실패: ${e}';
+			case 'strings.legacy.msg_comments': return ({required Object widget_commentCount}) => '${widget_commentCount} 댓글';
+			case 'strings.legacy.msg_remove_account': return '계정을 삭제하시겠습니까?';
+			case 'strings.legacy.msg_chinese_traditional': return '중국어(번체)';
+			case 'strings.legacy.msg_private_2': return '사적인';
+			case 'strings.legacy.msg_current_streak': return '현재 연속';
+			case 'strings.legacy.msg_generated_ai_memoflow': return 'AI · MemoFlow에 의해 생성됨';
+			case 'strings.legacy.msg_edit_completed': return '수정 완료';
+			case 'strings.legacy.msg_local': return '현지의';
+			case 'strings.legacy.msg_edit': return '편집하다';
+			case 'strings.legacy.msg_text': return ({required Object shortUserName_item_sender}) => '${shortUserName_item_sender}에서';
+			case 'strings.legacy.msg_got': return '알았어요';
+			case 'strings.legacy.msg_web_api_key': return '웹 API 키';
+			case 'strings.legacy.msg_preview': return '시사';
+			case 'strings.legacy.msg_enter_password': return '비밀번호를 입력해주세요';
+			case 'strings.legacy.msg_api': return 'API';
+			case 'strings.legacy.msg_ok': return '좋아요';
+			case 'strings.legacy.msg_failed_load_shortcuts': return '바로가기를 로드하지 못했습니다.';
+			case 'strings.legacy.msg_after_recording_audio_added_current_draft': return '녹음 후 오디오는 현재 초안에 첨부 파일로 추가되므로 보내기 전에 편집할 수 있습니다. 최대 길이는 60분입니다. 나중에 타사 서비스를 통해 전사를 추가할 수 있습니다.';
+			case 'strings.legacy.msg_pull_refresh': return '당겨서 새로고침';
+			case 'strings.legacy.msg_unable_open_photo': return '사진을 열 수 없습니다.';
+			case 'strings.legacy.msg_existing_tokens': return '기존 토큰';
+			case 'strings.legacy.msg_ai_settings': return 'AI 설정';
+			case 'strings.legacy.msg_app_lock': return '앱 잠금';
+			case 'strings.legacy.msg_total_notes': return '총 메모';
+			case 'strings.legacy.msg_stats_loading': return '통계를 로드하는 중입니다.';
+			case 'strings.legacy.msg_enter_token_description': return '토큰 설명을 입력하세요.';
+			case 'strings.legacy.msg_enter_token': return '토큰을 입력하세요';
+			case 'strings.legacy.msg_api_plugins': return 'API 및 플러그인';
+			case 'strings.legacy.msg_parsing_file': return '파일을 구문 분석하는 중...';
+			case 'strings.legacy.msg_english': return '영어';
+			case 'strings.legacy.msg_activity_heatmap': return '활동 히트맵';
+			case 'strings.legacy.msg_mark_read': return '읽음으로 표시';
+			case 'strings.legacy.msg_request': return '요구';
+			case 'strings.legacy.msg_sync_failed': return ({required Object type, required Object memoError}) => '동기화 실패(${type}): ${memoError}';
+			case 'strings.legacy.msg_error_copied': return '오류가 복사되었습니다.';
+			case 'strings.legacy.msg_only_local_index_removed_disk_files': return '로컬 인덱스만 제거됩니다. 디스크 파일이 보관됩니다. 이 작업은 취소할 수 없습니다.';
+			case 'strings.legacy.msg_switch_account': return '계정 전환';
+			case 'strings.legacy.msg_invalid_download_link': return '잘못된 다운로드 링크';
+			case 'strings.legacy.msg_about': return '에 대한';
+			case 'strings.legacy.msg_icon': return '상';
+			case 'strings.legacy.msg_reset_done_syncing': return '재설정이 완료되었습니다. 동기화 중...';
+			case 'strings.legacy.msg_enter_amap_web_api_key': return 'Amap Web API 키를 입력하세요';
+			case 'strings.legacy.msg_recycle_bin_coming_soon': return '휴지통: 곧 제공 예정';
+			case 'strings.legacy.msg_empty_content': return '(빈 콘텐츠)';
+			case 'strings.legacy.msg_note_most_features_offline_stats_ai': return '참고: 대부분의 기능(오프라인/통계/AI 보고서/내보내기)은 백엔드 변경 없이 작동하지만 토큰은 한 번만 반환되므로 안전하게 보관하십시오.';
+			case 'strings.legacy.msg_fixed': return '결정된:';
+			case 'strings.legacy.msg_allow_sharing_links_images_other_apps': return '다른 앱의 링크나 이미지를 MemoFlow로 공유하도록 허용합니다.';
+			case 'strings.legacy.msg_invalid_request_parameters': return '잘못된 요청 매개변수';
+			case 'strings.legacy.msg_enter_api_url': return 'API URL를 입력하세요.';
+			case 'strings.legacy.msg_pending': return ({required Object result_pendingCount}) => '(${result_pendingCount} 보류 중)';
+			case 'strings.legacy.msg_days_3': return ({required Object currentStreak}) => '${currentStreak}일';
+			case 'strings.legacy.msg_poster_not_ready_yet': return '포스터가 아직 준비되지 않았습니다.';
+			case 'strings.legacy.msg_generated_memoflow': return 'MemoFlow에 의해 생성됨';
+			case 'strings.legacy.msg_enter_name_2': return '이름을 입력하세요';
+			case 'strings.legacy.msg_version': return '버전';
+			case 'strings.legacy.msg_memo_missing_disk_but_has_local': return '메모가 디스크에 없지만 로컬에 보류 중인 변경 사항이 있습니다. 로컬에서 삭제하려면 디스크를 사용하세요.';
+			case 'strings.legacy.msg_legacy_api_compatibility': return '레거시 API 호환성';
+			case 'strings.legacy.msg_sync_parameters': return '동기화 매개변수';
+			case 'strings.legacy.msg_quick_prompts': return '빠른 프롬프트';
+			case 'strings.legacy.msg_share_failed': return ({required Object e}) => '공유 실패: ${e}';
+			case 'strings.legacy.msg_no_memos_summarize_range': return '이 범위에 요약할 메모가 없습니다.';
+			case 'strings.legacy.msg_characters': return '캐릭터';
+			case 'strings.legacy.msg_capture_every_moment_record': return '녹음하는 모든 순간을 포착하세요';
+			case 'strings.legacy.msg_vibration': return '진동';
+			case 'strings.legacy.msg_days_4': return '날';
+			case 'strings.legacy.msg_prompt_title': return '프롬프트 제목';
+			case 'strings.legacy.msg_show_all': return '모두 표시';
+			case 'strings.legacy.msg_no_memos_available': return '사용할 수 있는 메모가 없습니다.';
+			case 'strings.legacy.msg_comment_unavailable': return '댓글을 사용할 수 없습니다.';
+			case 'strings.legacy.msg_refresh': return '새로 고치다';
+			case 'strings.legacy.msg_syncing_2': return '동기화 중';
+			case 'strings.legacy.msg_body': return '몸';
+			case 'strings.legacy.msg_clear_2': return '분명한';
+			case 'strings.legacy.msg_third_party_share': return '제3자 공유';
+			case 'strings.legacy.msg_charging_station': return '충전소';
+			case 'strings.legacy.msg_attachments_2': return '첨부파일';
+			case 'strings.legacy.msg_when_enabled_must_verify_each_app': return '활성화되면 앱을 시작할 때마다 확인해야 합니다. 자동 잠금 시간은 앱이 백그라운드로 전환된 후 확인이 필요한 기간을 제어합니다.';
+			case 'strings.legacy.msg_add_prompt': return '프롬프트 추가';
+			case 'strings.legacy.msg_include': return '포함하다';
+			case 'strings.legacy.msg_created_time_2': return '생성시간 ↓';
+			case 'strings.legacy.msg_choose_data_source_start_importing_memos': return '메모 가져오기를 시작하려면 데이터 소스를 선택하세요.';
+			case 'strings.legacy.msg_describe_how_want_summary': return '요약을 원하는 방식을 설명하세요...';
+			case 'strings.legacy.msg_keep_token_safe_not_share_api': return '토큰을 안전하게 보관하고 공유하지 마세요.\\nAPI 속도 제한은 분당 요청 60개입니다.';
+			case 'strings.legacy.msg_open_2': return '열려 있는';
+			case 'strings.legacy.msg_e_g_claude_3_5_sonnet': return '예를 들어 클로드-3-5-소네트-20241022';
+			case 'strings.legacy.msg_failed_request_whitelist': return '화이트리스트를 요청하지 못했습니다.';
+			case 'strings.legacy.msg_notification_deleted': return '알림이 삭제되었습니다.';
+			case 'strings.legacy.msg_accounts': return '계정';
+			case 'strings.legacy.msg_add_local_library': return '로컬 라이브러리 추가';
+			case 'strings.legacy.msg_sign_first': return '먼저 로그인하세요.';
+			case 'strings.legacy.msg_failed_parse_query': return '쿼리를 구문 분석하지 못했습니다.';
+			case 'strings.legacy.msg_note_logs_sanitized_automatically_sensitive_data': return '참고: 로그는 자동으로 삭제됩니다. 민감한 데이터가 남아 있으면 제출하기 전에 수정하세요.';
+			case 'strings.legacy.msg_add': return '추가하다';
+			case 'strings.legacy.msg_failed_load_3': return ({required Object memosError}) => '로드 실패: ${memosError}';
+			case 'strings.legacy.msg_max_chars_day': return '최대 문자/일';
+			case 'strings.legacy.msg_choose_what_edited_image': return '편집된 이미지를 어떻게 처리할지 선택하세요.';
+			case 'strings.legacy.msg_select': return '선택하다';
+			case 'strings.legacy.msg_unnamed_token': return '(이름 없는 토큰)';
+			case 'strings.legacy.msg_name': return '이름';
+			case 'strings.legacy.msg_sure_want_delete_webhook': return '이 웹훅을 삭제하시겠습니까?';
+			case 'strings.legacy.msg_back': return '뒤쪽에';
+			case 'strings.legacy.msg_no': return '아니요';
+			case 'strings.legacy.msg_untitled': return '제목 없음';
+			case 'strings.legacy.msg_open_language_onboarding': return '개방형 언어 온보딩';
+			case 'strings.legacy.msg_voice_memos': return '음성 Memos';
+			case 'strings.legacy.msg_unable_open_browser_try': return '브라우저를 열 수 없습니다. 다시 시도해 주세요.';
+			case 'strings.legacy.msg_date_range': return '기간';
+			case 'strings.legacy.msg_not_authenticated': return '인증되지 않음';
+			case 'strings.legacy.msg_back_2': return '뒤쪽에';
+			case 'strings.legacy.msg_local_library_removed': return '로컬 라이브러리가 제거되었습니다.';
+			case 'strings.legacy.msg_exact_alarm_permission_required': return '정확한 알람 권한이 필요합니다';
+			case 'strings.legacy.msg_visibility': return '시계';
+			case 'strings.legacy.msg_failed_start_recording': return ({required Object e}) => '녹화 시작 실패: ${e}';
+			case 'strings.legacy.msg_mood_trend': return '기분 추세';
+			case 'strings.legacy.msg_local_library_name': return '지역 도서관 이름';
+			case 'strings.legacy.msg_no_tokens_yet': return '아직 토큰이 없습니다.';
+			case 'strings.legacy.msg_loading_2': return '로드 중이신가요?';
+			case 'strings.legacy.msg_location_permission_denied_permanently': return '위치 권한이 영구적으로 거부되었습니다.';
+			case 'strings.legacy.msg_download': return '다운로드';
+			case 'strings.legacy.msg_export_time': return '- 수출 시간';
+			case 'strings.legacy.msg_enter_password_2': return '비밀번호를 입력하세요';
+			case 'strings.legacy.msg_no_image_available': return '사용 가능한 이미지가 없습니다.';
+			case 'strings.legacy.msg_daily': return '일일';
+			case 'strings.legacy.msg_no_likes_yet': return '아직 좋아요가 없습니다.';
+			case 'strings.legacy.msg_basics': return '기초';
+			case 'strings.legacy.msg_shortcut': return '새로운 단축키';
+			case 'strings.legacy.msg_debug_tools': return '디버그 도구';
+			case 'strings.legacy.msg_save_settings': return '설정 저장';
+			case 'strings.legacy.msg_date_range_2': return '기간';
+			case 'strings.legacy.msg_feedback': return '피드백';
+			case 'strings.legacy.msg_image_bed_2': return '이미지베드';
+			case 'strings.legacy.msg_image_compression': return '이미지 압축';
+			case 'strings.legacy.msg_enable_image_compression': return '이미지 압축 활성화';
+			case 'strings.legacy.msg_image_compression_desc': return '업로드하기 전에 새로 추가된 이미지 첨부 파일을 압축하세요.';
+			case 'strings.legacy.msg_image_compression_scope': return '새로 추가된 첨부 파일에만 적용됩니다.';
+			case 'strings.legacy.msg_max_side': return '최대면';
+			case 'strings.legacy.msg_quality': return '품질';
+			case 'strings.legacy.msg_output_format': return '출력 형식';
+			case 'strings.legacy.msg_compression_mode': return '압축 모드';
+			case 'strings.legacy.msg_mode_quality': return '품질';
+			case 'strings.legacy.msg_mode_size': return '크기';
+			case 'strings.legacy.msg_lossless': return '무손실';
+			case 'strings.legacy.msg_keep_metadata': return '메타데이터 유지';
+			case 'strings.legacy.msg_skip_if_bigger': return '더 크면 건너뛰세요';
+			case 'strings.legacy.msg_resize': return '크기 조정';
+			case 'strings.legacy.msg_enable_resize': return '크기 조정 활성화';
+			case 'strings.legacy.msg_resize_mode': return '크기 조정 모드';
+			case 'strings.legacy.msg_resize_width': return '너비';
+			case 'strings.legacy.msg_resize_height': return '키';
+			case 'strings.legacy.msg_resize_edge': return '가장자리';
+			case 'strings.legacy.msg_do_not_enlarge': return '확대하지 마세요';
+			case 'strings.legacy.msg_resize_mode_no_resize': return '크기 조정 없음';
+			case 'strings.legacy.msg_resize_mode_dimensions': return '치수';
+			case 'strings.legacy.msg_resize_mode_percentage': return '백분율';
+			case 'strings.legacy.msg_resize_mode_short_edge': return '짧은 가장자리';
+			case 'strings.legacy.msg_resize_mode_long_edge': return '긴 가장자리';
+			case 'strings.legacy.msg_resize_mode_fixed_width': return '고정폭';
+			case 'strings.legacy.msg_resize_mode_fixed_height': return '고정 높이';
+			case 'strings.legacy.msg_jpeg': return 'JPEG';
+			case 'strings.legacy.msg_png': return 'PNG';
+			case 'strings.legacy.msg_webp': return '웹P';
+			case 'strings.legacy.msg_tiff': return '사소한 말다툼';
+			case 'strings.legacy.msg_chroma_subsampling': return '크로마 서브샘플링';
+			case 'strings.legacy.msg_chroma_auto': return '자동';
+			case 'strings.legacy.msg_chroma_444': return '4:4:4';
+			case 'strings.legacy.msg_chroma_422': return '4:2:2';
+			case 'strings.legacy.msg_chroma_420': return '4:2:0';
+			case 'strings.legacy.msg_chroma_411': return '4:1:1';
+			case 'strings.legacy.msg_progressive': return '프로그레시브';
+			case 'strings.legacy.msg_optimization_level': return '최적화 수준';
+			case 'strings.legacy.msg_method': return '방법';
+			case 'strings.legacy.msg_uncompressed': return '비압축';
+			case 'strings.legacy.msg_lzw': return 'LZW';
+			case 'strings.legacy.msg_deflate': return '꺾다';
+			case 'strings.legacy.msg_packbits': return '팩비트';
+			case 'strings.legacy.msg_deflate_preset': return '수축 사전 설정';
+			case 'strings.legacy.msg_fast': return '빠른';
+			case 'strings.legacy.msg_balanced': return '균형 잡힌';
+			case 'strings.legacy.msg_best': return '최상의';
+			case 'strings.legacy.msg_size_target': return '대상 크기';
+			case 'strings.legacy.msg_output_size_unit': return '크기 단위';
+			case 'strings.legacy.msg_format_auto': return '자동';
+			case 'strings.legacy.msg_output_format_same_as_input': return '입력과 동일';
+			case 'strings.legacy.msg_format_jpeg': return 'JPEG';
+			case 'strings.legacy.msg_format_png': return 'PNG';
+			case 'strings.legacy.msg_format_webp': return '웹P';
+			case 'strings.legacy.msg_format_tiff': return '사소한 말다툼';
+			case 'strings.legacy.msg_bytes': return '바이트';
+			case 'strings.legacy.msg_kb': return 'KB';
+			case 'strings.legacy.msg_mb': return 'MB';
+			case 'strings.legacy.msg_percentage': return '백분율';
+			case 'strings.legacy.msg_lossless_warning': return '무손실이 활성화된 경우에도 새 형식으로 변환하거나 크기를 조정하면 품질이 저하될 수 있습니다.';
+			case 'strings.legacy.msg_restoring': return '복원 중…';
+			case 'strings.legacy.msg_export': return '내보내다';
+			case 'strings.legacy.msg_enter_token_name': return '토큰 이름을 입력하세요.';
+			case 'strings.legacy.msg_start_time': return '시작 시간';
+			case 'strings.legacy.msg_preparing_file_structure': return '파일 구조 준비 중';
+			case 'strings.legacy.msg_sign_3': return '로그인';
+			case 'strings.legacy.msg_scan_local_library': return '로컬 라이브러리 스캔';
+			case 'strings.legacy.msg_lsky_pro': return 'Lsky 프로';
+			case 'strings.legacy.msg_exact_alarm_permission_off_reminders_may': return '정확한 알람 권한이 꺼져 있습니다. 알림은 제 시간에 실행되지 않을 수 있습니다. 지금 설정을 여시겠어요?';
+			case 'strings.legacy.msg_last_30_days': return '지난 30일';
+			case 'strings.legacy.msg_match': return '성냥';
+			case 'strings.legacy.msg_auth_mode': return '인증 모드';
+			case 'strings.legacy.msg_unsupported_file_type': return '지원되지 않는 파일 형식입니다.';
+			case 'strings.legacy.msg_only_delete_sync_task': return '동기화 작업만 삭제하세요.';
+			case 'strings.legacy.msg_change_password': return '비밀번호 변경';
+			case 'strings.legacy.msg_saved_2': return '저장됨';
+			case 'strings.legacy.msg_import_export': return '가져오기/내보내기';
+			case 'strings.legacy.msg_created_2': return '생성됨';
+			case 'strings.legacy.msg_ai_summary': return 'AI 요약';
+			case 'strings.legacy.msg_progress': return '진전';
+			case 'strings.legacy.msg_replace_memo_image': return '메모 이미지 교체';
+			case 'strings.legacy.msg_app_settings': return '앱 설정';
+			case 'strings.legacy.msg_copy_path': return '경로 복사';
+			case 'strings.legacy.msg_components': return '구성요소';
+			case 'strings.legacy.msg_no_shortcuts': return '단축키 없음';
+			case 'strings.legacy.msg_location_timed_try': return '위치 시간이 초과되었습니다. 다시 시도해 주세요.';
+			case 'strings.legacy.msg_attach_location_info_memos_show_subtle': return '메모에 위치 정보를 첨부하고 미묘한 장소 이름을 표시합니다.';
+			case 'strings.legacy.msg_send_failed': return ({required Object e}) => '보내기 실패: ${e}';
+			case 'strings.legacy.msg_repeat': return '반복하다';
+			case 'strings.legacy.msg_not_signed': return '로그인되지 않음';
+			case 'strings.legacy.msg_no_webhooks_configured': return '구성된 웹훅이 없습니다.';
+			case 'strings.legacy.msg_apply_token': return '토큰 적용';
+			case 'strings.legacy.msg_enable_reminder_permissions_2': return '알림 권한 활성화';
+			case 'strings.legacy.msg_enter_backup_password': return '백업 비밀번호를 입력하세요';
+			case 'strings.legacy.msg_start_backup': return '백업 시작';
+			case 'strings.legacy.msg_last_sync': return '마지막 동기화';
+			case 'strings.legacy.msg_note_export_includes_content_already_synced': return '참고: 내보내기에는 로컬 데이터베이스에 이미 동기화된 콘텐츠가 포함됩니다(오프라인 데이터 포함).';
+			case 'strings.legacy.msg_enter_username': return '사용자 이름을 입력하세요';
+			case 'strings.legacy.msg_settings_saved': return '설정이 저장되었습니다.';
+			case 'strings.legacy.msg_no_keywords': return '키워드 없음';
+			case 'strings.legacy.msg_these_settings_apply_newly_created_memos': return '이 설정은 새로 생성된 메모에 적용됩니다.';
+			case 'strings.legacy.msg_back_home': return '홈으로 돌아가기';
+			case 'strings.legacy.msg_quiet_hours': return '조용한 시간';
+			case 'strings.legacy.msg_add_account': return '계정 추가';
+			case 'strings.legacy.msg_reset_complete': return '재설정 완료';
+			case 'strings.legacy.msg_no_shortcuts_configured': return '구성된 바로가기가 없습니다.';
+			case 'strings.legacy.msg_password': return '비밀번호';
+			case 'strings.legacy.msg_importing': return '가져오기';
+			case 'strings.legacy.msg_visibility_2': return ({required Object visibilityLabel}) => '가시성 : ${visibilityLabel}';
+			case 'strings.legacy.msg_no_logs_yet': return '아직 로그가 없습니다.';
+			case 'strings.legacy.msg_v_9_times_allowed': return '최대 9회까지 허용';
+			case 'strings.legacy.msg_last_14_days': return '지난 14일';
+			case 'strings.legacy.msg_location_disabled_enable_settings_first': return '위치가 비활성화되었습니다. 먼저 설정에서 활성화하세요.';
+			case 'strings.legacy.msg_add_2': return '추가하다';
+			case 'strings.legacy.msg_logs': return '로그';
+			case 'strings.legacy.msg_references': return '참고자료';
+			case 'strings.legacy.msg_importing_memos': return '메모 가져오는 중...';
+			case 'strings.legacy.msg_account_security': return '계정 및 보안';
+			case 'strings.legacy.msg_reminder_2': return '알림';
+			case 'strings.legacy.msg_enable_scheduled_reminder_notifications': return '예약된 미리 알림을 활성화합니다.';
+			case 'strings.legacy.msg_no_links': return '링크 없음';
+			case 'strings.legacy.msg_delete_memo_2': return '메모 삭제';
+			case 'strings.legacy.msg_one_tap_add_not_supported_add': return '원터치 추가는 지원되지 않습니다. 위젯 선택기에서 추가하세요.';
+			case 'strings.legacy.msg_password_2': return '새 비밀번호';
+			case 'strings.legacy.msg_processing_content': return '콘텐츠 처리 중...';
+			case 'strings.legacy.msg_status': return '상태';
+			case 'strings.legacy.msg_local_library_added': return '로컬 라이브러리가 추가되었습니다.';
+			case 'strings.legacy.msg_failed_open_try': return '열지 못했습니다. 다시 시도해 주세요.';
+			case 'strings.legacy.msg_removed_locally_now_deleted_server_when': return '이제 로컬에서 제거되고 온라인일 때 서버에서 삭제됩니다.';
+			case 'strings.legacy.msg_server_url_unavailable': return '서버 URL를 사용할 수 없습니다.';
+			case 'strings.legacy.msg_no_release_notes_yet': return '아직 출시 노트가 없습니다.';
+			case 'strings.legacy.msg_cancelling_2': return '취소 중...';
+			case 'strings.legacy.msg_summaries_selected_range': return '선택한 범위에 대한 요약';
+			case 'strings.legacy.msg_expand_2': return '확장하다';
+			case 'strings.legacy.msg_close': return '닫다';
+			case 'strings.legacy.msg_more_comments': return ({required Object remainingComments}) => '${remainingComments} 더 많은 댓글';
+			case 'strings.legacy.msg_backing': return '백업 중…';
+			case 'strings.legacy.msg_view_debug_logs': return '디버그 로그 보기';
+			case 'strings.legacy.msg_location_permission_denied': return '위치 권한이 거부되었습니다.';
+			case 'strings.legacy.msg_self_repair_reset_heatmap': return '자가 수리: 히트맵 재설정';
+			case 'strings.legacy.msg_these_settings_changed_locally_remotely_choose': return '이러한 설정은 로컬 및 원격으로 변경되었습니다. 유지할 버전을 선택하세요.';
+			case 'strings.legacy.msg_not_authenticated_2': return '인증되지 않았습니다.';
+			case 'strings.legacy.msg_action_failed': return ({required Object e}) => '작업 실패: ${e}';
+			case 'strings.legacy.msg_shortcut_2': return '새로운 바로가기';
+			case 'strings.legacy.msg_url': return 'URL';
+			case 'strings.legacy.msg_no_memos_found_html': return 'HTML에서 메모를 찾을 수 없습니다.';
+			case 'strings.legacy.msg_enter_what_want_summarize': return '요약하고 싶은 내용을 입력하세요...';
+			case 'strings.legacy.msg_unable_load_audio_source': return '오디오 소스를 로드할 수 없습니다.';
+			case 'strings.legacy.msg_strategy_id': return '전략 ID';
+			case 'strings.legacy.msg_copy_failed': return ({required Object e}) => '복사 실패: ${e}';
+			case 'strings.legacy.msg_enable_image_bed': return '이미지 베드 활성화';
+			case 'strings.legacy.msg_active': return '활동적인';
+			case 'strings.legacy.msg_account': return '계정';
+			case 'strings.legacy.msg_invalid_webdav_server_url': return '잘못된 WebDAV 서버 URL';
+			case 'strings.legacy.msg_keep_local': return '로컬 유지';
+			case 'strings.legacy.msg_within_range': return '범위 내';
+			case 'strings.legacy.msg_generate_log_file': return '로그 번들 내보내기';
+			case 'strings.legacy.msg_ai_reports': return 'AI 보고서';
+			case 'strings.legacy.msg_battery_optimization': return '배터리 최적화';
+			case 'strings.legacy.msg_sync_overview': return '동기화 개요';
+			case 'strings.legacy.msg_legacy_servers_not_support_search_filters': return '레거시 서버는 검색 필터를 지원하지 않습니다. 결과가 불완전할 수 있습니다.';
+			case 'strings.legacy.msg_conflicts_detected_run_manual_sync': return '충돌이 감지되었습니다. 수동 동기화를 실행하세요.';
+			case 'strings.legacy.msg_authentication_failed_check_token': return '인증에 실패했습니다. 토큰을 확인하세요.';
+			case 'strings.legacy.msg_date_range_3': return '기간';
+			case 'strings.legacy.msg_help_ai_understand_better': return 'AI가 당신을 더 잘 이해할 수 있도록 도와주세요';
+			case 'strings.legacy.msg_no_search_history': return '검색 기록이 없습니다';
+			case 'strings.legacy.msg_enter_api_path': return 'API 경로를 입력하세요';
+			case 'strings.legacy.msg_stats': return '통계';
+			case 'strings.legacy.msg_text_2': return '새로운:';
+			case 'strings.legacy.msg_removing_signing_clear_local_cache_account': return '제거/로그아웃하면 이 계정의 로컬 캐시(오프라인 데이터/초안/보류 중인 동기화 대기열)가 지워집니다.';
+			case 'strings.legacy.msg_updated_time_2': return '업데이트 시간 ↑';
+			case 'strings.legacy.msg_province': return '주';
+			case 'strings.legacy.msg_submitting_sync_queue': return '동기화 대기열 제출 중';
+			case 'strings.legacy.msg_failed': return '실패한';
+			case 'strings.legacy.msg_set_time': return '시간 설정';
+			case 'strings.legacy.msg_enable_local_library_backup': return '로컬 라이브러리 백업 활성화';
+			case 'strings.legacy.msg_cancel_2': return '취소';
+			case 'strings.legacy.msg_week': return '이번 주';
+			case 'strings.legacy.msg_like': return '좋다';
+			case 'strings.legacy.msg_location_services_disabled': return '위치 서비스가 비활성화되었습니다';
+			case 'strings.legacy.msg_clears_local_cache_offline_memos_pending': return '이렇게 하면 로컬 캐시(오프라인 메모/보류 중인 대기열)가 지워지고 전체 재동기화가 트리거됩니다. 동기화되지 않은 콘텐츠는 손실되며 시간이 다소 걸릴 수 있습니다. 계속하다?';
+			case 'strings.legacy.msg_load_more': return '더 로드하기';
+			case 'strings.legacy.msg_pull_up_to_load_more': return '더 많은 것을 로드하려면 위로 당기세요.';
+			case 'strings.legacy.msg_release_to_load_more': return '더 많은 것을 로드하려면 손을 떼세요';
+			case 'strings.legacy.msg_scroll_down_to_load_more': return '더 로드하려면 아래로 스크롤하세요.';
+			case 'strings.legacy.msg_loaded_all_content': return '모든 콘텐츠가 로드되었습니다.';
+			case 'strings.legacy.msg_pull_memo_list_refresh_sync_sync': return '메모 목록을 아래로 당겨 새로고침하고 동기화하세요. 동기화는 가장 최근 항목을 먼저 가져옵니다. 통계/히트맵을 완전하게 유지하려면 주기적으로 전체 동기화를 실행하세요.';
+			case 'strings.legacy.msg_server_returned_error': return ({required Object code}) => '서버에서 오류(${code})를 반환했습니다.';
+			case 'strings.legacy.msg_sound_feedback': return '사운드 및 피드백';
+			case 'strings.legacy.msg_memos_skipped_attachments_skipped': return ({required Object exportedMemoCount, required Object skippedMemoCount, required Object exportedAttachmentCount, required Object skippedAttachmentCount}) => '${exportedMemoCount} 메모(${skippedMemoCount} 건너뛰기), ${exportedAttachmentCount} 첨부 파일(${skippedAttachmentCount} 건너뛰기).';
+			case 'strings.legacy.msg_import_complete': return '가져오기 완료';
+			case 'strings.legacy.msg_text_3': return '새로운';
+			case 'strings.legacy.msg_max_per_day': return '일일 최대';
+			case 'strings.legacy.msg_permissions_denied': return '권한이 거부되었습니다.';
+			case 'strings.legacy.msg_memo_2': return '새 메모';
+			case 'strings.legacy.msg_delete_reminder': return '알림 삭제';
+			case 'strings.legacy.msg_select_month': return '월 선택';
+			case 'strings.legacy.msg_select_backup': return '백업 선택';
+			case 'strings.legacy.msg_no_keywords_2': return '#키워드 없음';
+			case 'strings.legacy.msg_preparing_memo_content': return '메모 내용 준비 중';
+			case 'strings.legacy.msg_prompt_content': return '프롬프트 내용';
+			case 'strings.legacy.msg_default_prompt_ai_summaries_reports': return 'AI 요약/보고서에 대한 기본 프롬프트';
+			case 'strings.legacy.msg_intro': return '소개';
+			case 'strings.legacy.msg_monthly_stats': return '월별 통계';
+			case 'strings.legacy.msg_times_2': return '타임스';
+			case 'strings.legacy.msg_file_has_already_been_imported_skipped': return '이 파일은 이미 가져왔습니다. 건너뛰었습니다.';
+			case 'strings.legacy.msg_token_tail_unknown': return '토큰 테일을 알 수 없음';
+			case 'strings.legacy.msg_press_back_exit': return '종료하려면 뒤로를 다시 누르세요.';
+			case 'strings.legacy.msg_enter_password_3': return '비밀번호를 입력하세요';
+			case 'strings.legacy.msg_sync_conflicts': return '동기화 충돌';
+			case 'strings.legacy.msg_locale': return '장소';
+			case 'strings.legacy.msg_any': return '어느';
+			case 'strings.legacy.msg_provider': return '공급자';
+			case 'strings.legacy.msg_preview_2': return '시사';
+			case 'strings.legacy.msg_automatically_upload_images_append_links_memo': return '자동으로 이미지를 업로드하고 메모에 링크를 추가합니다.';
+			case 'strings.legacy.msg_import_file_not_found': return '가져오기 파일을 찾을 수 없습니다.';
+			case 'strings.legacy.msg_today': return '오늘';
+			case 'strings.legacy.msg_link_card': return '링크 카드';
+			case 'strings.legacy.msg_expiration': return '만료';
+			case 'strings.legacy.msg_summary_prompt_optional': return '요약 프롬프트(선택 사항)';
+			case 'strings.legacy.msg_memos': return 'Memos';
+			case 'strings.legacy.msg_recording_file_not_found_2': return '녹화 파일을 찾을 수 없습니다.';
+			case 'strings.legacy.msg_backup_settings': return '백업 설정';
+			case 'strings.legacy.msg_mode': return '방법';
+			case 'strings.legacy.msg_no_markdown_memos_found_zip': return 'ZIP에서 Markdown 메모를 찾을 수 없습니다.';
+			case 'strings.legacy.msg_archived': return '보관됨';
+			case 'strings.legacy.msg_update_failed': return ({required Object e}) => '업데이트 실패: ${e}';
+			case 'strings.legacy.msg_enable_app_lock': return '앱 잠금 활성화';
+			case 'strings.legacy.msg_html_zip': return 'HTML/ZIP';
+			case 'strings.legacy.msg_all': return '모두';
+			case 'strings.legacy.msg_model': return '모델';
+			case 'strings.legacy.msg_title': return '제목';
+			case 'strings.legacy.msg_amap_web_api': return 'Amap 웹 API';
+			case 'strings.legacy.msg_saved_gallery': return '갤러리에 저장됨';
+			case 'strings.legacy.msg_gallery_mobile_only': return '갤러리는 모바일에서만 이용 가능합니다.';
+			case 'strings.legacy.msg_unread': return '읽히지 않는';
+			case 'strings.legacy.msg_exporting': return '내보내는 중...';
+			case 'strings.legacy.msg_network_timeout_try': return '네트워크 시간 초과. 다시 시도해 주세요.';
+			case 'strings.legacy.msg_unlock': return '터놓다';
+			case 'strings.legacy.msg_ago_3': return ({required Object diff_inDays}) => '${diff_inDays} 전';
+			case 'strings.legacy.msg_random_walk_days_ago_exact': return ({required Object days}) => '${days}일 전';
+			case 'strings.legacy.msg_random_walk_day_period_dawn': return '새벽';
+			case 'strings.legacy.msg_random_walk_day_period_morning': return '아침';
+			case 'strings.legacy.msg_random_walk_day_period_noon': return '정오';
+			case 'strings.legacy.msg_random_walk_day_period_afternoon': return '오후';
+			case 'strings.legacy.msg_random_walk_day_period_dusk': return '황혼';
+			case 'strings.legacy.msg_random_walk_day_period_night': return '밤';
+			case 'strings.legacy.msg_deserve_coffee_i_m_pulling_all': return '이 커피를 마실 자격이 있기 위해 나는 밤새도록 100줄의 코드를 작성하고 있습니다!';
+			case 'strings.legacy.msg_token_name': return '토큰 이름';
+			case 'strings.legacy.msg_restore_completed': return '복원 완료';
+			case 'strings.legacy.msg_restore_completed_to_path': return ({required Object path}) => '복원이 완료되었습니다. ${path}에 저장된 파일';
+			case 'strings.legacy.msg_restore_missing_attachments': return ({required Object count}) => '일부 첨부 파일을 다운로드하지 못했습니다: ${count}';
+			case 'strings.legacy.msg_restore_to_directory': return '디렉터리로 복원';
+			case 'strings.legacy.msg_restore_export_only_notice': return '서버 모드 복원은 선택한 디렉터리에만 파일을 다운로드하고 서버에 다시 쓰지 않습니다.';
+			case 'strings.legacy.msg_restore_config_confirm_title': return '민감한 설정을 복원하시겠습니까?';
+			case 'strings.legacy.msg_restore_config_confirm_hint': return '적용할 민감한 설정을 선택하세요. 다른 설정은 자동으로 복원됩니다.';
+			case 'strings.legacy.msg_restore_config_item_webdav': return 'WebDAV 설정';
+			case 'strings.legacy.msg_restore_config_item_image_bed': return '이미지 침대 설정';
+			case 'strings.legacy.msg_restore_config_item_image_compression': return '이미지 압축 설정';
+			case 'strings.legacy.msg_restore_config_item_app_lock': return '앱 잠금 설정';
+			case 'strings.legacy.msg_restore_config_item_ai': return 'AI 설정';
+			case 'strings.legacy.msg_backup_plain_risk_title': return '일반 텍스트 백업';
+			case 'strings.legacy.msg_backup_plain_risk_body': return '일반 텍스트 백업은 암호화되지 않으며 민감한 데이터가 노출될 수 있습니다. 계속하다?';
+			case 'strings.legacy.msg_backup_config_scope': return '백업 구성';
+			case 'strings.legacy.msg_backup_config_none': return '구성을 백업하지 마십시오';
+			case 'strings.legacy.msg_backup_config_none_desc': return '메모와 첨부파일만 백업하세요.';
+			case 'strings.legacy.msg_backup_config_safe': return '안전한 구성만';
+			case 'strings.legacy.msg_backup_config_safe_desc': return '전체 기본 설정, 미리 알림, 템플릿 및 위치를 백업하세요.';
+			case 'strings.legacy.msg_backup_config_full': return '모든 구성(민감함)';
+			case 'strings.legacy.msg_backup_config_full_desc': return 'WebDAV, AI, 앱 잠금, 이미지 베드, 초안이 포함되어 있습니다.';
+			case 'strings.legacy.msg_backup_config_full_requires_encryption': return '모든 구성에는 암호화된 백업이 필요합니다.';
+			case 'strings.legacy.msg_skip': return '건너뛰다';
+			case 'strings.legacy.msg_copied_clipboard': return '클립보드에 복사됨';
+			case 'strings.legacy.msg_failed_2': return ({required Object attempts}) => '${attempts} 실패';
+			case 'strings.legacy.msg_too_many_requests_try_later': return '요청이 너무 많습니다. 나중에 다시 시도하세요.';
+			case 'strings.legacy.msg_more': return '더';
+			case 'strings.legacy.msg_already_whitelisted': return '이미 허용 목록에 추가됨';
+			case 'strings.legacy.msg_local_library_backup': return '로컬 라이브러리 백업';
+			case 'strings.legacy.msg_awesome': return '엄청난! ❤️';
+			case 'strings.legacy.msg_now': return '지금';
+			case 'strings.legacy.msg_select_reminder_time': return '알림 시간 선택';
+			case 'strings.legacy.msg_protected': return '보호됨';
+			case 'strings.legacy.msg_failed_load_4': return ({required Object e}) => '로드 실패: ${e}';
+			case 'strings.legacy.msg_operation_failed': return ({required Object e}) => '작업 실패: ${e}';
+			case 'strings.legacy.msg_no_tags': return '태그 없음';
+			case 'strings.legacy.msg_create_tag': return '태그 만들기';
+			case 'strings.legacy.msg_edit_tag': return '태그 수정';
+			case 'strings.legacy.msg_tag_name': return '태그 이름';
+			case 'strings.legacy.msg_tag_name_required': return '태그 이름은 필수 항목입니다.';
+			case 'strings.legacy.msg_tag_name_invalid': return '태그 이름에는 /를 포함할 수 없습니다.';
+			case 'strings.legacy.msg_parent_tag': return '상위 태그';
+			case 'strings.legacy.msg_no_parent': return '부모 없음';
+			case 'strings.legacy.msg_tag_color': return '태그 색상';
+			case 'strings.legacy.msg_inherit': return '상속';
+			case 'strings.legacy.msg_inherit_color': return '상위 색상 상속';
+			case 'strings.legacy.msg_tag_pinned': return '핀 태그';
+			case 'strings.legacy.msg_delete_tag': return '태그 삭제';
+			case 'strings.legacy.msg_delete_tag_confirm': return '이 태그를 삭제하시겠습니까?';
+			case 'strings.legacy.msg_delete_tag_warning': return '하위 태그는 상위 태그로 이동되며 이 태그는 메모에서 제거됩니다.';
+			case 'strings.legacy.msg_server': return '섬기는 사람';
+			case 'strings.legacy.msg_improved': return '개선됨';
+			case 'strings.legacy.msg_request_2': return '요구';
+			case 'strings.legacy.msg_export_failed': return ({required Object e}) => '내보내기 실패: ${e}';
+			case 'strings.legacy.msg_notification_settings': return '알림 설정';
+			case 'strings.legacy.msg_related_memo_was_deleted': return '관련 메모가 삭제되었습니다';
+			case 'strings.legacy.msg_email': return '이메일';
+			case 'strings.legacy.msg_enter_password_4': return '비밀번호를 입력해주세요';
+			case 'strings.legacy.msg_retry_count': return '재시도 횟수';
+			case 'strings.legacy.msg_import_exported_html_zip_package': return '내보낸 HTML 또는 ZIP 패키지 가져오기';
+			case 'strings.legacy.msg_archive': return '보관소';
+			case 'strings.legacy.msg_reset_heatmap': return '히트맵을 재설정하시겠습니까?';
+			case 'strings.legacy.msg_token_applied': return '토큰이 적용됨';
+			case 'strings.legacy.msg_log_file_created': return '로그 번들을 내보냈습니다.';
+			case 'strings.legacy.msg_delete_sync_task': return '동기화 작업 삭제';
+			case 'strings.legacy.msg_include_archived_2': return '- 보관된 내용 포함';
+			case 'strings.legacy.msg_memoflow_side_project_i_build_my': return 'MemoFlow는 여가 시간에 만드는 사이드 프로젝트입니다. 늦게까지 버그를 고치느라 아이스 아메리카노가 정말 먹고 싶었습니다. 귀하의 지원은 배터리에 활력을 불어넣고 새로운 기능 출시에 도움이 됩니다';
+			case 'strings.legacy.msg_failed_generate': return ({required Object e}) => '생성 실패: ${e}';
+			case 'strings.legacy.msg_search_logs': return '로그 검색';
+			case 'strings.legacy.msg_active_days': return '활동적인 날';
+			case 'strings.legacy.msg_back_top': return '맨 위로 돌아가기';
+			case 'strings.legacy.msg_month': return '이번 달';
+			case 'strings.legacy.msg_loading_references': return '참조 로드 중';
+			case 'strings.legacy.msg_silent': return '조용한';
+			case 'strings.legacy.msg_settings': return '설정';
+			case 'strings.legacy.msg_locating': return '찾는 중...';
+			case 'strings.legacy.msg_scan': return '주사';
+			case 'strings.legacy.msg_recording_path_missing': return '녹음 경로가 없습니다.';
+			case 'strings.legacy.msg_date_range_4': return '- 기간';
+			case 'strings.legacy.msg_suggested_tags': return '추천 태그';
+			case 'strings.legacy.msg_energy_restored': return '⚡ 에너지가 복원되었습니다';
+			case 'strings.legacy.msg_username_2': return '사용자 이름';
+			case 'strings.legacy.msg_ai_summary_report': return 'AI 요약 보고서';
+			case 'strings.legacy.msg_all_tags': return '모든 태그';
+			case 'strings.legacy.msg_preferences': return '환경설정';
+			case 'strings.legacy.msg_image_bed_3': return '이미지베드';
+			case 'strings.legacy.msg_quick_input': return '빠른 입력';
+			case 'strings.legacy.msg_tags': return '태그';
+			case 'strings.legacy.msg_energy_critically_low': return '에너지가 매우 낮습니다!';
+			case 'strings.legacy.msg_delete_failed': return ({required Object e}) => '삭제 실패: ${e}';
+			case 'strings.legacy.msg_server_login': return '서버 로그인';
+			case 'strings.legacy.msg_like_2': return '좋다';
+			case 'strings.legacy.msg_save_2': return '구하다';
+			case 'strings.legacy.msg_unknown': return '알려지지 않은';
+			case 'strings.legacy.msg_release_notes_2': return '릴리스 노트';
+			case 'strings.legacy.msg_include_error_details': return '오류 세부정보 포함';
+			case 'strings.legacy.msg_write_comment': return '댓글을 쓰세요...';
+			case 'strings.legacy.msg_write_thoughts': return '당신의 생각을 적어보세요...';
+			case 'strings.legacy.msg_draft_box_title': return '초안 상자';
+			case 'strings.legacy.msg_draft_box_empty_desc': return '아직 저장된 초안이 없습니다.';
+			case 'strings.legacy.msg_draft_box_pending_hint': return ({required Object count}) => '초안 상자에 완료되지 않은 초안이 있습니다(${count}). 초안 상자를 눌러 확인하세요.';
+			case 'strings.legacy.msg_empty_draft': return '빈 초안';
+			case 'strings.legacy.msg_editing': return '편집';
+			case 'strings.legacy.msg_delete_draft': return '초안 삭제';
+			case 'strings.legacy.msg_delete_draft_confirm': return '이 초안을 삭제하시겠습니까?';
+			case 'strings.legacy.msg_draft_deleted': return '초안이 삭제되었습니다.';
+			case 'strings.legacy.msg_local_2': return '현지의';
+			case 'strings.legacy.msg_expired': return '만료됨';
+			case 'strings.legacy.msg_fixed_2': return '결정된';
+			case 'strings.legacy.msg_upload_attachment': return '첨부파일 업로드';
+			case 'strings.legacy.msg_battery_whitelist': return '배터리 화이트리스트';
+			case 'strings.legacy.msg_district': return '구역';
+			case 'strings.legacy.msg_voice_memo': return '🎙️ 음성 메모\\n';
+			case 'strings.legacy.msg_system_default': return '시스템 기본값';
+			case 'strings.legacy.msg_all_memos_2': return '모든 메모';
+			case 'strings.legacy.msg_network_request_failed': return '네트워크 요청이 실패했습니다.';
+			case 'strings.legacy.msg_memo_not_found': return '메모를 찾을 수 없습니다';
+			case 'strings.legacy.msg_playback_failed_2': return ({required Object e}) => '재생 실패: ${e}';
+			case 'strings.legacy.msg_sync_settings_webdav_across_devices': return '복구를 위해 설정을 WebDAV에 백업하세요.';
+			case 'strings.legacy.msg_offline_first_client_memos_backend': return 'Memos 백엔드를 위한 오프라인 우선 클라이언트입니다.';
+			case 'strings.legacy.msg_user_guide': return '사용자 가이드';
+			case 'strings.legacy.msg_notice': return '알아채다';
+			case 'strings.legacy.msg_exact_alarms': return '정확한 알람';
+			case 'strings.legacy.msg_restoring_overwrite_local_library_files_rebuild': return '복원하면 로컬 라이브러리 파일을 덮어쓰고 데이터베이스를 다시 작성합니다. 이 작업은 취소할 수 없습니다.';
+			case 'strings.legacy.msg_enter_api_url_ai_settings': return 'AI 설정에 API URL를 입력하세요.';
+			case 'strings.legacy.msg_create_failed_2': return ({required Object e}) => '생성 실패: ${e}';
+			case 'strings.legacy.msg_close_search': return '검색 닫기';
+			case 'strings.legacy.msg_imported_memos_2': return '가져온 메모';
+			case 'strings.legacy.msg_explore': return '탐구하다';
+			case 'strings.legacy.msg_network_connection_failed': return '네트워크 연결에 실패했습니다.';
+			case 'strings.legacy.msg_save_failed_3': return ({required Object e}) => '저장 실패: ${e}';
+			case 'strings.legacy.msg_no_summary_share': return '공유할 요약이 없습니다.';
+			case 'strings.legacy.msg_custom_model': return '맞춤형 모델';
+			case 'strings.legacy.msg_sign_failed': return ({required Object message}) => '로그인 실패: ${message}';
+			case 'strings.legacy.msg_notification_exact_alarm_permissions_required_send': return '알림을 제때 보내려면 알림 및 정확한 알람 권한이 필요합니다.';
+			case 'strings.legacy.msg_random_review': return '무작위 검토';
+			case 'strings.legacy.msg_random_review_source_scope': return '참고 출처';
+			case 'strings.legacy.msg_random_review_source_all_notes': return '모든 메모';
+			case 'strings.legacy.msg_random_review_source_explore_notes': return '노트 탐색';
+			case 'strings.legacy.msg_random_review_source_ai_history': return 'AI 역사';
+			case 'strings.legacy.msg_random_review_ai_history_date_range': return 'AI 요약 시간';
+			case 'strings.legacy.msg_public': return '공공의';
+			case 'strings.legacy.msg_all_2': return '모두';
+			case 'strings.legacy.msg_add_custom_model': return '맞춤 모델 추가';
+			case 'strings.legacy.msg_backup_password': return '백업 비밀번호';
+			case 'strings.legacy.msg_optional_used_sign_requests': return '선택 과목. 요청에 서명하는 데 사용됩니다.';
+			case 'strings.legacy.msg_search': return '찾다';
+			case 'strings.legacy.msg_set_password': return '비밀번호 설정';
+			case 'strings.legacy.msg_submit_logs': return '로그 내보내기';
+			case 'strings.legacy.msg_logs_export_local_only': return '내보내기는 로그를 로컬에만 저장합니다. 앱은 자동으로 메모를 업로드하거나 메모를 생성하지 않습니다.';
+			case 'strings.legacy.msg_enable_network_logging_before_exporting': return '로그인/동기화/백업 문제의 경우 내보내기 전에 네트워크 로깅을 활성화하세요.';
+			case 'strings.legacy.msg_activity_heatmap_2': return '활동 히트맵';
+			case 'strings.legacy.msg_invalid_api_key_insufficient_permissions': return 'API 키가 잘못되었거나 권한이 부족합니다.';
+			case 'strings.legacy.msg_data_has_been_migrated_app_successfully': return '귀하의 데이터가 이 앱으로 성공적으로 이전되었습니다.';
+			case 'strings.legacy.msg_get_version': return '새 버전 받기';
+			case 'strings.legacy.msg_token_source': return '토큰 소스';
+			case 'strings.legacy.msg_send': return '보내다';
+			case 'strings.legacy.msg_no_pending_sync_tasks': return '보류 중인 동기화 작업이 없습니다.';
+			case 'strings.legacy.msg_locating_memo_content': return '메모 내용 찾기';
+			case 'strings.legacy.msg_offline_ready': return '오프라인 준비';
+			case 'strings.legacy.msg_use_relative_path': return '상대 경로 사용';
+			case 'strings.legacy.msg_total': return '총';
+			case 'strings.legacy.msg_location_2': return '위치';
+			case 'strings.legacy.msg_location_contains': return '위치에 다음이 포함됨';
+			case 'strings.legacy.msg_show_location_metadata_memos_not_configured': return '메모에 위치 메타데이터를 표시합니다. 구성되지 않은 경우 좌표가 대신 표시됩니다.';
+			case 'strings.legacy.msg_api_url': return 'API URL';
+			case 'strings.legacy.msg_parsing_progress': return '파싱 ​​진행';
+			case 'strings.legacy.msg_parsing': return '파싱';
+			case 'strings.legacy.msg_custom': return '관습';
+			case 'strings.legacy.msg_tags_created': return '새 태그가 생성되었습니다.';
+			case 'strings.legacy.msg_third_party_share_disabled': return '타사 공유가 비활성화되었습니다.';
+			case 'strings.legacy.msg_loading_links': return '링크 로드 중...';
+			case 'strings.legacy.msg_how_report': return '신고하는 방법?';
+			case 'strings.legacy.msg_confirm_password_2': return '비밀번호 확인';
+			case 'strings.legacy.msg_search_title_content_tags': return '제목, 콘텐츠, 태그로 검색';
+			case 'strings.legacy.msg_reset_failed': return ({required Object e}) => '재설정 실패: ${e}';
+			case 'strings.legacy.msg_debug_preview_update_dialog': return '디버그: 업데이트 미리보기 대화상자';
+			case 'strings.legacy.msg_what_s': return '새로운 소식은 무엇인가요?';
+			case 'strings.legacy.msg_ringtone': return '벨소리';
+			case 'strings.legacy.msg_unable_detect_backend_version_check_server': return '백엔드 버전을 감지할 수 없습니다. 서버 URL 또는 네트워크를 확인하세요.';
+			case 'strings.legacy.msg_pending_2': return '보류 중';
+			case 'strings.legacy.msg_parsing_html': return 'HTML을 구문 분석하는 중...';
+			case 'strings.legacy.msg_actions': return '행위';
+			case 'strings.legacy.msg_import_complete_2': return '가져오기 완료';
+			case 'strings.legacy.msg_use_disk': return '디스크 사용';
+			case 'strings.legacy.msg_root_path': return '루트 경로';
+			case 'strings.legacy.msg_disabled': return '장애가 있는';
+			case 'strings.legacy.msg_improved_2': return '개선됨:';
+			case 'strings.legacy.msg_city': return '도시';
+			case 'strings.legacy.msg_decoding_zip': return 'ZIP 디코딩 중...';
+			case 'strings.legacy.msg_notification_content': return '알림 내용';
+			case 'strings.legacy.msg_resolve_conflict': return '갈등 해결';
+			case 'strings.legacy.msg_webhooks_not_supported_server': return '이 서버에서는 웹후크가 지원되지 않습니다.';
+			case 'strings.legacy.msg_may_delayed': return '(지연될 수도 있습니다)';
+			case 'strings.legacy.msg_permissions_system_settings': return '권한 및 시스템 설정';
+			case 'strings.legacy.msg_waiting_tasks_stop': return '작업이 중지되기를 기다리는 중';
+			case 'strings.legacy.msg_done_2': return '완료';
+			case 'strings.legacy.msg_parsing_memoflow_export': return 'MemoFlow 내보내기 구문 분석 중...';
+			case 'strings.legacy.msg_location_updated': return ({required Object next_displayText_fractionDigits_6}) => '업데이트된 위치: ${next_displayText_fractionDigits_6}';
+			case 'strings.legacy.msg_checking_server_version': return '서버 버전 확인 중...';
+			case 'strings.legacy.msg_next_time_back_fixing_bugs': return '🙌 다음에는 버그 수정으로 다시 돌아오겠습니다';
+			case 'strings.legacy.msg_ago_4': return ({required Object weeks}) => '${weeks} 전';
+			case 'strings.legacy.msg_import': return '수입';
+			case 'strings.legacy.msg_create_token_2': return '토큰 생성';
+			case 'strings.legacy.msg_marked_read': return '읽음으로 표시됨';
+			case 'strings.legacy.msg_pinned': return '고정됨';
+			case 'strings.legacy.msg_version_update': return '버전 업데이트';
+			case 'strings.legacy.msg_allow_private_memos': return '비공개 메모 허용';
+			case 'strings.legacy.msg_token_copied_clipboard': return '토큰이 클립보드에 복사되었습니다.';
+			case 'strings.legacy.msg_keeping_more_versions_uses_more_storage': return '더 많은 버전을 유지하면 더 많은 저장용량을 사용합니다. 이전 버전을 정리하는 것이 좋습니다.';
+			case 'strings.legacy.msg_delete_webhook': return '웹훅 삭제';
+			case 'strings.legacy.msg_prompt': return '즉각적인';
+			case 'strings.legacy.msg_location_precision': return '위치 정밀도';
+			case 'strings.legacy.msg_password_required': return '비밀번호가 필요합니다';
+			case 'strings.legacy.msg_exit_app': return '앱 종료';
+			case 'strings.legacy.msg_thanks_energy_fully_restored': return '감사해요! 에너지가 완전히 회복되었습니다 ⚡';
+			case 'strings.legacy.msg_connection_timeout_check_network_api_url': return '연결 시간이 초과되었습니다. 네트워크 또는 API URL를 확인하세요.';
+			case 'strings.legacy.msg_local_network_migration': return '로컬 네트워크 마이그레이션';
+			case 'strings.legacy.msg_local_network_migration_desc': return '로컬 네트워크 마이그레이션을 사용하여 LAN을 통해 MemoFlow 장치와 타사 메모 도구를 연결하세요. MemoFlow 마이그레이션 및 Obsidian은 현재 지원됩니다.';
+			case 'strings.legacy.msg_connect_obsidian': return '흑요석 연결';
+			case 'strings.legacy.msg_connect_obsidian_desc': return '로컬 네트워크를 통해 Obsidian과 노트 콘텐츠를 페어링하고 동기화하세요.';
+			case 'strings.legacy.msg_local_network_migration_more_targets': return '나중에 SiYuan 및 기타 타사 도구를 포함한 더 많은 대상이 여기에 추가될 예정입니다.';
+			case 'strings.legacy.msg_memoflow_migration': return 'MemoFlow 마이그레이션';
+			case 'strings.legacy.msg_memoflow_migration_target_desc': return '로컬 네트워크를 통해 로컬 작업 공간 메모 및 설정을 다른 MemoFlow 장치로 마이그레이션하세요.';
+			case 'strings.legacy.msg_memoflow_migration_targets_summary': return 'MemoFlow / 흑요석';
+			case 'strings.legacy.msg_memoflow_migration_role_desc': return '이 기기가 일회성 로컬 마이그레이션 세션을 보낼지 받을지 선택하세요. 두 장치를 동일한 LAN에 유지하고 전송 중에 MemoFlow를 포그라운드에 유지하세요.';
+			case 'strings.legacy.msg_memoflow_migration_sender': return '나는 보낸 사람이다';
+			case 'strings.legacy.msg_memoflow_migration_sender_desc': return '현재 로컬 작업 공간에서 메모와 설정을 선택한 다음 근처 수신기에 연결하세요.';
+			case 'strings.legacy.msg_memoflow_migration_sender_only_local_mode': return '보낸 사람 역할은 이 장치가 로컬 작업 공간을 사용하는 경우에만 사용할 수 있습니다.';
+			case 'strings.legacy.msg_memoflow_migration_receiver': return '나는 수신기입니다';
+			case 'strings.legacy.msg_memoflow_migration_receiver_desc': return '수신 세션을 만들고, QR 코드를 표시하고, 들어오는 메모나 설정을 가져옵니다.';
+			case 'strings.legacy.msg_memoflow_migration_select_content': return '콘텐츠 선택';
+			case 'strings.legacy.msg_memoflow_migration_notes': return '메모 내용';
+			case 'strings.legacy.msg_memoflow_migration_notes_desc': return '현재 로컬 작업공간에서 모든 메모와 첨부 파일을 보냅니다.';
+			case 'strings.legacy.msg_memoflow_migration_settings': return '설정 내용';
+			case 'strings.legacy.msg_memoflow_migration_settings_desc': return '휴대용 기본 설정과 선택적 민감한 설정을 보냅니다.';
+			case 'strings.legacy.msg_memoflow_migration_safe_config': return '안전한 설정';
+			case 'strings.legacy.msg_memoflow_migration_sensitive_config': return '민감한 설정';
+			case 'strings.legacy.msg_memoflow_migration_prepare_package': return '마이그레이션 패키지 준비';
+			case 'strings.legacy.msg_memoflow_migration_prepare_send': return '보낼 준비를 하세요';
+			case 'strings.legacy.msg_memoflow_migration_send_method': return '전송 방법';
+			case 'strings.legacy.msg_memoflow_migration_send_method_desc': return '패키지가 준비된 후 수신기에 연결하는 방법을 선택하십시오.';
+			case 'strings.legacy.msg_memoflow_migration_prepare_send_first': return '전송 방법을 선택하기 전에 이전 화면에서 패키지를 준비하세요.';
+			case 'strings.legacy.msg_memoflow_migration_package_ready': return '패키지 준비';
+			case 'strings.legacy.msg_memoflow_migration_package_summary': return ({required Object memoCount, required Object attachmentCount, required Object size}) => '${memoCount} 메모 · ${attachmentCount} 첨부파일 · ${size}';
+			case 'strings.legacy.msg_memoflow_migration_scan_receiver': return '스캔 수신기';
+			case 'strings.legacy.msg_memoflow_migration_search_receiver': return '주변 수신기 검색';
+			case 'strings.legacy.msg_memoflow_migration_discovered_receivers': return '근처 수신기';
+			case 'strings.legacy.msg_memoflow_migration_waiting_receiver': return '발신자 연결을 기다리는 중…';
+			case 'strings.legacy.msg_memoflow_migration_review_proposal': return '마이그레이션 제안 검토';
+			case 'strings.legacy.msg_memoflow_migration_receive_mode': return '수신 모드';
+			case 'strings.legacy.msg_memoflow_migration_receive_as_new_workspace': return '새 로컬 작업공간으로 가져오기';
+			case 'strings.legacy.msg_memoflow_migration_overwrite_current_workspace': return '현재 로컬 작업공간 덮어쓰기';
+			case 'strings.legacy.msg_memoflow_migration_sensitive_config_confirm': return '민감한 설정에는 확인이 필요합니다.';
+			case 'strings.legacy.msg_memoflow_migration_accept': return '수락하고 받기';
+			case 'strings.legacy.msg_memoflow_migration_reject': return '거부하다';
+			case 'strings.legacy.msg_memoflow_migration_start_receive': return '수신 시작';
+			case 'strings.legacy.msg_memoflow_migration_completed': return '마이그레이션 완료';
+			case 'strings.legacy.msg_memoflow_migration_view_result': return '결과 보기';
+			case 'strings.legacy.msg_memoflow_migration_result': return '마이그레이션 결과';
+			case 'strings.legacy.msg_memoflow_migration_sender_device': return '발신 장치';
+			case 'strings.legacy.msg_memoflow_migration_size': return '예상 크기';
+			case 'strings.legacy.msg_memoflow_migration_received_bytes': return ({required Object size}) => '수신됨: ${size}';
+			case 'strings.legacy.msg_memoflow_migration_applied_configs': return '적용된 설정';
+			case 'strings.legacy.msg_memoflow_migration_skipped_configs': return '건너뛴 설정';
+			case 'strings.legacy.msg_memoflow_migration_workspace_name': return '작업공간';
+			case 'strings.legacy.msg_memoflow_migration_scan_title': return '스캔 수신기 QR';
+			case 'strings.legacy.msg_memoflow_migration_scan_hint': return '수신 장치에 표시된 QR 코드를 스캔하세요.';
+			case 'strings.legacy.msg_memoflow_migration_foreground_notice': return '마이그레이션 중에 두 장치 모두에서 MemoFlow를 포그라운드로 유지합니다.';
+			case 'strings.legacy.msg_bridge_component_title': return 'MemoFlow 다리';
+			case 'strings.legacy.msg_bridge_component_desc': return '로컬 동기화를 위해 Obsidian 플러그인과 페어링하세요.';
+			case 'strings.legacy.msg_bridge_title': return '흑요석 연결';
+			case 'strings.legacy.msg_bridge_local_mode_only': return '로컬 네트워크를 통해 Obsidian과 페어링하세요. 나중에 다른 목표가 올 수도 있습니다.';
+			case 'strings.legacy.msg_bridge_paired_target': return ({required Object target}) => '페어링됨: ${target}';
+			case 'strings.legacy.msg_bridge_unpaired': return '페어링되지 않음';
+			case 'strings.legacy.msg_bridge_server': return ({required Object server}) => '서버: ${server}';
+			case 'strings.legacy.msg_bridge_device': return ({required Object device}) => '장치: ${device}';
+			case 'strings.legacy.msg_bridge_processing': return '처리 중...';
+			case 'strings.legacy.msg_bridge_action_scan_pair': return '스캔하여 페어링';
+			case 'strings.legacy.msg_bridge_action_mdns_discover': return 'mDNS 검색';
+			case 'strings.legacy.msg_bridge_action_searching': return '수색...';
+			case 'strings.legacy.msg_bridge_pair_code_label': return '페어 코드';
+			case 'strings.legacy.msg_bridge_pair_code_hint': return 'Obsidian에 표시된 6자리 코드를 입력하세요.';
+			case 'strings.legacy.msg_bridge_action_pairing': return '편성...';
+			case 'strings.legacy.msg_bridge_action_confirm_pair': return '페어링 확인';
+			case 'strings.legacy.msg_bridge_action_checking': return '확인 중...';
+			case 'strings.legacy.msg_bridge_action_health_check': return '건강검진';
+			case 'strings.legacy.msg_bridge_enable': return '브리지 활성화';
+			case 'strings.legacy.msg_bridge_pair_cleared': return '페어링이 삭제되었습니다.';
+			case 'strings.legacy.msg_bridge_clear_pair': return '페어 지우기';
+			case 'strings.legacy.msg_bridge_discovery_results': return '발견 결과';
+			case 'strings.legacy.msg_bridge_scan_title': return 'QR 스캔';
+			case 'strings.legacy.msg_bridge_scan_hint': return 'Obsidian 플러그인에 표시된 QR 코드를 스캔하세요.';
+			case 'strings.legacy.msg_bridge_qr_invalid': return '잘못된 페어링 QR 코드';
+			case 'strings.legacy.msg_bridge_pair_response_missing_token': return '쌍 응답 누락 토큰';
+			case 'strings.legacy.msg_bridge_pair_success': return '페어링 성공';
+			case 'strings.legacy.msg_bridge_pair_failed': return ({required Object e}) => '페어링 실패: ${e}';
+			case 'strings.legacy.msg_bridge_mdns_searching': return 'mDNS 서비스 검색 중...';
+			case 'strings.legacy.msg_bridge_mdns_failed': return ({required Object e}) => 'mDNS 검색 실패: ${e}';
+			case 'strings.legacy.msg_bridge_mdns_not_found': return '브리지 서비스를 찾을 수 없습니다.';
+			case 'strings.legacy.msg_bridge_mdns_found_count': return ({required Object count}) => '${count} 서비스를 찾았습니다.';
+			case 'strings.legacy.msg_bridge_input_host_required': return '호스트는 필수 항목입니다.';
+			case 'strings.legacy.msg_bridge_input_port_invalid': return '포트가 유효하지 않습니다';
+			case 'strings.legacy.msg_bridge_input_pair_code_required': return '쌍 코드가 필요합니다';
+			case 'strings.legacy.msg_bridge_status_pairing': return '편성...';
+			case 'strings.legacy.msg_bridge_need_pair_first': return '먼저 페어링해주세요';
+			case 'strings.legacy.msg_bridge_status_health_checking': return '브릿지 상태 확인 중...';
+			case 'strings.legacy.msg_bridge_status_health_ok': return '브릿지는 건강해요';
+			case 'strings.legacy.msg_bridge_status_health_failed': return ({required Object e}) => '상태 확인 실패: ${e}';
+			case 'strings.legacy.app_language.system': return '시스템 설정 따르기';
+			case 'strings.legacy.app_language.zh_hans': return '중국어(간체)';
+			case 'strings.legacy.app_language.zh_hant_tw': return '중국어(번체, 대만)';
+			case 'strings.legacy.app_language.en': return '영어';
+			case 'strings.legacy.app_language.ja': return '일본어';
+			case 'strings.legacy.app_language.de': return '독일어';
+			case 'strings.legacy.app_language.pt_br': return '포르투갈어(브라질)';
+			case 'strings.legacy.app_language.ko': return '한국어';
+			case 'strings.legacy.app_theme.system': return '체계';
+			case 'strings.legacy.app_theme.light': return '빛';
+			case 'strings.legacy.app_theme.dark': return '어두운';
+			case 'strings.legacy.app_font_size.standard': return '기준';
+			case 'strings.legacy.app_font_size.large': return '크기가 큰';
+			case 'strings.legacy.app_font_size.small': return '작은';
+			case 'strings.legacy.app_line_height.classic': return '권위 있는';
+			case 'strings.legacy.app_line_height.compact': return '콤팩트';
+			case 'strings.legacy.app_line_height.relaxed': return '편안한';
+			case 'strings.legacy.launch_action.none': return '없음';
+			case 'strings.legacy.launch_action.sync': return '동조';
+			case 'strings.legacy.launch_action.quick_input': return '빠른 입력';
+			case 'strings.legacy.launch_action.daily_review': return '무작위 검토';
+			case 'strings.legacy.auto_lock_time.immediately': return '즉시';
+			case 'strings.legacy.auto_lock_time.after_1_min': return '1분';
+			case 'strings.legacy.auto_lock_time.after_5_min': return '5분';
+			case 'strings.legacy.auto_lock_time.after_15_min': return '15분';
+			case 'strings.legacy.reminder.default_title': return '이 아이디어 기억나세요?';
+			case 'strings.legacy.reminder.default_body': return '세부정보를 보려면 탭하세요.';
+			case 'strings.legacy.location.current': return '현재 위치';
+			case 'strings.legacy.webdav.not_configured': return 'WebDAV가 구성되지 않았습니다.';
+			case 'strings.legacy.webdav.backup_disabled': return '백업이 비활성화되었습니다.';
+			case 'strings.legacy.webdav.backup_account_missing': return '백업할 계정이 없습니다.';
+			case 'strings.legacy.webdav.backup_local_only': return '백업은 로컬 라이브러리에만 가능합니다.';
+			case 'strings.legacy.webdav.backup_password_missing': return '백업 비밀번호가 없습니다.';
+			case 'strings.legacy.webdav.backup_no_memo_files': return '로컬 라이브러리에 메모 파일이 없습니다. 백업이 취소되었습니다';
+			case 'strings.legacy.webdav.restore_account_missing': return '복원할 계정이 없습니다.';
+			case 'strings.legacy.webdav.restore_local_only': return '복원은 로컬 라이브러리에만 가능합니다.';
+			case 'strings.legacy.webdav.backup_empty': return '백업이 비어 있습니다.';
+			case 'strings.legacy.webdav.backup_no_memos': return '백업에서 메모를 찾을 수 없습니다.';
+			case 'strings.legacy.webdav.snapshot_missing': return '백업 스냅샷 누락';
+			case 'strings.legacy.webdav.snapshot_corrupted': return '백업 스냅샷이 손상되었습니다.';
+			case 'strings.legacy.webdav.object_missing': return '백업 객체 누락';
+			case 'strings.legacy.webdav.config_corrupted': return '백업 구성이 손상되었습니다.';
+			case 'strings.legacy.webdav.config_invalid': return '잘못된 백업 구성';
+			case 'strings.legacy.webdav.password_invalid': return '잘못된 백업 비밀번호';
+			case 'strings.legacy.webdav.data_corrupted': return '백업 데이터가 손상되었습니다.';
+			case 'strings.legacy.webdav.server_url_invalid': return '잘못된 WebDAV 서버 URL';
+			case 'strings.legacy.webdav.recover_password_title': return '백업 비밀번호를 복구하세요';
+			case 'strings.legacy.webdav.recover_password_button': return '다시 덮다';
+			case 'strings.legacy.webdav.recover_password_hint': return '보안 코드로 백업 비밀번호 재설정';
+			case 'strings.legacy.webdav.recovery_code_title': return '보안 코드';
+			case 'strings.legacy.webdav.recovery_code_enter': return '보안 코드를 입력하세요';
+			case 'strings.legacy.webdav.recovery_code_enter_new_password': return '새 비밀번호를 입력하세요';
+			case 'strings.legacy.webdav.recovery_code_setup_message': return '백업 비밀번호가 설정되었습니다. 지금 이 보안 코드를 저장하세요. 비밀번호를 잊어버린 경우 이 코드로만 비밀번호를 재설정할 수 있습니다.';
+			case 'strings.legacy.webdav.recovery_code_reset_message': return '백업 비밀번호가 재설정되었습니다. 새 보안 코드를 저장하세요. 이전 코드는 더 이상 유효하지 않습니다.';
+			case 'strings.legacy.webdav.recovery_code_copied': return '보안 코드가 복사되었습니다.';
+			case 'strings.legacy.webdav.recovery_reset_success': return '백업 비밀번호 재설정';
+			case 'strings.legacy.webdav.recovery_code_invalid': return '잘못된 보안 코드입니다. 확인하신 후 다시 시도해 주세요.';
+			case 'strings.legacy.webdav.recovery_not_configured': return '이 백업에는 아직 보안 코드 복구가 활성화되지 않았습니다.';
+			case 'strings.legacy.import_count_memos': return ({required Object count}) => '${count}';
+			case 'strings.legacy.import_count_attachments': return ({required Object count}) => '${count}';
+			case 'strings.legacy.msg_version_probe_complete': return '버전 조사 완료';
+			case 'strings.legacy.msg_currently_using_api': return ({required Object version}) => '현재 API ${version}를 사용하고 있습니다.';
+			case 'strings.legacy.msg_version_probe_failed': return '버전 조사 실패';
+			case 'strings.legacy.msg_copy_diagnostics': return '진단 복사';
+			case 'strings.legacy.msg_diagnostics_copied': return '진단이 복사되었습니다.';
+			case 'strings.legacy.msg_probe_failed': return ({required Object error}) => '프로브 실패: ${error}';
+			case 'strings.legacy.msg_no_active_session_after_sign_in': return '로그인 후 활성 세션이 없습니다.';
+			case 'strings.legacy.msg_request_headers': return '요청 헤더';
+			case 'strings.legacy.msg_request_body': return '요청 본문';
+			case 'strings.legacy.msg_response_headers': return '응답 헤더';
+			case 'strings.legacy.msg_response_body': return '응답 본문';
+			case 'strings.legacy.msg_error': return '오류';
+			case 'strings.legacy.msg_system_logs': return '시스템 로그';
+			case 'strings.legacy.msg_copy_last_lines': return ({required Object lines}) => '마지막 ${lines} 줄 복사';
+			case 'strings.legacy.msg_export_logs_bundle': return '로그 번들 내보내기';
+			case 'strings.legacy.msg_showing_last_lines': return ({required Object lines}) => '마지막 ${lines} 라인 표시';
+			case 'strings.legacy.msg_no_system_logs_yet': return '아직 시스템 로그가 없습니다.';
+			case 'strings.legacy.msg_system_logs_copied': return ({required Object lines}) => '시스템 로그 복사됨(${lines} 행)';
+			case 'strings.legacy.msg_log_bundle_created': return ({required Object path, required Object exportId}) => '생성된 로그 번들: ${path}(ExportId: ${exportId})';
+			case 'strings.legacy.msg_failed_export_logs': return ({required Object error}) => '로그 내보내기 실패: ${error}';
+			case 'strings.legacy.msg_api_route': return 'API 노선';
+			case 'strings.legacy.msg_screenshot_mode': return '스크린샷 모드';
+			case 'strings.legacy.msg_screenshot_mode_detail': return '깔끔한 캡처를 위해 상태/탐색 표시줄 숨기기';
+			case 'strings.legacy.msg_template': return '주형';
+			case 'strings.legacy.msg_no_templates_yet': return '아직 템플릿이 없습니다.';
+			case 'strings.legacy.msg_quick_search': return '빠른 검색...';
+			case 'strings.legacy.msg_minimize': return '최소화';
+			case 'strings.legacy.msg_maximize': return '최대화';
+			case 'strings.legacy.msg_restore_window': return '복원하다';
+			case 'strings.legacy.msg_windows_enable_location_access': return ({required Object message}) => '${message}. Windows 설정에서 위치 액세스를 활성화합니다.';
+			case 'strings.legacy.msg_camera_file_missing': return '카메라 파일이 없습니다.';
+			case 'strings.legacy.msg_no_camera_detected': return '카메라가 감지되지 않았습니다.';
+			case 'strings.legacy.msg_camera_failed': return ({required Object error}) => '카메라 실패: ${error}';
+			case 'strings.legacy.msg_camera_permission_denied_windows': return '카메라 권한이 거부되었습니다. Windows 설정에서 카메라 액세스를 활성화하세요.';
+			case 'strings.legacy.msg_file_selection_failed': return ({required Object error}) => '파일 선택 실패: ${error}';
+			case 'strings.legacy.msg_files_unavailable_from_picker': return '선택기에서 파일을 사용할 수 없습니다.';
+			case 'strings.legacy.msg_no_files_selected': return '선택한 파일이 없습니다.';
+			case 'strings.legacy.msg_original_image': return '원래의';
+			case 'strings.legacy.msg_gallery_system_picker_original_desc': return '선택한 이미지를 업로드하기 전에 압축을 건너뛸지 여부를 선택하세요.';
+			case 'strings.legacy.msg_gallery_system_picker_original_switch': return '선택한 이미지를 원본 품질로 업로드';
+			case 'strings.legacy.msg_gallery_original_selection_summary': return ({required Object selectedCount, required Object originalCount}) => '선택된 ${selectedCount} · 원본 ${originalCount}';
+			case 'strings.legacy.msg_added_files': return ({required Object count}) => '${count} 파일을 추가했습니다.';
+			case 'strings.legacy.msg_unavailable_file_count': return ({required Object count}) => '${count}를 사용할 수 없습니다';
+			case 'strings.legacy.msg_added_files_with_skipped': return ({required Object count, required Object details}) => '${count} 파일을 추가했습니다. ${details}를 건너뛰었습니다.';
+			case 'strings.legacy.msg_added_photo_attachment': return '사진 첨부를 추가했습니다.';
+			case 'strings.legacy.msg_enter_content_before_creating_link': return '링크를 만들기 전에 내용을 입력해주세요.';
+			case 'strings.legacy.msg_checkbox': return '체크박스';
+			case 'strings.legacy.msg_code_block': return '코드 블록';
+			case 'strings.legacy.msg_no_recording_input_device_found': return '녹음 입력 장치를 찾을 수 없습니다.';
+			case 'strings.legacy.msg_write_current_thought': return '당신이 생각하는 것을 적어보세요 ...';
+			case 'strings.legacy.msg_tag': return '꼬리표';
+			case 'strings.legacy.msg_attachment': return '부착';
+			case 'strings.legacy.msg_todo': return '토도';
+			case 'strings.legacy.msg_link': return '링크';
+			case 'strings.legacy.msg_capture_photo': return '사진 캡처';
+			case 'strings.legacy.msg_open_camera_settings': return '카메라 설정 열기';
+			case 'strings.legacy.msg_unable_open_windows_camera_settings': return 'Windows 카메라 설정을 열 수 없습니다.';
+			case 'strings.legacy.msg_qr_scan_not_supported_use_manual_pairing': return '이 플랫폼에서는 QR 스캔이 지원되지 않습니다.\n대신 수동 페어링을 사용하세요.';
+			case 'strings.legacy.msg_qr_scan_not_supported_pair_manually': return '이 플랫폼에서는 QR 스캔이 지원되지 않습니다. 호스트, 포트, 페어링 코드를 수동으로 페어링하세요.';
+			case 'strings.legacy.msg_loading_memos': return '메모 로드 중...';
+			case 'strings.legacy.msg_encryption_feature_placeholder': return '암호화는 현재 자리 표시자이며 아직 시행되지 않습니다.';
+			case 'strings.legacy.msg_password_feature_placeholder': return '비밀번호 지원은 현재 자리 표시자이며 아직 시행되지 않습니다.';
+			case 'strings.legacy.msg_template_feature_manage_desc': return '템플릿 이름, 콘텐츠, 변수를 관리하려면 템플릿을 활성화하세요.';
+			case 'strings.legacy.msg_shortcuts_overview': return '바로가기 개요';
+			case 'strings.legacy.msg_restore_defaults': return '기본값 복원';
+			case 'strings.legacy.msg_default_shortcuts_restored': return '기본 단축키가 복원되었습니다.';
+			case 'strings.legacy.msg_file_save_location': return '파일 저장 위치';
+			case 'strings.legacy.msg_select_location': return '위치 선택';
+			case 'strings.legacy.msg_repository_name': return '저장소 이름';
+			case 'strings.legacy.msg_enter_repository_name_hint': return '저장소 이름을 입력하세요';
+			case 'strings.legacy.msg_not_selected': return '선택되지 않음';
+			case 'strings.legacy.msg_select_file_save_location': return '파일 저장 위치를 ​​선택해주세요.';
+			case 'strings.legacy.msg_enter_repository_name_prompt': return '저장소 이름을 입력하세요.';
+			case 'strings.legacy.msg_enter_and_confirm_password': return '비밀번호를 입력하고 확인해 주세요.';
+			case 'strings.legacy.msg_encrypt_save_placeholder': return '암호화된 저장(자리 표시자)';
+			case 'strings.legacy.msg_windows_related_settings': return 'Windows 관련 설정';
+			case 'strings.legacy.msg_only_windows_desktop_supports_this_setting': return 'Windows 데스크톱만 이 설정을 지원합니다.';
+			case 'strings.legacy.msg_shortcut_settings': return '바로가기 설정';
+			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return 'Windows 바탕 화면 바로 가기 구성';
+			case 'strings.legacy.msg_close_window_minimize_to_tray': return '창을 닫을 때 트레이로 최소화';
+			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return '활성화되면 오른쪽 상단 닫기 버튼을 클릭해도 앱이 종료되지 않습니다. 시스템 트레이에서 창을 복원할 수 있습니다.';
+			case 'strings.legacy.msg_local_storage_unavailable': return '로컬 저장소를 사용할 수 없습니다';
+			case 'strings.legacy.msg_check_system_permissions_or_retry_later': return '시스템 권한을 확인하거나 나중에 다시 시도하세요.';
+			case 'strings.legacy.msg_source_value': return ({required Object source}) => '출처: ${source}';
+			case 'strings.legacy.msg_enable_sync_bridge_first': return '먼저 동기화 브리지를 활성화하세요.';
+			case 'strings.legacy.msg_sync_to_obsidian': return '흑요석과 동기화';
+			case 'strings.legacy.msg_sync_to_obsidian_confirm': return '첨부 파일을 포함하여 현재 로컬 라이브러리에 있는 모든 메모를 페어링된 Obsidian에 한 번에 동기화하세요. 계속하다?';
+			case 'strings.legacy.msg_sync_completed_summary': return ({required Object succeeded, required Object total, required Object failed}) => '동기화 완료: ${succeeded}/${total} 성공, ${failed} 실패.';
+			case 'strings.legacy.msg_sync_failed_with_error': return ({required Object error}) => '동기화 실패: ${error}';
+			case 'strings.legacy.msg_sync_to_obsidian_in_progress': return 'Obsidian과 동기화하는 중...';
+			case 'strings.legacy.msg_action_shortcut': return '작업 - 바로가기';
+			case 'strings.legacy.msg_global': return '글로벌';
+			case 'strings.legacy.msg_editor': return '편집자';
+			case 'strings.legacy.msg_paste': return '반죽';
+			case 'strings.legacy.msg_cut': return '자르다';
+			case 'strings.legacy.msg_previous_page': return '이전 페이지';
+			case 'strings.legacy.msg_next_page': return '다음 페이지';
+			case 'strings.legacy.msg_shift_enter_supported': return 'Shift + Enter도 지원합니다.';
+			case 'strings.legacy.msg_shortcuts_supported_windows_macos': return 'Windows 및 macOS만 바로가기 설정을 지원합니다.';
+			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding}는 이미 "${action}"에서 사용되고 있습니다.';
+			case 'strings.legacy.msg_windows_paging_note': return 'Windows 페이징: PageUp 이전 페이지, PageDown 다음 페이지.';
+			case 'strings.legacy.msg_system_edit_shortcuts_note': return '복사/붙여넣기/잘라내기는 시스템 기본 단축키를 사용합니다.';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return '최소한 하나의 수정자 키(Ctrl/Cmd/Shift/Alt)를 포함하세요.';
+			case 'strings.legacy.msg_current_shortcut': return ({required Object binding}) => '현재: ${binding}';
+			case 'strings.legacy.msg_press_new_shortcut': return '새 단축키를 누르세요...';
+			case 'strings.legacy.msg_quick_record': return '빠른 기록';
+			case 'strings.legacy.msg_focus_input_area': return '초점 입력 영역';
+			case 'strings.legacy.msg_toggle_sidebar': return '사이드바 전환';
+			case 'strings.legacy.msg_open_settings': return '설정 열기';
+			case 'strings.legacy.msg_show_hide_memoflow': return 'MemoFlow 표시 / 숨기기';
+			case 'strings.legacy.msg_publish_memo': return '메모 게시';
+			case 'strings.legacy.msg_bold': return '용감한';
+			case 'strings.legacy.msg_underline': return '밑줄';
+			case 'strings.legacy.msg_highlight': return '가장 밝은 부분';
+			case 'strings.legacy.msg_unordered_list': return '순서가 없는 목록';
+			case 'strings.legacy.msg_ordered_list': return '주문목록';
+			case 'strings.legacy.msg_undo': return '끄르다';
+			case 'strings.legacy.msg_redo': return '다시 하다';
+			case 'strings.legacy.msg_no_templates_click_add': return '아직 템플릿이 없습니다. 템플릿을 만들려면 \'템플릿 추가\'를 클릭하세요.';
+			case 'strings.legacy.msg_weather_variables_enabled_city_not_set': return '날씨 변수 활성화됨(도시가 설정되지 않음)';
+			case 'strings.legacy.msg_weather_variables_city': return ({required Object city}) => '날씨 변수: ${city}';
+			case 'strings.legacy.msg_weather_variables_disabled': return '날씨 변수가 비활성화되었습니다.';
+			case 'strings.legacy.msg_template_feature_title': return '템플릿 활성화';
+			case 'strings.legacy.msg_template_feature_desc': return '활성화한 후 편집기 도구 모음에서 템플릿을 선택할 수 있습니다. 하나를 선택하면 편집기 콘텐츠가 대체됩니다.';
+			case 'strings.legacy.msg_template_list': return '템플릿 목록';
+			case 'strings.legacy.msg_many_templates_support_scroll': return '템플릿이 많은 경우 이 영역에서는 세로 스크롤을 지원합니다.';
+			case 'strings.legacy.msg_variable_settings': return '변수 설정';
+			case 'strings.legacy.msg_template_variables': return '템플릿 변수';
+			case 'strings.legacy.msg_available_variable_docs': return '사용 가능한 변수 문서';
+			case 'strings.legacy.msg_available_variable_docs_desc': return '탭하면 중앙 대화 상자에 변수 테이블과 의미 메모가 표시됩니다.';
+			case 'strings.legacy.msg_date_time_weather_variable_desc': return '날짜/시간 변수는 변수 설정의 형식을 따릅니다. 날씨 변수는 AMap 날씨 구성에 따라 달라집니다.';
+			case 'strings.legacy.msg_variable': return '변하기 쉬운';
+			case 'strings.legacy.msg_meaning': return '의미';
+			case 'strings.legacy.msg_example': return '예';
+			case 'strings.legacy.msg_got_it': return '알았어요';
+			case 'strings.legacy.msg_scene_micro_guide_list_gestures': return '메모를 복사하려면 길게 누르고, 빠르게 편집하려면 두 번 탭하세요.';
+			case 'strings.legacy.msg_scene_micro_guide_list_search_shortcuts': return '제목, 콘텐츠, 태그 검색을 탭하세요. 바로가기 필터 제목을 탭하세요';
+			case 'strings.legacy.msg_scene_micro_guide_editor_tag_autocomplete_desktop': return '태그 제안에 #을 입력하고 ??를 사용하세요. 선택하고 Enter를 눌러 삽입하세요.';
+			case 'strings.legacy.msg_scene_micro_guide_editor_tag_autocomplete_mobile': return '#을 입력하거나 태그 버튼을 탭하여 추천 태그를 선택하세요.';
+			case 'strings.legacy.msg_scene_micro_guide_gallery_controls_desktop': return '?/? 스위치? Esc가 닫히나요? 두 번 탭하여 재설정';
+			case 'strings.legacy.msg_scene_micro_guide_gallery_controls_mobile': return '재설정하려면 두 번 탭하세요.';
+			case 'strings.legacy.msg_scene_micro_guide_desktop_global_shortcuts': return ({required Object search, required Object quickRecord, required Object overview}) => '${search} 검색 ? ${quickRecord} 빠른 기록 ? ${overview} 바로가기 보기';
+			case 'strings.legacy.msg_new_template': return '템플릿 추가';
+			case 'strings.legacy.msg_edit_template': return '템플릿 편집';
+			case 'strings.legacy.msg_template_name': return '템플릿 이름';
+			case 'strings.legacy.msg_template_name_example': return '예: 아침 복습';
+			case 'strings.legacy.msg_template_content': return '템플릿 내용';
+			case 'strings.legacy.msg_template_content_example': return '예를 들어 다음과 같은 변수를 사용할 수 있습니다. {{date}} {{weather}}';
+			case 'strings.legacy.msg_template_variable_settings': return '템플릿 변수 설정';
+			case 'strings.legacy.msg_date_format_variable': return '날짜 형식({{date}})';
+			case 'strings.legacy.msg_time_format_variable': return '시간 형식({{time}})';
+			case 'strings.legacy.msg_datetime_format_variable': return '날짜/시간 형식({{datetime}})';
+			case 'strings.legacy.msg_enable_weather_variables': return '날씨 변수 활성화';
+			case 'strings.legacy.msg_weather_variable_tokens': return '변수: {{weather}} / {{weather.*}}';
+			case 'strings.legacy.msg_weather_city_adcode_or_name': return '날씨 도시(애드코드 또는 도시 이름)';
+			case 'strings.legacy.msg_weather_city_example': return '예: 110000';
+			case 'strings.legacy.msg_weather_fallback_text': return '날씨 대체 텍스트';
+			case 'strings.legacy.msg_keep_unknown_variables_raw': return '알 수 없는 변수를 그대로 유지';
+			case 'strings.legacy.msg_keep_unknown_variables_raw_desc': return '비활성화되면 알 수 없는 변수가 빈 문자열로 대체됩니다.';
+			case 'strings.legacy.msg_delete_template': return '템플릿 삭제';
+			case 'strings.legacy.msg_delete_template_confirm_with_name': return ({required Object name}) => '\'${name}\'를 삭제하시겠습니까?';
+			case 'strings.legacy.msg_current_date': return '현재 날짜';
+			case 'strings.legacy.msg_current_time': return '현재 시간';
+			case 'strings.legacy.msg_current_datetime': return '현재 날짜 및 시간';
+			case 'strings.legacy.msg_weekday_name': return '요일 이름';
+			case 'strings.legacy.msg_weather_plus_temperature_without_city': return '날씨 + 기온(도시 제외)';
+			case 'strings.legacy.msg_city_plus_weather_plus_temperature': return '도시 + 날씨 + 기온';
+			case 'strings.legacy.msg_weather_city_label': return '날씨 도시';
+			case 'strings.legacy.msg_weather_province': return '날씨 지방';
+			case 'strings.legacy.msg_weather_condition': return '기상 조건';
+			case 'strings.legacy.msg_temperature_without_unit': return '온도(장치 없음)';
+			case 'strings.legacy.msg_humidity_without_percent': return '습도(% 기호 없음)';
+			case 'strings.legacy.msg_wind_direction': return '풍향';
+			case 'strings.legacy.msg_wind_power': return '풍력';
+			case 'strings.legacy.msg_weather_report_time': return '일기 예보 시간';
+			case 'strings.legacy.msg_adcode': return '행정구역번호';
+			case 'strings.legacy.msg_example_saturday': return '토요일';
+			case 'strings.legacy.msg_example_sunny_25c': return '맑음 25°C';
+			case 'strings.legacy.msg_example_beijing_sunny_25c': return '베이징 맑음 25°C';
+			case 'strings.legacy.msg_example_beijing': return '베이징';
+			case 'strings.legacy.msg_example_beijing_city': return '베이징시';
+			case 'strings.legacy.msg_example_sunny': return '화창한';
+			case 'strings.legacy.msg_example_northeast': return '북동';
+			case 'strings.legacy.msg_total_count_times': return ({required Object count}) => '총 ${count}회';
+			case 'strings.legacy.msg_current_streak_days': return '현재 연속 기록(일)';
+			case 'strings.legacy.msg_total_days': return '총 일수';
+			case 'strings.legacy.msg_average_daily_characters': return '일일 평균 문자';
+			case 'strings.legacy.msg_longest_streak_days': return '최장 연속 기록(일)';
+			case 'strings.legacy.msg_total_memos_metric': return '총 메모';
+			case 'strings.legacy.msg_total_characters_metric': return '총 문자수';
+			case 'strings.legacy.msg_common_writing_time': return '일반적인 작성 시간';
+			case 'strings.legacy.msg_most_active_day': return '가장 활동적인 날';
+			case 'strings.legacy.msg_memo_count': return '메모 개수';
+			case 'strings.legacy.msg_total_characters_short': return '총 문자수';
+			case 'strings.legacy.msg_max_characters_single_day': return '하루 최대 문자 수';
+			case 'strings.legacy.msg_image': return '영상';
+			case 'strings.legacy.msg_video': return '동영상';
+			case 'strings.legacy.msg_audio': return '오디오';
+			case 'strings.legacy.msg_document': return '문서';
+			case 'strings.legacy.msg_other': return '다른';
+			case 'strings.legacy.msg_attachment_name_contains': return '첨부파일 이름에 다음이 포함되어 있습니다.';
+			case 'strings.legacy.msg_attachment_type': return '첨부파일 유형';
+			case 'strings.legacy.msg_linked_memos': return '연결된 메모';
+			case 'strings.legacy.msg_clear_all_filters': return '모든 필터 지우기';
+			case 'strings.legacy.msg_file': return '파일';
+			case 'strings.legacy.msg_vs_last_month_same_memo_count': return '지난달과 동일한 메모 개수';
+			case 'strings.legacy.msg_vs_last_month_increase_memo_count': return '지난달보다 메모가 많아졌다';
+			case 'strings.legacy.msg_vs_last_month_decrease_memo_count': return '지난달보다 메모가 적어요';
+			case 'strings.legacy.msg_weekday_monday': return '월';
+			case 'strings.legacy.msg_weekday_tuesday': return '화요일';
+			case 'strings.legacy.msg_weekday_wednesday': return '수요일';
+			case 'strings.legacy.msg_weekday_thursday': return '목';
+			case 'strings.legacy.msg_weekday_friday': return '금';
+			case 'strings.legacy.msg_weekday_saturday': return '앉았다';
+			case 'strings.legacy.msg_weekday_sunday': return '해';
+			case 'strings.legacy.msg_current_window_pin_not_supported': return '현재 창에서는 고정이 지원되지 않습니다.';
+			case 'strings.legacy.msg_no_valid_files_selected': return '유효한 파일을 선택하지 않았습니다.';
+			case 'strings.legacy.msg_added_attachment_count': return ({required Object count}) => '${count} 첨부 파일을 추가했습니다.';
+			case 'strings.legacy.msg_save_failed_check_content_retry': return '저장에 실패했습니다. 내용을 확인하신 후 다시 시도해 주세요.';
+			case 'strings.legacy.msg_quick_input_channel_not_ready_retry': return '빠른 입력 채널이 준비되지 않았습니다. 기본 창을 다시 열고 다시 시도해 주세요.';
+			case 'strings.legacy.msg_visibility_value': return ({required Object value}) => '가시성 : ${value}';
+			case 'strings.legacy.msg_saved_to_memoflow': return 'MemoFlow에 저장되었습니다.';
+			case 'strings.legacy.msg_quick_input_failed_with_error': return ({required Object error}) => '빠른 입력 실패: ${error}';
+			case 'strings.legacy.msg_feature': return '특징';
+			case 'strings.legacy.msg_feature_not_implemented_placeholder_with_label': return ({required Object label}) => '"${label}"는 아직 구현되지 않았습니다(자리 표시자).';
+			case 'strings.legacy.msg_quick_input_save_failed_with_error': return ({required Object error}) => '빠른 입력 저장 실패: ${error}';
+			case 'strings.legacy.msg_toggle_memoflow_failed_with_error': return ({required Object error}) => 'MemoFlow 표시/숨기기 실패: ${error}';
+			case 'strings.legacy.msg_shortcuts_overview_opened': return '바로가기 개요를 열었습니다.';
+			case 'strings.legacy.msg_unsupported_version_value': return ({required Object version}) => '지원되지 않는 버전: ${version}';
+			case 'strings.legacy.msg_version_probe_passed_with_version': return ({required Object version}) => 'v${version} 프로브 통과';
+			case 'strings.legacy.msg_startup_slogan': return '기록이 자연스럽게 흐르도록 하세요';
+			case 'strings.legacy.msg_storage_read_failed_some_features_limited': return '저장소 읽기에 실패했습니다. 일부 기능이 제한됩니다.';
+			case 'strings.legacy.msg_monthly_overview': return ({required Object month}) => '${month} 월간 개요';
+			case 'strings.legacy.msg_daily_memo_trend': return '일일 메모 트렌드';
+			case 'strings.legacy.msg_date_memo_count_tooltip': return ({required Object date, required Object count}) => '${date}\n${count} 메모';
+			case 'strings.legacy.msg_average_value': return ({required Object value}) => '평균 ${value}';
+			case 'strings.legacy.msg_need_at_least_five_tags': return '태그가 5개 미만입니다. 태그를 더 추가하고 다시 시도해 주세요.';
+			case 'strings.legacy.msg_tag_cloud_tooltip': return ({required Object count, required Object percent, required Object latest}) => '${count} 메모\n${percent}%\n최신: ${latest}';
+			case 'strings.legacy.msg_unnamed_tag': return '이름 없는 태그';
+			case 'strings.legacy.msg_yearly_character_trend': return '연간 캐릭터 동향';
+			case 'strings.legacy.msg_no_data': return '데이터 없음';
+			case 'strings.legacy.msg_month_characters_tooltip': return ({required Object month, required Object chars}) => '${month}\n${chars} 문자';
+			case 'strings.legacy.msg_on_this_day': return '이날';
+			case 'strings.legacy.msg_links_label': return '모래밭';
+			case 'strings.legacy.app_drawer.tooltip_single': return ({required Object date, required Object weekday, required Object count}) => '${date} (${weekday}) · ${count} 메모';
+			case 'strings.legacy.app_drawer.tooltip_multi': return ({required Object date, required Object weekday, required Object count}) => '${date} (${weekday}) · ${count} 메모';
+			case 'strings.legacy.ai_summary.error_api_key_empty': return 'API 키가 비어 있습니다.';
+			case 'strings.legacy.ai_summary.system.require_json': return 'JSON를 엄격하게 출력하십시오. 코드 블록이나 추가 텍스트를 사용하지 마세요.';
+			case 'strings.legacy.ai_summary.system.json_format': return 'JSON 형식: {"insights":["..."],"moodTrend":"...","keywords":["#..."]}';
+			case 'strings.legacy.ai_summary.system.insights_rule': return '인사이트는 2~5개 항목이어야 합니다. 키워드는 #이 포함된 4~8개 항목이어야 합니다.';
+			case 'strings.legacy.ai_summary.user.range': return ({required Object rangeLabel}) => '시간 범위: ${rangeLabel}';
+			case 'strings.legacy.ai_summary.user.counts': return ({required Object memoCount, required Object includedCount}) => 'Memos: ${memoCount}(요약을 위해 포함됨: ${includedCount})';
+			case 'strings.legacy.ai_summary.user.profile': return ({required Object profile}) => '사용자 프로필: ${profile}';
+			case 'strings.legacy.ai_summary.user.custom_prompt': return ({required Object customPrompt}) => '추가 지침: ${customPrompt}';
+			case 'strings.legacy.ai_summary.user.memo_content': return '메모 내용:';
+			case 'strings.legacy.ai_summary.error_invalid_response': return 'AI 응답의 형식이 잘못되었습니다.';
+			case 'strings.legacy.ai_summary.error_empty_response': return 'AI 응답이 비어 있습니다.';
+			case 'strings.legacy.ai_summary.error_missing_content': return 'AI 응답 콘텐츠가 누락되었습니다.';
+			case 'strings.legacy.ai_summary.default_prompt': return '당신은 미니멀리스트 노트 도우미입니다. 핵심 포인트를 추출하여 깔끔한 형식으로 제시합니다. 전문적이고 따뜻하며 간결한 톤을 유지하세요. 목록과 짧은 단락을 선호합니다.';
+			case 'strings.shareClip.videoDetected': return '동영상 콘텐츠로 감지됨';
+			case 'strings.shareClip.linkOnlyLabel': return '링크만 저장';
+			case 'strings.shareClip.originalLinkLabel': return '원본 링크';
+			case 'strings.shareClip.videoCandidatesTitle': return '비디오 후보';
+			case 'strings.shareClip.downloadAndAttach': return '다운로드 및 첨부';
+			case 'strings.shareClip.notSupportedLabel': return '지원되지 않음';
+			case 'strings.shareClip.directLinkLabel': return '직접링크';
+			case 'strings.shareClip.xiaohongshuLabel': return '샤오홍슈';
+			case 'strings.shareClip.unsupportedDash': return '별도의 DASH 스트림은 지원되지 않습니다.';
+			case 'strings.shareClip.unsupportedStream': return '스트리밍 전용 리소스는 지원되지 않습니다.';
+			case 'strings.shareClip.fileTooLargeTitle': return '비디오가 30MB보다 큽니다.';
+			case 'strings.shareClip.fileTooLargeBody': return ({required Object size}) => '본 영상은 ${size}로, 서버 첨부 제한을 초과하였습니다.';
+			case 'strings.shareClip.compressAndSave': return '압축 및 저장';
+			case 'strings.shareClip.fallbackParseFailed': return '동영상 파싱에 실패하여 앱이 링크만 저장했습니다.';
+			case 'strings.shareClip.fallbackDownloadFailed': return '동영상 다운로드에 실패하여 앱에 링크만 저장되었습니다.';
+			case 'strings.shareClip.fallbackCompressionFailed': return '동영상 압축에 실패하여 앱에 링크만 저장되었습니다.';
+			case 'strings.shareClip.fallbackCompressionStillTooLarge': return '압축된 비디오는 여전히 30MB보다 크기 때문에 앱은 링크만 저장했습니다.';
+			case 'strings.shareClip.failureUnsupportedUrl': return '지원되지 않는 URL 체계입니다.';
+			case 'strings.shareClip.failureLoadTimeout': return '페이지를 로드하는 동안 시간이 초과되었습니다.';
+			case 'strings.shareClip.failureWebView': return 'WebView가 페이지를 로드하지 못했습니다.';
+			case 'strings.shareClip.failureDom': return '페이지 콘텐츠를 읽을 수 없습니다.';
+			case 'strings.shareClip.failureParserEmpty': return '읽을 수 있는 콘텐츠를 추출할 수 없습니다.';
+			case 'strings.shareClip.failureUnknown': return '공유 미리보기를 준비하는 중에 문제가 발생했습니다.';
+			case 'strings.shareClip.stageLoadingPage': return '페이지 로드 중';
+			case 'strings.shareClip.stageWaitingContent': return '동적 콘텐츠를 기다리는 중';
+			case 'strings.shareClip.stageDetectingMedia': return '비디오 리소스 감지';
+			case 'strings.shareClip.stageParsingArticle': return '기사 분석 중';
+			case 'strings.shareClip.stageBuildingPreview': return '건물 미리보기';
+			case 'strings.shareClip.stageDownloadingVideo': return '비디오 다운로드 중';
+			case 'strings.shareClip.stageCompressingVideo': return '비디오 압축 중';
+			case 'strings.shareClip.localSavedPendingSync': return '로컬에 저장되었습니다. 가능한 경우 동기화가 계속됩니다.';
+			case 'strings.memoTimeAdjustment.action': return '생성 시간 변경';
+			case 'strings.memoTimeAdjustment.saved': return '생성 시간이 업데이트되었습니다.';
+			case 'strings.memoTimeAdjustment.description': return '저장 후 이 메모는 새로 생성된 시간을 기준으로 표시 및 정렬됩니다.';
+			case 'strings.memoTimeAdjustment.dateField': return '날짜';
+			case 'strings.memoTimeAdjustment.timeField': return '시간';
+			case 'strings.memoTimeAdjustment.selectedCreationTime': return ({required Object value}) => '생성 시간: ${value}';
+			case 'strings.memoTimeAdjustment.failed': return ({required Object error}) => '생성 시간 변경 실패: ${error}';
+			case 'strings.collections.drawerLabel': return '컬렉션';
+			case 'strings.collections.title': return '컬렉션';
+			case 'strings.collections.collection': return '수집';
+			case 'strings.collections.pinned': return '고정됨';
+			case 'strings.collections.archived': return '보관됨';
+			case 'strings.collections.addToCollection': return '컬렉션에 추가';
+			case 'strings.collections.newManual': return '새로운 매뉴얼';
+			case 'strings.collections.create': return '만들다';
+			case 'strings.collections.createCollection': return '컬렉션 만들기';
+			case 'strings.collections.editCollection': return '컬렉션 수정';
+			case 'strings.collections.reader.comingSoon': return '곧 출시 예정';
+			case 'strings.collections.reader.manageCollectionItems': return '컬렉션 아이템 관리';
+			case 'strings.collections.reader.currentMemoActions': return '현재 메모 작업';
+			case 'strings.collections.reader.pageAnimationTooltip': return '페이지 애니메이션';
+			case 'strings.collections.reader.pageAnimationNone': return '애니메이션 없음';
+			case 'strings.collections.reader.pageAnimationSlide': return '슬라이드';
+			case 'strings.collections.reader.pageAnimationSimulation': return '시뮬레이션';
+			case 'strings.collections.reader.progressPage': return ({required Object current, required Object total}) => '페이지 ${current}/${total}';
+			case 'strings.collections.reader.progressMemo': return ({required Object current, required Object total}) => '메모 ${current}/${total}';
+			case 'strings.collections.reader.settingsTitle': return '리더 설정';
+			case 'strings.collections.reader.themePreset': return '테마 사전 설정';
+			case 'strings.collections.reader.themePaper': return '종이';
+			case 'strings.collections.reader.themeEyeCare': return '눈 관리';
+			case 'strings.collections.reader.themeDark': return '어두운';
+			case 'strings.collections.reader.themeGray': return '회색';
+			case 'strings.collections.reader.brightnessMode': return '밝기 모드';
+			case 'strings.collections.reader.brightnessSystem': return '체계';
+			case 'strings.collections.reader.brightnessManual': return '수동';
+			case 'strings.collections.reader.readerBrightness': return '리더 밝기';
+			case 'strings.collections.reader.textScale': return '텍스트 규모';
+			case 'strings.collections.reader.lineSpacing': return '줄 간격';
+			case 'strings.collections.reader.pagePadding': return '페이지 패딩';
+			case 'strings.collections.reader.autoPageTitle': return '자동 페이지';
+			case 'strings.collections.reader.autoPageStart': return '시작';
+			case 'strings.collections.reader.autoPageStop': return '멈추다';
+			case 'strings.collections.reader.autoPageSecondsPerPage': return '초/페이지';
+			case 'strings.collections.reader.styleTitle': return '독자 스타일';
+			case 'strings.collections.reader.backgroundStyle': return '배경 스타일';
+			case 'strings.collections.reader.backgroundTypePreset': return '프리셋';
+			case 'strings.collections.reader.backgroundTypeSolid': return '단단한';
+			case 'strings.collections.reader.backgroundTypeImage': return '영상';
+			case 'strings.collections.reader.backgroundAlpha': return '배경 알파';
+			case 'strings.collections.reader.typography': return '타이포그래피';
+			case 'strings.collections.reader.readerFont': return '리더 글꼴';
+			case 'strings.collections.reader.fontSystemDefault': return '시스템 기본값';
+			case 'strings.collections.reader.fontWeightNormal': return '정상';
+			case 'strings.collections.reader.fontWeightMedium': return '중간';
+			case 'strings.collections.reader.fontWeightBold': return '용감한';
+			case 'strings.collections.reader.letterSpacing': return '문자 간격';
+			case 'strings.collections.reader.paragraphSpacing': return '단락 간격';
+			case 'strings.collections.reader.firstLineIndent': return '첫 줄 들여쓰기';
+			case 'strings.collections.reader.tipSettingsTitle': return '팁바 설정';
+			case 'strings.collections.reader.tipSettingsSubtitle': return '제목, 머리글, 바닥글, 팁 색상';
+			case 'strings.collections.reader.paddingSettingsTitle': return '패딩 설정';
+			case 'strings.collections.reader.paddingSettingsSubtitle': return '본문/머리글/바닥글 패딩';
+			case 'strings.collections.reader.brightness': return '명도';
+			case 'strings.collections.reader.customSolidColor': return '맞춤형 단색';
+			case 'strings.collections.reader.backgroundColor': return '배경색';
+			case 'strings.collections.reader.backgroundImage': return '배경 이미지';
+			case 'strings.collections.reader.backgroundImageUnavailableWeb': return '웹에서는 이미지 파일 배경을 사용할 수 없습니다.';
+			case 'strings.collections.reader.backgroundImagePickHint': return '리더 배경으로 사용할 이미지 파일을 선택하세요.';
+			case 'strings.collections.reader.clearImageBackground': return '이미지 배경 지우기';
+			case 'strings.collections.reader.titleSection': return '제목';
+			case 'strings.collections.reader.titleModeLeft': return '왼쪽';
+			case 'strings.collections.reader.titleModeCenter': return '센터';
+			case 'strings.collections.reader.titleModeHidden': return '숨겨진';
+			case 'strings.collections.reader.titleScale': return '타이틀 스케일';
+			case 'strings.collections.reader.titleTopSpacing': return '제목 상단 간격';
+			case 'strings.collections.reader.titleBottomSpacing': return '제목 하단 간격';
+			case 'strings.collections.reader.headerFooterSection': return '머리글/바닥글';
+			case 'strings.collections.reader.headerMode': return '헤더 모드';
+			case 'strings.collections.reader.footerMode': return '바닥글 모드';
+			case 'strings.collections.reader.headerLeft': return '헤더 왼쪽';
+			case 'strings.collections.reader.headerCenter': return '헤더 센터';
+			case 'strings.collections.reader.headerRight': return '헤더 오른쪽';
+			case 'strings.collections.reader.footerLeft': return '바닥글 왼쪽';
+			case 'strings.collections.reader.footerCenter': return '바닥글 중심';
+			case 'strings.collections.reader.footerRight': return '바닥글 오른쪽';
+			case 'strings.collections.reader.tipTextColor': return '팁 텍스트 색상';
+			case 'strings.collections.reader.dividerColor': return '구분선 색상';
+			case 'strings.collections.reader.useDefaultLongPressReset': return '기본값 사용(재설정하려면 길게 누르세요)';
+			case 'strings.collections.reader.tipSlotNone': return '없음';
+			case 'strings.collections.reader.tipSlotCollectionTitle': return '컬렉션 제목';
+			case 'strings.collections.reader.tipSlotChapterTitle': return '장 제목';
+			case 'strings.collections.reader.tipSlotTime': return '시간';
+			case 'strings.collections.reader.tipSlotBattery': return '배터리';
+			case 'strings.collections.reader.tipSlotBatteryPercentage': return '배터리 %';
+			case 'strings.collections.reader.tipSlotPage': return '페이지';
+			case 'strings.collections.reader.tipSlotTotalProgress': return '진전';
+			case 'strings.collections.reader.tipSlotPageAndTotal': return '페이지/전체';
+			case 'strings.collections.reader.tipSlotTimeBattery': return '시간 + 배터리';
+			case 'strings.collections.reader.tipSlotTimeBatteryPercentage': return '시간 + 배터리 %';
+			case 'strings.collections.reader.tipDisplayHidden': return '숨겨진';
+			case 'strings.collections.reader.tipDisplayInline': return '인라인';
+			case 'strings.collections.reader.tipDisplayReserved': return '예약된';
+			case 'strings.collections.reader.paddingTitle': return '페이지 패딩';
+			case 'strings.collections.reader.paddingBody': return '몸';
+			case 'strings.collections.reader.paddingHeader': return '헤더';
+			case 'strings.collections.reader.paddingFooter': return '보행인';
+			case 'strings.collections.reader.paddingTop': return '맨 위';
+			case 'strings.collections.reader.paddingBottom': return '맨 아래';
+			case 'strings.collections.reader.paddingLeft': return '왼쪽';
+			case 'strings.collections.reader.paddingRight': return '오른쪽';
+			case 'strings.collections.reader.showHeaderDivider': return '헤더 구분선 표시';
+			case 'strings.collections.reader.showFooterDivider': return '바닥글 구분선 표시';
+			case 'strings.collections.reader.moreSettingsTitle': return '추가 설정';
+			case 'strings.collections.reader.moreDisplay': return '표시하다';
+			case 'strings.collections.reader.moreInput': return '입력';
+			case 'strings.collections.reader.moreContent': return '콘텐츠';
+			case 'strings.collections.reader.hideStatusBar': return '상태 표시줄 숨기기';
+			case 'strings.collections.reader.hideNavigationBar': return '탐색 모음 숨기기';
+			case 'strings.collections.reader.padDisplayCutouts': return '패드 디스플레이 컷아웃';
+			case 'strings.collections.reader.keepScreenAwake': return '화면을 활성 상태로 유지';
+			case 'strings.collections.reader.barsFollowPageStyle': return '막대는 페이지 스타일을 따릅니다.';
+			case 'strings.collections.reader.showReadTitleAddition': return '읽은 제목 추가 표시';
+			case 'strings.collections.reader.showBrightnessOverlay': return '밝기 오버레이 표시';
+			case 'strings.collections.reader.mouseWheelPageTurn': return '마우스 휠 페이지 넘기기';
+			case 'strings.collections.reader.volumeKeyPageTurn': return '볼륨 키 페이지 넘기기';
+			case 'strings.collections.reader.longPressKeyPageTurn': return '길게 누르기 키 페이지 넘기기';
+			case 'strings.collections.reader.touchSlop': return '터치슬롭';
+			case 'strings.collections.reader.clickActionsTitle': return '클릭 동작';
+			case 'strings.collections.reader.clickActionsSubtitle': return '3×3 터치 영역 구성';
+			case 'strings.collections.reader.platformUnavailable': return '이 플랫폼에서는 사용할 수 없습니다.';
+			case 'strings.collections.reader.allowTextSelection': return '텍스트 선택 허용';
+			case 'strings.collections.reader.previewImageOnTap': return '탭 시 이미지 미리보기';
+			case 'strings.collections.reader.tapRegionTopLeft': return '왼쪽 위';
+			case 'strings.collections.reader.tapRegionTopCenter': return '상단 중앙';
+			case 'strings.collections.reader.tapRegionTopRight': return '오른쪽 상단';
+			case 'strings.collections.reader.tapRegionMiddleLeft': return '가운데 왼쪽';
+			case 'strings.collections.reader.tapRegionMiddleCenter': return '중간 센터';
+			case 'strings.collections.reader.tapRegionMiddleRight': return '가운데 오른쪽';
+			case 'strings.collections.reader.tapRegionBottomLeft': return '왼쪽 하단';
+			case 'strings.collections.reader.tapRegionBottomCenter': return '하단 중앙';
+			case 'strings.collections.reader.tapRegionBottomRight': return '오른쪽 하단';
+			case 'strings.collections.reader.tapActionNone': return '없음';
+			case 'strings.collections.reader.tapActionMenu': return '메뉴';
+			case 'strings.collections.reader.tapActionNextPage': return '다음 페이지';
+			case 'strings.collections.reader.tapActionPrevPage': return '이전 페이지';
+			case 'strings.collections.reader.tapActionNextChapter': return '다음 장';
+			case 'strings.collections.reader.tapActionPrevChapter': return '이전 장';
+			case 'strings.collections.reader.tapActionToc': return '목차';
+			case 'strings.collections.reader.tapActionSearch': return '찾다';
+			case 'strings.collections.reader.cancel': return '취소';
+			case 'strings.collections.reader.apply': return '적용하다';
+			case 'strings.collections.reader.styleCardsTitle': return '스타일 카드';
+			case 'strings.collections.reader.styleCardNew': return '새로운';
+			case 'strings.collections.reader.styleCardEditCurrent': return '현재 편집';
+			case 'strings.collections.reader.styleCardCreateTitle': return '스타일 카드 만들기';
+			case 'strings.collections.reader.styleCardEditTitle': return '스타일 카드 수정';
+			case 'strings.collections.reader.styleCardSave': return '구하다';
+			case 'strings.collections.reader.styleCardDelete': return '삭제';
+			case 'strings.collections.reader.styleCardNameLabel': return '스타일 이름';
+			case 'strings.collections.reader.styleCardBuiltIn': return '프리셋';
+			case 'strings.collections.reader.styleCardCustom': return '관습';
+			case 'strings.collections.createCollectionTooltip': return '컬렉션 만들기';
+			case 'strings.collections.reorderShelf': return '선반 재정렬';
+			case 'strings.collections.reorderShelfDescription': return '선반에 표시된 순서를 드래그하여 조정하세요. 고정된 컬렉션은 여전히 ​​나머지 컬렉션보다 위에 있습니다.';
+			case 'strings.collections.manageItems': return '항목 관리';
+			case 'strings.collections.searchCollections': return '컬렉션 검색';
+			case 'strings.collections.searchInsideCollection': return '이 컬렉션 내에서 검색';
+			case 'strings.collections.searchMemos': return '메모 검색';
+			case 'strings.collections.clearSearch': return '검색 지우기';
+			case 'strings.collections.collectionActions': return '수집 작업';
+			case 'strings.collections.openCollection': return '오픈 컬렉션';
+			case 'strings.collections.dragToReorder': return '드래그하여 재정렬하세요.';
+			case 'strings.collections.smart': return '똑똑한';
+			case 'strings.collections.smartCollectionSummary': return '스마트 컬렉션';
+			case 'strings.collections.manual': return '수동';
+			case 'strings.collections.manualCollectionSummary': return '수동 수집';
+			case 'strings.collections.shelf': return '선반';
+			case 'strings.collections.timeline': return '타임라인';
+			case 'strings.collections.list': return '목록';
+			case 'strings.collections.noGroups': return '그룹 없음';
+			case 'strings.collections.month': return '월';
+			case 'strings.collections.quarter': return '4분의 1';
+			case 'strings.collections.year': return '년도';
+			case 'strings.collections.autoCover': return '자동커버';
+			case 'strings.collections.coverReady': return '커버 준비 완료';
+			case 'strings.collections.pinToTop': return '상단에 고정';
+			case 'strings.collections.privateOnly': return '비공개 전용';
+			case 'strings.collections.publicOnly': return '공개 전용';
+			case 'strings.collections.hasAttachments': return '첨부파일 있음';
+			case 'strings.collections.noAttachments': return '첨부파일 없음';
+			case 'strings.collections.imagesOnly': return '이미지만';
+			case 'strings.collections.pinnedOnlySummary': return '고정된 것만';
+			case 'strings.collections.lastDays': return ({required Object days}) => '지난 ${days}일';
+			case 'strings.collections.customRangeSummary': return '맞춤 범위';
+			case 'strings.collections.headerHeadline': return '메모로 테마 선반을 만들어보세요';
+			case 'strings.collections.headerDescription': return '컬렉션은 로컬 우선으로 유지되고 태그에서 자동으로 업데이트되며 반복되는 주제에 자체 홈을 제공합니다.';
+			case 'strings.collections.countAll': return ({required Object count}) => '${count} 컬렉션';
+			case 'strings.collections.countFiltered': return ({required Object visible, required Object total}) => '${visible} / ${total} 컬렉션 표시 중';
+			case 'strings.collections.noCollectionsTitle': return '아직 컬렉션이 없습니다.';
+			case 'strings.collections.noCollectionsDescription': return '반복되는 태그를 엄선된 선반으로 바꾸는 스마트 컬렉션을 만드세요.';
+			case 'strings.collections.noMatchingTitle': return '일치하는 컬렉션이 없습니다.';
+			case 'strings.collections.noMatchingDescription': return '필요한 컬렉션을 찾으려면 다른 검색이나 필터를 사용해 보세요.';
+			case 'strings.collections.resetFilters': return '필터 재설정';
+			case 'strings.collections.loadingCollections': return '컬렉션 로드 중';
+			case 'strings.collections.loadingCollection': return '컬렉션 로드 중';
+			case 'strings.collections.loadingMemos': return '메모 로드 중';
+			case 'strings.collections.unableToLoadCollections': return '컬렉션을 로드할 수 없습니다.';
+			case 'strings.collections.unableToLoadCollection': return '컬렉션을 로드할 수 없습니다.';
+			case 'strings.collections.unableToLoadCollectionItems': return '컬렉션 항목을 로드할 수 없습니다.';
+			case 'strings.collections.unableToLoadCurrentItems': return '현재 항목을 로드할 수 없습니다.';
+			case 'strings.collections.unableToLoadMemos': return '메모를 로드할 수 없습니다.';
+			case 'strings.collections.deleteTitle': return '컬렉션을 삭제하시겠습니까?';
+			case 'strings.collections.deleteMessage': return ({required Object title}) => '\'${title}\'을 삭제하시겠습니까?';
+			case 'strings.collections.memosCount': return ({required Object count}) => '${count} 메모';
+			case 'strings.collections.imagesCount': return ({required Object count}) => '이미지가 있는 ${count}';
+			case 'strings.collections.showingMemos': return ({required Object visible, required Object total}) => '${visible} / ${total} 메모 표시 중';
+			case 'strings.collections.noMemoMatchedYet': return '아직 일치하는 메모가 없습니다.';
+			case 'strings.collections.updatedAt': return ({required Object date}) => '${date}를 업데이트했습니다.';
+			case 'strings.collections.addMemos': return '메모 추가';
+			case 'strings.collections.addMemo': return '메모 추가';
+			case 'strings.collections.addSelected': return ({required Object count}) => '(${count}) 추가';
+			case 'strings.collections.remove': return '제거하다';
+			case 'strings.collections.noManualCollectionsTitle': return '아직 수동 컬렉션이 없습니다.';
+			case 'strings.collections.noManualCollectionsDescription': return '이 메모를 저장하고 선반에 보관하려면 메모를 만드세요.';
+			case 'strings.collections.manualCollectionNotFoundTitle': return '수동 컬렉션을 찾을 수 없습니다.';
+			case 'strings.collections.manualCollectionNotFoundDescription': return '이 컬렉션이 누락되었거나 로컬 저장소에서 더 이상 사용할 수 없습니다.';
+			case 'strings.collections.manualCollectionEmptyTitle': return '이 컬렉션에는 아직 항목이 없습니다.';
+			case 'strings.collections.manualCollectionEmptyDescription': return '메모를 추가하여 이 수동 컬렉션을 계속해서 다시 방문할 수 있는 책장으로 바꾸세요.';
+			case 'strings.collections.noMemosAvailableTitle': return '추가할 수 있는 메모가 없습니다.';
+			case 'strings.collections.noMemosAvailableDescription': return '여기에 추가하기 전에 다른 키워드를 시도하거나 더 많은 메모를 작성하세요.';
+			case 'strings.collections.collectionNotFound': return '컬렉션을 찾을 수 없습니다';
+			case 'strings.collections.searchNoResultsTitle': return ({required Object query}) => '"${query}"에 대한 검색결과가 없습니다.';
+			case 'strings.collections.searchNoResultsDescription': return '이 컬렉션 내에서 다른 키워드를 사용해 보세요.';
+			case 'strings.collections.emptySmartDetail': return '아직 현재 규칙과 일치하는 메모가 없습니다.';
+			case 'strings.collections.emptyManualDetail': return '이 컬렉션에는 아직 항목이 없습니다.';
+			case 'strings.collections.basics': return '기초';
+			case 'strings.collections.titleRequired': return '제목은 필수 항목입니다.';
+			case 'strings.collections.ruleRequired': return '저장하기 전에 규칙을 하나 이상 추가하세요.';
+			case 'strings.collections.description': return '설명';
+			case 'strings.collections.type': return '유형';
+			case 'strings.collections.accentColor': return '악센트 색상';
+			case 'strings.collections.rules': return '규칙';
+			case 'strings.collections.tags': return '태그';
+			case 'strings.collections.selectTags': return '태그 선택';
+			case 'strings.collections.noTagsSelected': return '선택한 태그가 없습니다.';
+			case 'strings.collections.tagMatch': return '태그 매치';
+			case 'strings.collections.anyTag': return '모든 태그';
+			case 'strings.collections.allTags': return '모든 태그';
+			case 'strings.collections.includeDescendants': return '하위 항목 포함';
+			case 'strings.collections.includeDescendantsDescription': return '프로젝트/알파와 같은 하위 태그를 일치시킵니다.';
+			case 'strings.collections.attachments': return '첨부파일';
+			case 'strings.collections.attachmentAny': return '어느';
+			case 'strings.collections.attachmentRequired': return '필수의';
+			case 'strings.collections.attachmentNone': return '없음';
+			case 'strings.collections.attachmentImagesOnly': return '이미지만';
+			case 'strings.collections.dateRange': return '기간';
+			case 'strings.collections.allTime': return '모든 시간';
+			case 'strings.collections.last7Days': return '지난 7일';
+			case 'strings.collections.last30Days': return '지난 30일';
+			case 'strings.collections.customRange': return '맞춤 범위';
+			case 'strings.collections.chooseRange': return '범위 선택';
+			case 'strings.collections.pinnedOnly': return '고정된 메모만';
+			case 'strings.collections.manualItems': return '수동 항목';
+			case 'strings.collections.manualItemsDescription': return '수동 컬렉션은 메모 카드, 메모 세부 사항 또는 세부 사항 페이지 항목 관리 모드에서 선별됩니다.';
+			case 'strings.collections.display': return '표시하다';
+			case 'strings.collections.cover': return '씌우다';
+			case 'strings.collections.coverAttachment': return '부착';
+			case 'strings.collections.coverImage': return '표지 이미지';
+			case 'strings.collections.noCoverImageAvailable': return '현재 미리보기에서는 아직 이미지 첨부를 사용할 수 없습니다.';
+			case 'strings.collections.defaultLayout': return '기본 레이아웃';
+			case 'strings.collections.groupBy': return '그룹화 기준';
+			case 'strings.collections.manualOrder': return '수동 주문';
+			case 'strings.collections.displayTimeDesc': return '표시시간 ↓';
+			case 'strings.collections.displayTimeAsc': return '표시 시간 ↑';
+			case 'strings.collections.updatedTimeDesc': return '업데이트 시간 ↓';
+			case 'strings.collections.updatedTimeAsc': return '업데이트 시간 ↑';
+			case 'strings.collections.showDetailStats': return '세부 통계 표시';
+			case 'strings.collections.showDetailStatsDescription': return '세부 헤더에 메모 개수, 이미지 개수, 최근 활동을 표시합니다.';
+			case 'strings.collections.hideWhenEmpty': return '비어 있으면 선반에 숨기세요';
+			case 'strings.collections.hideWhenEmptyDescription': return '메모와 다시 일치할 때까지 이 컬렉션을 기본 선반에 보관합니다.';
+			case 'strings.collections.previewMemos': return 'Memos';
+			case 'strings.collections.previewImages': return '이미지';
+			case 'strings.collections.noPreviewSmart': return '아직 일치하는 메모가 없습니다.';
+			case 'strings.collections.noPreviewManual': return '이 수동 컬렉션에는 아직 항목이 없습니다.';
+			default: return null;
+		}
+	}
+}
+
 extension on _StringsPtBr {
 	dynamic _flatMapFunction(String path) {
 		switch (path) {
@@ -21333,6 +25995,7 @@ extension on _StringsPtBr {
 			case 'strings.languages.ja': return 'Japonês';
 			case 'strings.languages.de': return 'Alemão';
 			case 'strings.languages.ptBr': return 'Português (Brasil)';
+			case 'strings.languages.ko': return 'Coreano';
 			case 'strings.languagesNative.system': return 'Sistema';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
@@ -21340,6 +26003,7 @@ extension on _StringsPtBr {
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
 			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
+			case 'strings.languagesNative.ko': return '한국어';
 			case 'strings.onboarding.tagline': return 'Fluxo de notas minimalista e poderoso';
 			case 'strings.onboarding.selectLanguage': return 'Selecione o idioma';
 			case 'strings.onboarding.selectMode': return 'Escolha um modo';
@@ -22708,6 +27372,7 @@ extension on _StringsPtBr {
 			case 'strings.legacy.app_language.ja': return 'Japonês';
 			case 'strings.legacy.app_language.de': return 'Alemão';
 			case 'strings.legacy.app_language.pt_br': return 'Português (Brasil)';
+			case 'strings.legacy.app_language.ko': return 'Coreano';
 			case 'strings.legacy.app_theme.system': return 'Sistema';
 			case 'strings.legacy.app_theme.light': return 'Luz';
 			case 'strings.legacy.app_theme.dark': return 'Escuro';
@@ -23362,6 +28027,7 @@ extension on _StringsZhHans {
 			case 'strings.languages.ja': return '日语';
 			case 'strings.languages.de': return '德语';
 			case 'strings.languages.ptBr': return '葡萄牙语（巴西）';
+			case 'strings.languages.ko': return '韩语';
 			case 'strings.languagesNative.system': return '系统';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
@@ -23369,6 +28035,7 @@ extension on _StringsZhHans {
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
 			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
+			case 'strings.languagesNative.ko': return '한국어';
 			case 'strings.onboarding.tagline': return '简约而强大的笔记流';
 			case 'strings.onboarding.selectLanguage': return '选择语言';
 			case 'strings.onboarding.selectMode': return '选择工作模式';
@@ -24734,6 +29401,7 @@ extension on _StringsZhHans {
 			case 'strings.legacy.app_language.ja': return '日语';
 			case 'strings.legacy.app_language.de': return '德语';
 			case 'strings.legacy.app_language.pt_br': return '葡萄牙语（巴西）';
+			case 'strings.legacy.app_language.ko': return '韩语';
 			case 'strings.legacy.app_theme.system': return '系统';
 			case 'strings.legacy.app_theme.light': return '浅色';
 			case 'strings.legacy.app_theme.dark': return '深色';
@@ -25391,6 +30059,7 @@ extension on _StringsZhHantTw {
 			case 'strings.languages.ja': return '日文';
 			case 'strings.languages.de': return '德文';
 			case 'strings.languages.ptBr': return '葡萄牙文（巴西）';
+			case 'strings.languages.ko': return '韓語';
 			case 'strings.languagesNative.system': return '系統';
 			case 'strings.languagesNative.zhHans': return '简体中文';
 			case 'strings.languagesNative.zhHantTw': return '繁體中文（中國台灣）';
@@ -25398,6 +30067,7 @@ extension on _StringsZhHantTw {
 			case 'strings.languagesNative.ja': return '日本語';
 			case 'strings.languagesNative.de': return 'Deutsch';
 			case 'strings.languagesNative.ptBr': return 'Português (Brasil)';
+			case 'strings.languagesNative.ko': return '한국어';
 			case 'strings.onboarding.tagline': return '簡約而強大的筆記流';
 			case 'strings.onboarding.selectLanguage': return '選擇語言';
 			case 'strings.onboarding.selectMode': return '選擇工作模式';
@@ -26746,6 +31416,7 @@ extension on _StringsZhHantTw {
 			case 'strings.legacy.app_language.ja': return '日語';
 			case 'strings.legacy.app_language.de': return '德語';
 			case 'strings.legacy.app_language.pt_br': return '葡萄牙文（巴西）';
+			case 'strings.legacy.app_language.ko': return '韓語';
 			case 'strings.legacy.app_theme.system': return '系統';
 			case 'strings.legacy.app_theme.light': return '淺色';
 			case 'strings.legacy.app_theme.dark': return '深色';

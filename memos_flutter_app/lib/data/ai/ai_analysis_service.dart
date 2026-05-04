@@ -1448,9 +1448,7 @@ class AiAnalysisService {
     String? previousError,
   }) {
     final candidates = retrieval.candidates;
-    final localeText = prefersEnglishFor(language)
-        ? 'English'
-        : 'Simplified Chinese';
+    final localeText = aiOutputLanguageNameFor(language);
     final readingAngles = _emotionMapIntents(language)
         .map(
           (intent) => {'section_key': intent.sectionKey, 'goal': intent.query},

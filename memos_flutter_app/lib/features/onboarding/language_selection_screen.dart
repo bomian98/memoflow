@@ -83,6 +83,7 @@ class _LanguageSelectionScreenState
     AppLanguage.ja,
     AppLanguage.de,
     AppLanguage.ptBr,
+    AppLanguage.ko,
   ];
 
   String _languageTitle(AppLanguage language) {
@@ -95,6 +96,7 @@ class _LanguageSelectionScreenState
       AppLanguage.ja => labels.ja,
       AppLanguage.de => labels.de,
       AppLanguage.ptBr => labels.ptBr,
+      AppLanguage.ko => labels.ko,
     };
   }
 
@@ -108,6 +110,7 @@ class _LanguageSelectionScreenState
       AppLanguage.ja => labels.ja,
       AppLanguage.de => labels.de,
       AppLanguage.ptBr => labels.ptBr,
+      AppLanguage.ko => labels.ko,
     };
   }
 
