@@ -51,6 +51,56 @@ void main() {
     },
   );
 
+  test('xiaohongshu video result uses generic video candidate flow', () async {
+    const payload = SharePayload(
+      type: SharePayloadType.text,
+      text: 'https://xhslink.com/a/example',
+      title: 'Shared XHS Video',
+    );
+    final engine = _FakeShareCaptureEngine(
+      ShareCaptureResult.success(
+        finalUrl: Uri.parse(
+          'https://www.xiaohongshu.com/discovery/item/note-123?type=video',
+        ),
+        articleTitle: 'XHS Video Gifts',
+        pageKind: SharePageKind.video,
+        siteParserTag: 'xiaohongshu',
+        videoCandidates: const [
+          ShareVideoCandidate(
+            id: 'xiaohongshu-h264',
+            url: 'http://sns-video-qc.xhscdn.com/stream/h264.mp4',
+            title: 'h264.mp4',
+            source: ShareVideoSource.parser,
+            isDirectDownloadable: true,
+            parserTag: 'xiaohongshu',
+          ),
+        ],
+      ),
+    );
+    final controller = ShareClipController(payload: payload, engine: engine);
+    addTearDown(controller.dispose);
+
+    await controller.start();
+
+    expect(controller.state.phase, ShareClipPhase.success);
+    expect(controller.state.result!.isVideoPage, isTrue);
+    expect(controller.state.result!.hasDirectVideoCandidates, isTrue);
+    expect(controller.state.autoComposeRequest, isNull);
+
+    final request = controller.attachVideo(
+      controller.state.result!.videoCandidates.first,
+    );
+
+    expect(request, isNotNull);
+    expect(request!.deferredVideoAttachments, hasLength(1));
+    expect(
+      request.deferredVideoAttachments.single.candidate.parserTag,
+      'xiaohongshu',
+    );
+    expect(request.text, contains('# XHS Video Gifts'));
+    expect(request.text, isNot(contains('xhsdiscover://')));
+  });
+
   test(
     'saveArticle defers inline image downloads into compose request',
     () async {

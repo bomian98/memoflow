@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/features/share/parsers/bilibili_share_page_parser.dart';
+import 'package:memos_flutter_app/features/share/parsers/browser_error_page_detector.dart';
 import 'package:memos_flutter_app/features/share/parsers/coolapk_share_page_parser.dart';
 import 'package:memos_flutter_app/features/share/parsers/generic_share_page_parser.dart';
 import 'package:memos_flutter_app/features/share/parsers/share_page_parser.dart';
 import 'package:memos_flutter_app/features/share/parsers/wechat_share_page_parser.dart';
+import 'package:memos_flutter_app/features/share/parsers/xiaohongshu_deeplink_parser.dart';
 import 'package:memos_flutter_app/features/share/parsers/xiaohongshu_share_page_parser.dart';
 import 'package:memos_flutter_app/features/share/share_clip_models.dart';
 import 'package:memos_flutter_app/features/share/share_handler.dart';
@@ -185,6 +189,101 @@ void main() {
       expect(result.pageKind, SharePageKind.video);
       expect(result.videoCandidates, isNotEmpty);
       expect(result.title, 'XHS Video');
+    });
+
+    test('xiaohongshu parser exposes image attachment seeds', () {
+      final parser = XiaohongshuSharePageParser();
+      final snapshot = SharePageSnapshot(
+        requestUrl: Uri.parse('https://www.xiaohongshu.com/explore/456'),
+        finalUrl: Uri.parse('https://www.xiaohongshu.com/explore/456'),
+        host: 'www.xiaohongshu.com',
+        bridgeData: const {
+          'windowStates': {
+            '__INITIAL_STATE__': {
+              'note': {
+                'title': 'XHS Image Note',
+                'desc': 'XHS image description',
+                'noteType': 'normal',
+                'imageList': [
+                  {
+                    'urlDefault':
+                        'https://sns-webpic-qc.xhscdn.com/example-a.jpg',
+                  },
+                  {'urlPre': 'https://sns-webpic-qc.xhscdn.com/example-b.webp'},
+                ],
+              },
+            },
+          },
+        },
+      );
+
+      final result = parser.parse(snapshot);
+
+      expect(result.pageKind, SharePageKind.article);
+      expect(result.videoCandidates, isEmpty);
+      expect(result.imageAttachmentUrls, hasLength(2));
+      expect(result.imageAttachmentUrls.first, contains('example-a.jpg'));
+      expect(result.imageAttachmentUrls.last, contains('example-b.webp'));
+    });
+
+    test('xiaohongshu deep link parser extracts video preload info', () {
+      final result = parseXiaohongshuDeepLinkCapture(
+        _xiaohongshuDeepLinkFixture(),
+        fallbackSourceUrl: Uri.parse('https://xhslink.com/a/example'),
+      );
+
+      expect(result, isNotNull);
+      expect(result!.isSuccess, isTrue);
+      expect(result.pageKind, SharePageKind.video);
+      expect(result.siteParserTag, 'xiaohongshu');
+      expect(result.articleTitle, 'XHS Video Gifts');
+      expect(result.leadImageUrl, 'http://sns-webpic-qc.xhscdn.com/cover.jpg');
+      expect(
+        result.finalUrl.toString(),
+        startsWith('https://www.xiaohongshu.com/discovery/item/note-123'),
+      );
+      expect(result.videoCandidates, hasLength(2));
+      expect(result.videoCandidates.first.url, contains('h264.mp4'));
+      expect(result.videoCandidates.first.isDirectDownloadable, isTrue);
+      expect(result.videoCandidates.first.parserTag, 'xiaohongshu');
+      expect(result.videoCandidates.first.thumbnailUrl, result.leadImageUrl);
+      expect(result.videoCandidates.last.url, contains('h265.mp4'));
+    });
+
+    test('xiaohongshu deep link parser rejects invalid payloads', () {
+      expect(
+        parseXiaohongshuDeepLinkCapture(
+          Uri.parse('xhsdiscover://video_feed/note-123'),
+        ),
+        isNull,
+      );
+      expect(
+        parseXiaohongshuDeepLinkCapture(
+          Uri.parse('xhsdiscover://profile/note-123?h5VideoPreloadInfo={}'),
+        ),
+        isNull,
+      );
+    });
+
+    test('unknown scheme browser error detector rejects Chromium page', () {
+      final detected = isUnknownUrlSchemeBrowserErrorPage(
+        pageTitle: 'Webpage not available',
+        textContent:
+            'The webpage at xhsdiscover://video_feed/note could not be loaded because: net::ERR_UNKNOWN_URL_SCHEME',
+        attemptedUrl: Uri.parse('xhsdiscover://video_feed/note'),
+      );
+
+      expect(detected, isTrue);
+    });
+
+    test('unknown scheme browser error detector keeps normal content', () {
+      final detected = isUnknownUrlSchemeBrowserErrorPage(
+        pageTitle: 'Developer Notes',
+        textContent:
+            'This article explains why an Android browser can show ERR_UNKNOWN_URL_SCHEME and how to debug it.',
+      );
+
+      expect(detected, isFalse);
     });
 
     test(
@@ -489,4 +588,45 @@ void main() {
       expect(result, isNull);
     });
   });
+}
+
+Uri _xiaohongshuDeepLinkFixture() {
+  final preload = jsonEncode({
+    'title': 'XHS Video Gifts',
+    'video_info_v2': {
+      'image': {'first_frame': 'http://sns-webpic-qc.xhscdn.com/cover.jpg'},
+      'media': {
+        'stream': {
+          'h264': [
+            {
+              'master_url':
+                  'http://sns-video-qc.xhscdn.com/stream/h264.mp4?sign=one',
+              'width': 720,
+              'height': 1280,
+            },
+            {
+              'master_url':
+                  'http://sns-video-qc.xhscdn.com/stream/h264.mp4?sign=one',
+              'width': 720,
+              'height': 1280,
+            },
+          ],
+          'h265': [
+            {
+              'master_url':
+                  'http://sns-video-qc.xhscdn.com/stream/h265.mp4?sign=two',
+              'width': 720,
+              'height': 1280,
+            },
+          ],
+        },
+      },
+    },
+  });
+  final openUrl = '/discovery/item/note-123?type=video&xsec_source=app_share';
+  return Uri.parse(
+    'xhsdiscover://video_feed/note-123'
+    '?h5VideoPreloadInfo=${Uri.encodeQueryComponent(preload)}'
+    '&open_url=${Uri.encodeQueryComponent(openUrl)}',
+  );
 }

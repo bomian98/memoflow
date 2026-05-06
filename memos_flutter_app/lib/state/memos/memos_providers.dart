@@ -35,7 +35,7 @@ import '../../data/models/memo_relation.dart';
 import '../../data/repositories/image_bed_settings_repository.dart';
 import '../../data/local_library/local_attachment_store.dart';
 import '../../data/local_library/local_library_fs.dart';
-import '../../features/share/share_inline_image_content.dart';
+import '../../core/share_inline_image_content.dart';
 import 'create_memo_outbox_payload.dart';
 import 'create_memo_time_policy.dart';
 import 'memo_relations_cache_mutation_service.dart';

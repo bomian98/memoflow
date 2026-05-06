@@ -897,6 +897,24 @@ class MemoMutationService {
     required String normalizedSourceUrl,
     required Map<String, dynamic> stagedUploadPayload,
   }) async {
+    await appendThirdPartyShareAttachment(
+      memo: memo,
+      updatedContent: updatedContent,
+      updatedAttachments: updatedAttachments,
+      localUrl: localUrl,
+      normalizedSourceUrl: normalizedSourceUrl,
+      stagedUploadPayload: stagedUploadPayload,
+    );
+  }
+
+  Future<void> appendThirdPartyShareAttachment({
+    required LocalMemo memo,
+    required String updatedContent,
+    required List<Map<String, dynamic>> updatedAttachments,
+    String localUrl = '',
+    String normalizedSourceUrl = '',
+    required Map<String, dynamic> stagedUploadPayload,
+  }) async {
     final contentChanged = updatedContent != memo.content;
     final attachmentsChanged =
         updatedAttachments.length != memo.attachments.length;

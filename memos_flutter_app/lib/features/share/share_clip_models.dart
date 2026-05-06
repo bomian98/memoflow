@@ -243,6 +243,7 @@ class ShareCaptureResult {
     this.pageKind = SharePageKind.unknown,
     this.videoCandidates = const [],
     this.unsupportedVideoCandidates = const [],
+    this.imageAttachmentUrls = const [],
     this.siteParserTag,
     this.pageUserAgent,
     this.failure,
@@ -266,6 +267,7 @@ class ShareCaptureResult {
     SharePageKind pageKind = SharePageKind.unknown,
     List<ShareVideoCandidate> videoCandidates = const [],
     List<ShareVideoCandidate> unsupportedVideoCandidates = const [],
+    List<String> imageAttachmentUrls = const [],
     String? siteParserTag,
     String? pageUserAgent,
   }) : this(
@@ -286,6 +288,7 @@ class ShareCaptureResult {
          pageKind: pageKind,
          videoCandidates: videoCandidates,
          unsupportedVideoCandidates: unsupportedVideoCandidates,
+         imageAttachmentUrls: imageAttachmentUrls,
          siteParserTag: siteParserTag,
          pageUserAgent: pageUserAgent,
        );
@@ -303,6 +306,7 @@ class ShareCaptureResult {
     SharePageKind pageKind = SharePageKind.unknown,
     List<ShareVideoCandidate> videoCandidates = const [],
     List<ShareVideoCandidate> unsupportedVideoCandidates = const [],
+    List<String> imageAttachmentUrls = const [],
     String? siteParserTag,
     String? pageUserAgent,
   }) : this(
@@ -319,6 +323,7 @@ class ShareCaptureResult {
          pageKind: pageKind,
          videoCandidates: videoCandidates,
          unsupportedVideoCandidates: unsupportedVideoCandidates,
+         imageAttachmentUrls: imageAttachmentUrls,
          siteParserTag: siteParserTag,
          pageUserAgent: pageUserAgent,
        );
@@ -340,6 +345,7 @@ class ShareCaptureResult {
   final SharePageKind pageKind;
   final List<ShareVideoCandidate> videoCandidates;
   final List<ShareVideoCandidate> unsupportedVideoCandidates;
+  final List<String> imageAttachmentUrls;
   final String? siteParserTag;
   final String? pageUserAgent;
   final ShareCaptureFailure? failure;

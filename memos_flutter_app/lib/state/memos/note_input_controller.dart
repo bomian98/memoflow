@@ -1,13 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/attachment.dart';
-import '../../data/models/local_memo.dart';
 import '../../data/models/memo_location.dart';
 import '../../features/share/share_clip_models.dart';
-import '../../features/share/share_inline_image_content.dart';
 import '../attachments/queued_attachment_stager_provider.dart';
 import 'memo_mutation_service.dart';
-import '../system/database_provider.dart';
+import 'third_party_share_attachment_appender.dart';
 
 class NoteInputPendingAttachment {
   const NoteInputPendingAttachment({
@@ -126,98 +123,23 @@ class NoteInputController {
     required String sourceUrl,
     required NoteInputPendingAttachment attachment,
   }) async {
-    final db = _ref.read(databaseProvider);
-    final queuedAttachmentStager = _ref.read(queuedAttachmentStagerProvider);
-    final stagedAttachmentData = await queuedAttachmentStager
-        .stageDraftAttachment(
-          uid: attachment.uid,
-          filePath: attachment.filePath,
-          filename: attachment.filename,
-          mimeType: attachment.mimeType,
-          size: attachment.size,
-          scopeKey: memoUid,
-        );
-    final stagedAttachment = NoteInputPendingAttachment(
-      uid: attachment.uid,
-      filePath: stagedAttachmentData.filePath,
-      filename: stagedAttachmentData.filename,
-      mimeType: stagedAttachmentData.mimeType,
-      size: stagedAttachmentData.size,
-      skipCompression: attachment.skipCompression,
-      shareInlineImage: attachment.shareInlineImage,
-      fromThirdPartyShare: attachment.fromThirdPartyShare,
-      sourceUrl: attachment.sourceUrl,
-    );
-    final row = await db.getMemoByUid(memoUid);
-    if (row == null) {
-      throw StateError('Memo not found: $memoUid');
-    }
-
-    final memo = LocalMemo.fromDb(row);
-    final localUrl = Uri.file(stagedAttachment.filePath).toString();
-    final originalLocalUrl = shareInlineLocalUrlFromPath(attachment.filePath);
-    final normalizedSourceUrl =
-        stagedAttachment.sourceUrl?.trim() ?? sourceUrl.trim();
-    var updatedContent = replaceShareInlineImageUrl(
-      memo.content,
-      fromUrl: sourceUrl,
-      toUrl: localUrl,
-    );
-    if (originalLocalUrl.isNotEmpty && originalLocalUrl != localUrl) {
-      updatedContent = replaceShareInlineImageUrl(
-        updatedContent,
-        fromUrl: originalLocalUrl,
-        toUrl: localUrl,
-      );
-    }
-    final contentAlreadyContainsLocalUrl = contentContainsShareInlineImageUrl(
-      updatedContent,
-      localUrl,
-    );
-    final attachmentAlreadyExists = memo.attachments.any(
-      (item) => item.externalLink.trim() == localUrl,
-    );
-    if (attachmentAlreadyExists) {
-      return;
-    }
-    if (updatedContent == memo.content && !contentAlreadyContainsLocalUrl) {
-      return;
-    }
-    final nextContent = updatedContent == memo.content
-        ? memo.content
-        : updatedContent;
-
-    final updatedAttachments = <Map<String, dynamic>>[
-      ...memo.attachments.map((item) => item.toJson()),
-      Attachment(
-        name: 'attachments/${stagedAttachment.uid}',
-        filename: stagedAttachment.filename,
-        type: stagedAttachment.mimeType,
-        size: stagedAttachment.size,
-        externalLink: localUrl,
-      ).toJson(),
-    ];
-    final stagedPayload = await queuedAttachmentStager.stageUploadPayload({
-      'uid': stagedAttachment.uid,
-      'memo_uid': memo.uid,
-      'file_path': stagedAttachment.filePath,
-      'filename': stagedAttachment.filename,
-      'mime_type': stagedAttachment.mimeType,
-      'file_size': stagedAttachment.size,
-      'skip_compression': stagedAttachment.skipCompression,
-      'share_inline_image': true,
-      'from_third_party_share': true,
-      'share_inline_local_url': localUrl,
-    }, scopeKey: memo.uid);
     await _ref
-        .read(memoMutationServiceProvider)
-        .appendDeferredThirdPartyShareInlineImage(
-          memo: memo,
-          updatedContent: nextContent,
-          updatedAttachments: updatedAttachments,
-          localUrl: localUrl,
-          normalizedSourceUrl: normalizedSourceUrl,
-          stagedUploadPayload: stagedPayload,
+        .read(thirdPartyShareAttachmentAppenderProvider)
+        .append(
+          ThirdPartyShareAttachmentAppendRequest(
+            memoUid: memoUid,
+            attachmentUid: attachment.uid,
+            filePath: attachment.filePath,
+            filename: attachment.filename,
+            mimeType: attachment.mimeType,
+            size: attachment.size,
+            kind: ThirdPartyShareAttachmentKind.inlineImage,
+            skipCompression: attachment.skipCompression,
+            shareInlineImage: attachment.shareInlineImage,
+            fromThirdPartyShare: attachment.fromThirdPartyShare,
+            sourceUrl: attachment.sourceUrl,
+            replaceSourceUrl: sourceUrl,
+          ),
         );
   }
 }

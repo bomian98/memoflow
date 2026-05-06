@@ -54,6 +54,7 @@ class SharePageParserResult {
     this.pageKind = SharePageKind.unknown,
     this.videoCandidates = const [],
     this.unsupportedVideoCandidates = const [],
+    this.imageAttachmentUrls = const [],
     this.title,
     this.excerpt,
     this.contentHtml,
@@ -69,6 +70,7 @@ class SharePageParserResult {
   final SharePageKind pageKind;
   final List<ShareVideoCandidate> videoCandidates;
   final List<ShareVideoCandidate> unsupportedVideoCandidates;
+  final List<String> imageAttachmentUrls;
   final String? title;
   final String? excerpt;
   final String? contentHtml;
@@ -102,6 +104,9 @@ SharePageParserResult mergeSharePageParserResults(
   final mergedUnsupportedCandidates = mergeShareVideoCandidates(
     list.expand((item) => item.unsupportedVideoCandidates),
   );
+  final mergedImageAttachmentUrls = _mergeImageAttachmentUrls(
+    list.expand((item) => item.imageAttachmentUrls),
+  );
   final resolvedPageKind = preferred.pageKind != SharePageKind.unknown
       ? preferred.pageKind
       : fallback.pageKind != SharePageKind.unknown
@@ -119,6 +124,7 @@ SharePageParserResult mergeSharePageParserResults(
     pageKind: resolvedPageKind,
     videoCandidates: mergedCandidates,
     unsupportedVideoCandidates: mergedUnsupportedCandidates,
+    imageAttachmentUrls: mergedImageAttachmentUrls,
     title: _firstNonEmpty(list.map((item) => item.title)),
     excerpt: _firstNonEmpty(list.map((item) => item.excerpt)),
     contentHtml: _firstNonEmpty(list.map((item) => item.contentHtml)),
@@ -130,6 +136,16 @@ SharePageParserResult mergeSharePageParserResults(
     leadImageUrl: _firstNonEmpty(list.map((item) => item.leadImageUrl)),
     parserTag: preferred.parserTag ?? fallback.parserTag,
   );
+}
+
+List<String> _mergeImageAttachmentUrls(Iterable<String> urls) {
+  final unique = <String>{};
+  for (final url in urls) {
+    final normalized = normalizeShareText(url);
+    if (normalized == null) continue;
+    unique.add(normalized);
+  }
+  return unique.toList(growable: false);
 }
 
 List<ShareVideoCandidate> mergeShareVideoCandidates(

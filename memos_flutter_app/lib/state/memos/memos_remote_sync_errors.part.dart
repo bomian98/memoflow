@@ -12,8 +12,7 @@ String _extractErrorMessage(dynamic data) {
     try {
       final decoded = jsonDecode(s);
       if (decoded is Map) {
-        final msg =
-            decoded['message'] ?? decoded['error'] ?? decoded['detail'];
+        final msg = decoded['message'] ?? decoded['error'] ?? decoded['detail'];
         if (msg is String && msg.trim().isNotEmpty) return msg.trim();
       }
     } catch (_) {}
@@ -67,18 +66,22 @@ SyncError _summarizeHttpError(DioException e) {
     );
   }
 
-  final baseKey = switch (status) {
-    400 => 'legacy.msg_invalid_request_parameters',
-    401 => 'legacy.msg_authentication_failed_check_token',
-    403 => 'legacy.msg_insufficient_permissions',
-    404 => 'legacy.msg_endpoint_not_found_version_mismatch',
-    413 => 'legacy.msg_attachment_too_large',
-    500 => 'legacy.msg_server_error',
-    _ => 'legacy.msg_request_failed',
-  };
-  final presentationKey = msg.isEmpty
-      ? 'legacy.msg_http_2'
-      : 'legacy.msg_http';
+  final attachmentTooLarge = _looksLikeAttachmentTooLargeHttpError(
+    status: status,
+    message: msg,
+  );
+  final baseKey = attachmentTooLarge
+      ? 'legacy.msg_attachment_too_large'
+      : switch (status) {
+          400 => 'legacy.msg_invalid_request_parameters',
+          401 => 'legacy.msg_authentication_failed_check_token',
+          403 => 'legacy.msg_insufficient_permissions',
+          404 => 'legacy.msg_endpoint_not_found_version_mismatch',
+          413 => 'legacy.msg_attachment_too_large',
+          500 => 'legacy.msg_server_error',
+          _ => 'legacy.msg_request_failed',
+        };
+  final presentationKey = msg.isEmpty ? 'legacy.msg_http_2' : 'legacy.msg_http';
   final code = switch (status) {
     400 => SyncErrorCode.invalidConfig,
     401 => SyncErrorCode.authFailed,
@@ -102,6 +105,27 @@ SyncError _summarizeHttpError(DioException e) {
       if (msg.isNotEmpty) 'msg': msg,
     },
   );
+}
+
+@visibleForTesting
+SyncError summarizeMemosHttpErrorForTesting(DioException e) {
+  return _summarizeHttpError(e);
+}
+
+bool _looksLikeAttachmentTooLargeHttpError({
+  required int status,
+  required String message,
+}) {
+  if (status == 413) return true;
+  final normalized = message.toLowerCase();
+  if (normalized.trim().isEmpty) return false;
+  return normalized.contains('file size exceeds the limit') ||
+      normalized.contains('attachment too large') ||
+      normalized.contains('payload too large') ||
+      normalized.contains('request entity too large') ||
+      (normalized.contains('upload') &&
+          normalized.contains('size') &&
+          normalized.contains('limit'));
 }
 
 String _detailHttpError(DioException e) {

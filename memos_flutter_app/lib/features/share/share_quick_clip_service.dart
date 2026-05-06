@@ -7,13 +7,15 @@ import 'package:html/parser.dart' as html_parser;
 import '../../application/sync/sync_request.dart';
 import '../../core/tags.dart';
 import '../../core/uid.dart';
+import '../../data/api/memos_api.dart';
 import '../../data/logs/log_manager.dart';
 import '../../data/models/memo_clip_card_metadata.dart';
 import '../../data/models/local_memo.dart';
+import '../../state/memos/attachment_upload_size_limit_provider.dart';
 import '../../state/memos/app_bootstrap_adapter_provider.dart';
 import '../../state/memos/memo_composer_state.dart';
 import '../../state/memos/memo_mutation_service.dart';
-import '../../state/memos/note_input_providers.dart';
+import '../../state/memos/third_party_share_attachment_appender.dart';
 import 'share_capture_engine.dart';
 import 'share_capture_formatter.dart';
 import 'share_capture_inappwebview_engine.dart';
@@ -21,7 +23,9 @@ import 'share_clip_models.dart';
 import 'share_handler.dart';
 import 'share_inline_image_content.dart';
 import 'share_inline_image_download_service.dart';
+import 'share_quick_clip_media_classifier.dart';
 import 'share_quick_clip_models.dart';
+import 'share_video_attachment_preparer.dart';
 
 const int _quickClipResolveMemoScanLimit = 40;
 
@@ -78,16 +82,20 @@ class ShareQuickClipService {
     required AppBootstrapAdapter bootstrapAdapter,
     ShareCaptureEngine? engine,
     ShareInlineImageDownloadService? inlineImageDownloadService,
+    ShareVideoAttachmentPreparer? videoAttachmentPreparer,
   }) : _ref = ref,
        _bootstrapAdapter = bootstrapAdapter,
        _engine = engine ?? ShareCaptureInAppWebViewEngine(),
        _inlineImageDownloadService =
-           inlineImageDownloadService ?? ShareInlineImageDownloadService();
+           inlineImageDownloadService ?? ShareInlineImageDownloadService(),
+       _videoAttachmentPreparer =
+           videoAttachmentPreparer ?? ShareVideoAttachmentPreparer();
 
   final WidgetRef _ref;
   final AppBootstrapAdapter _bootstrapAdapter;
   final ShareCaptureEngine _engine;
   final ShareInlineImageDownloadService _inlineImageDownloadService;
+  final ShareVideoAttachmentPreparer _videoAttachmentPreparer;
 
   Future<void> start({
     required SharePayload payload,
@@ -328,16 +336,37 @@ class ShareQuickClipService {
         );
       }
       var appendedInlineImages = 0;
-      if (result.isSuccess) {
-        appendedInlineImages = preparedInlineImageSeeds.isNotEmpty
-            ? await _appendPreparedInlineImages(
-                memoUid: resolvedMemoUid,
-                attachmentSeeds: preparedInlineImageSeeds,
-              )
-            : await _appendDeferredInlineImages(
-                memoUid: resolvedMemoUid,
-                result: result,
-              );
+      var appendedVideos = 0;
+      if (result.isSuccess && !submission.textOnly) {
+        final mediaClassification = classifyQuickClipMedia(result);
+        LogManager.instance.debug(
+          'ShareQuickClip: media_classified',
+          context: {
+            'memoUid': resolvedMemoUid,
+            'parserTag': result.siteParserTag,
+            'pageKind': result.pageKind.name,
+            'path': mediaClassification.path.name,
+            'videoCandidateId': mediaClassification.videoCandidate?.id,
+          },
+        );
+        if (mediaClassification.path == ShareQuickClipMediaPath.video &&
+            mediaClassification.videoCandidate != null) {
+          appendedVideos = await _appendQuickClipVideo(
+            memoUid: resolvedMemoUid,
+            result: result,
+            candidate: mediaClassification.videoCandidate!,
+          );
+        } else {
+          appendedInlineImages = preparedInlineImageSeeds.isNotEmpty
+              ? await _appendPreparedInlineImages(
+                  memoUid: resolvedMemoUid,
+                  attachmentSeeds: preparedInlineImageSeeds,
+                )
+              : await _appendDeferredInlineImages(
+                  memoUid: resolvedMemoUid,
+                  result: result,
+                );
+        }
       }
       LogManager.instance.info(
         'ShareQuickClip: memo_updated',
@@ -348,6 +377,7 @@ class ShareQuickClipService {
           'contentLength': nextContent.length,
           'success': result.isSuccess,
           'appendedInlineImages': appendedInlineImages,
+          'appendedVideos': appendedVideos,
         },
       );
       unawaited(
@@ -356,7 +386,10 @@ class ShareQuickClipService {
           requestedMemoUid: memoUid,
           host: request.url.host,
           trigger: 'capture_update',
-          extraContext: {'appendedInlineImages': appendedInlineImages},
+          extraContext: {
+            'appendedInlineImages': appendedInlineImages,
+            'appendedVideos': appendedVideos,
+          },
         ),
       );
     } on TimeoutException catch (error, stackTrace) {
@@ -495,23 +528,29 @@ class ShareQuickClipService {
           );
           continue;
         }
-        await _ref
-            .read(noteInputControllerProvider)
-            .appendDeferredThirdPartyShareInlineImage(
-              memoUid: memoUid,
-              sourceUrl: request.sourceUrl,
-              attachment: NoteInputPendingAttachment(
-                uid: seed.uid,
+        final appendResult = await _ref
+            .read(thirdPartyShareAttachmentAppenderProvider)
+            .append(
+              ThirdPartyShareAttachmentAppendRequest(
+                memoUid: memoUid,
+                attachmentUid: seed.uid,
                 filePath: seed.filePath,
                 filename: seed.filename,
                 mimeType: seed.mimeType,
                 size: seed.size,
+                kind: seed.shareInlineImage
+                    ? ThirdPartyShareAttachmentKind.inlineImage
+                    : ThirdPartyShareAttachmentKind.attachment,
+                skipCompression: seed.skipCompression,
                 shareInlineImage: seed.shareInlineImage,
                 fromThirdPartyShare: seed.fromThirdPartyShare,
                 sourceUrl: seed.sourceUrl,
+                replaceSourceUrl: request.sourceUrl,
               ),
             );
-        appended++;
+        if (appendResult.appended) {
+          appended++;
+        }
         LogManager.instance.debug(
           'ShareQuickClip: inline_image_appended',
           context: {
@@ -520,6 +559,7 @@ class ShareQuickClipService {
             'attachmentUid': seed.uid,
             'filename': seed.filename,
             'size': seed.size,
+            'status': appendResult.status.name,
           },
         );
       } catch (error, stackTrace) {
@@ -533,6 +573,86 @@ class ShareQuickClipService {
     }
 
     return appended;
+  }
+
+  Future<int> _appendQuickClipVideo({
+    required String memoUid,
+    required ShareCaptureResult result,
+    required ShareVideoCandidate candidate,
+  }) async {
+    try {
+      final uploadSizeLimit = await _ref
+          .read(attachmentUploadSizeLimitResolverProvider)
+          .resolve();
+      LogManager.instance.info(
+        'ShareQuickClip: video_prepare_start',
+        context: {
+          'memoUid': memoUid,
+          'candidateId': candidate.id,
+          'candidateUrl': candidate.url,
+          ..._uploadSizeLimitLogContext(uploadSizeLimit),
+        },
+      );
+      final prepared = await _videoAttachmentPreparer.prepare(
+        result: result,
+        candidate: candidate,
+        uploadSizeLimit: uploadSizeLimit,
+      );
+      final appendResult = await _ref
+          .read(thirdPartyShareAttachmentAppenderProvider)
+          .append(
+            ThirdPartyShareAttachmentAppendRequest(
+              memoUid: memoUid,
+              attachmentUid: generateUid(),
+              filePath: prepared.filePath,
+              filename: prepared.filename,
+              mimeType: prepared.mimeType,
+              size: prepared.size,
+              kind: ThirdPartyShareAttachmentKind.video,
+              fromThirdPartyShare: true,
+            ),
+          );
+      LogManager.instance.info(
+        'ShareQuickClip: video_append_result',
+        context: {
+          'memoUid': memoUid,
+          'candidateId': candidate.id,
+          'filename': prepared.filename,
+          'size': prepared.size,
+          'wasCompressed': prepared.wasCompressed,
+          'status': appendResult.status.name,
+        },
+      );
+      return appendResult.appended ? 1 : 0;
+    } catch (error, stackTrace) {
+      LogManager.instance.warn(
+        'ShareQuickClip: video_append_failed',
+        error: error,
+        stackTrace: stackTrace,
+        context: {
+          'memoUid': memoUid,
+          'candidateId': candidate.id,
+          'candidateUrl': candidate.url,
+        },
+      );
+      return 0;
+    }
+  }
+
+  Map<String, Object?> _uploadSizeLimitLogContext(
+    AttachmentUploadSizeLimit limit,
+  ) {
+    if (limit.isKnown) {
+      return {
+        'uploadLimitKnown': true,
+        'uploadLimitBytes': limit.bytes,
+        'uploadLimitSource': limit.source?.name,
+      };
+    }
+    return {
+      'uploadLimitKnown': false,
+      'uploadLimitUnknownReason': limit.unknownReason?.name,
+    };
   }
 
   Map<String, Object?> _buildInlineImageCaptureDiagnostics(
@@ -724,23 +844,29 @@ class ShareQuickClipService {
         continue;
       }
       try {
-        await _ref
-            .read(noteInputControllerProvider)
-            .appendDeferredThirdPartyShareInlineImage(
-              memoUid: memoUid,
-              sourceUrl: sourceUrl,
-              attachment: NoteInputPendingAttachment(
-                uid: seed.uid,
+        final appendResult = await _ref
+            .read(thirdPartyShareAttachmentAppenderProvider)
+            .append(
+              ThirdPartyShareAttachmentAppendRequest(
+                memoUid: memoUid,
+                attachmentUid: seed.uid,
                 filePath: seed.filePath,
                 filename: seed.filename,
                 mimeType: seed.mimeType,
                 size: seed.size,
+                kind: seed.shareInlineImage
+                    ? ThirdPartyShareAttachmentKind.inlineImage
+                    : ThirdPartyShareAttachmentKind.attachment,
+                skipCompression: seed.skipCompression,
                 shareInlineImage: seed.shareInlineImage,
                 fromThirdPartyShare: seed.fromThirdPartyShare,
                 sourceUrl: seed.sourceUrl,
+                replaceSourceUrl: sourceUrl,
               ),
             );
-        appended++;
+        if (appendResult.appended) {
+          appended++;
+        }
       } catch (error, stackTrace) {
         LogManager.instance.warn(
           'ShareQuickClip: prepared_inline_image_append_failed',

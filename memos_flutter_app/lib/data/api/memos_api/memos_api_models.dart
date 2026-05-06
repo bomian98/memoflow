@@ -13,6 +13,39 @@ enum _AttachmentApiMode { attachments, resources, legacy }
 
 enum _ServerApiFlavor { unknown, v0_25Plus, v0_24, v0_23, v0_22, v0_21 }
 
+enum AttachmentUploadSizeLimitSource {
+  systemStatus,
+  workspaceStorageSetting,
+  instanceStorageSetting,
+}
+
+enum AttachmentUploadSizeLimitUnknownReason {
+  localLibrary,
+  permissionDenied,
+  endpointUnavailable,
+  requestFailed,
+  invalidResponse,
+  nonPositiveLimit,
+}
+
+class AttachmentUploadSizeLimit {
+  const AttachmentUploadSizeLimit.known({
+    required this.bytes,
+    required this.source,
+  }) : unknownReason = null;
+
+  const AttachmentUploadSizeLimit.unknown(this.unknownReason)
+    : bytes = null,
+      source = null;
+
+  final int? bytes;
+  final AttachmentUploadSizeLimitSource? source;
+  final AttachmentUploadSizeLimitUnknownReason? unknownReason;
+
+  bool get isKnown => bytes != null && bytes! > 0;
+  bool get isUnknown => !isKnown;
+}
+
 enum _CurrentUserEndpoint {
   authSessionCurrent,
   authMe,

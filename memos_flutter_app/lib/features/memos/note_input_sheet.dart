@@ -29,6 +29,7 @@ import '../../data/models/memo_location.dart';
 import '../../data/models/memo_template_settings.dart';
 import '../../data/models/user_setting.dart';
 import '../../state/settings/location_settings_provider.dart';
+import '../../state/memos/attachment_upload_size_limit_provider.dart';
 import '../../state/memos/memo_composer_controller.dart';
 import '../../state/memos/memo_composer_state.dart';
 import '../../state/memos/memos_providers.dart';
@@ -49,6 +50,7 @@ import '../image_preview/widgets/image_preview_tile.dart';
 import '../share/share_clip_models.dart';
 import '../share/share_inline_image_content.dart';
 import '../share/share_inline_image_download_service.dart';
+import '../share/share_video_attachment_preparer.dart';
 import '../share/share_video_compression_service.dart';
 import '../share/share_video_download_service.dart';
 import 'attachment_gallery_screen.dart';
@@ -231,6 +233,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   late final ShareInlineImageDownloadService _shareInlineImageDownloadService;
   late final ShareVideoDownloadService _shareVideoDownloadService;
   late final ShareVideoCompressionService _shareVideoCompressionService;
+  late final ShareVideoAttachmentPreparer _shareVideoAttachmentPreparer;
   final List<ShareDeferredInlineImageAttachmentRequest>
   _deferredInlineImageRequests = [];
   final Map<String, String> _thirdPartyShareInlineSourceByLocalUrl = {};
@@ -297,6 +300,10 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         widget.shareVideoDownloadService ?? ShareVideoDownloadService();
     _shareVideoCompressionService =
         widget.shareVideoCompressionService ?? ShareVideoCompressionService();
+    _shareVideoAttachmentPreparer = ShareVideoAttachmentPreparer(
+      downloadService: _shareVideoDownloadService,
+      compressionService: _shareVideoCompressionService,
+    );
     _composer = MemoComposerController(
       initialText: widget.initialText ?? '',
       initialSelection: widget.initialSelection,
@@ -738,28 +745,27 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     final task = _findDeferredShareVideoTask(id);
     if (task == null || task.cancelled) return;
 
-    String? downloadedPath;
-    String? compressedPath;
     try {
-      final probe = await _shareVideoDownloadService.probe(
+      final uploadSizeLimit = await ref
+          .read(attachmentUploadSizeLimitResolverProvider)
+          .resolve();
+      final prepared = await _shareVideoAttachmentPreparer.prepare(
         result: task.request.captureResult,
         candidate: task.request.candidate,
-      );
-      final stillActive = _findDeferredShareVideoTask(id);
-      if (!mounted || stillActive == null || stillActive.cancelled) {
-        return;
-      }
-      setState(() {
-        stillActive.headers = probe.headers;
-        stillActive.remoteSize = probe.contentLength;
-        stillActive.phase = _DeferredShareVideoPhase.downloading;
-        stillActive.progress = 0;
-      });
-
-      final download = await _shareVideoDownloadService.download(
-        result: task.request.captureResult,
-        candidate: task.request.candidate,
-        onProgress: (progress) {
+        uploadSizeLimit: uploadSizeLimit,
+        onProbeComplete: (probe) {
+          final stillActive = _findDeferredShareVideoTask(id);
+          if (!mounted || stillActive == null || stillActive.cancelled) {
+            return;
+          }
+          setState(() {
+            stillActive.headers = probe.headers;
+            stillActive.remoteSize = probe.contentLength;
+            stillActive.phase = _DeferredShareVideoPhase.downloading;
+            stillActive.progress = 0;
+          });
+        },
+        onDownloadProgress: (progress) {
           final activeTask = _findDeferredShareVideoTask(id);
           if (!mounted || activeTask == null || activeTask.cancelled) return;
           setState(() {
@@ -767,91 +773,59 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
             activeTask.progress = progress.clamp(0, 1);
           });
         },
-      );
-      downloadedPath = download.filePath;
-
-      final activeTask = _findDeferredShareVideoTask(id);
-      if (!mounted || activeTask == null || activeTask.cancelled) {
-        await _cleanupShareVideoFile(downloadedPath);
-        return;
-      }
-
-      var resolvedPath = download.filePath;
-      var resolvedSize = download.fileSize;
-      if (resolvedSize > kShareVideoAttachmentLimitBytes) {
-        setState(() {
-          activeTask.phase = _DeferredShareVideoPhase.awaitingCompression;
-          activeTask.progress = 1;
-        });
-        final shouldCompress = await _confirmDeferredVideoCompression(
-          resolvedSize,
-        );
-        final compressionTask = _findDeferredShareVideoTask(id);
-        if (!mounted || compressionTask == null || compressionTask.cancelled) {
-          await _cleanupShareVideoFile(downloadedPath);
-          return;
-        }
-        if (!shouldCompress) {
-          await _cleanupShareVideoFile(downloadedPath);
-          await _removeDeferredShareVideoTask(id);
-          return;
-        }
-
-        setState(() {
-          compressionTask.phase = _DeferredShareVideoPhase.compressing;
-          compressionTask.progress = 0;
-        });
-        final compression = await _shareVideoCompressionService.compressToFit(
-          inputPath: download.filePath,
-          onProgress: (progress) {
-            final nextTask = _findDeferredShareVideoTask(id);
-            if (!mounted || nextTask == null || nextTask.cancelled) return;
+        confirmCompression: (fileSize, maxBytes) async {
+          final activeTask = _findDeferredShareVideoTask(id);
+          if (!mounted || activeTask == null || activeTask.cancelled) {
+            return false;
+          }
+          setState(() {
+            activeTask.phase = _DeferredShareVideoPhase.awaitingCompression;
+            activeTask.progress = 1;
+          });
+          final shouldCompress = await _confirmDeferredVideoCompression(
+            fileSize,
+          );
+          final compressionTask = _findDeferredShareVideoTask(id);
+          if (!mounted ||
+              compressionTask == null ||
+              compressionTask.cancelled) {
+            return false;
+          }
+          if (shouldCompress) {
             setState(() {
-              nextTask.phase = _DeferredShareVideoPhase.compressing;
-              nextTask.progress = progress.clamp(0, 1);
+              compressionTask.phase = _DeferredShareVideoPhase.compressing;
+              compressionTask.progress = 0;
             });
-          },
-        );
-        if (compression == null) {
-          await _cleanupShareVideoFile(downloadedPath);
-          await _removeDeferredShareVideoTask(id);
-          _showDeferredVideoFailure(
-            _DeferredShareVideoFailure.compressionFailed,
-          );
-          return;
-        }
-        compressedPath = compression.filePath;
-        resolvedPath = compression.filePath;
-        resolvedSize = compression.fileSize;
-        if (compression.wasCompressed && compressedPath != downloadedPath) {
-          await _cleanupShareVideoFile(downloadedPath);
-          downloadedPath = null;
-        }
-        if (resolvedSize > kShareVideoAttachmentLimitBytes) {
-          await _cleanupShareVideoFile(resolvedPath);
-          await _removeDeferredShareVideoTask(id);
-          _showDeferredVideoFailure(
-            _DeferredShareVideoFailure.compressionStillTooLarge,
-          );
-          return;
-        }
-      }
+          }
+          return shouldCompress;
+        },
+        onCompressionProgress: (progress) {
+          final nextTask = _findDeferredShareVideoTask(id);
+          if (!mounted || nextTask == null || nextTask.cancelled) return;
+          setState(() {
+            nextTask.phase = _DeferredShareVideoPhase.compressing;
+            nextTask.progress = progress.clamp(0, 1);
+          });
+        },
+        isCancelled: () {
+          final activeTask = _findDeferredShareVideoTask(id);
+          return !mounted || activeTask == null || activeTask.cancelled;
+        },
+      );
 
       final completionTask = _findDeferredShareVideoTask(id);
       if (!mounted || completionTask == null || completionTask.cancelled) {
-        await _cleanupShareVideoFile(resolvedPath);
+        await _cleanupShareVideoFile(prepared.filePath);
         return;
       }
 
-      final filename = resolvedPath.split(Platform.pathSeparator).last;
-      final mimeType = _guessMimeType(filename);
       final stagedAttachment = await _stagePendingAttachment(
         _PendingAttachment(
           uid: generateUid(),
-          filePath: resolvedPath,
-          filename: filename,
-          mimeType: mimeType,
-          size: resolvedSize,
+          filePath: prepared.filePath,
+          filename: prepared.filename,
+          mimeType: prepared.mimeType,
+          size: prepared.size,
         ),
       );
       setState(() {
@@ -860,10 +834,20 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         _composer.addPendingAttachments([stagedAttachment]);
         completionTask.phase = _DeferredShareVideoPhase.removed;
       });
+    } on ShareVideoAttachmentCancelled {
+      await _removeDeferredShareVideoTask(id);
+    } on ShareVideoAttachmentCompressionDeclined {
+      await _removeDeferredShareVideoTask(id);
+    } on ShareVideoAttachmentCompressionFailed {
+      await _removeDeferredShareVideoTask(id);
+      _showDeferredVideoFailure(_DeferredShareVideoFailure.compressionFailed);
+    } on ShareVideoAttachmentStillTooLarge {
+      await _removeDeferredShareVideoTask(id);
+      _showDeferredVideoFailure(
+        _DeferredShareVideoFailure.compressionStillTooLarge,
+      );
     } catch (_) {
       final failedTask = _findDeferredShareVideoTask(id);
-      await _cleanupShareVideoFile(compressedPath);
-      await _cleanupShareVideoFile(downloadedPath);
       await _removeDeferredShareVideoTask(id);
       if (failedTask?.cancelled == true) {
         return;

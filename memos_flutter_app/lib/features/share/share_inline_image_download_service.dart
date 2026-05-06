@@ -94,6 +94,22 @@ class ShareInlineImageDownloadService {
   discoverDeferredInlineImageAttachments(ShareCaptureResult result) async {
     final rawHtml = normalizeShareText(result.contentHtml);
     if (rawHtml == null) {
+      final parserSeedRequests = _deferredRequestsFromParserImageUrls(result);
+      if (parserSeedRequests.isNotEmpty) {
+        LogManager.instance.debug(
+          'ShareInlineImage: discover_parser_seed_result',
+          context: {
+            'host': result.finalUrl.host,
+            'count': parserSeedRequests.length,
+            'parserTag': result.siteParserTag,
+            'sampleUrls': parserSeedRequests
+                .take(3)
+                .map((item) => item.sourceUrl)
+                .toList(growable: false),
+          },
+        );
+        return parserSeedRequests;
+      }
       LogManager.instance.debug(
         'ShareInlineImage: discover_skipped',
         context: {
@@ -108,6 +124,23 @@ class ShareInlineImageDownloadService {
     final fragment = html_parser.parseFragment(rawHtml);
     final imageElements = fragment.querySelectorAll('img[src]');
     if (imageElements.isEmpty) {
+      final parserSeedRequests = _deferredRequestsFromParserImageUrls(result);
+      if (parserSeedRequests.isNotEmpty) {
+        LogManager.instance.debug(
+          'ShareInlineImage: discover_parser_seed_result',
+          context: {
+            'host': result.finalUrl.host,
+            'count': parserSeedRequests.length,
+            'parserTag': result.siteParserTag,
+            'reason': 'no_img_src',
+            'sampleUrls': parserSeedRequests
+                .take(3)
+                .map((item) => item.sourceUrl)
+                .toList(growable: false),
+          },
+        );
+        return parserSeedRequests;
+      }
       final dataSrcCount = fragment.querySelectorAll('img[data-src]').length;
       LogManager.instance.debug(
         'ShareInlineImage: discover_skipped',
@@ -184,6 +217,7 @@ class ShareInlineImageDownloadService {
   Future<ShareAttachmentSeed?> downloadDeferredInlineImageAttachment(
     ShareDeferredInlineImageAttachmentRequest request, {
     void Function(double progress)? onProgress,
+    bool shareInlineImage = true,
   }) async {
     final sourceUri = Uri.tryParse(request.sourceUrl);
     if (sourceUri == null) {
@@ -272,7 +306,7 @@ class ShareInlineImageDownloadService {
       filename: p.basename(filePath),
       mimeType: normalizeShareText(response.mimeType) ?? 'image/jpeg',
       size: size,
-      shareInlineImage: true,
+      shareInlineImage: shareInlineImage,
       fromThirdPartyShare: true,
       sourceUrl: sourceUri.toString(),
     );
@@ -283,6 +317,13 @@ class ShareInlineImageDownloadService {
   ) async {
     final rawHtml = normalizeShareText(result.contentHtml);
     if (rawHtml == null) {
+      final seeds = await _downloadParserImageSeeds(result);
+      if (seeds.isNotEmpty) {
+        return ShareInlineImageDownloadResult(
+          contentHtml: null,
+          attachmentSeeds: seeds,
+        );
+      }
       return const ShareInlineImageDownloadResult(
         contentHtml: null,
         attachmentSeeds: <ShareAttachmentSeed>[],
@@ -292,6 +333,13 @@ class ShareInlineImageDownloadService {
     final fragment = html_parser.parseFragment(rawHtml);
     final imageElements = fragment.querySelectorAll('img[src]');
     if (imageElements.isEmpty) {
+      final seeds = await _downloadParserImageSeeds(result);
+      if (seeds.isNotEmpty) {
+        return ShareInlineImageDownloadResult(
+          contentHtml: rawHtml,
+          attachmentSeeds: seeds,
+        );
+      }
       return ShareInlineImageDownloadResult(
         contentHtml: rawHtml,
         attachmentSeeds: const <ShareAttachmentSeed>[],
@@ -363,6 +411,51 @@ class ShareInlineImageDownloadService {
       headers['Cookie'] = cookieHeader!;
     }
     return headers;
+  }
+
+  List<ShareDeferredInlineImageAttachmentRequest>
+  _deferredRequestsFromParserImageUrls(ShareCaptureResult result) {
+    final unique = <String>{};
+    final requests = <ShareDeferredInlineImageAttachmentRequest>[];
+    for (final rawUrl in result.imageAttachmentUrls) {
+      final normalized = normalizeShareText(rawUrl);
+      if (normalized == null) continue;
+      final resolved = _resolveImageUri(result.finalUrl, normalized);
+      if (resolved == null) continue;
+      final sourceUrl = resolved.toString();
+      if (!unique.add(sourceUrl)) continue;
+      requests.add(
+        ShareDeferredInlineImageAttachmentRequest(
+          captureResult: result,
+          sourceUrl: sourceUrl,
+          index: requests.length,
+        ),
+      );
+    }
+    return requests;
+  }
+
+  Future<List<ShareAttachmentSeed>> _downloadParserImageSeeds(
+    ShareCaptureResult result,
+  ) async {
+    final requests = _deferredRequestsFromParserImageUrls(result);
+    if (requests.isEmpty) return const <ShareAttachmentSeed>[];
+    final seeds = <ShareAttachmentSeed>[];
+    for (final request in requests) {
+      if (seeds.isNotEmpty && requestInterval > Duration.zero) {
+        await _pause(requestInterval);
+      }
+      try {
+        final seed = await downloadDeferredInlineImageAttachment(
+          request,
+          shareInlineImage: false,
+        );
+        if (seed != null) {
+          seeds.add(seed);
+        }
+      } catch (_) {}
+    }
+    return seeds;
   }
 
   Uri? _resolveImageUri(Uri baseUrl, String raw) {

@@ -79,6 +79,43 @@ void main() {
       expect(text, contains('> Video summary'));
       expect(text, isNot(contains('<p>Long body')));
     });
+
+    test('uses web-openable Xiaohongshu URL for video memo body', () {
+      const payload = SharePayload(
+        type: SharePayloadType.text,
+        text: 'https://xhslink.com/a/example',
+        title: 'Shared XHS Video',
+      );
+      final result = ShareCaptureResult.success(
+        finalUrl: Uri.parse(
+          'https://www.xiaohongshu.com/discovery/item/note-123?type=video',
+        ),
+        articleTitle: 'XHS Video Gifts',
+        pageKind: SharePageKind.video,
+        siteParserTag: 'xiaohongshu',
+        videoCandidates: const [
+          ShareVideoCandidate(
+            id: 'xiaohongshu-h264',
+            url: 'http://sns-video-qc.xhscdn.com/stream/h264.mp4',
+            source: ShareVideoSource.parser,
+            isDirectDownloadable: true,
+            parserTag: 'xiaohongshu',
+          ),
+        ],
+      );
+
+      final text = buildShareCaptureMemoText(result: result, payload: payload);
+
+      expect(text, contains('# XHS Video Gifts'));
+      expect(
+        text,
+        contains(
+          '[XHS Video Gifts](https://www.xiaohongshu.com/discovery/item/note-123?type=video)',
+        ),
+      );
+      expect(text, isNot(contains('xhsdiscover://')));
+    });
+
     test('falls back to text paragraphs when html content is absent', () {
       const payload = SharePayload(
         type: SharePayloadType.text,

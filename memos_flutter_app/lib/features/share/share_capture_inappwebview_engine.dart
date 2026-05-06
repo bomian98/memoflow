@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import 'parsers/bilibili_share_page_parser.dart';
+import 'parsers/browser_error_page_detector.dart';
 import 'parsers/coolapk_share_page_parser.dart';
 import 'parsers/generic_share_page_parser.dart';
 import 'parsers/share_page_parser.dart';
 import 'parsers/wechat_share_page_parser.dart';
+import 'parsers/xiaohongshu_deeplink_parser.dart';
 import 'parsers/xiaohongshu_share_page_parser.dart';
 import 'share_capture_engine.dart';
 import 'share_clip_models.dart';
@@ -60,12 +62,39 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
     final controllerCompleter = Completer<InAppWebViewController>();
     final pageReadyCompleter = Completer<void>();
     final networkRecords = <ShareNetworkRecord>[];
+    Uri? blockedNonHttpMainFrameUrl;
+    ShareCaptureResult? interceptedDeepLinkResult;
     String? webViewError;
+
+    void completePageReady() {
+      if (!pageReadyCompleter.isCompleted) {
+        pageReadyCompleter.complete();
+      }
+    }
 
     void addNetworkRecord(ShareNetworkRecord record) {
       if (networkRecords.length >= _maxNetworkRecords) return;
       if (normalizeShareText(record.url) == null) return;
       networkRecords.add(record);
+    }
+
+    bool blockNonHttpMainFrameNavigation(Uri uri) {
+      if (_isSupportedUrl(uri) || _isWebViewInternalUrl(uri)) return false;
+      blockedNonHttpMainFrameUrl = uri;
+      interceptedDeepLinkResult ??= parseXiaohongshuDeepLinkCapture(
+        uri,
+        fallbackSourceUrl: request.url,
+      );
+      completePageReady();
+      return true;
+    }
+
+    ShareCaptureResult? resolveBlockedNavigationResult() {
+      final parsedDeepLink = interceptedDeepLinkResult;
+      if (parsedDeepLink != null) return parsedDeepLink;
+      final blockedUrl = blockedNonHttpMainFrameUrl;
+      if (blockedUrl == null) return null;
+      return _buildUnsupportedNavigationFailure(request, blockedUrl);
     }
 
     try {
@@ -74,6 +103,7 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
         initialSettings: InAppWebViewSettings(
           javaScriptEnabled: true,
           useOnLoadResource: true,
+          useShouldOverrideUrlLoading: true,
           useShouldInterceptAjaxRequest: true,
           useShouldInterceptFetchRequest: true,
           mediaPlaybackRequiresUserGesture: false,
@@ -84,17 +114,28 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
           }
         },
         onLoadStop: (controller, url) {
-          if (!pageReadyCompleter.isCompleted) {
-            pageReadyCompleter.complete();
-          }
+          completePageReady();
         },
         onReceivedError: (controller, requestInfo, error) {
           if (requestInfo.isForMainFrame ?? true) {
-            webViewError = error.description;
-            if (!pageReadyCompleter.isCompleted) {
-              pageReadyCompleter.complete();
+            final errorUrl = _uriFromWebViewValue(requestInfo.url);
+            if (errorUrl != null && blockNonHttpMainFrameNavigation(errorUrl)) {
+              return;
             }
+            webViewError = error.description;
+            completePageReady();
           }
+        },
+        shouldOverrideUrlLoading: (controller, navigationAction) async {
+          final navigationUrl = _uriFromWebViewValue(
+            navigationAction.request.url,
+          );
+          if (navigationAction.isForMainFrame &&
+              navigationUrl != null &&
+              blockNonHttpMainFrameNavigation(navigationUrl)) {
+            return NavigationActionPolicy.CANCEL;
+          }
+          return NavigationActionPolicy.ALLOW;
         },
         shouldInterceptRequest: (controller, requestInfo) async {
           addNetworkRecord(
@@ -174,6 +215,11 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
       );
 
       await pageReadyCompleter.future.timeout(_pageLoadTimeout);
+      final earlyBlockedResult = resolveBlockedNavigationResult();
+      if (earlyBlockedResult != null) {
+        onStageChanged?.call(ShareCaptureStage.buildingPreview);
+        return earlyBlockedResult;
+      }
       if (webViewError != null) {
         return ShareCaptureResult.failure(
           finalUrl: request.url,
@@ -184,6 +230,11 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
 
       onStageChanged?.call(ShareCaptureStage.waitingForDynamicContent);
       await _waitForDynamicContent(controller);
+      final delayedBlockedResult = resolveBlockedNavigationResult();
+      if (delayedBlockedResult != null) {
+        onStageChanged?.call(ShareCaptureStage.buildingPreview);
+        return delayedBlockedResult;
+      }
 
       onStageChanged?.call(ShareCaptureStage.detectingMedia);
       final rawResult = await controller
@@ -194,9 +245,19 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
             ),
           )
           .timeout(_captureScriptTimeout);
+      final lateBlockedResult = resolveBlockedNavigationResult();
+      if (lateBlockedResult != null) {
+        onStageChanged?.call(ShareCaptureStage.buildingPreview);
+        return lateBlockedResult;
+      }
 
       onStageChanged?.call(ShareCaptureStage.buildingPreview);
-      return _parseCaptureResult(request, rawResult, networkRecords);
+      return _parseCaptureResult(
+        request,
+        rawResult,
+        networkRecords,
+        attemptedNonHttpMainFrameUrl: blockedNonHttpMainFrameUrl,
+      );
     } on TimeoutException {
       return ShareCaptureResult.failure(
         finalUrl: request.url,
@@ -217,7 +278,36 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
   }
 
   bool _isSupportedUrl(Uri url) {
-    return url.scheme == 'http' || url.scheme == 'https';
+    final scheme = url.scheme.toLowerCase();
+    return scheme == 'http' || scheme == 'https';
+  }
+
+  bool _isWebViewInternalUrl(Uri url) {
+    return const {
+      'about',
+      'blob',
+      'data',
+      'javascript',
+    }.contains(url.scheme.toLowerCase());
+  }
+
+  Uri? _uriFromWebViewValue(Object? value) {
+    if (value == null) return null;
+    if (value is Uri) return value;
+    return Uri.tryParse(value.toString());
+  }
+
+  ShareCaptureResult _buildUnsupportedNavigationFailure(
+    ShareCaptureRequest request,
+    Uri blockedUrl,
+  ) {
+    return ShareCaptureResult.failure(
+      finalUrl: request.url,
+      failure: ShareCaptureFailure.webViewError,
+      failureMessage:
+          'The shared page tried to open an unsupported URL scheme: '
+          '${blockedUrl.scheme}.',
+    );
   }
 
   Future<void> _waitForDynamicContent(InAppWebViewController controller) async {
@@ -289,8 +379,9 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
   ShareCaptureResult _parseCaptureResult(
     ShareCaptureRequest request,
     dynamic rawResult,
-    List<ShareNetworkRecord> networkRecords,
-  ) {
+    List<ShareNetworkRecord> networkRecords, {
+    Uri? attemptedNonHttpMainFrameUrl,
+  }) {
     final decoded = _decodeJsonMap(rawResult);
     if (decoded == null) {
       return ShareCaptureResult.failure(
@@ -336,6 +427,35 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
     final length =
         (decoded['length'] as num?)?.toInt() ?? textContent?.length ?? 0;
     final failureMessage = normalizeShareText(decoded['error']?.toString());
+    if (isUnknownUrlSchemeBrowserErrorPage(
+      pageTitle: normalizeShareText(decoded['pageTitle']?.toString()),
+      articleTitle:
+          normalizeShareText(merged.title) ??
+          normalizeShareText(decoded['articleTitle']?.toString()),
+      textContent: textContent,
+      contentHtml: contentHtml,
+      error: failureMessage,
+      finalUrl: finalUrl,
+      attemptedUrl: attemptedNonHttpMainFrameUrl,
+    )) {
+      return ShareCaptureResult.failure(
+        finalUrl: request.url,
+        failure: ShareCaptureFailure.webViewError,
+        failureMessage:
+            failureMessage ??
+            'The shared page opened an unsupported app link instead of readable content.',
+        pageTitle: normalizeShareText(decoded['pageTitle']?.toString()),
+        articleTitle:
+            normalizeShareText(merged.title) ??
+            normalizeShareText(decoded['articleTitle']?.toString()),
+        siteName:
+            normalizeShareText(merged.siteName) ??
+            normalizeShareText(decoded['siteName']?.toString()),
+        pageKind: SharePageKind.unknown,
+        siteParserTag: merged.parserTag,
+        pageUserAgent: snapshot.userAgent,
+      );
+    }
 
     final resolvedPageKind = merged.pageKind != SharePageKind.unknown
         ? merged.pageKind
@@ -369,6 +489,7 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
         pageKind: resolvedPageKind,
         videoCandidates: merged.videoCandidates,
         unsupportedVideoCandidates: merged.unsupportedVideoCandidates,
+        imageAttachmentUrls: merged.imageAttachmentUrls,
         siteParserTag: merged.parserTag,
         pageUserAgent: snapshot.userAgent,
       );
@@ -405,6 +526,7 @@ class ShareCaptureInAppWebViewEngine implements ShareCaptureEngine {
       pageKind: resolvedPageKind,
       videoCandidates: merged.videoCandidates,
       unsupportedVideoCandidates: merged.unsupportedVideoCandidates,
+      imageAttachmentUrls: merged.imageAttachmentUrls,
       siteParserTag: merged.parserTag,
       pageUserAgent: snapshot.userAgent,
     );

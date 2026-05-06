@@ -1,6 +1,110 @@
 part of '../memos_api.dart';
 
 mixin _MemosApiResources on _MemosApiBase {
+  Future<AttachmentUploadSizeLimit> getAttachmentUploadSizeLimit() async {
+    await _ensureServerHints();
+    return switch (_serverFlavor) {
+      _ServerApiFlavor.v0_21 => _getLegacyStatusUploadSizeLimit(),
+      _ServerApiFlavor.v0_22 ||
+      _ServerApiFlavor.v0_23 ||
+      _ServerApiFlavor.v0_24 => _getWorkspaceStorageUploadSizeLimit(),
+      _ServerApiFlavor.v0_25Plus ||
+      _ServerApiFlavor.unknown => _getInstanceStorageUploadSizeLimit(),
+    };
+  }
+
+  Future<AttachmentUploadSizeLimit> _getLegacyStatusUploadSizeLimit() async {
+    try {
+      final response = await _dio.get('api/v1/status');
+      final body = _expectJsonMap(response.data);
+      return _uploadSizeLimitFromMiBValue(
+        body['maxUploadSizeMiB'] ?? body['max_upload_size_mib'],
+        source: AttachmentUploadSizeLimitSource.systemStatus,
+      );
+    } on DioException catch (error) {
+      return _unknownAttachmentUploadSizeLimit(error);
+    } on FormatException {
+      return const AttachmentUploadSizeLimit.unknown(
+        AttachmentUploadSizeLimitUnknownReason.invalidResponse,
+      );
+    }
+  }
+
+  Future<AttachmentUploadSizeLimit> _getWorkspaceStorageUploadSizeLimit() {
+    return _getStorageSettingUploadSizeLimit(
+      path: 'api/v1/workspace/settings/STORAGE',
+      source: AttachmentUploadSizeLimitSource.workspaceStorageSetting,
+    );
+  }
+
+  Future<AttachmentUploadSizeLimit> _getInstanceStorageUploadSizeLimit() {
+    return _getStorageSettingUploadSizeLimit(
+      path: 'api/v1/instance/settings/STORAGE',
+      source: AttachmentUploadSizeLimitSource.instanceStorageSetting,
+    );
+  }
+
+  Future<AttachmentUploadSizeLimit> _getStorageSettingUploadSizeLimit({
+    required String path,
+    required AttachmentUploadSizeLimitSource source,
+  }) async {
+    try {
+      final response = await _dio.get(path);
+      final body = _expectJsonMap(response.data);
+      final storageSetting = _readMap(
+        body['storageSetting'] ??
+            body['storage_setting'] ??
+            _readMap(body['value'])?['value'],
+      );
+      return _uploadSizeLimitFromMiBValue(
+        storageSetting?['uploadSizeLimitMb'] ??
+            storageSetting?['upload_size_limit_mb'],
+        source: source,
+      );
+    } on DioException catch (error) {
+      return _unknownAttachmentUploadSizeLimit(error);
+    } on FormatException {
+      return const AttachmentUploadSizeLimit.unknown(
+        AttachmentUploadSizeLimitUnknownReason.invalidResponse,
+      );
+    }
+  }
+
+  AttachmentUploadSizeLimit _uploadSizeLimitFromMiBValue(
+    Object? value, {
+    required AttachmentUploadSizeLimitSource source,
+  }) {
+    final mebibytes = _readInt(value);
+    if (mebibytes <= 0) {
+      return const AttachmentUploadSizeLimit.unknown(
+        AttachmentUploadSizeLimitUnknownReason.nonPositiveLimit,
+      );
+    }
+    return AttachmentUploadSizeLimit.known(
+      bytes: mebibytes * 1024 * 1024,
+      source: source,
+    );
+  }
+
+  AttachmentUploadSizeLimit _unknownAttachmentUploadSizeLimit(
+    DioException error,
+  ) {
+    final status = error.response?.statusCode;
+    if (status == 401 || status == 403) {
+      return const AttachmentUploadSizeLimit.unknown(
+        AttachmentUploadSizeLimitUnknownReason.permissionDenied,
+      );
+    }
+    if (status == 404 || status == 405) {
+      return const AttachmentUploadSizeLimit.unknown(
+        AttachmentUploadSizeLimitUnknownReason.endpointUnavailable,
+      );
+    }
+    return const AttachmentUploadSizeLimit.unknown(
+      AttachmentUploadSizeLimitUnknownReason.requestFailed,
+    );
+  }
+
   Future<Attachment> createAttachment({
     required String attachmentId,
     required String filename,
@@ -257,6 +361,7 @@ mixin _MemosApiResources on _MemosApiBase {
     );
     _attachmentMode = _AttachmentApiMode.resources;
   }
+
   Future<Attachment> _createAttachmentLegacy({
     required String attachmentId,
     required String filename,
