@@ -225,6 +225,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   DesktopHomePaneState? _desktopPreviewRollbackPaneState;
   bool? _desktopPreviewRollbackSecondaryPaneVisible;
   bool _desktopPreviewPressOpened = false;
+  bool _desktopPreviewPressShouldDeselect = false;
   int _ignoredDesktopPreviewTapCount = 0;
   String? _desktopComposeInitialText;
   List<String> _desktopComposeInitialAttachmentPaths = const <String>[];
@@ -379,6 +380,10 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     return focusedWidget is EditableText;
   }
 
+  bool _isTextEditingKeyboardOwnerActive() {
+    return _inlineComposeFocusNode.hasFocus || _isTextInputFocused();
+  }
+
   void _selectDesktopMemo(LocalMemo memo, {required bool showPreview}) {
     final memoUid = memo.uid.trim();
     if (memoUid.isEmpty) return;
@@ -396,6 +401,20 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       return;
     }
     controller.selectMemo(memoUid);
+  }
+
+  void _deselectDesktopMemo() {
+    final paneState = ref.read(desktopHomePaneStateProvider);
+    if (!paneState.hasSelection &&
+        paneState.secondaryPaneMode == DesktopHomeSecondaryPaneMode.none) {
+      return;
+    }
+    _setStateWithDiagnostics(
+      'desktop_preview_transition',
+      () => _previewTransitionKey += 1,
+    );
+    ref.read(desktopHomePaneStateProvider.notifier).deselectMemo();
+    _setDesktopPreviewPaneVisiblePreference(false);
   }
 
   void _openDesktopPreview(LocalMemo memo, {bool requestMemo = true}) {
@@ -448,6 +467,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     _desktopPreviewRollbackPaneState = null;
     _desktopPreviewRollbackSecondaryPaneVisible = null;
     _desktopPreviewPressOpened = false;
+    _desktopPreviewPressShouldDeselect = false;
     if (resetTapIgnore) {
       _ignoredDesktopPreviewTapCount = 0;
     }
@@ -490,6 +510,11 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     _desktopPreviewRollbackSecondaryPaneVisible =
         _desktopHomeLayoutPreference.secondaryPaneVisible;
     _desktopPreviewPressOpened = false;
+    _desktopPreviewPressShouldDeselect =
+        _desktopPreviewRollbackPaneState?.selectedMemoUid == memoUid;
+    if (_desktopPreviewPressShouldDeselect) {
+      return;
+    }
     unawaited(
       ref.read(desktopMemoPreviewSessionProvider.notifier).requestMemo(memo),
     );
@@ -518,6 +543,11 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     _ignoredDesktopPreviewTapCount += 1;
     _desktopPreviewPressTimer?.cancel();
     _desktopPreviewPressTimer = null;
+    if (_desktopPreviewPressShouldDeselect) {
+      _deselectDesktopMemo();
+      _clearDesktopPreviewPressState(resetTapIgnore: false);
+      return;
+    }
     if (!_desktopPreviewPressOpened) {
       _desktopPreviewPressOpened = true;
       _openDesktopPreview(memo, requestMemo: false);
@@ -2155,7 +2185,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     final primaryPressed = isPrimaryShortcutModifierPressed(pressed);
     final shiftPressed = isShiftModifierPressed(pressed);
     final altPressed = isAltModifierPressed(pressed);
-    final textInputFocused = _isTextInputFocused();
+    final textEditingKeyboardOwnerActive = _isTextEditingKeyboardOwnerActive();
 
     if (event.logicalKey == LogicalKeyboardKey.escape &&
         paneState.secondaryPaneMode != DesktopHomeSecondaryPaneMode.none) {
@@ -2163,7 +2193,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       return true;
     }
 
-    if (!textInputFocused && selectedMemo != null) {
+    if (!textEditingKeyboardOwnerActive && selectedMemo != null) {
       if (!primaryPressed &&
           !shiftPressed &&
           !altPressed &&

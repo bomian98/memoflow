@@ -641,6 +641,150 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets(
+    'windows wide layout inline compose Enter does not open selected memo',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1600, 1800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1600, 1800),
+          showDrawer: true,
+          enableCompose: true,
+          enableDesktopResizableHomeInlineCompose: true,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Inline compose Enter memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      await tester.tap(find.byType(MemoListCard).first);
+      await tester.pump(const Duration(milliseconds: 420));
+      await _pumpScreenFrames(tester);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MemosListScreen)),
+      );
+      expect(
+        container.read(desktopHomePaneStateProvider).selectedMemoUid,
+        'memo-1',
+      );
+      expect(
+        find.byKey(const ValueKey<String>('desktop-memo-preview-pane')),
+        findsOneWidget,
+      );
+
+      final editorFinder = find.byKey(
+        const ValueKey<String>('memos-inline-compose-text-field'),
+      );
+      await tester.tap(editorFinder);
+      await tester.enterText(editorFinder, 'Draft line');
+      await tester.pump();
+      expect(
+        tester.widget<TextField>(editorFinder).focusNode?.hasFocus,
+        isTrue,
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await _pumpScreenFrames(tester);
+
+      expect(find.byType(MemoDetailScreen), findsNothing);
+      expect(
+        tester.widget<TextField>(editorFinder).controller?.text,
+        contains('Draft line'),
+      );
+      expect(
+        tester.widget<TextField>(editorFinder).focusNode?.hasFocus,
+        isTrue,
+      );
+      expect(
+        container.read(desktopHomePaneStateProvider).selectedMemoUid,
+        'memo-1',
+      );
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets(
+    'windows wide layout clicking selected memo clears preview without draft loss',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1600, 1800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1600, 1800),
+          showDrawer: true,
+          enableCompose: true,
+          enableDesktopResizableHomeInlineCompose: true,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Deselect preview memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      await tester.tap(find.byType(MemoListCard).first);
+      await tester.pump(const Duration(milliseconds: 420));
+      await _pumpScreenFrames(tester);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MemosListScreen)),
+      );
+      expect(
+        container.read(desktopHomePaneStateProvider).selectedMemoUid,
+        'memo-1',
+      );
+      expect(
+        find.byKey(const ValueKey<String>('desktop-memo-preview-pane')),
+        findsOneWidget,
+      );
+
+      final editorFinder = find.byKey(
+        const ValueKey<String>('memos-inline-compose-text-field'),
+      );
+      await tester.tap(editorFinder);
+      await tester.enterText(editorFinder, 'Draft survives deselect');
+      await tester.pump();
+
+      await tester.tap(find.byType(MemoListCard).first);
+      await tester.pump(const Duration(milliseconds: 420));
+      await _pumpScreenFrames(tester);
+
+      final paneState = container.read(desktopHomePaneStateProvider);
+      expect(paneState.selectedMemoUid, isNull);
+      expect(paneState.previewVisible, isFalse);
+      expect(paneState.secondaryPaneMode, DesktopHomeSecondaryPaneMode.none);
+      expect(
+        tester.widget<TextField>(editorFinder).controller?.text,
+        'Draft survives deselect',
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await _pumpScreenFrames(tester);
+      expect(find.byType(MemoDetailScreen), findsNothing);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
   testWidgets('windows wide layout detail edit returns to home compose pane', (
     tester,
   ) async {

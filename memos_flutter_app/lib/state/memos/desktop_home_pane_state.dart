@@ -98,6 +98,19 @@ class DesktopHomePaneStateController
     );
   }
 
+  void deselectMemo() {
+    if (!state.hasSelection &&
+        state.secondaryPaneMode == DesktopHomeSecondaryPaneMode.none) {
+      return;
+    }
+    state = DesktopHomePaneState(
+      selectedMemoUid: null,
+      secondaryPaneMode: DesktopHomeSecondaryPaneMode.none,
+      composeDraftTarget: state.composeDraftTarget,
+      editorSurfaceMode: state.editorSurfaceMode,
+    );
+  }
+
   void showComposeNew({String? selectedMemoUid}) {
     state = DesktopHomePaneState(
       selectedMemoUid: selectedMemoUid?.trim().isEmpty ?? true
