@@ -12,19 +12,25 @@ import '../../data/updates/update_config.dart';
 import '../../features/updates/notice_dialog.dart';
 import '../../features/updates/update_announcement_dialog.dart';
 import '../../state/memos/app_bootstrap_adapter_provider.dart';
+import 'update_announcement_channel_policy.dart';
 
 class UpdateAnnouncementRunner {
   UpdateAnnouncementRunner({
     required AppBootstrapAdapter bootstrapAdapter,
     required GlobalKey<NavigatorState> navigatorKey,
     required bool Function() isMounted,
+    bool Function()? shouldFetchStartupUpdateAnnouncements,
   }) : _bootstrapAdapter = bootstrapAdapter,
        _navigatorKey = navigatorKey,
-       _isMounted = isMounted;
+       _isMounted = isMounted,
+       _shouldFetchStartupUpdateAnnouncements =
+           shouldFetchStartupUpdateAnnouncements ??
+           shouldFetchStartupUpdateAnnouncementsForCurrentBuild;
 
   final AppBootstrapAdapter _bootstrapAdapter;
   final GlobalKey<NavigatorState> _navigatorKey;
   final bool Function() _isMounted;
+  final bool Function() _shouldFetchStartupUpdateAnnouncements;
 
   bool _updateAnnouncementChecked = false;
   Future<String?>? _appVersionFuture;
@@ -57,6 +63,10 @@ class UpdateAnnouncementRunner {
 
   void scheduleIfNeeded(WidgetRef ref) {
     if (_updateAnnouncementChecked) return;
+    if (!_shouldFetchStartupUpdateAnnouncements()) {
+      _updateAnnouncementChecked = true;
+      return;
+    }
     _updateAnnouncementChecked = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isMounted()) return;
