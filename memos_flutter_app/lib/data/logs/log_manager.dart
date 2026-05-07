@@ -163,6 +163,15 @@ class LogManager {
     _enqueueWrite(line);
   }
 
+  Future<void> flush({
+    Duration timeout = const Duration(milliseconds: 500),
+  }) async {
+    if (!_initialized) return;
+    try {
+      await _writeQueue.timeout(timeout);
+    } catch (_) {}
+  }
+
   Future<List<String>> readRecentLines({
     int maxLines = 500,
     int maxBytes = 2 * 1024 * 1024,

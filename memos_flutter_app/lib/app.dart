@@ -43,6 +43,7 @@ import 'state/memos/app_bootstrap_adapter_provider.dart';
 import 'state/memos/app_bootstrap_controller.dart';
 import 'state/settings/device_preferences_provider.dart';
 import 'state/settings/resolved_preferences_provider.dart';
+import 'state/sync/sync_coordinator_provider.dart';
 import 'state/system/session_provider.dart';
 
 class App extends ConsumerStatefulWidget {
@@ -216,6 +217,8 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
     _exitCoordinator = DesktopExitCoordinator.init(
       ref: ref,
       quickInputController: _desktopQuickInputController,
+      prepareForExit: () =>
+          ref.read(syncCoordinatorProvider.notifier).prepareForAppExit(),
     );
     unawaited(_exitCoordinator?.attachWindowListener());
     _updateAnnouncementRunner = UpdateAnnouncementRunner(

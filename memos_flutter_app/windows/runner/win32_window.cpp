@@ -4,6 +4,7 @@
 #include <flutter_windows.h>
 
 #include "resource.h"
+#include "utils.h"
 
 namespace {
 
@@ -229,9 +230,11 @@ Win32Window::MessageHandler(HWND hwnd,
                             LPARAM const lparam) noexcept {
   switch (message) {
     case WM_DESTROY:
+      RunnerLog("wm_destroy_received");
       window_handle_ = nullptr;
       Destroy();
       if (quit_on_close_) {
+        RunnerLog("post_quit_message");
         PostQuitMessage(0);
       }
       return 0;
@@ -272,15 +275,19 @@ Win32Window::MessageHandler(HWND hwnd,
 }
 
 void Win32Window::Destroy() {
+  RunnerLog("win32_destroy_start");
   OnDestroy();
 
   if (window_handle_) {
+    RunnerLog("destroy_window_start");
     DestroyWindow(window_handle_);
+    RunnerLog("destroy_window_returned");
     window_handle_ = nullptr;
   }
   if (g_active_window_count == 0) {
     WindowClassRegistrar::GetInstance()->UnregisterWindowClass();
   }
+  RunnerLog("win32_destroy_done");
 }
 
 Win32Window* Win32Window::GetThisFromHandle(HWND const window) noexcept {

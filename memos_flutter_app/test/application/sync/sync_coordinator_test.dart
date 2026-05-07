@@ -647,6 +647,84 @@ void main() {
     expect(target.single.detail, contains('schedule=manual'));
   });
 
+  test('prepareForAppExit cancels delayed WebDAV sync scheduling', () {
+    fakeAsync((async) {
+      final logs = <DebugLogEntry>[];
+      final calls = <String>[];
+      final coordinator = SyncCoordinator(
+        SyncDependencies(
+          webDavSyncService: FakeWebDavSyncService(calls),
+          webDavBackupService: FakeWebDavBackupService(calls),
+          webDavBackupStateRepository: FakeWebDavBackupStateRepository(),
+          readWebDavSettings: () => WebDavSettings.defaults.copyWith(
+            enabled: true,
+            autoSyncAllowed: true,
+            serverUrl: 'https://example.com',
+            username: 'user',
+            password: 'pass',
+          ),
+          readCurrentAccountKey: () => 'account-1',
+          readCurrentAccount: () => null,
+          readCurrentLocalLibrary: () => const LocalLibrary(
+            key: 'local',
+            name: 'Local',
+            rootPath: 'c:\\tmp',
+          ),
+          readDatabase: () => FakeAppDatabase(retryableCount: 0),
+          runMemosSync: () async => const MemoSyncSuccess(),
+          logWriter: logs.add,
+        ),
+      );
+
+      SyncRunResult? firstResult;
+      unawaited(
+        coordinator
+            .requestSync(
+              const SyncRequest(
+                kind: SyncRequestKind.webDavSync,
+                reason: SyncRequestReason.settings,
+              ),
+            )
+            .then((result) => firstResult = result),
+      );
+      async.flushMicrotasks();
+
+      expect(firstResult, isA<SyncRunQueued>());
+
+      coordinator.prepareForAppExit();
+      async.elapse(const Duration(seconds: 3));
+      async.flushMicrotasks();
+
+      expect(calls, isEmpty);
+
+      SyncRunResult? secondResult;
+      unawaited(
+        coordinator
+            .requestSync(
+              const SyncRequest(
+                kind: SyncRequestKind.webDavSync,
+                reason: SyncRequestReason.settings,
+              ),
+            )
+            .then((result) => secondResult = result),
+      );
+      async.flushMicrotasks();
+
+      expect(secondResult, isA<SyncRunSkipped>());
+      expect(calls, isEmpty);
+      expect(
+        logs.any(
+          (entry) =>
+              entry.label == 'Request skipped' &&
+              (entry.detail ?? '').contains('app_exiting'),
+        ),
+        isTrue,
+      );
+
+      coordinator.dispose();
+    });
+  });
+
   test('logs manual schedule when auto backup is skipped', () {
     fakeAsync((async) {
       final logs = <DebugLogEntry>[];

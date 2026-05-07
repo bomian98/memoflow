@@ -403,7 +403,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     controller.selectMemo(memoUid);
   }
 
-  void _deselectDesktopMemo() {
+  void _deselectDesktopMemo({bool persistHidden = true}) {
     final paneState = ref.read(desktopHomePaneStateProvider);
     if (!paneState.hasSelection &&
         paneState.secondaryPaneMode == DesktopHomeSecondaryPaneMode.none) {
@@ -414,7 +414,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       () => _previewTransitionKey += 1,
     );
     ref.read(desktopHomePaneStateProvider.notifier).deselectMemo();
-    _setDesktopPreviewPaneVisiblePreference(false);
+    if (persistHidden) {
+      _setDesktopPreviewPaneVisiblePreference(false);
+    }
   }
 
   void _openDesktopPreview(LocalMemo memo, {bool requestMemo = true}) {
@@ -578,13 +580,11 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
 
   void _closeDesktopPreview({bool persistHidden = true}) {
     final paneState = ref.read(desktopHomePaneStateProvider);
-    if (paneState.secondaryPaneMode == DesktopHomeSecondaryPaneMode.none) {
+    if (!paneState.hasSelection &&
+        paneState.secondaryPaneMode == DesktopHomeSecondaryPaneMode.none) {
       return;
     }
-    ref.read(desktopHomePaneStateProvider.notifier).closeSecondaryPane();
-    if (persistHidden) {
-      _setDesktopPreviewPaneVisiblePreference(false);
-    }
+    _deselectDesktopMemo(persistHidden: persistHidden);
   }
 
   void _openDesktopComposeNew({

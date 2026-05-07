@@ -117,9 +117,9 @@ class SyncCoordinatorState {
 
     Map<String, dynamic> readMap(Object? raw) {
       if (raw is Map) {
-        return Map<Object?, Object?>.from(raw).map<String, dynamic>(
-          (key, value) => MapEntry(key.toString(), value),
-        );
+        return Map<Object?, Object?>.from(
+          raw,
+        ).map<String, dynamic>((key, value) => MapEntry(key.toString(), value));
       }
       return const <String, dynamic>{};
     }
@@ -131,10 +131,10 @@ class SyncCoordinatorState {
       localScan: SyncFlowStatus.fromJson(readMap(json['localScan'])),
       webDavLastBackupAt: readDateTime(json['webDavLastBackupAtMs']),
       webDavRestoring: readBool(json['webDavRestoring']),
-      pendingWebDavConflicts: (json['pendingWebDavConflicts'] as List? ??
-              const <Object?>[])
-          .whereType<String>()
-          .toList(growable: false),
+      pendingWebDavConflicts:
+          (json['pendingWebDavConflicts'] as List? ?? const <Object?>[])
+              .whereType<String>()
+              .toList(growable: false),
       pendingLocalScanConflicts:
           (json['pendingLocalScanConflicts'] as List? ?? const <Object?>[])
               .whereType<Map>()
@@ -236,6 +236,8 @@ abstract class DesktopSyncFacade extends StateNotifier<SyncCoordinatorState> {
 
   Future<void> retryPending();
 
+  void prepareForAppExit() {}
+
   Future<WebDavBackupExportResolution> handleBackupExportIssuePrompt(
     WebDavBackupExportIssue issue,
   ) async {
@@ -284,6 +286,7 @@ class SyncCoordinator extends DesktopSyncFacade {
   SyncRequestKind? _activeKind;
   Timer? _webDavAutoTimer;
   Timer? _memosRetryTimer;
+  bool _appExitPrepared = false;
   int _memosRetryBackoffIndex = 0;
   Map<String, bool>? _pendingWebDavConflictResolutions;
   Map<String, bool>? _pendingLocalScanResolutions;
@@ -368,6 +371,12 @@ class SyncCoordinator extends DesktopSyncFacade {
     }
   }
 
+  bool _isExitSuppressedKind(SyncRequestKind kind) {
+    return kind == SyncRequestKind.webDavSync ||
+        kind == SyncRequestKind.webDavBackup ||
+        kind == SyncRequestKind.all;
+  }
+
   SyncRunSkipped _skipContextNotReady(SyncRequestKind kind) {
     switch (kind) {
       case SyncRequestKind.memos:
@@ -447,6 +456,14 @@ class SyncCoordinator extends DesktopSyncFacade {
         'Request received',
         detail: 'kind=${request.kind.name} reason=${request.reason.name}',
       );
+    }
+    if (_appExitPrepared && _isExitSuppressedKind(request.kind)) {
+      _writeWebDavLog(
+        'Request skipped',
+        detail:
+            'kind=${request.kind.name} reason=${request.reason.name} app_exiting',
+      );
+      return const SyncRunSkipped();
     }
     if (!_isContextReadyForKind(request.kind)) {
       if (request.kind == SyncRequestKind.webDavSync ||
@@ -739,6 +756,7 @@ class SyncCoordinator extends DesktopSyncFacade {
   }
 
   void _scheduleWebDavAuto(SyncRequest request) {
+    if (_appExitPrepared) return;
     final accountKey = _deps.readCurrentAccountKey();
     if (accountKey == null || accountKey.trim().isEmpty) return;
     final settings = _deps.readWebDavSettings();
@@ -751,6 +769,15 @@ class SyncCoordinator extends DesktopSyncFacade {
       _queueRequest(request);
       unawaited(_processQueue());
     });
+  }
+
+  @override
+  void prepareForAppExit() {
+    _appExitPrepared = true;
+    _webDavAutoTimer?.cancel();
+    _webDavAutoTimer = null;
+    _pendingRequests.remove(SyncRequestKind.webDavSync);
+    _pendingRequests.remove(SyncRequestKind.webDavBackup);
   }
 
   void _logSettingsTriggeredBackupDecision(WebDavSettings settings) {

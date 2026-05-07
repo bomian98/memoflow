@@ -362,6 +362,14 @@ void main() {
       container.read(desktopHomePaneStateProvider).previewVisible,
       isFalse,
     );
+    expect(
+      container.read(desktopHomePaneStateProvider).selectedMemoUid,
+      isNull,
+    );
+    expect(
+      tester.widget<MemoListCard>(find.byType(MemoListCard).at(1)).selected,
+      isFalse,
+    );
     debugDefaultTargetPlatformOverride = null;
   });
 
@@ -414,9 +422,7 @@ void main() {
     );
     await _pumpScreenFrames(tester);
 
-    await tester.tap(
-      find.byKey(const ValueKey<String>('desktop-preview-pane-toggle')),
-    );
+    await tester.tap(find.byType(MemoListCard).first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 32));
 
@@ -1038,8 +1044,135 @@ void main() {
       container.read(desktopHomePaneStateProvider).previewVisible,
       isFalse,
     );
+    expect(
+      container.read(desktopHomePaneStateProvider).selectedMemoUid,
+      isNull,
+    );
+    expect(
+      tester.widget<MemoListCard>(find.byType(MemoListCard).first).selected,
+      isFalse,
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await _pumpScreenFrames(tester);
+    expect(find.byType(MemoDetailScreen), findsNothing);
     debugDefaultTargetPlatformOverride = null;
   });
+
+  testWidgets('windows wide layout preview close button clears selection', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Close preview button memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    await tester.tap(find.byType(MemoListCard).first);
+    await tester.pump(const Duration(milliseconds: 420));
+    await _pumpScreenFrames(tester);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).selectedMemoUid,
+      'memo-1',
+    );
+    expect(
+      find.byKey(const ValueKey<String>('desktop-memo-preview-pane')),
+      findsOneWidget,
+    );
+
+    final closeButton = tester.widget<IconButton>(
+      find.byKey(const ValueKey<String>('desktop-memo-preview-close')),
+    );
+    expect(closeButton.onPressed, isNotNull);
+    closeButton.onPressed!();
+    await _pumpScreenFrames(tester);
+
+    final paneState = container.read(desktopHomePaneStateProvider);
+    expect(paneState.selectedMemoUid, isNull);
+    expect(paneState.previewVisible, isFalse);
+    expect(paneState.secondaryPaneMode, DesktopHomeSecondaryPaneMode.none);
+    expect(
+      tester.widget<MemoListCard>(find.byType(MemoListCard).first).selected,
+      isFalse,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets(
+    'windows wide layout escape preview close preserves inline compose draft',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1600, 1800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1600, 1800),
+          showDrawer: true,
+          enableCompose: true,
+          enableDesktopResizableHomeInlineCompose: true,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Draft close preview memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      await tester.tap(find.byType(MemoListCard).first);
+      await tester.pump(const Duration(milliseconds: 420));
+      await _pumpScreenFrames(tester);
+
+      final editorFinder = find.byKey(
+        const ValueKey<String>('memos-inline-compose-text-field'),
+      );
+      await tester.tap(editorFinder);
+      await tester.enterText(editorFinder, 'Draft survives preview close');
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await _pumpScreenFrames(tester);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MemosListScreen)),
+      );
+      final paneState = container.read(desktopHomePaneStateProvider);
+      expect(paneState.selectedMemoUid, isNull);
+      expect(paneState.previewVisible, isFalse);
+      expect(paneState.secondaryPaneMode, DesktopHomeSecondaryPaneMode.none);
+      expect(
+        tester.widget<TextField>(editorFinder).controller?.text,
+        'Draft survives preview close',
+      );
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
 
   testWidgets(
     'windows wide layout closes preview when selected memo leaves results',

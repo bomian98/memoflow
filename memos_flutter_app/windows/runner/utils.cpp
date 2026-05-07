@@ -5,7 +5,44 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include <chrono>
+#include <fstream>
 #include <iostream>
+#include <sstream>
+
+namespace {
+
+std::string BuildRunnerLogLine(const std::string& message) {
+  const auto now = std::chrono::system_clock::now().time_since_epoch();
+  const auto millis =
+      std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+  std::ostringstream stream;
+  stream << "[native-exit] t=" << millis
+         << " pid=" << ::GetCurrentProcessId()
+         << " tid=" << ::GetCurrentThreadId()
+         << " " << message;
+  return stream.str();
+}
+
+void AppendRunnerLogFile(const std::string& line) {
+  wchar_t temp_path[MAX_PATH];
+  const DWORD temp_path_length = ::GetTempPathW(MAX_PATH, temp_path);
+  if (temp_path_length == 0 || temp_path_length > MAX_PATH) {
+    return;
+  }
+
+  std::wstring log_path(temp_path);
+  log_path += L"MemoFlow_native_exit.log";
+
+  std::ofstream file(log_path, std::ios::app);
+  if (!file.is_open()) {
+    return;
+  }
+  file << line << std::endl;
+  file.flush();
+}
+
+}  // namespace
 
 void CreateAndAttachConsole() {
   if (::AllocConsole()) {
@@ -19,6 +56,14 @@ void CreateAndAttachConsole() {
     std::ios::sync_with_stdio();
     FlutterDesktopResyncOutputStreams();
   }
+}
+
+void RunnerLog(const std::string& message) {
+  const std::string line = BuildRunnerLogLine(message);
+  std::cerr << line << std::endl;
+  std::cerr.flush();
+  AppendRunnerLogFile(line);
+  ::OutputDebugStringA((line + "\n").c_str());
 }
 
 std::vector<std::string> GetCommandLineArguments() {

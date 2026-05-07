@@ -8,7 +8,6 @@
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
 #include <file_selector_windows/file_selector_windows.h>
-#include <flutter_inappwebview_windows/flutter_inappwebview_windows_plugin_c_api.h>
 #include <flutter_secure_storage_windows/flutter_secure_storage_windows_plugin.h>
 #include <flutter_timezone/flutter_timezone_plugin_c_api.h>
 #include <geolocator_windows/geolocator_windows.h>
@@ -22,8 +21,9 @@
 #include <share_plus/share_plus_windows_plugin_c_api.h>
 #include <tray_manager/tray_manager_plugin.h>
 #include <url_launcher_windows/url_launcher_windows.h>
-#include <webview_windows/webview_windows_plugin.h>
 #include <window_manager/window_manager_plugin.h>
+
+#include "utils.h"
 
 namespace {
 
@@ -36,8 +36,6 @@ void RegisterSubWindowPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("ConnectivityPlusWindowsPlugin"));
   FileSelectorWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FileSelectorWindows"));
-  FlutterInappwebviewWindowsPluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("FlutterInappwebviewWindowsPluginCApi"));
   FlutterSecureStorageWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterSecureStorageWindowsPlugin"));
   FlutterTimezonePluginCApiRegisterWithRegistrar(
@@ -67,8 +65,6 @@ void RegisterSubWindowPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("TrayManagerPlugin"));
   UrlLauncherWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("UrlLauncherWindows"));
-  WebviewWindowsPluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("WebviewWindowsPlugin"));
   WindowManagerPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("WindowManagerPlugin"));
 }
@@ -81,7 +77,9 @@ FlutterWindow::FlutterWindow(const flutter::DartProject& project)
 FlutterWindow::~FlutterWindow() {}
 
 bool FlutterWindow::OnCreate() {
+  RunnerLog("flutter_window_on_create_start");
   if (!Win32Window::OnCreate()) {
+    RunnerLog("flutter_window_base_on_create_failed");
     return false;
   }
 
@@ -93,6 +91,7 @@ bool FlutterWindow::OnCreate() {
       frame.right - frame.left, frame.bottom - frame.top, project_);
   // Ensure that basic setup of the controller was successful.
   if (!flutter_controller_->engine() || !flutter_controller_->view()) {
+    RunnerLog("flutter_window_controller_create_failed");
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
@@ -115,15 +114,22 @@ bool FlutterWindow::OnCreate() {
   // window is shown. It is a no-op if the first frame hasn't completed yet.
   flutter_controller_->ForceRedraw();
 
+  RunnerLog("flutter_window_on_create_done");
   return true;
 }
 
 void FlutterWindow::OnDestroy() {
+  RunnerLog("flutter_window_on_destroy_start");
   if (flutter_controller_) {
+    RunnerLog("flutter_controller_release_start");
     flutter_controller_ = nullptr;
+    RunnerLog("flutter_controller_release_done");
+  } else {
+    RunnerLog("flutter_window_on_destroy_no_controller");
   }
 
   Win32Window::OnDestroy();
+  RunnerLog("flutter_window_on_destroy_done");
 }
 
 LRESULT

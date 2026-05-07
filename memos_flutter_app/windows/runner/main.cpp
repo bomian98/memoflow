@@ -12,32 +12,55 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
     CreateAndAttachConsole();
   }
+  RunnerLog("process_start");
 
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
-  ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  const HRESULT co_initialize_result =
+      ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  RunnerLog("co_initialize_result=" +
+            std::to_string(static_cast<long>(co_initialize_result)));
 
-  flutter::DartProject project(L"data");
+  int exit_code = EXIT_SUCCESS;
 
-  std::vector<std::string> command_line_arguments =
-      GetCommandLineArguments();
+  {
+    flutter::DartProject project(L"data");
 
-  project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
+    std::vector<std::string> command_line_arguments =
+        GetCommandLineArguments();
 
-  FlutterWindow window(project);
-  Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
-  if (!window.Create(L"MemoFlow", origin, size)) {
-    return EXIT_FAILURE;
+    project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
+
+    FlutterWindow window(project);
+    Win32Window::Point origin(10, 10);
+    Win32Window::Size size(1280, 720);
+    RunnerLog("main_window_create_start");
+    if (!window.Create(L"MemoFlow", origin, size)) {
+      RunnerLog("main_window_create_failed");
+      exit_code = EXIT_FAILURE;
+    } else {
+      RunnerLog("main_window_create_done");
+      window.SetQuitOnClose(true);
+
+      RunnerLog("message_loop_enter");
+      ::MSG msg;
+      while (::GetMessage(&msg, nullptr, 0, 0)) {
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
+      }
+      RunnerLog("message_loop_exit");
+    }
+
+    RunnerLog("flutter_scope_exit_start");
   }
-  window.SetQuitOnClose(true);
+  RunnerLog("flutter_scope_exit_done");
 
-  ::MSG msg;
-  while (::GetMessage(&msg, nullptr, 0, 0)) {
-    ::TranslateMessage(&msg);
-    ::DispatchMessage(&msg);
-  }
-
-  ::CoUninitialize();
-  return EXIT_SUCCESS;
+  // WebView/CoreMessaging teardown can still have process-level COM work queued
+  // after the Flutter engine and window objects are destroyed. Let process exit
+  // clean up the COM apartment instead of explicitly uninitializing it here,
+  // which avoids a shutdown-time coremessaging.dll APPCRASH on Windows.
+  RunnerLog("co_uninitialize_skipped_for_process_exit");
+  RunnerLog("terminate_process_start");
+  ::TerminateProcess(::GetCurrentProcess(), static_cast<UINT>(exit_code));
+  return exit_code;
 }
