@@ -22,6 +22,7 @@ import 'package:memos_flutter_app/data/repositories/location_settings_repository
 import 'package:memos_flutter_app/features/memos/memos_list_floating_collapse_controller.dart';
 import 'package:memos_flutter_app/features/memos/memo_markdown.dart';
 import 'package:memos_flutter_app/features/memos/memo_image_grid.dart';
+import 'package:memos_flutter_app/features/memos/memo_inline_image_syntax.dart';
 import 'package:memos_flutter_app/features/memos/memo_media_cache_key.dart';
 import 'package:memos_flutter_app/features/memos/memo_media_grid.dart';
 import 'package:memos_flutter_app/features/memos/memo_time_adjustment_sheet.dart';
@@ -838,7 +839,7 @@ void main() {
       expect(find.text('Expand'), findsOneWidget);
 
       memoCardKey.currentState!.debugExpandForTest();
-      await tester.pumpAndSettle();
+      await _pumpTestFrames(tester);
 
       markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
       expect(markdown.renderImages, isFalse);
@@ -855,6 +856,92 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Collapse'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'normal memo card expands markdown images inline and suppresses duplicate grid',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(900, 2200));
+
+      final content =
+          'Intro paragraph before the markdown image.\n\n'
+          '![inline](https://example.com/raw-body.jpg)\n\n'
+          '${List<String>.generate(8, (index) => 'Expanded body paragraph $index with enough text to keep the preview truncated.').join('\n\n')}\n\n'
+          'Tail marker visible after expand.';
+      final memo = _buildMemo(content: content);
+      final memoCardKey = GlobalKey<MemoListCardState>();
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memo: memo,
+          memoCardKey: memoCardKey,
+          wrapInScrollView: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      var markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.renderImages, isFalse);
+      expect(markdown.imageSyntax, MemoInlineImageSyntax.none);
+      expect(find.byType(MemoMediaGrid), findsOneWidget);
+
+      memoCardKey.currentState!.debugExpandForTest();
+      await _pumpTestFrames(tester);
+
+      markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.renderImages, isTrue);
+      expect(markdown.imageSyntax, MemoInlineImageSyntax.markdownOnly);
+      expect(markdown.data, contains('![inline]'));
+      expect(find.byType(MemoMediaGrid), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'expanded markdown image body keeps unreferenced attachment grid entries',
+    (tester) async {
+      const inlineImage = MemoImageEntry(
+        id: 'inline_0',
+        title: 'inline',
+        mimeType: 'image/*',
+        previewUrl: 'https://example.com/inline.jpg',
+        fullUrl: 'https://example.com/inline.jpg',
+      );
+      const attachmentImage = MemoImageEntry(
+        id: 'attachments/att-1',
+        title: 'attachment',
+        mimeType: 'image/*',
+        previewUrl: 'https://example.com/attachment.jpg',
+        fullUrl: 'https://example.com/attachment.jpg',
+        isAttachment: true,
+      );
+      final memo = _buildMemo(
+        content:
+            'Intro paragraph.\n\n'
+            '![inline](https://example.com/inline.jpg)\n\n'
+            '${'Detailed body paragraph. ' * 80}',
+      );
+
+      await tester.pumpWidget(
+        _buildDirectCardHarness(
+          memo: memo,
+          imageEntries: const [inlineImage, attachmentImage],
+          mediaEntries: const [
+            MemoMediaEntry.image(inlineImage),
+            MemoMediaEntry.image(attachmentImage),
+          ],
+          initiallyExpanded: true,
+          expandedInlineImageSyntax: MemoInlineImageSyntax.markdownOnly,
+        ),
+      );
+      await tester.pump();
+
+      final grid = tester.widget<MemoMediaGrid>(find.byType(MemoMediaGrid));
+      expect(grid.entries, hasLength(1));
+      expect(grid.entries.single.image?.isAttachment, isTrue);
+      final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.imageSyntax, MemoInlineImageSyntax.markdownOnly);
     },
   );
 
@@ -1049,6 +1136,8 @@ Widget _buildDirectCardHarness({
   String? authHeader,
   bool rebaseAbsoluteFileUrlForV024 = false,
   bool attachAuthForSameOriginAbsolute = false,
+  MemoInlineImageSyntax expandedInlineImageSyntax =
+      MemoInlineImageSyntax.markdownAndHtml,
 }) {
   LocaleSettings.setLocale(AppLocale.en);
   return TranslationProvider(
@@ -1078,6 +1167,7 @@ Widget _buildDirectCardHarness({
               contentTextOverride: contentTextOverride,
               contentHeader: const SizedBox.shrink(),
               useExpandedArticleBody: true,
+              expandedInlineImageSyntax: expandedInlineImageSyntax,
               baseUrl: baseUrl,
               authHeader: authHeader,
               rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,

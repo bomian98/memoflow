@@ -28,6 +28,7 @@ import '../memo_card_preview.dart';
 import '../memo_hero_flight.dart';
 import '../memo_image_grid.dart';
 import '../memo_inline_image_sources.dart';
+import '../memo_inline_image_syntax.dart';
 import '../memo_location_line.dart';
 import '../memo_markdown.dart';
 import '../memo_media_grid.dart';
@@ -118,10 +119,15 @@ String _memoCardMarkdownCacheKey({
   required String highlightKey,
   required String source,
   required bool renderImages,
+  MemoInlineImageSyntax? imageSyntax,
   String localInlineImageFingerprint = '',
 }) {
   final renderFlag = renderImages ? 1 : 0;
-  return '$cacheKeyBase|md|source=$source|renderImages=$renderFlag|localInline=$localInlineImageFingerprint|searchhl=v2|hl=$highlightKey';
+  final resolvedImageSyntax = resolveMemoInlineImageSyntax(
+    renderImages: renderImages,
+    imageSyntax: imageSyntax,
+  );
+  return '$cacheKeyBase|md|source=$source|renderImages=$renderFlag|imageSyntax=${resolvedImageSyntax.cacheToken}|localInline=$localInlineImageFingerprint|searchhl=v2|hl=$highlightKey';
 }
 
 void invalidateMemoRenderCacheForUid(String memoUid) {
@@ -277,6 +283,7 @@ class MemoListCard extends StatefulWidget {
     this.contentTextOverride,
     this.contentHeader,
     this.useExpandedArticleBody = false,
+    this.expandedInlineImageSyntax = MemoInlineImageSyntax.markdownAndHtml,
     this.baseUrl,
     this.authHeader,
     this.rebaseAbsoluteFileUrlForV024 = false,
@@ -318,6 +325,7 @@ class MemoListCard extends StatefulWidget {
   final String? contentTextOverride;
   final Widget? contentHeader;
   final bool useExpandedArticleBody;
+  final MemoInlineImageSyntax expandedInlineImageSyntax;
   final Uri? baseUrl;
   final String? authHeader;
   final bool rebaseAbsoluteFileUrlForV024;
@@ -676,6 +684,12 @@ class MemoListCardState extends State<MemoListCard> {
     final showExpandedBody = _expanded;
     final renderExpandedArticleBody =
         widget.useExpandedArticleBody && showExpandedBody;
+    final effectiveInlineImageSyntax = renderExpandedArticleBody
+        ? widget.expandedInlineImageSyntax
+        : MemoInlineImageSyntax.none;
+    final trailingMediaEntries = renderExpandedArticleBody
+        ? memoTrailingMediaEntriesForInlineBody(mediaEntries)
+        : mediaEntries;
     final displayText = showExpandedBody
         ? contentText
         : (showCollapsed ? preview.text : previewText);
@@ -686,13 +700,15 @@ class MemoListCardState extends State<MemoListCard> {
         ? buildMemoInlineImageSourcePolicy(
             content: contentText,
             attachments: memo.attachments,
+            imageSyntax: effectiveInlineImageSyntax,
           )
         : MemoInlineImageSourcePolicy.empty;
     final markdownCacheKey = _memoCardMarkdownCacheKey(
       cacheKeyBase: cacheKey,
       highlightKey: highlightKey,
       source: markdownSource,
-      renderImages: renderExpandedArticleBody,
+      renderImages: effectiveInlineImageSyntax.rendersImages,
+      imageSyntax: effectiveInlineImageSyntax,
       localInlineImageFingerprint: renderExpandedArticleBody
           ? inlineImageSourcePolicy.fingerprint
           : '',
@@ -776,14 +792,14 @@ class MemoListCardState extends State<MemoListCard> {
     }
 
     Widget buildMediaGrid() {
-      if (mediaEntries.isEmpty) return const SizedBox.shrink();
+      if (trailingMediaEntries.isEmpty) return const SizedBox.shrink();
       final previewBorder = borderColor.withValues(alpha: 0.65);
       final previewBg = isDark
           ? MemoFlowPalette.audioSurfaceDark.withValues(alpha: 0.6)
           : MemoFlowPalette.audioSurfaceLight;
       final maxHeight = MediaQuery.of(context).size.height * 0.4;
       return MemoMediaGrid(
-        entries: mediaEntries,
+        entries: trailingMediaEntries,
         columns: 3,
         maxCount: 9,
         maxHeight: maxHeight,
@@ -879,7 +895,8 @@ class MemoListCardState extends State<MemoListCard> {
               ).textTheme.bodyMedium?.copyWith(color: textMain),
               blockSpacing: renderExpandedArticleBody ? 8 : 4,
               normalizeHeadings: true,
-              renderImages: renderExpandedArticleBody,
+              renderImages: effectiveInlineImageSyntax.rendersImages,
+              imageSyntax: effectiveInlineImageSyntax,
               tagColors: widget.tagColors,
               baseUrl: widget.baseUrl,
               authHeader: widget.authHeader,
@@ -926,7 +943,7 @@ class MemoListCardState extends State<MemoListCard> {
                 ),
               ),
             ],
-            if (mediaEntries.isNotEmpty && !renderExpandedArticleBody) ...[
+            if (trailingMediaEntries.isNotEmpty) ...[
               const SizedBox(height: 2),
               buildMediaGrid(),
             ],

@@ -20,6 +20,8 @@ import '../../../state/system/reminder_utils.dart';
 import '../../../state/system/session_provider.dart';
 import '../../../state/tags/tag_color_lookup.dart';
 import '../memo_image_grid.dart';
+import '../memo_image_src_normalizer.dart';
+import '../memo_inline_image_syntax.dart';
 import '../memo_media_cache_key.dart';
 import '../memo_media_grid.dart';
 import '../memo_video_grid.dart';
@@ -241,6 +243,13 @@ class MemosListMemoCardContainer extends ConsumerWidget {
         : stripMemoClipTitle(
             memo.content,
           ).replaceAll(buildThirdPartyShareMemoMarker(), '').trimRight();
+    final hasMarkdownInlineImages =
+        clipCard == null && contentHasMarkdownImageSyntax(memo.content);
+    final expandedInlineImageSyntax = clipCard != null
+        ? MemoInlineImageSyntax.markdownAndHtml
+        : hasMarkdownInlineImages
+        ? MemoInlineImageSyntax.markdownOnly
+        : MemoInlineImageSyntax.none;
     final trimmedSearchQuery = searchQuery.trim();
     final inSearchContext =
         searching ||
@@ -279,7 +288,8 @@ class MemosListMemoCardContainer extends ConsumerWidget {
               title: clipParts?.title,
               compact: true,
             ),
-      useExpandedArticleBody: clipCard != null,
+      useExpandedArticleBody: clipCard != null || hasMarkdownInlineImages,
+      expandedInlineImageSyntax: expandedInlineImageSyntax,
       baseUrl: baseUrl,
       authHeader: authHeader,
       rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,

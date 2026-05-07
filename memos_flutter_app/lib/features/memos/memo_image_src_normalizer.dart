@@ -1,5 +1,7 @@
 import 'package:html/parser.dart' as html_parser;
 
+import 'memo_inline_image_syntax.dart';
+
 final RegExp _markdownImagePattern = RegExp(
   r'!\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)',
 );
@@ -84,6 +86,22 @@ List<String> extractMemoImageUrls(String text) {
     ...extractMarkdownImageUrls(text),
     ...extractHtmlImageUrls(text),
   ];
+}
+
+bool contentHasMarkdownImageSyntax(String text) {
+  return extractMarkdownImageUrls(text).isNotEmpty;
+}
+
+List<String> extractMemoImageUrlsForSyntax(
+  String text,
+  MemoInlineImageSyntax syntax,
+) {
+  if (text.trim().isEmpty) return const [];
+  return switch (syntax) {
+    MemoInlineImageSyntax.none => const <String>[],
+    MemoInlineImageSyntax.markdownOnly => extractMarkdownImageUrls(text),
+    MemoInlineImageSyntax.markdownAndHtml => extractMemoImageUrls(text),
+  };
 }
 
 String _normalizeGithubBlobImageUrl(String value) {

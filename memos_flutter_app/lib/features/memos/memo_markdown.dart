@@ -24,6 +24,7 @@ import '../../state/tags/tag_color_lookup.dart';
 import '../image_preview/image_preview_item.dart';
 import '../image_preview/image_preview_open_request.dart';
 import 'memo_image_src_normalizer.dart';
+import 'memo_inline_image_syntax.dart';
 import 'memo_render_pipeline.dart';
 
 export 'memo_image_src_normalizer.dart';
@@ -183,6 +184,7 @@ class MemoMarkdown extends StatelessWidget {
     this.blockSpacing = 6,
     this.shrinkWrap = true,
     this.renderImages = true,
+    this.imageSyntax,
     this.tagColors,
     this.onToggleTask,
     this.baseUrl,
@@ -205,6 +207,7 @@ class MemoMarkdown extends StatelessWidget {
   final double blockSpacing;
   final bool shrinkWrap;
   final bool renderImages;
+  final MemoInlineImageSyntax? imageSyntax;
   final TagColorLookup? tagColors;
   final TaskToggleHandler? onToggleTask;
   final Uri? baseUrl;
@@ -218,11 +221,17 @@ class MemoMarkdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveImageSyntax = resolveMemoInlineImageSyntax(
+      renderImages: renderImages,
+      imageSyntax: imageSyntax,
+    );
+    final effectiveRenderImages = effectiveImageSyntax.rendersImages;
     final effectiveArtifact =
         artifact ??
         buildMemoRenderArtifact(
           data: data,
-          renderImages: renderImages,
+          renderImages: effectiveRenderImages,
+          imageSyntax: effectiveImageSyntax,
           highlightQuery: highlightQuery,
           cacheKey: cacheKey,
           allowedLocalImageUrls: allowedLocalImageUrls,
@@ -232,7 +241,7 @@ class MemoMarkdown extends StatelessWidget {
     _logMemoMarkdownDiagnostics(
       contentText,
       cacheKey: cacheKey,
-      renderImages: renderImages,
+      renderImages: effectiveRenderImages,
       selectable: selectable,
       maxLines: maxLines,
       normalizeHeadings: normalizeHeadings,
@@ -345,7 +354,8 @@ class MemoMarkdown extends StatelessWidget {
         error: error,
         stackTrace: stackTrace,
         extraContext: <String, Object?>{
-          'renderImages': renderImages,
+          'renderImages': effectiveRenderImages,
+          'imageSyntax': effectiveImageSyntax.cacheToken,
           'cacheKey': cacheKey,
         },
       );
@@ -509,7 +519,7 @@ class MemoMarkdown extends StatelessWidget {
         if (rawSrc == null) return null;
         final src = normalizeMarkdownImageSrc(rawSrc);
         if (src.isEmpty) return null;
-        if (!renderImages) {
+        if (!effectiveRenderImages) {
           _logMemoMarkdownHtmlImageWhileDisabled(
             contentText,
             cacheKey: cacheKey,
@@ -825,7 +835,7 @@ class MemoMarkdown extends StatelessWidget {
         styles.addAll({'list-style-type': 'none', 'padding-left': '0'});
       }
       if (localName == 'img') {
-        if (renderImages) {
+        if (effectiveRenderImages) {
           styles.addAll({
             'max-width': '100%',
             'max-height': maxImageHeightPx,

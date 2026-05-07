@@ -17,6 +17,7 @@ import 'package:memos_flutter_app/data/models/local_memo.dart';
 import 'package:memos_flutter_app/data/models/memo_relation.dart';
 import 'package:memos_flutter_app/features/memos/memo_detail_screen.dart';
 import 'package:memos_flutter_app/features/memos/memo_hero_flight.dart';
+import 'package:memos_flutter_app/features/memos/memo_inline_image_syntax.dart';
 import 'package:memos_flutter_app/features/memos/memo_markdown.dart';
 import 'package:memos_flutter_app/features/share/share_inline_image_content.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
@@ -160,6 +161,148 @@ void main() {
     );
     expect(request?.headers, {'Authorization': authHeader});
   });
+
+  testWidgets('detail renders ordinary markdown images inline when expanded', (
+    tester,
+  ) async {
+    const content =
+        'Article body\n\n'
+        '![inline](https://example.com/detail-inline.png)';
+    final memo = _buildMemo(content: content);
+    final resolvedData = buildMemoDocumentResolvedData(
+      memo: memo,
+      appLanguage: AppLanguage.en,
+      clipCard: null,
+      baseUrl: null,
+      authHeader: null,
+      rebaseAbsoluteFileUrlForV024: false,
+      attachAuthForSameOriginAbsolute: false,
+      richContentEnabled: true,
+    );
+
+    expect(resolvedData.effectiveRenderInlineImages, isTrue);
+    expect(resolvedData.inlineImageSyntax, MemoInlineImageSyntax.markdownOnly);
+    expect(
+      resolvedData.markdownArtifact.content,
+      contains('<img src="https://example.com/detail-inline.png"'),
+    );
+    expect(resolvedData.mediaEntries, isEmpty);
+
+    await tester.pumpWidget(
+      _buildPrimaryContentTestApp(resolvedData: resolvedData),
+    );
+
+    final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+    expect(markdown.renderImages, isTrue);
+    expect(markdown.imageSyntax, MemoInlineImageSyntax.markdownOnly);
+  });
+
+  test('detail ordinary markdown image mode ignores raw html images', () {
+    const content =
+        'Article body\n\n'
+        '<img src="https://example.com/detail-html.png">';
+    final memo = _buildMemo(content: content);
+
+    final resolvedData = buildMemoDocumentResolvedData(
+      memo: memo,
+      appLanguage: AppLanguage.en,
+      clipCard: null,
+      baseUrl: null,
+      authHeader: null,
+      rebaseAbsoluteFileUrlForV024: false,
+      attachAuthForSameOriginAbsolute: false,
+      richContentEnabled: true,
+    );
+
+    expect(resolvedData.effectiveRenderInlineImages, isFalse);
+    expect(resolvedData.inlineImageSyntax, MemoInlineImageSyntax.none);
+    expect(resolvedData.markdownArtifact.content, isNot(contains('<img')));
+    expect(
+      resolvedData.markdownArtifact.content,
+      isNot(contains('https://example.com/detail-html.png')),
+    );
+  });
+
+  testWidgets('detail collapsed body keeps markdown images disabled', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(900, 2400));
+    final content =
+        'Article body\n\n'
+        '![inline](https://example.com/detail-inline.png)\n\n'
+        '${'Long detail paragraph. ' * 80}';
+    final memo = _buildMemo(content: content);
+    final resolvedData = buildMemoDocumentResolvedData(
+      memo: memo,
+      appLanguage: AppLanguage.en,
+      clipCard: null,
+      baseUrl: null,
+      authHeader: null,
+      rebaseAbsoluteFileUrlForV024: false,
+      attachAuthForSameOriginAbsolute: false,
+      richContentEnabled: true,
+    );
+
+    await tester.pumpWidget(
+      _buildPrimaryContentTestApp(resolvedData: resolvedData),
+    );
+    await tester.pump();
+
+    var markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+    expect(markdown.renderImages, isTrue);
+    expect(find.text('Collapse'), findsOneWidget);
+
+    await tester.tap(find.text('Collapse'));
+    await tester.pump();
+
+    markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+    expect(markdown.renderImages, isFalse);
+    expect(markdown.imageSyntax, MemoInlineImageSyntax.none);
+  });
+
+  test(
+    'detail keeps unreferenced attachments after inline duplicate removal',
+    () {
+      const inlineUrl = 'https://example.com/inline.jpg';
+      const otherUrl = 'https://example.com/other.jpg';
+      final memo = _buildMemo(
+        content: 'Article body\n\n![inline]($inlineUrl)',
+        attachments: const [
+          Attachment(
+            name: 'attachments/inline',
+            filename: 'inline.jpg',
+            type: 'image/jpeg',
+            size: 1,
+            externalLink: inlineUrl,
+          ),
+          Attachment(
+            name: 'attachments/other',
+            filename: 'other.jpg',
+            type: 'image/jpeg',
+            size: 1,
+            externalLink: otherUrl,
+          ),
+        ],
+      );
+
+      final resolvedData = buildMemoDocumentResolvedData(
+        memo: memo,
+        appLanguage: AppLanguage.en,
+        clipCard: null,
+        baseUrl: null,
+        authHeader: null,
+        rebaseAbsoluteFileUrlForV024: false,
+        attachAuthForSameOriginAbsolute: false,
+        richContentEnabled: true,
+      );
+
+      expect(resolvedData.effectiveRenderInlineImages, isTrue);
+      expect(resolvedData.mediaEntries, hasLength(1));
+      expect(resolvedData.mediaEntries.single.image?.isAttachment, isTrue);
+      expect(resolvedData.mediaEntries.single.image?.fullUrl, otherUrl);
+    },
+  );
 
   testWidgets('detail allows current memo local attachment inline images', (
     tester,

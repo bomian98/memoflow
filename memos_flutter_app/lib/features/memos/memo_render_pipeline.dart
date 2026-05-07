@@ -3,6 +3,7 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:markdown/markdown.dart' as md;
 
 import 'memo_html_sanitizer.dart';
+import 'memo_inline_image_syntax.dart';
 import 'memo_markdown_preprocessor.dart';
 import 'memo_task_list_service.dart';
 
@@ -30,10 +31,15 @@ class MemoRenderPipeline {
   MemoRenderArtifact build({
     required String data,
     required bool renderImages,
+    MemoInlineImageSyntax? imageSyntax,
     String? highlightQuery,
     String? cacheKey,
     Set<String> allowedLocalImageUrls = const <String>{},
   }) {
+    final effectiveImageSyntax = resolveMemoInlineImageSyntax(
+      renderImages: renderImages,
+      imageSyntax: imageSyntax,
+    );
     final filteredData = stripTaskListToggleHint(data);
     final rawTrimmed = filteredData.trim();
     if (rawTrimmed.isEmpty) {
@@ -48,8 +54,13 @@ class MemoRenderPipeline {
     }
 
     var sanitized = sanitizeMemoMarkdown(filteredData);
-    if (!renderImages) {
-      sanitized = stripMarkdownImages(sanitized);
+    switch (effectiveImageSyntax) {
+      case MemoInlineImageSyntax.none:
+        sanitized = stripMarkdownImages(sanitized);
+      case MemoInlineImageSyntax.markdownOnly:
+        sanitized = stripRawHtmlImages(sanitized);
+      case MemoInlineImageSyntax.markdownAndHtml:
+        break;
     }
 
     final trimmed = sanitized.trim();
@@ -60,6 +71,7 @@ class MemoRenderPipeline {
 
     final effectiveCacheKey = _withLocalImageAllowlistFingerprint(
       cacheKey,
+      effectiveImageSyntax,
       allowedLocalImageUrls,
     );
     final cachedHtml = effectiveCacheKey == null
@@ -70,7 +82,7 @@ class MemoRenderPipeline {
         _buildMemoHtml(
           tagged,
           highlightQuery: highlightQuery,
-          renderImages: renderImages,
+          imageSyntax: effectiveImageSyntax,
           allowedLocalImageUrls: allowedLocalImageUrls,
         );
     if (effectiveCacheKey != null && cachedHtml == null) {
@@ -92,6 +104,7 @@ final MemoRenderPipeline _sharedMemoRenderPipeline = MemoRenderPipeline();
 MemoRenderArtifact buildMemoRenderArtifact({
   required String data,
   required bool renderImages,
+  MemoInlineImageSyntax? imageSyntax,
   String? highlightQuery,
   String? cacheKey,
   Set<String> allowedLocalImageUrls = const <String>{},
@@ -99,6 +112,7 @@ MemoRenderArtifact buildMemoRenderArtifact({
   return _sharedMemoRenderPipeline.build(
     data: data,
     renderImages: renderImages,
+    imageSyntax: imageSyntax,
     highlightQuery: highlightQuery,
     cacheKey: cacheKey,
     allowedLocalImageUrls: allowedLocalImageUrls,
@@ -141,7 +155,7 @@ class _LruCache<K, V> {
 
 String _buildMemoHtml(
   String text, {
-  required bool renderImages,
+  required MemoInlineImageSyntax imageSyntax,
   String? highlightQuery,
   Set<String> allowedLocalImageUrls = const <String>{},
 }) {
@@ -151,7 +165,7 @@ String _buildMemoHtml(
     escapedCodeBlocks,
     allowedLocalImageUrls: allowedLocalImageUrls,
   );
-  final normalizedHtml = renderImages
+  final normalizedHtml = imageSyntax.rendersImages
       ? sanitized
       : _stripHtmlImagesFromRenderedHtml(sanitized);
   return _applySearchHighlights(normalizedHtml, highlightQuery: highlightQuery);
@@ -159,10 +173,13 @@ String _buildMemoHtml(
 
 String? _withLocalImageAllowlistFingerprint(
   String? cacheKey,
+  MemoInlineImageSyntax imageSyntax,
   Set<String> allowedLocalImageUrls,
 ) {
   if (cacheKey == null) return null;
-  if (allowedLocalImageUrls.isEmpty) return cacheKey;
+  if (allowedLocalImageUrls.isEmpty) {
+    return '$cacheKey|imageSyntax=${imageSyntax.cacheToken}';
+  }
   final sorted =
       allowedLocalImageUrls
           .map((url) => url.trim())
@@ -170,7 +187,10 @@ String? _withLocalImageAllowlistFingerprint(
           .toSet()
           .toList(growable: false)
         ..sort();
-  final buffer = StringBuffer(cacheKey)..write('|localInlineAllow=');
+  final buffer = StringBuffer(cacheKey)
+    ..write('|imageSyntax=')
+    ..write(imageSyntax.cacheToken)
+    ..write('|localInlineAllow=');
   for (final url in sorted) {
     buffer
       ..write(url.length)

@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 
 import '../../data/models/attachment.dart';
 import 'memo_image_src_normalizer.dart';
+import 'memo_inline_image_syntax.dart';
 
 class MemoInlineImageSourcePolicy {
   MemoInlineImageSourcePolicy({
@@ -29,6 +30,7 @@ class MemoInlineImageSourcePolicy {
 MemoInlineImageSourcePolicy buildMemoInlineImageSourcePolicy({
   required String content,
   required Iterable<Attachment> attachments,
+  MemoInlineImageSyntax imageSyntax = MemoInlineImageSyntax.markdownAndHtml,
 }) {
   if (content.trim().isEmpty) return MemoInlineImageSourcePolicy.empty;
 
@@ -43,7 +45,7 @@ MemoInlineImageSourcePolicy buildMemoInlineImageSourcePolicy({
   if (attachmentPaths.isEmpty) return MemoInlineImageSourcePolicy.empty;
 
   final allowed = <String>{};
-  for (final rawUrl in extractMemoImageUrls(content)) {
+  for (final rawUrl in extractMemoImageUrlsForSyntax(content, imageSyntax)) {
     final source = _parseCanonicalFileUrl(rawUrl);
     if (source == null) continue;
     if (!attachmentPaths.contains(source.normalizedPath)) continue;

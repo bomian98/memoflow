@@ -38,6 +38,17 @@ List<MemoMediaEntry> buildMemoMediaEntries({
   return entries;
 }
 
+List<MemoMediaEntry> memoTrailingMediaEntriesForInlineBody(
+  List<MemoMediaEntry> entries,
+) {
+  return entries
+      .where(
+        (entry) =>
+            entry.isVideo || (entry.isImage && entry.image!.isAttachment),
+      )
+      .toList(growable: false);
+}
+
 MemoMediaTapBehavior resolveMemoMediaTapBehavior({
   required List<MemoMediaEntry> entries,
   required int mediaIndex,

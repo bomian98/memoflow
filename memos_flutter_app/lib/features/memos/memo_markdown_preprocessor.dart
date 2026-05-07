@@ -3,6 +3,11 @@ import '../../core/tags.dart';
 final RegExp _markdownImagePattern = RegExp(
   r'!\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)',
 );
+final RegExp _rawHtmlImageTagPattern = RegExp(
+  r'<img\b[^>]*>',
+  caseSensitive: false,
+  dotAll: true,
+);
 final RegExp _codeFencePattern = RegExp(r'^\s*(```|~~~)');
 final RegExp _fullHtmlDoctypeLinePattern = RegExp(
   r'^\s*<!doctype\s+html(?:\s[^>]*)?>\s*$',
@@ -45,6 +50,41 @@ String stripMarkdownImages(String text) {
     if (cleaned.trim().isEmpty) continue;
     out.add(cleaned);
   }
+
+  return out.join('\n');
+}
+
+String stripRawHtmlImages(String text) {
+  if (text.trim().isEmpty) return text;
+  final lines = text.split('\n');
+  final out = <String>[];
+  final segment = StringBuffer();
+  var inFence = false;
+
+  void flushSegment() {
+    if (segment.isEmpty) return;
+    final cleaned = segment.toString().replaceAll(_rawHtmlImageTagPattern, '');
+    out.addAll(cleaned.split('\n'));
+    segment.clear();
+  }
+
+  for (final line in lines) {
+    if (_codeFencePattern.hasMatch(line.trimLeft())) {
+      flushSegment();
+      inFence = !inFence;
+      out.add(line);
+      continue;
+    }
+    if (inFence) {
+      out.add(line);
+      continue;
+    }
+    if (segment.isNotEmpty) {
+      segment.writeln();
+    }
+    segment.write(line);
+  }
+  flushSegment();
 
   return out.join('\n');
 }

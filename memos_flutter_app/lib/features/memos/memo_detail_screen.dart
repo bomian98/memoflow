@@ -46,7 +46,9 @@ import 'memo_editor_screen.dart';
 import 'memo_detail_view.dart';
 import 'memo_image_grid.dart';
 import 'memo_image_preview_adapters.dart';
+import 'memo_inline_image_rendering_policy.dart';
 import 'memo_inline_image_sources.dart';
+import 'memo_inline_image_syntax.dart';
 import 'memo_media_grid.dart';
 import 'memo_markdown.dart';
 import 'memo_render_pipeline.dart';
@@ -62,23 +64,30 @@ import '../../i18n/strings.g.dart';
 String memoDetailMarkdownCacheKey(
   LocalMemo memo, {
   required bool renderImages,
+  MemoInlineImageSyntax? imageSyntax,
   bool stripClipTitle = false,
   String localInlineImageFingerprint = '',
 }) {
+  final resolvedImageSyntax = resolveMemoInlineImageSyntax(
+    renderImages: renderImages,
+    imageSyntax: imageSyntax,
+  );
   final renderFlag = renderImages ? 1 : 0;
   final stripFlag = stripClipTitle ? 1 : 0;
-  return 'detail|${memo.uid}|${memo.contentFingerprint}|renderImages=$renderFlag|clip=$stripFlag|localInline=$localInlineImageFingerprint|highlight=';
+  return 'detail|${memo.uid}|${memo.contentFingerprint}|renderImages=$renderFlag|imageSyntax=${resolvedImageSyntax.cacheToken}|clip=$stripFlag|localInline=$localInlineImageFingerprint|highlight=';
 }
 
 String buildMemoDocumentMarkdownCacheKey(
   LocalMemo memo, {
   required bool renderImages,
+  MemoInlineImageSyntax? imageSyntax,
   bool stripClipTitle = false,
   String localInlineImageFingerprint = '',
 }) {
   return memoDetailMarkdownCacheKey(
     memo,
     renderImages: renderImages,
+    imageSyntax: imageSyntax,
     stripClipTitle: stripClipTitle,
     localInlineImageFingerprint: localInlineImageFingerprint,
   );
@@ -107,6 +116,7 @@ class MemoDocumentResolvedData {
     required this.attachAuthForSameOriginAbsolute,
     required this.richContentEnabled,
     required this.effectiveRenderInlineImages,
+    required this.inlineImageSyntax,
   });
 
   final LocalMemo memo;
@@ -128,6 +138,7 @@ class MemoDocumentResolvedData {
   final bool attachAuthForSameOriginAbsolute;
   final bool richContentEnabled;
   final bool effectiveRenderInlineImages;
+  final MemoInlineImageSyntax inlineImageSyntax;
 }
 
 MemoDocumentResolvedData buildMemoDocumentResolvedData({
@@ -144,16 +155,26 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
       ? null
       : parseMemoClipMarkdown(memo.content);
   final renderInlineImages = contentHasThirdPartyShareMarker(memo.content);
-  final effectiveRenderInlineImages = renderInlineImages && richContentEnabled;
   final displayContentText = clipCard == null
       ? memo.content
       : stripMemoClipTitle(
           memo.content,
         ).replaceAll(buildThirdPartyShareMemoMarker(), '').trimRight();
+  final requestedInlineImageSyntax = renderInlineImages
+      ? MemoInlineImageSyntax.markdownAndHtml
+      : MemoInlineImageSyntax.markdownOnly;
+  final inlineImagePolicy = buildMemoInlineImageRenderPolicy(
+    content: displayContentText,
+    attachments: memo.attachments,
+    enabled: richContentEnabled,
+    syntax: requestedInlineImageSyntax,
+  );
+  final inlineImageSyntax = inlineImagePolicy.syntax;
+  final effectiveRenderInlineImages = inlineImagePolicy.rendersImages;
   final imageEntries = !richContentEnabled
       ? const <MemoImageEntry>[]
       : collectMemoImageEntries(
-          content: memo.content,
+          content: displayContentText,
           attachments: memo.attachments,
           baseUrl: baseUrl,
           authHeader: authHeader,
@@ -171,30 +192,22 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
         );
   final mediaEntries = !richContentEnabled
       ? const <MemoMediaEntry>[]
-      : renderInlineImages
-      ? buildMemoMediaEntries(
-          images: imageEntries
-              .where((entry) => entry.isAttachment)
-              .toList(growable: false),
-          videos: videoEntries,
+      : effectiveRenderInlineImages
+      ? memoTrailingMediaEntriesForInlineBody(
+          buildMemoMediaEntries(images: imageEntries, videos: videoEntries),
         )
       : buildMemoMediaEntries(images: imageEntries, videos: videoEntries);
   final imagePreviewItems = !richContentEnabled
       ? const <ImagePreviewItem>[]
       : collectMemoDocumentImagePreviewItems(
-          content: memo.content,
+          content: displayContentText,
           attachments: memo.attachments,
           baseUrl: baseUrl,
           authHeader: authHeader,
           rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
           attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
         );
-  final inlineImageSourcePolicy = effectiveRenderInlineImages
-      ? buildMemoInlineImageSourcePolicy(
-          content: memo.content,
-          attachments: memo.attachments,
-        )
-      : MemoInlineImageSourcePolicy.empty;
+  final inlineImageSourcePolicy = inlineImagePolicy.localSourcePolicy;
   final nonImageAttachments = memo.attachments
       .where(
         (attachment) =>
@@ -212,6 +225,7 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
   final markdownCacheKey = buildMemoDocumentMarkdownCacheKey(
     memo,
     renderImages: effectiveRenderInlineImages,
+    imageSyntax: inlineImageSyntax,
     stripClipTitle: clipCard != null,
     localInlineImageFingerprint: inlineImageSourcePolicy.fingerprint,
   );
@@ -222,6 +236,7 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
     markdownArtifact: buildMemoRenderArtifact(
       data: displayContentText,
       renderImages: effectiveRenderInlineImages,
+      imageSyntax: inlineImageSyntax,
       cacheKey: markdownCacheKey,
       allowedLocalImageUrls: inlineImageSourcePolicy.allowedLocalImageUrls,
     ),
@@ -241,6 +256,7 @@ MemoDocumentResolvedData buildMemoDocumentResolvedData({
     attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
     richContentEnabled: richContentEnabled,
     effectiveRenderInlineImages: effectiveRenderInlineImages,
+    inlineImageSyntax: inlineImageSyntax,
   );
 }
 
@@ -1212,6 +1228,7 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
       markdownArtifact: resolvedData.markdownArtifact,
       markdownSelectable: markdownSelectable && resolvedData.richContentEnabled,
       renderImages: resolvedData.effectiveRenderInlineImages,
+      imageSyntax: resolvedData.inlineImageSyntax,
       baseUrl: resolvedData.baseUrl,
       authHeader: resolvedData.authHeader,
       rebaseAbsoluteFileUrlForV024: resolvedData.rebaseAbsoluteFileUrlForV024,
@@ -2952,6 +2969,7 @@ class _CollapsibleText extends StatefulWidget {
     this.markdownArtifact,
     this.markdownSelectable = true,
     this.renderImages = false,
+    this.imageSyntax,
     this.baseUrl,
     this.authHeader,
     this.rebaseAbsoluteFileUrlForV024 = false,
@@ -2972,6 +2990,7 @@ class _CollapsibleText extends StatefulWidget {
   final MemoRenderArtifact? markdownArtifact;
   final bool markdownSelectable;
   final bool renderImages;
+  final MemoInlineImageSyntax? imageSyntax;
   final Uri? baseUrl;
   final String? authHeader;
   final bool rebaseAbsoluteFileUrlForV024;
@@ -3036,6 +3055,12 @@ class _CollapsibleTextState extends State<_CollapsibleText> {
     final shouldCollapse = widget.collapseEnabled && _isLong(text);
     final showCollapsed = shouldCollapse && !_expanded;
     final displayText = showCollapsed ? _collapseText(text) : text;
+    final effectiveImageSyntax = showCollapsed
+        ? MemoInlineImageSyntax.none
+        : resolveMemoInlineImageSyntax(
+            renderImages: widget.renderImages,
+            imageSyntax: widget.imageSyntax,
+          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3047,7 +3072,8 @@ class _CollapsibleTextState extends State<_CollapsibleText> {
           textStyle: widget.style,
           selectable: widget.markdownSelectable && !showCollapsed,
           blockSpacing: 8,
-          renderImages: widget.renderImages && !showCollapsed,
+          renderImages: effectiveImageSyntax.rendersImages,
+          imageSyntax: effectiveImageSyntax,
           baseUrl: widget.baseUrl,
           authHeader: widget.authHeader,
           rebaseAbsoluteFileUrlForV024: widget.rebaseAbsoluteFileUrlForV024,

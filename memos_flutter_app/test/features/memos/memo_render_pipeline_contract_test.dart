@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/features/memos/memo_image_src_normalizer.dart';
+import 'package:memos_flutter_app/features/memos/memo_inline_image_syntax.dart';
 import 'package:memos_flutter_app/features/memos/memo_markdown_preprocessor.dart';
 import 'package:memos_flutter_app/features/memos/memo_render_pipeline.dart';
 
@@ -51,6 +52,64 @@ void main() {
     );
   });
 
+  test('markdown-only image mode preserves markdown image syntax', () {
+    const content = 'before\n\n![alt](https://example.com/image.png)\n\nafter';
+
+    final artifact = pipeline.build(
+      data: content,
+      renderImages: true,
+      imageSyntax: MemoInlineImageSyntax.markdownOnly,
+    );
+
+    expect(artifact.content, contains('before'));
+    expect(artifact.content, contains('after'));
+    expect(
+      artifact.content,
+      contains('<img src="https://example.com/image.png" alt="alt"'),
+    );
+  });
+
+  test('markdown-only image mode strips raw html image tags', () {
+    const content =
+        'before\n\n'
+        '<img src="https://example.com/html.png" alt="html">\n\n'
+        '![md](https://example.com/markdown.png)\n\n'
+        'after';
+
+    final artifact = pipeline.build(
+      data: content,
+      renderImages: true,
+      imageSyntax: MemoInlineImageSyntax.markdownOnly,
+    );
+
+    expect(artifact.content, contains('before'));
+    expect(artifact.content, contains('after'));
+    expect(artifact.content, contains('https://example.com/markdown.png'));
+    expect(artifact.content, isNot(contains('https://example.com/html.png')));
+  });
+
+  test(
+    'markdown-only image mode leaves fenced html image examples as code',
+    () {
+      const content =
+          'before\n\n'
+          '```html\n'
+          '<img src="https://example.com/in-code.png">\n'
+          '```\n\n'
+          'after';
+
+      final artifact = pipeline.build(
+        data: content,
+        renderImages: true,
+        imageSyntax: MemoInlineImageSyntax.markdownOnly,
+      );
+
+      expect(artifact.content, contains('<pre><code class="language-html">'));
+      expect(artifact.content, contains('&lt;img'));
+      expect(artifact.content, isNot(contains('<img src=')));
+    },
+  );
+
   test('renderImages false strips html img tags from rendered output', () {
     const content =
         'before\n\n'
@@ -78,6 +137,60 @@ void main() {
     expect(artifact.content, contains('before'));
     expect(artifact.content, contains('after'));
     expect(artifact.content, contains('<img src="$localUrl" width="100%">'));
+  });
+
+  test('allowlisted local markdown file images stay in rendered html', () {
+    const localUrl = 'file:///tmp/memo-inline-local.png';
+    const content = 'before\n\n![]($localUrl)\n\nafter';
+
+    final artifact = pipeline.build(
+      data: content,
+      renderImages: true,
+      imageSyntax: MemoInlineImageSyntax.markdownOnly,
+      allowedLocalImageUrls: const {localUrl},
+    );
+
+    expect(artifact.content, contains('before'));
+    expect(artifact.content, contains('after'));
+    expect(artifact.content, contains('<img src="$localUrl"'));
+  });
+
+  test('unallowlisted local markdown file images are stripped', () {
+    const localUrl = 'file:///tmp/memo-inline-local.png';
+    const content = 'before\n\n![]($localUrl)\n\nafter';
+
+    final artifact = pipeline.build(
+      data: content,
+      renderImages: true,
+      imageSyntax: MemoInlineImageSyntax.markdownOnly,
+    );
+
+    expect(artifact.content, contains('before'));
+    expect(artifact.content, contains('after'));
+    expect(artifact.content, isNot(contains('<img')));
+    expect(artifact.content, isNot(contains(localUrl)));
+  });
+
+  test('image syntax mode participates in render cache freshness', () {
+    final cachePipeline = MemoRenderPipeline();
+    const content = 'before\n\n![](https://example.com/cache.png)\n\nafter';
+    const cacheKey = 'memo-cache-key';
+
+    final stripped = cachePipeline.build(
+      data: content,
+      renderImages: false,
+      cacheKey: cacheKey,
+    );
+    final inline = cachePipeline.build(
+      data: content,
+      renderImages: true,
+      imageSyntax: MemoInlineImageSyntax.markdownOnly,
+      cacheKey: cacheKey,
+    );
+
+    expect(stripped.content, isNot(contains('<img')));
+    expect(inline.content, contains('<img'));
+    expect(inline.content, contains('https://example.com/cache.png'));
   });
 
   test('unallowlisted local file images are stripped from rendered html', () {
