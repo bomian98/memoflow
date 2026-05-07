@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:memos_flutter_app/core/app_motion_widgets.dart';
 import 'package:memos_flutter_app/core/memoflow_palette.dart';
 import 'package:memos_flutter_app/core/theme_colors.dart';
 import 'package:memos_flutter_app/data/ai/ai_semantic_memo_search_service.dart';
@@ -295,6 +297,80 @@ void main() {
     expect(_collapseButtonRect(tester).right, closeTo(800 - 16, 0.1));
   });
 
+  testWidgets(
+    'mobile drawer swipe over memo card opens drawer without activating card',
+    (tester) async {
+      final scaffoldKey = GlobalKey<ScaffoldState>();
+      var tapCount = 0;
+      var longPressCount = 0;
+
+      await _pumpBodyWithDrawerSwipeTarget(
+        tester,
+        scaffoldKey: scaffoldKey,
+        onTap: () => tapCount++,
+        onLongPress: () => longPressCount++,
+      );
+
+      final memoCard = find.byKey(_drawerSwipeMemoCardKey);
+      final pressScale = find.ancestor(
+        of: memoCard,
+        matching: find.byType(AnimatedScale),
+      );
+
+      expect(memoCard, findsOneWidget);
+      expect(pressScale, findsOneWidget);
+      expect(scaffoldKey.currentState!.isDrawerOpen, isFalse);
+
+      final gesture = await tester.startGesture(tester.getCenter(memoCard));
+      await tester.pump();
+
+      expect(tester.widget<AnimatedScale>(pressScale).scale, 0.97);
+
+      await gesture.moveBy(const Offset(32, 0));
+      await tester.pump();
+
+      expect(tester.widget<AnimatedScale>(pressScale).scale, 1);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(scaffoldKey.currentState!.isDrawerOpen, isTrue);
+      expect(tapCount, 0);
+      expect(longPressCount, 0);
+    },
+  );
+
+  testWidgets('active search keeps drawer swipe disabled over memo content', (
+    tester,
+  ) async {
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+
+    await _pumpBodyWithDrawerSwipeTarget(
+      tester,
+      scaffoldKey: scaffoldKey,
+      searching: true,
+    );
+
+    await _dragRightFromMemoCard(tester);
+
+    expect(scaffoldKey.currentState!.isDrawerOpen, isFalse);
+  });
+
+  testWidgets('desktop side pane keeps drawer swipe disabled', (tester) async {
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+
+    await _pumpBodyWithDrawerSwipeTarget(
+      tester,
+      scaffoldKey: scaffoldKey,
+      platform: TargetPlatform.windows,
+      useDesktopSidePane: true,
+    );
+
+    await _dragRightFromMemoCard(tester);
+
+    expect(scaffoldKey.currentState!.isDrawerOpen, isFalse);
+  });
+
   testWidgets('keyword empty state offers explicit AI search CTA', (
     tester,
   ) async {
@@ -503,7 +579,99 @@ void main() {
   });
 }
 
+const _drawerSwipeMemoCardKey = ValueKey<String>('drawer-swipe-memo-card');
+
+Future<void> _pumpBodyWithDrawerSwipeTarget(
+  WidgetTester tester, {
+  required GlobalKey<ScaffoldState> scaffoldKey,
+  TargetPlatform platform = TargetPlatform.android,
+  bool searching = false,
+  bool useDesktopSidePane = false,
+  VoidCallback? onTap,
+  VoidCallback? onLongPress,
+}) async {
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = const Size(800, 1000);
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
+  await tester.pumpWidget(
+    ProviderScope(
+      child: TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          theme: ThemeData(platform: platform),
+          home: _buildBodyScreen(
+            scaffoldKey: scaffoldKey,
+            drawerPanel: const Drawer(
+              child: Center(child: Text('drawer content')),
+            ),
+            data: _buildBodyData(
+              searching: searching,
+              visibleMemos: <LocalMemo>[_buildMemo('memo-1')],
+              layout: _buildLayout(useDesktopSidePane: useDesktopSidePane),
+            ),
+            animatedItemBuilder: (_, _, _) => _buildDrawerSwipeMemoCard(
+              onTap: onTap,
+              onLongPress: onLongPress,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _dragRightFromMemoCard(WidgetTester tester) async {
+  final memoCard = find.byKey(_drawerSwipeMemoCardKey);
+  expect(memoCard, findsOneWidget);
+
+  final gesture = await tester.startGesture(tester.getCenter(memoCard));
+  await gesture.moveBy(const Offset(32, 0));
+  await tester.pump();
+  await gesture.up();
+  await tester.pumpAndSettle();
+}
+
+Widget _buildDrawerSwipeMemoCard({
+  VoidCallback? onTap,
+  VoidCallback? onLongPress,
+}) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: AppPressScale(
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          key: _drawerSwipeMemoCardKey,
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: const SizedBox(
+            height: 160,
+            width: double.infinity,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('memo card content'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 Widget _buildBodyScreen({
+  GlobalKey<ScaffoldState>? scaffoldKey,
   Widget? drawerPanel,
   MemosListScreenBodyData? data,
   MemosListAnimatedItemBuilder? animatedItemBuilder,
@@ -522,7 +690,7 @@ Widget _buildBodyScreen({
       );
 
   return MemosListScreenBody(
-    scaffoldKey: GlobalKey<ScaffoldState>(),
+    scaffoldKey: scaffoldKey ?? GlobalKey<ScaffoldState>(),
     scrollController: ScrollController(),
     floatingCollapseViewportKey: GlobalKey(),
     listKey: GlobalKey<SliverAnimatedListState>(),
@@ -627,27 +795,13 @@ MemosListScreenBodyData _buildBodyData({
   List<LocalMemo> visibleMemos = const <LocalMemo>[],
   bool searching = false,
   MemosListScreenQueryState? query,
+  MemosListScreenLayoutState? layout,
 }) {
   final resolvedQuery = query ?? _buildQueryState();
   return MemosListScreenBodyData(
     viewState: MemosListScreenViewState(
       query: resolvedQuery,
-      layout: const MemosListScreenLayoutState(
-        showHeaderPillActions: false,
-        listTopPadding: 0,
-        listVisualOffset: 0,
-        supportsDesktopSidePane: false,
-        useDesktopSidePane: false,
-        supportsDesktopPreviewPane: false,
-        useDesktopPreviewPane: false,
-        useInlineCompose: false,
-        useWindowsDesktopHeader: false,
-        headerToolbarHeight: kToolbarHeight,
-        headerBottomHeight: 0,
-        floatingCollapseTopPadding: 0,
-        showComposeFab: false,
-        backToTopBaseOffset: 0,
-      ),
+      layout: layout ?? _buildLayout(),
       guide: const MemosListScreenGuideState(
         canShowSearchShortcutGuide: false,
         canShowDesktopShortcutGuide: false,
@@ -679,6 +833,25 @@ MemosListScreenBodyData _buildBodyData({
     hapticsEnabled: false,
     desktopPreviewVisible: false,
     enableDrawerOpenDragGesture: true,
+  );
+}
+
+MemosListScreenLayoutState _buildLayout({bool useDesktopSidePane = false}) {
+  return MemosListScreenLayoutState(
+    showHeaderPillActions: false,
+    listTopPadding: 0,
+    listVisualOffset: 0,
+    supportsDesktopSidePane: useDesktopSidePane,
+    useDesktopSidePane: useDesktopSidePane,
+    supportsDesktopPreviewPane: false,
+    useDesktopPreviewPane: false,
+    useInlineCompose: false,
+    useWindowsDesktopHeader: false,
+    headerToolbarHeight: kToolbarHeight,
+    headerBottomHeight: 0,
+    floatingCollapseTopPadding: 0,
+    showComposeFab: false,
+    backToTopBaseOffset: 0,
   );
 }
 

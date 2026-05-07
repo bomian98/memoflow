@@ -58,8 +58,21 @@ const Tolerance _memoListFloatingActionSideTolerance = Tolerance(
 );
 const double _memoListFloatingActionTravelScaleDelta = 0.025;
 const double _memoListFloatingActionTravelOpacityDelta = 0.04;
+const double _memoListDrawerQuickOpenDistance = 28;
+const double _memoListDrawerQuickOpenDirectionRatio = 1.35;
 
 enum _MemoListFloatingActionSide { left, right }
+
+bool _usesNativeMobilePlatform(BuildContext context) {
+  if (kIsWeb) return false;
+  return switch (Theme.of(context).platform) {
+    TargetPlatform.android || TargetPlatform.iOS => true,
+    TargetPlatform.fuchsia ||
+    TargetPlatform.linux ||
+    TargetPlatform.macOS ||
+    TargetPlatform.windows => false,
+  };
+}
 
 extension _MemoListFloatingActionSideLayout on _MemoListFloatingActionSide {
   double get springValue {
@@ -209,14 +222,7 @@ class _MemoListFloatingActionSideScopeState
   }
 
   bool _usesMobileAdaptiveSide(BuildContext context) {
-    if (kIsWeb) return false;
-    return switch (Theme.of(context).platform) {
-      TargetPlatform.android || TargetPlatform.iOS => true,
-      TargetPlatform.fuchsia ||
-      TargetPlatform.linux ||
-      TargetPlatform.macOS ||
-      TargetPlatform.windows => false,
-    };
+    return _usesNativeMobilePlatform(context);
   }
 
   _MemoListFloatingActionSide _resolvedSide(BuildContext context) {
@@ -231,6 +237,90 @@ class _MemoListFloatingActionSideScopeState
       context,
       _resolvedSide(context),
       _handleScrollNotification,
+    );
+  }
+}
+
+class _MemoListResponsiveDrawerOpenDrag extends StatefulWidget {
+  const _MemoListResponsiveDrawerOpenDrag({
+    required this.enabled,
+    required this.scaffoldKey,
+    required this.child,
+  });
+
+  final bool enabled;
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  final Widget child;
+
+  @override
+  State<_MemoListResponsiveDrawerOpenDrag> createState() =>
+      _MemoListResponsiveDrawerOpenDragState();
+}
+
+class _MemoListResponsiveDrawerOpenDragState
+    extends State<_MemoListResponsiveDrawerOpenDrag> {
+  int? _activePointer;
+  Offset? _downPosition;
+  bool _openQueuedForPointer = false;
+
+  void _clearPointer() {
+    _activePointer = null;
+    _downPosition = null;
+    _openQueuedForPointer = false;
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    if (!widget.enabled) return;
+    _activePointer = event.pointer;
+    _downPosition = event.position;
+    _openQueuedForPointer = false;
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (!widget.enabled || _openQueuedForPointer) return;
+    if (_activePointer != event.pointer) return;
+
+    final downPosition = _downPosition;
+    if (downPosition == null) return;
+
+    final delta = event.position - downPosition;
+    if (delta.dx < _memoListDrawerQuickOpenDistance) return;
+    if (delta.dx < delta.dy.abs() * _memoListDrawerQuickOpenDirectionRatio) {
+      return;
+    }
+
+    _openQueuedForPointer = true;
+    _scheduleOpenDrawer();
+  }
+
+  void _handlePointerUpOrCancel(PointerEvent event) {
+    if (_activePointer != event.pointer) return;
+    if (event is PointerUpEvent && _openQueuedForPointer) {
+      _scheduleOpenDrawer();
+    }
+    _clearPointer();
+  }
+
+  void _scheduleOpenDrawer() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.enabled) return;
+      final scaffoldState = widget.scaffoldKey.currentState;
+      if (scaffoldState == null || scaffoldState.isDrawerOpen) return;
+      scaffoldState.openDrawer();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enabled) return widget.child;
+
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: _handlePointerDown,
+      onPointerMove: _handlePointerMove,
+      onPointerUp: _handlePointerUpOrCancel,
+      onPointerCancel: _handlePointerUpOrCancel,
+      child: widget.child,
     );
   }
 }
@@ -1002,6 +1092,10 @@ class MemosListScreenBody extends StatelessWidget {
       );
     }
 
+    final drawerOpenDragEnabled =
+        data.enableDrawerOpenDragGesture &&
+        !data.viewState.layout.useDesktopSidePane &&
+        !data.searching;
     final scaffoldBody =
         data.viewState.layout.useWindowsDesktopHeader && !data.searching
         ? Column(
@@ -1040,17 +1134,18 @@ class MemosListScreenBody extends StatelessWidget {
     return Scaffold(
       key: scaffoldKey,
       drawer: data.viewState.layout.useDesktopSidePane ? null : drawerPanel,
-      drawerEnableOpenDragGesture:
-          data.enableDrawerOpenDragGesture &&
-          !data.viewState.layout.useDesktopSidePane &&
-          !data.searching,
-      drawerEdgeDragWidth:
-          data.enableDrawerOpenDragGesture &&
-              !data.viewState.layout.useDesktopSidePane &&
-              !data.searching
+      drawerEnableOpenDragGesture: drawerOpenDragEnabled,
+      drawerEdgeDragWidth: drawerOpenDragEnabled
           ? MediaQuery.sizeOf(context).width
           : null,
-      body: scaffoldBody,
+      body: _MemoListResponsiveDrawerOpenDrag(
+        enabled:
+            drawerOpenDragEnabled &&
+            drawerPanel != null &&
+            _usesNativeMobilePlatform(context),
+        scaffoldKey: scaffoldKey,
+        child: scaffoldBody,
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: floatingActionButton,
     );

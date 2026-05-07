@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'app_motion.dart';
@@ -112,10 +113,40 @@ class AppPressScale extends StatefulWidget {
 
 class _AppPressScaleState extends State<AppPressScale> {
   bool _pressed = false;
+  int? _activePointer;
+  Offset? _downPosition;
 
   void _setPressed(bool value) {
     if (!widget.enabled || _pressed == value) return;
     setState(() => _pressed = value);
+  }
+
+  void _clearPointerTracking() {
+    _activePointer = null;
+    _downPosition = null;
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    if (!widget.enabled) return;
+    _activePointer = event.pointer;
+    _downPosition = event.position;
+    _setPressed(true);
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (!widget.enabled || !_pressed) return;
+    if (_activePointer != event.pointer) return;
+    final downPosition = _downPosition;
+    if (downPosition == null) return;
+    final distance = (event.position - downPosition).distance;
+    if (distance <= kTouchSlop) return;
+    _setPressed(false);
+  }
+
+  void _handlePointerUpOrCancel(PointerEvent event) {
+    if (_activePointer != event.pointer) return;
+    _setPressed(false);
+    _clearPointerTracking();
   }
 
   @override
@@ -127,9 +158,10 @@ class _AppPressScaleState extends State<AppPressScale> {
 
     return Listener(
       behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) => _setPressed(true),
-      onPointerUp: (_) => _setPressed(false),
-      onPointerCancel: (_) => _setPressed(false),
+      onPointerDown: _handlePointerDown,
+      onPointerMove: _handlePointerMove,
+      onPointerUp: _handlePointerUpOrCancel,
+      onPointerCancel: _handlePointerUpOrCancel,
       child: AnimatedScale(
         scale: _pressed ? widget.scaleDown : 1,
         duration: duration,
