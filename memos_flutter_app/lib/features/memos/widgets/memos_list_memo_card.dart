@@ -8,7 +8,6 @@ import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_motion.dart';
-import '../../../core/app_motion_widgets.dart';
 import '../../../core/app_localization.dart';
 import '../../../core/attachment_toast.dart';
 import '../../../core/location_launcher.dart';
@@ -36,6 +35,13 @@ import 'audio_row.dart';
 import '../../../i18n/strings.g.dart';
 
 enum MemoSyncStatus { none, pending, failed }
+
+@visibleForTesting
+const Key memoListCardPressOffsetKey = ValueKey<String>(
+  'memo-list-card-press-offset',
+);
+
+const double _memoCardPressedOffsetY = 1;
 
 class _LruCache<K, V> {
   _LruCache({required int capacity}) : _capacity = capacity;
@@ -1008,7 +1014,7 @@ class MemoListCardState extends State<MemoListCard> {
       );
     }
 
-    Widget card = AppPressScale(
+    Widget card = _MemoCardFixedPressFeedback(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1267,6 +1273,81 @@ class MemoListCardState extends State<MemoListCard> {
     }
 
     return null;
+  }
+}
+
+class _MemoCardFixedPressFeedback extends StatefulWidget {
+  const _MemoCardFixedPressFeedback({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_MemoCardFixedPressFeedback> createState() =>
+      _MemoCardFixedPressFeedbackState();
+}
+
+class _MemoCardFixedPressFeedbackState
+    extends State<_MemoCardFixedPressFeedback> {
+  bool _pressed = false;
+  int? _activePointer;
+  Offset? _downPosition;
+
+  void _setPressed(bool value) {
+    if (_pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  void _clearPointerTracking() {
+    _activePointer = null;
+    _downPosition = null;
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _activePointer = event.pointer;
+    _downPosition = event.position;
+    _setPressed(true);
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (!_pressed || _activePointer != event.pointer) return;
+    final downPosition = _downPosition;
+    if (downPosition == null) return;
+    if ((event.position - downPosition).distance <= kTouchSlop) return;
+    _setPressed(false);
+  }
+
+  void _handlePointerUpOrCancel(PointerEvent event) {
+    if (_activePointer != event.pointer) return;
+    _setPressed(false);
+    _clearPointerTracking();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = AppMotion.effectiveDuration(
+      context,
+      _pressed ? AppMotion.desktopPressDown : AppMotion.desktopPressUp,
+    );
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: _handlePointerDown,
+      onPointerMove: _handlePointerMove,
+      onPointerUp: _handlePointerUpOrCancel,
+      onPointerCancel: _handlePointerUpOrCancel,
+      child: AnimatedContainer(
+        key: memoListCardPressOffsetKey,
+        duration: duration,
+        curve: _pressed
+            ? AppMotion.standardCurve
+            : AppMotion.emphasizedEnterCurve,
+        transform: Matrix4.translationValues(
+          0,
+          _pressed ? _memoCardPressedOffsetY : 0,
+          0,
+        ),
+        child: widget.child,
+      ),
+    );
   }
 }
 
