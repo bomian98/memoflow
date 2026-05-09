@@ -7,6 +7,7 @@ const List<HomeRootDestination> kHomeRootDestinationPickerOrder = [
   HomeRootDestination.dailyReview,
   HomeRootDestination.settings,
   HomeRootDestination.aiSummary,
+  HomeRootDestination.draftBox,
   HomeRootDestination.resources,
   HomeRootDestination.archived,
   HomeRootDestination.none,
@@ -18,6 +19,7 @@ const List<HomeRootDestination> _kHomeRootDestinationFallbackOrder = [
   HomeRootDestination.dailyReview,
   HomeRootDestination.settings,
   HomeRootDestination.aiSummary,
+  HomeRootDestination.draftBox,
   HomeRootDestination.resources,
   HomeRootDestination.archived,
   HomeRootDestination.none,
@@ -83,6 +85,7 @@ bool isHomeRootDestinationAvailable(
     HomeRootDestination.dailyReview ||
     HomeRootDestination.settings ||
     HomeRootDestination.aiSummary ||
+    HomeRootDestination.draftBox ||
     HomeRootDestination.resources ||
     HomeRootDestination.archived => true,
   };

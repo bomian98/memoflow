@@ -8,6 +8,7 @@ enum HomeRootDestination {
   dailyReview,
   settings,
   aiSummary,
+  draftBox,
   resources,
   archived,
 }

@@ -19,6 +19,7 @@ class WorkspacePreferences {
     showDrawerDailyReview: true,
     showDrawerAiSummary: true,
     showDrawerCollections: true,
+    showDrawerDraftBox: true,
     showDrawerResources: true,
     showDrawerArchive: true,
     tagListMode: TagListMode.all,
@@ -42,6 +43,7 @@ class WorkspacePreferences {
     required this.showDrawerDailyReview,
     required this.showDrawerAiSummary,
     required this.showDrawerCollections,
+    required this.showDrawerDraftBox,
     required this.showDrawerResources,
     required this.showDrawerArchive,
     required this.tagListMode,
@@ -64,6 +66,7 @@ class WorkspacePreferences {
   final bool showDrawerDailyReview;
   final bool showDrawerAiSummary;
   final bool showDrawerCollections;
+  final bool showDrawerDraftBox;
   final bool showDrawerResources;
   final bool showDrawerArchive;
   final TagListMode tagListMode;
@@ -86,6 +89,7 @@ class WorkspacePreferences {
     'showDrawerDailyReview': showDrawerDailyReview,
     'showDrawerAiSummary': showDrawerAiSummary,
     'showDrawerCollections': showDrawerCollections,
+    'showDrawerDraftBox': showDrawerDraftBox,
     'showDrawerResources': showDrawerResources,
     'showDrawerArchive': showDrawerArchive,
     'tagListMode': tagListMode.name,
@@ -110,6 +114,7 @@ class WorkspacePreferences {
       'showDrawerDailyReview': json['showDrawerDailyReview'],
       'showDrawerAiSummary': json['showDrawerAiSummary'],
       'showDrawerCollections': json['showDrawerCollections'],
+      'showDrawerDraftBox': json['showDrawerDraftBox'],
       'showDrawerResources': json['showDrawerResources'],
       'showDrawerArchive': json['showDrawerArchive'],
       'homeQuickActionPrimary': json['homeQuickActionPrimary'],
@@ -167,6 +172,7 @@ class WorkspacePreferences {
       showDrawerAiSummary: legacy.showDrawerAiSummary,
       showDrawerCollections:
           WorkspacePreferences.defaults.showDrawerCollections,
+      showDrawerDraftBox: legacy.showDrawerDraftBox,
       showDrawerResources: legacy.showDrawerResources,
       showDrawerArchive: legacy.showDrawerArchive,
       tagListMode: tagListMode,
@@ -202,6 +208,7 @@ class WorkspacePreferences {
       showDrawerExplore: showDrawerExplore,
       showDrawerDailyReview: showDrawerDailyReview,
       showDrawerAiSummary: showDrawerAiSummary,
+      showDrawerDraftBox: showDrawerDraftBox,
       showDrawerResources: showDrawerResources,
       showDrawerArchive: showDrawerArchive,
       homeQuickActionPrimary: homeQuickActionPrimary,
@@ -228,6 +235,7 @@ class WorkspacePreferences {
     bool? showDrawerDailyReview,
     bool? showDrawerAiSummary,
     bool? showDrawerCollections,
+    bool? showDrawerDraftBox,
     bool? showDrawerResources,
     bool? showDrawerArchive,
     TagListMode? tagListMode,
@@ -254,6 +262,7 @@ class WorkspacePreferences {
       showDrawerAiSummary: showDrawerAiSummary ?? this.showDrawerAiSummary,
       showDrawerCollections:
           showDrawerCollections ?? this.showDrawerCollections,
+      showDrawerDraftBox: showDrawerDraftBox ?? this.showDrawerDraftBox,
       showDrawerResources: showDrawerResources ?? this.showDrawerResources,
       showDrawerArchive: showDrawerArchive ?? this.showDrawerArchive,
       tagListMode: tagListMode ?? this.tagListMode,

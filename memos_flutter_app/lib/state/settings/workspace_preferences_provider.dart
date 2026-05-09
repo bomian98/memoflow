@@ -172,6 +172,8 @@ class WorkspacePreferencesController
       _setAndPersist(state.copyWith(showDrawerAiSummary: value));
   void setShowDrawerCollections(bool value) =>
       _setAndPersist(state.copyWith(showDrawerCollections: value));
+  void setShowDrawerDraftBox(bool value) =>
+      _setAndPersist(state.copyWith(showDrawerDraftBox: value));
   void setShowDrawerResources(bool value) =>
       _setAndPersist(state.copyWith(showDrawerResources: value));
   void setShowDrawerArchive(bool value) =>

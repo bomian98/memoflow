@@ -5,6 +5,7 @@ import '../../i18n/strings.g.dart';
 import '../collections/collections_screen.dart';
 import '../explore/explore_screen.dart';
 import '../home/app_drawer.dart';
+import '../memos/draft_box_navigation_screen.dart';
 import '../memos/memos_list_screen.dart';
 import '../resources/resources_screen.dart';
 import '../review/ai_summary_screen.dart';
@@ -71,6 +72,12 @@ const List<HomeRootDestinationDefinition> kHomeRootDestinationDefinitions = [
     drawerDestination: AppDrawerDestination.aiSummary,
     icon: Icons.auto_awesome,
     labelBuilder: _aiSummaryLabel,
+  ),
+  HomeRootDestinationDefinition(
+    destination: HomeRootDestination.draftBox,
+    drawerDestination: AppDrawerDestination.draftBox,
+    icon: Icons.inventory_2_outlined,
+    labelBuilder: _draftBoxLabel,
   ),
   HomeRootDestinationDefinition(
     destination: HomeRootDestination.resources,
@@ -173,6 +180,11 @@ Widget buildHomeRootScreen({
         presentation: presentation,
         embeddedNavigationHost: navigationHost,
       );
+    case HomeRootDestination.draftBox:
+      return DraftBoxNavigationScreen(
+        presentation: presentation,
+        embeddedNavigationHost: navigationHost,
+      );
     case HomeRootDestination.resources:
       return ResourcesScreen(
         presentation: presentation,
@@ -210,6 +222,9 @@ String _settingsLabel(BuildContext context) =>
 
 String _aiSummaryLabel(BuildContext context) =>
     context.t.strings.legacy.msg_ai_summary;
+
+String _draftBoxLabel(BuildContext context) =>
+    context.t.strings.legacy.msg_draft_box_title;
 
 String _attachmentsLabel(BuildContext context) =>
     context.t.strings.legacy.msg_attachments;

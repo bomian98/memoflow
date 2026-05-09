@@ -75,10 +75,11 @@ class _DraftBoxMemoCardState extends State<DraftBoxMemoCard> {
         ? MemoFlowPalette.audioSurfaceDark.withValues(alpha: 0.6)
         : MemoFlowPalette.audioSurfaceLight;
     final snapshot = widget.draft.snapshot;
+    final language = context.appLanguage;
     final previewText = buildMemoCardPreviewText(
       snapshot.content,
       collapseReferences: false,
-      language: context.appLanguage,
+      language: language,
     );
     final preview = truncateMemoCardPreview(
       previewText,
@@ -86,6 +87,7 @@ class _DraftBoxMemoCardState extends State<DraftBoxMemoCard> {
     );
     final showToggle = preview.truncated;
     final showCollapsed = showToggle && !_expanded;
+    final markdownText = showCollapsed ? preview.text : previewText;
     final mediaEntries = buildDraftBoxMediaEntries(snapshot);
     final nonMediaAttachmentCount = countDraftNonMediaAttachments(snapshot);
     final visibilityPresentation = _resolveVisibilityPresentation(
@@ -209,8 +211,12 @@ class _DraftBoxMemoCardState extends State<DraftBoxMemoCard> {
                 )
               else
                 MemoMarkdown(
-                  cacheKey: 'draft-box-${widget.draft.uid}',
-                  data: showCollapsed ? preview.text : previewText,
+                  cacheKey: _draftMarkdownCacheKey(
+                    draft: widget.draft,
+                    markdownText: markdownText,
+                    languageToken: language.name,
+                  ),
+                  data: markdownText,
                   maxLines: showCollapsed ? kMemoCardPreviewMaxLines : null,
                   textStyle: Theme.of(
                     context,
@@ -312,6 +318,16 @@ class _DraftBoxMemoCardState extends State<DraftBoxMemoCard> {
         );
     }
   }
+}
+
+String _draftMarkdownCacheKey({
+  required ComposeDraftRecord draft,
+  required String markdownText,
+  required String languageToken,
+}) {
+  final updatedTime = draft.updatedTime.toUtc().microsecondsSinceEpoch;
+  return 'draft-box-${draft.uid}|updated=$updatedTime|'
+      'language=$languageToken|content=${markdownText.hashCode}';
 }
 
 class _DraftVisibilityPresentation {

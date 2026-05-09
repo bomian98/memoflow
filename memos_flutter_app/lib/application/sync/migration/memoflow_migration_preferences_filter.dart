@@ -20,6 +20,7 @@ class AppPreferencesTransferPayload {
     required this.showDrawerExplore,
     required this.showDrawerDailyReview,
     required this.showDrawerAiSummary,
+    required this.showDrawerDraftBox,
     required this.showDrawerResources,
     required this.showDrawerArchive,
     required this.aiSummaryAllowPrivateMemos,
@@ -42,6 +43,7 @@ class AppPreferencesTransferPayload {
   final bool showDrawerExplore;
   final bool showDrawerDailyReview;
   final bool showDrawerAiSummary;
+  final bool showDrawerDraftBox;
   final bool showDrawerResources;
   final bool showDrawerArchive;
   final bool aiSummaryAllowPrivateMemos;
@@ -64,6 +66,7 @@ class AppPreferencesTransferPayload {
     'showDrawerExplore': showDrawerExplore,
     'showDrawerDailyReview': showDrawerDailyReview,
     'showDrawerAiSummary': showDrawerAiSummary,
+    'showDrawerDraftBox': showDrawerDraftBox,
     'showDrawerResources': showDrawerResources,
     'showDrawerArchive': showDrawerArchive,
     'aiSummaryAllowPrivateMemos': aiSummaryAllowPrivateMemos,
@@ -137,6 +140,9 @@ class AppPreferencesTransferPayload {
       showDrawerAiSummary:
           (json['showDrawerAiSummary'] as bool?) ??
           AppPreferences.defaults.showDrawerAiSummary,
+      showDrawerDraftBox:
+          (json['showDrawerDraftBox'] as bool?) ??
+          AppPreferences.defaults.showDrawerDraftBox,
       showDrawerResources:
           (json['showDrawerResources'] as bool?) ??
           AppPreferences.defaults.showDrawerResources,
@@ -174,6 +180,7 @@ class MigrationPreferencesFilter {
       showDrawerExplore: source.showDrawerExplore,
       showDrawerDailyReview: source.showDrawerDailyReview,
       showDrawerAiSummary: source.showDrawerAiSummary,
+      showDrawerDraftBox: source.showDrawerDraftBox,
       showDrawerResources: source.showDrawerResources,
       showDrawerArchive: source.showDrawerArchive,
       aiSummaryAllowPrivateMemos: source.aiSummaryAllowPrivateMemos,
@@ -202,6 +209,7 @@ class MigrationPreferencesFilter {
       showDrawerExplore: incoming.showDrawerExplore,
       showDrawerDailyReview: incoming.showDrawerDailyReview,
       showDrawerAiSummary: incoming.showDrawerAiSummary,
+      showDrawerDraftBox: incoming.showDrawerDraftBox,
       showDrawerResources: incoming.showDrawerResources,
       showDrawerArchive: incoming.showDrawerArchive,
       aiSummaryAllowPrivateMemos: incoming.aiSummaryAllowPrivateMemos,

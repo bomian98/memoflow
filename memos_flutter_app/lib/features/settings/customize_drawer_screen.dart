@@ -92,6 +92,14 @@ class CustomizeDrawerScreen extends ConsumerWidget {
                         .setShowDrawerCollections(v),
                   ),
                   _ToggleRow(
+                    label: context.t.strings.legacy.msg_draft_box_title,
+                    value: prefs.showDrawerDraftBox,
+                    textMain: textMain,
+                    onChanged: (v) => ref
+                        .read(currentWorkspacePreferencesProvider.notifier)
+                        .setShowDrawerDraftBox(v),
+                  ),
+                  _ToggleRow(
                     label: context.t.strings.legacy.msg_attachments,
                     value: prefs.showDrawerResources,
                     textMain: textMain,

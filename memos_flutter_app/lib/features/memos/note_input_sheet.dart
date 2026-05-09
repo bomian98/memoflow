@@ -97,6 +97,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
     this.initialClipMetadataDraft,
     this.initialDeferredInlineImageAttachments = const [],
     this.initialDeferredVideoAttachments = const [],
+    this.initialDraftUid,
     this.ignoreDraft = false,
     this.autoFocus = true,
     this.showLocalSaveSuccessToast = false,
@@ -114,6 +115,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
   initialDeferredInlineImageAttachments;
   final List<ShareDeferredVideoAttachmentRequest>
   initialDeferredVideoAttachments;
+  final String? initialDraftUid;
   final bool ignoreDraft;
   final bool autoFocus;
   final bool showLocalSaveSuccessToast;
@@ -133,6 +135,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
         const [],
     List<ShareDeferredVideoAttachmentRequest> initialDeferredVideoAttachments =
         const [],
+    String? initialDraftUid,
     bool ignoreDraft = false,
     bool autoFocus = true,
     bool showLocalSaveSuccessToast = false,
@@ -157,6 +160,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
         initialDeferredInlineImageAttachments:
             initialDeferredInlineImageAttachments,
         initialDeferredVideoAttachments: initialDeferredVideoAttachments,
+        initialDraftUid: initialDraftUid,
         ignoreDraft: ignoreDraft,
         autoFocus: autoFocus,
         showLocalSaveSuccessToast: showLocalSaveSuccessToast,
@@ -320,6 +324,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     unawaited(_seedInitialAttachments());
     unawaited(_seedInitialDeferredInlineImages());
     unawaited(_seedInitialDeferredShareVideos());
+    unawaited(_restoreInitialDraft());
     _settingsSubscription = ref.listenManual<AsyncValue<UserGeneralSetting>>(
       userGeneralSettingProvider,
       (prev, next) {
@@ -417,6 +422,26 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     _composer.setPendingAttachments(restored.pendingAttachments);
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  Future<void> _restoreInitialDraft() async {
+    if (widget.ignoreDraft) return;
+    final draftUid = widget.initialDraftUid?.trim();
+    if (draftUid == null || draftUid.isEmpty) return;
+    try {
+      final draft = await ref
+          .read(composeDraftRepositoryProvider)
+          .getByUid(draftUid);
+      if (!mounted || draft == null) return;
+      _restoreComposeDraft(draft);
+    } catch (error, stackTrace) {
+      LogManager.instance.warn(
+        'Failed to restore initial compose draft.',
+        error: error,
+        stackTrace: stackTrace,
+        context: <String, Object?>{'draftUid': draftUid},
+      );
     }
   }
 

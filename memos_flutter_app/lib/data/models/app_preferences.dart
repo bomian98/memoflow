@@ -123,6 +123,7 @@ class AppPreferences {
     showDrawerExplore: true,
     showDrawerDailyReview: true,
     showDrawerAiSummary: true,
+    showDrawerDraftBox: true,
     showDrawerResources: true,
     showDrawerArchive: true,
     homeQuickActionPrimary: HomeQuickAction.monthlyStats,
@@ -177,6 +178,7 @@ class AppPreferences {
     required this.showDrawerExplore,
     required this.showDrawerDailyReview,
     required this.showDrawerAiSummary,
+    required this.showDrawerDraftBox,
     required this.showDrawerResources,
     required this.showDrawerArchive,
     required this.homeQuickActionPrimary,
@@ -222,6 +224,7 @@ class AppPreferences {
   final bool showDrawerExplore;
   final bool showDrawerDailyReview;
   final bool showDrawerAiSummary;
+  final bool showDrawerDraftBox;
   final bool showDrawerResources;
   final bool showDrawerArchive;
   final HomeQuickAction homeQuickActionPrimary;
@@ -296,6 +299,7 @@ class AppPreferences {
     'showDrawerExplore': showDrawerExplore,
     'showDrawerDailyReview': showDrawerDailyReview,
     'showDrawerAiSummary': showDrawerAiSummary,
+    'showDrawerDraftBox': showDrawerDraftBox,
     'showDrawerResources': showDrawerResources,
     'showDrawerArchive': showDrawerArchive,
     'homeQuickActionPrimary': homeQuickActionPrimary.name,
@@ -645,6 +649,10 @@ class AppPreferences {
         'showDrawerAiSummary',
         AppPreferences.defaults.showDrawerAiSummary,
       ),
+      showDrawerDraftBox: parseBool(
+        'showDrawerDraftBox',
+        AppPreferences.defaults.showDrawerDraftBox,
+      ),
       showDrawerResources: parseBool(
         'showDrawerResources',
         AppPreferences.defaults.showDrawerResources,
@@ -716,6 +724,7 @@ class AppPreferences {
     bool? showDrawerExplore,
     bool? showDrawerDailyReview,
     bool? showDrawerAiSummary,
+    bool? showDrawerDraftBox,
     bool? showDrawerResources,
     bool? showDrawerArchive,
     HomeQuickAction? homeQuickActionPrimary,
@@ -772,6 +781,7 @@ class AppPreferences {
       showDrawerDailyReview:
           showDrawerDailyReview ?? this.showDrawerDailyReview,
       showDrawerAiSummary: showDrawerAiSummary ?? this.showDrawerAiSummary,
+      showDrawerDraftBox: showDrawerDraftBox ?? this.showDrawerDraftBox,
       showDrawerResources: showDrawerResources ?? this.showDrawerResources,
       showDrawerArchive: showDrawerArchive ?? this.showDrawerArchive,
       homeQuickActionPrimary:

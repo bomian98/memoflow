@@ -56,6 +56,7 @@ class ResolvedAppSettings {
       showDrawerExplore: workspace.showDrawerExplore,
       showDrawerDailyReview: workspace.showDrawerDailyReview,
       showDrawerAiSummary: workspace.showDrawerAiSummary,
+      showDrawerDraftBox: workspace.showDrawerDraftBox,
       showDrawerResources: workspace.showDrawerResources,
       showDrawerArchive: workspace.showDrawerArchive,
       homeQuickActionPrimary: workspace.homeQuickActionPrimary,

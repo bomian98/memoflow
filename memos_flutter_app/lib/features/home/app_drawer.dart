@@ -35,6 +35,7 @@ enum AppDrawerDestination {
   dailyReview,
   aiSummary,
   collections,
+  draftBox,
   archived,
   tags,
   resources,
@@ -285,6 +286,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
           showDrawerDailyReview: prefs.showDrawerDailyReview,
           showDrawerAiSummary: prefs.showDrawerAiSummary,
           showDrawerCollections: prefs.showDrawerCollections,
+          showDrawerDraftBox: prefs.showDrawerDraftBox,
           showDrawerResources: prefs.showDrawerResources,
           showDrawerArchive: prefs.showDrawerArchive,
         ),
@@ -375,6 +377,14 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
             icon: Icons.auto_stories_rounded,
             selected: selected == AppDrawerDestination.collections,
             onTap: () => onSelect(AppDrawerDestination.collections),
+          ),
+        if (drawerPrefs.showDrawerDraftBox)
+          AppDrawerDestinationItem(
+            id: AppDrawerDestination.draftBox.name,
+            label: context.t.strings.legacy.msg_draft_box_title,
+            icon: Icons.inventory_2_outlined,
+            selected: selected == AppDrawerDestination.draftBox,
+            onTap: () => onSelect(AppDrawerDestination.draftBox),
           ),
         AppDrawerDestinationItem(
           id: AppDrawerDestination.tags.name,
@@ -996,6 +1006,15 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                     label: context.t.strings.collections.drawerLabel,
                     icon: Icons.auto_stories_rounded,
                     onTap: () => onSelect(AppDrawerDestination.collections),
+                    textMain: textMain,
+                    hover: hover,
+                  ),
+                if (drawerPrefs.showDrawerDraftBox)
+                  _NavButton(
+                    selected: selected == AppDrawerDestination.draftBox,
+                    label: context.t.strings.legacy.msg_draft_box_title,
+                    icon: Icons.inventory_2_outlined,
+                    onTap: () => onSelect(AppDrawerDestination.draftBox),
                     textMain: textMain,
                     hover: hover,
                   ),

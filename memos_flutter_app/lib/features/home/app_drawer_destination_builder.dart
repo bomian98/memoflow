@@ -4,6 +4,7 @@ import '../../i18n/strings.g.dart';
 import '../about/about_screen.dart';
 import '../collections/collections_screen.dart';
 import '../explore/explore_screen.dart';
+import '../memos/draft_box_navigation_screen.dart';
 import '../memos/memos_list_screen.dart';
 import '../memos/recycle_bin_screen.dart';
 import '../resources/resources_screen.dart';
@@ -57,6 +58,10 @@ Widget buildDrawerDestinationScreen({
       embeddedNavigationHost: navigationHost,
     ),
     AppDrawerDestination.collections => CollectionsScreen(
+      embeddedNavigationHost: navigationHost,
+    ),
+    AppDrawerDestination.draftBox => DraftBoxNavigationScreen(
+      presentation: presentation,
       embeddedNavigationHost: navigationHost,
     ),
     AppDrawerDestination.tags => TagsScreen(
