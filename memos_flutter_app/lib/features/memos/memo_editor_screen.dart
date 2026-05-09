@@ -15,6 +15,7 @@ import '../../application/attachments/queued_attachment_stager.dart';
 import '../../state/sync/sync_coordinator_provider.dart';
 import '../../application/sync/sync_request.dart';
 import '../../core/app_localization.dart';
+import '../../core/attachment_mime_type.dart';
 import '../../core/desktop/shortcuts.dart';
 import '../../core/image_thumbnail_cache.dart';
 import '../../core/markdown_editing.dart';
@@ -384,7 +385,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
           uid: generateUid(),
           filePath: path,
           filename: filename,
-          mimeType: _guessMimeType(filename),
+          mimeType: guessAttachmentMimeType(filename),
           size: file.lengthSync(),
         ),
       );
@@ -578,7 +579,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
               ? path.split(Platform.pathSeparator).last
               : filename,
           mimeType: (mimeType == null || mimeType.isEmpty)
-              ? _guessMimeType(path.split(Platform.pathSeparator).last)
+              ? guessAttachmentMimeType(path.split(Platform.pathSeparator).last)
               : mimeType,
           size: _readInt(map['size']),
           skipCompression: map['skip_compression'] == true,
@@ -1415,43 +1416,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     _addLinkedMemo(selection);
   }
 
-  String _guessMimeType(String filename) {
-    final lower = filename.toLowerCase();
-    final dot = lower.lastIndexOf('.');
-    final ext = dot == -1 ? '' : lower.substring(dot + 1);
-    return switch (ext) {
-      'png' => 'image/png',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'gif' => 'image/gif',
-      'webp' => 'image/webp',
-      'bmp' => 'image/bmp',
-      'heic' => 'image/heic',
-      'heif' => 'image/heif',
-      'mp3' => 'audio/mpeg',
-      'm4a' => 'audio/mp4',
-      'aac' => 'audio/aac',
-      'wav' => 'audio/wav',
-      'flac' => 'audio/flac',
-      'ogg' => 'audio/ogg',
-      'opus' => 'audio/opus',
-      'mp4' => 'video/mp4',
-      'mov' => 'video/quicktime',
-      'mkv' => 'video/x-matroska',
-      'webm' => 'video/webm',
-      'avi' => 'video/x-msvideo',
-      'pdf' => 'application/pdf',
-      'zip' => 'application/zip',
-      'rar' => 'application/vnd.rar',
-      '7z' => 'application/x-7z-compressed',
-      'txt' => 'text/plain',
-      'md' => 'text/markdown',
-      'json' => 'application/json',
-      'csv' => 'text/csv',
-      'log' => 'text/plain',
-      _ => 'application/octet-stream',
-    };
-  }
-
   Future<void> _handleGalleryToolbarPressed() async {
     if (!isMemoGalleryToolbarSupportedPlatform) {
       showTopToast(context, context.t.strings.legacy.msg_gallery_mobile_only);
@@ -1602,7 +1566,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
         final filename = file.name.trim().isNotEmpty
             ? file.name.trim()
             : path.split(Platform.pathSeparator).last;
-        final mimeType = _guessMimeType(filename);
+        final mimeType = guessAttachmentMimeType(filename);
         LogManager.instance.debug(
           'MemoEditor: file_picker_attachment_ready',
           context: {

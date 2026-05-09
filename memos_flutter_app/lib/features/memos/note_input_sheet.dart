@@ -10,19 +10,16 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../application/attachments/queued_attachment_stager.dart';
-import '../../state/sync/sync_coordinator_provider.dart';
-import '../../application/sync/sync_request.dart';
 import '../../core/app_localization.dart';
+import '../../core/attachment_mime_type.dart';
 import '../../core/desktop/shortcuts.dart';
 import '../../core/image_thumbnail_cache.dart';
 import '../../core/markdown_editing.dart';
 import '../../core/memo_template_renderer.dart';
 import '../../core/memoflow_palette.dart';
-import '../../core/tags.dart';
 import '../../core/top_toast.dart';
 import '../../core/uid.dart';
 import '../../data/logs/log_manager.dart';
-import '../../data/models/attachment.dart';
 import '../../data/models/compose_draft.dart';
 import '../../data/models/memo.dart';
 import '../../data/models/memo_location.dart';
@@ -33,6 +30,7 @@ import '../../state/memos/attachment_upload_size_limit_provider.dart';
 import '../../state/memos/memo_composer_controller.dart';
 import '../../state/memos/memo_composer_state.dart';
 import '../../state/memos/memos_providers.dart';
+import '../../state/memos/note_input_draft_session.dart';
 import '../../state/attachments/queued_attachment_stager_provider.dart';
 import '../../state/settings/image_compression_settings_provider.dart';
 import '../../state/settings/memo_template_settings_provider.dart';
@@ -48,6 +46,8 @@ import '../image_preview/image_preview_launcher.dart';
 import '../image_preview/image_preview_open_request.dart';
 import '../image_preview/widgets/image_preview_tile.dart';
 import '../share/share_clip_models.dart';
+import '../share/share_deferred_inline_image_coordinator.dart';
+import '../share/share_deferred_video_coordinator.dart';
 import '../share/share_inline_image_content.dart';
 import '../share/share_inline_image_download_service.dart';
 import '../share/share_video_attachment_preparer.dart';
@@ -64,7 +64,9 @@ import 'memo_image_preview_adapters.dart';
 import 'memo_video_grid.dart';
 import 'tag_autocomplete.dart';
 import 'link_memo_sheet.dart';
-import 'widgets/attachment_processing_overlay.dart';
+import 'widgets/note_input_attachment_preview.dart';
+import 'widgets/note_input_compact_widgets.dart';
+import 'widgets/note_input_fullscreen_compose.dart';
 import '../voice/voice_record_screen.dart';
 import '../location_picker/show_location_picker.dart';
 import '../../i18n/strings.g.dart';
@@ -83,57 +85,7 @@ ImageThumbnailCacheTarget resolveNoteInputPendingImageThumbnailCacheTarget({
   );
 }
 
-enum _DeferredShareVideoPhase {
-  preparing,
-  downloading,
-  awaitingCompression,
-  compressing,
-  completed,
-  removed,
-}
-
-enum _DeferredShareVideoFailure {
-  downloadFailed,
-  compressionFailed,
-  compressionStillTooLarge,
-}
-
-class _DeferredShareVideoTask {
-  _DeferredShareVideoTask({required this.request});
-
-  final ShareDeferredVideoAttachmentRequest request;
-  Map<String, String> headers = const <String, String>{};
-  int? remoteSize;
-  int? uploadSizeLimitBytes;
-  double progress = 0;
-  _DeferredShareVideoPhase phase = _DeferredShareVideoPhase.preparing;
-  bool cancelled = false;
-
-  String get id => request.id;
-
-  String get title => request.title;
-
-  String? get thumbnailUrl => request.thumbnailUrl;
-
-  bool get isPending =>
-      !cancelled &&
-      phase != _DeferredShareVideoPhase.completed &&
-      phase != _DeferredShareVideoPhase.removed;
-
-  bool get isRemovable => phase != _DeferredShareVideoPhase.completed;
-
-  double get overallProgress {
-    return switch (phase) {
-      _DeferredShareVideoPhase.preparing => 0,
-      _DeferredShareVideoPhase.downloading => progress.clamp(0, 1) * 0.72,
-      _DeferredShareVideoPhase.awaitingCompression => 0.72,
-      _DeferredShareVideoPhase.compressing =>
-        0.72 + progress.clamp(0, 1) * 0.28,
-      _DeferredShareVideoPhase.completed ||
-      _DeferredShareVideoPhase.removed => 1,
-    };
-  }
-}
+enum _NoteInputSheetPresentationMode { compact, fullscreen }
 
 class NoteInputSheet extends ConsumerStatefulWidget {
   const NoteInputSheet({
@@ -191,6 +143,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       barrierColor: Theme.of(context).brightness == Brightness.dark
           ? Colors.black.withValues(alpha: 0.4)
@@ -219,6 +172,25 @@ class NoteInputSheet extends ConsumerStatefulWidget {
 }
 
 class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
+  static const _fullscreenExpandButtonKey = ValueKey<String>(
+    'note-input-fullscreen-expand-button',
+  );
+  static const _fullscreenCollapseButtonKey = ValueKey<String>(
+    'note-input-fullscreen-collapse-button',
+  );
+  static const _fullscreenCloseButtonKey = ValueKey<String>(
+    'note-input-fullscreen-close-button',
+  );
+  static const _fullscreenTopToolbarKey = ValueKey<String>(
+    'note-input-fullscreen-top-toolbar-row',
+  );
+  static const _fullscreenBottomToolbarKey = ValueKey<String>(
+    'note-input-fullscreen-bottom-toolbar-row',
+  );
+  static const _fullscreenSendButtonKey = ValueKey<String>(
+    'note-input-fullscreen-send-button',
+  );
+
   late final MemoComposerController _composer;
   late final FocusNode _editorFocusNode;
   TextEditingController get _controller => _composer.textController;
@@ -233,37 +205,29 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   NoteDraftRepository? _noteDraftRepository;
   late final NoteDraftController _noteDraftController;
   late final ShareInlineImageDownloadService _shareInlineImageDownloadService;
+  late final ShareDeferredInlineImageCoordinator
+  _deferredInlineImageCoordinator;
   late final ShareVideoDownloadService _shareVideoDownloadService;
   late final ShareVideoCompressionService _shareVideoCompressionService;
   late final ShareVideoAttachmentPreparer _shareVideoAttachmentPreparer;
+  late final ShareDeferredVideoCoordinator _deferredVideoCoordinator;
   final List<ShareDeferredInlineImageAttachmentRequest>
   _deferredInlineImageRequests = [];
   final Map<String, String> _thirdPartyShareInlineSourceByLocalUrl = {};
-  final List<_DeferredShareVideoTask> _deferredShareVideoTasks = [];
   List<_LinkedMemo> get _linkedMemos => _composer.linkedMemos;
   List<_PendingAttachment> get _pendingAttachments =>
       _composer.pendingAttachments;
-  List<_DeferredShareVideoTask> get _visibleDeferredShareVideoTasks =>
-      _deferredShareVideoTasks
-          .where((task) => task.phase != _DeferredShareVideoPhase.removed)
-          .toList(growable: false);
+  List<ShareDeferredVideoTask> get _visibleDeferredShareVideoTasks =>
+      _deferredVideoCoordinator.visibleTasks;
   bool get _hasPendingDeferredShareVideoTasks =>
-      _deferredShareVideoTasks.any((task) => task.isPending);
+      _deferredVideoCoordinator.hasPendingTasks;
   var _submittingDeferredInlineImages = false;
   var _deferredInlineImageTotal = 0;
   var _deferredInlineImageCompleted = 0;
   var _deferredInlineImageActiveProgress = 0.0;
   Future<void>? _deferredInlineImagePrefetchFuture;
   double? get _deferredShareVideoProgress {
-    final active = _deferredShareVideoTasks
-        .where((task) => task.isPending)
-        .toList(growable: false);
-    if (active.isEmpty) return null;
-    final total = active.fold<double>(
-      0,
-      (sum, task) => sum + task.overallProgress,
-    );
-    return (total / active.length).clamp(0, 1);
+    return _deferredVideoCoordinator.progress;
   }
 
   double? get _deferredInlineImageProgress {
@@ -276,20 +240,42 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         .clamp(0, 1);
   }
 
+  void _applyDeferredInlineImageProgress(
+    ShareDeferredInlineImageProgress progress,
+  ) {
+    void apply() {
+      _submittingDeferredInlineImages = progress.active;
+      _deferredInlineImageTotal = progress.total;
+      _deferredInlineImageCompleted = progress.completed;
+      _deferredInlineImageActiveProgress = progress.activeProgress;
+    }
+
+    if (mounted) {
+      setState(apply);
+    } else {
+      apply();
+    }
+  }
+
   final _tagMenuKey = GlobalKey();
   final _templateMenuKey = GlobalKey();
   final _todoMenuKey = GlobalKey();
   final _visibilityMenuKey = GlobalKey();
   final _imagePicker = ImagePicker();
   final _templateRenderer = MemoTemplateRenderer();
+  final _draftSession = const NoteInputDraftSessionHelper();
   final _pickedImages = <XFile>[];
   String? _activeDraftId;
   String _visibility = 'PRIVATE';
   bool _visibilityTouched = false;
   MemoLocation? _location;
   final _locating = false;
+  var _presentationMode = _NoteInputSheetPresentationMode.compact;
   int get _tagAutocompleteIndex => _composer.tagAutocompleteIndex;
   ProviderSubscription<AsyncValue<UserGeneralSetting>>? _settingsSubscription;
+
+  bool get _isFullscreenCompose =>
+      _presentationMode == _NoteInputSheetPresentationMode.fullscreen;
 
   @override
   void initState() {
@@ -298,6 +284,12 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     _shareInlineImageDownloadService =
         widget.shareInlineImageDownloadService ??
         ShareInlineImageDownloadService();
+    _deferredInlineImageCoordinator = ShareDeferredInlineImageCoordinator(
+      downloadService: _shareInlineImageDownloadService,
+      cleanupFile: _cleanupShareVideoFile,
+      onProgressChanged: _applyDeferredInlineImageProgress,
+      isCancelled: () => !mounted,
+    );
     _shareVideoDownloadService =
         widget.shareVideoDownloadService ?? ShareVideoDownloadService();
     _shareVideoCompressionService =
@@ -305,6 +297,16 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     _shareVideoAttachmentPreparer = ShareVideoAttachmentPreparer(
       downloadService: _shareVideoDownloadService,
       compressionService: _shareVideoCompressionService,
+    );
+    _deferredVideoCoordinator = ShareDeferredVideoCoordinator(
+      resolveUploadSizeLimit: () =>
+          ref.read(attachmentUploadSizeLimitResolverProvider).resolve(),
+      confirmCompression: _confirmDeferredVideoCompression,
+      admitPreparedAttachment: _admitPreparedDeferredVideoAttachment,
+      preparer: _shareVideoAttachmentPreparer,
+      cleanupFile: _cleanupShareVideoFile,
+      onFailure: _showDeferredVideoFailureEvent,
+      onChanged: _handleDeferredVideoCoordinatorChanged,
     );
     _composer = MemoComposerController(
       initialText: widget.initialText ?? '',
@@ -360,7 +362,13 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
 
   Future<String?> _saveCurrentDraft({bool triggerSync = true}) async {
     if (widget.ignoreDraft) return null;
-    final snapshot = _buildCurrentDraftSnapshot();
+    final snapshot = _draftSession.buildSnapshot(
+      content: _controller.text,
+      visibility: _normalizedVisibility(),
+      linkedMemos: _linkedMemos,
+      pendingAttachments: _pendingAttachments,
+      location: _location,
+    );
     final repository = _composeDraftRepository;
     if (repository == null) return null;
     final nextDraftId = await repository.saveSnapshot(
@@ -389,78 +397,27 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     await repository.write(text);
   }
 
-  ComposeDraftSnapshot _buildCurrentDraftSnapshot() {
-    return ComposeDraftSnapshot(
-      content: _controller.text,
-      visibility: _normalizedVisibility(),
-      relations: _linkedMemos
-          .map((memo) => memo.toRelationJson())
-          .toList(growable: false),
-      attachments: _pendingAttachments
-          .map(ComposeDraftAttachment.fromPendingAttachment)
-          .toList(growable: false),
-      location: _location,
-    );
-  }
-
   void _restoreComposeDraft(ComposeDraftRecord draft) {
-    final snapshot = draft.snapshot;
-    final linkedMemos = _linkedMemosFromRelations(snapshot.relations);
-    final pendingAttachments = snapshot.attachments
-        .map((attachment) => attachment.toPendingAttachment())
-        .toList(growable: false);
-    final pickedImages = pendingAttachments
-        .where((attachment) => _isImageMimeType(attachment.mimeType))
-        .map((attachment) => XFile(attachment.filePath))
-        .toList(growable: false);
-    final inlineSourceMap = <String, String>{};
-    for (final attachment in snapshot.attachments) {
-      final sourceUrl = attachment.sourceUrl?.trim();
-      if (!attachment.shareInlineImage ||
-          sourceUrl == null ||
-          sourceUrl.isEmpty) {
-        continue;
-      }
-      final localUrl = shareInlineLocalUrlFromPath(attachment.filePath);
-      if (localUrl.isNotEmpty) {
-        inlineSourceMap[localUrl] = sourceUrl;
-      }
-    }
-
-    _activeDraftId = draft.uid;
-    _visibility = snapshot.visibility.trim().isEmpty
-        ? _resolvedDefaultVisibility()
-        : snapshot.visibility.trim();
+    final restored = _draftSession.restoreState(
+      draft,
+      defaultVisibility: _resolvedDefaultVisibility(),
+    );
+    _activeDraftId = restored.draftUid;
+    _visibility = restored.visibility;
     _visibilityTouched = true;
-    _location = snapshot.location;
+    _location = restored.location;
     _thirdPartyShareInlineSourceByLocalUrl
       ..clear()
-      ..addAll(inlineSourceMap);
+      ..addAll(restored.inlineSourceByLocalUrl);
     _pickedImages
       ..clear()
-      ..addAll(pickedImages);
-    _composer.replaceText(snapshot.content, clearHistory: true);
-    _composer.setLinkedMemos(linkedMemos);
-    _composer.setPendingAttachments(pendingAttachments);
+      ..addAll(restored.pickedImagePaths.map(XFile.new));
+    _composer.replaceText(restored.content, clearHistory: true);
+    _composer.setLinkedMemos(restored.linkedMemos);
+    _composer.setPendingAttachments(restored.pendingAttachments);
     if (mounted) {
       setState(() {});
     }
-  }
-
-  List<_LinkedMemo> _linkedMemosFromRelations(
-    List<Map<String, dynamic>> relations,
-  ) {
-    final linked = <_LinkedMemo>[];
-    final seenNames = <String>{};
-    for (final relation in relations) {
-      final relatedMemoRaw = relation['relatedMemo'];
-      if (relatedMemoRaw is! Map) continue;
-      final name = (relatedMemoRaw['name'] as String? ?? '').trim();
-      if (name.isEmpty || !seenNames.add(name)) continue;
-      final label = name.startsWith('memos/') ? name.substring(6) : name;
-      linked.add(_LinkedMemo(name: name, label: label));
-    }
-    return linked;
   }
 
   void _clearCurrentComposeState() {
@@ -471,7 +428,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     _thirdPartyShareInlineSourceByLocalUrl.clear();
     _pickedImages.clear();
     _deferredInlineImageRequests.clear();
-    _deferredShareVideoTasks.clear();
+    _deferredVideoCoordinator.clear();
     _composer.replaceText('', clearHistory: true);
     _composer.clearPendingAttachments();
     _composer.clearLinkedMemos();
@@ -525,7 +482,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
       if (!file.existsSync()) continue;
       final size = file.lengthSync();
       final filename = path.split(Platform.pathSeparator).last;
-      final mimeType = _guessMimeType(filename);
+      final mimeType = guessAttachmentMimeType(filename);
       added.add(
         _PendingAttachment(
           uid: generateUid(),
@@ -547,14 +504,8 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     final requests = widget.initialDeferredVideoAttachments;
     if (requests.isEmpty) return;
 
-    final tasks = requests
-        .map((request) => _DeferredShareVideoTask(request: request))
-        .toList(growable: false);
     if (!mounted) return;
-    setState(() => _deferredShareVideoTasks.addAll(tasks));
-    for (final task in tasks) {
-      unawaited(_processDeferredShareVideo(task.id));
-    }
+    _deferredVideoCoordinator.addRequests(requests);
   }
 
   Future<void> _seedInitialDeferredInlineImages() async {
@@ -579,88 +530,30 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
       return;
     }
 
-    if (mounted) {
-      setState(() {
-        _submittingDeferredInlineImages = true;
-        _deferredInlineImageTotal = requests.length;
-        _deferredInlineImageCompleted = 0;
-        _deferredInlineImageActiveProgress = 0;
-      });
-    } else {
-      _submittingDeferredInlineImages = true;
-      _deferredInlineImageTotal = requests.length;
-      _deferredInlineImageCompleted = 0;
-      _deferredInlineImageActiveProgress = 0;
-    }
-
     try {
-      for (final request in requests) {
-        if (!mounted) return;
-
-        if (!contentContainsShareInlineImageUrl(
-          _controller.text,
-          request.sourceUrl,
-        )) {
-          setState(() {
-            _removeDeferredInlineImageRequest(request);
-            _deferredInlineImageCompleted += 1;
-            _deferredInlineImageActiveProgress = 0;
-          });
-          continue;
-        }
-
-        ShareAttachmentSeed? seed;
-        try {
-          seed = await _shareInlineImageDownloadService
-              .downloadDeferredInlineImageAttachment(
-                request,
-                onProgress: (progress) {
-                  if (!mounted) return;
-                  setState(() {
-                    _deferredInlineImageActiveProgress = progress.clamp(0, 1);
-                  });
-                },
-              );
-          if (seed != null) {
-            final applied = await _applyPrefetchedDeferredInlineImage(
-              request: request,
-              seed: seed,
-            );
-            if (!applied) {
-              await _cleanupShareVideoFile(seed.filePath);
-            }
-          }
-        } catch (_) {
-          if (seed != null) {
-            await _cleanupShareVideoFile(seed.filePath);
-          }
-        } finally {
+      await _deferredInlineImageCoordinator.processRequests(
+        requests: requests,
+        shouldProcess: (request) {
+          if (!mounted) return false;
+          return contentContainsShareInlineImageUrl(
+            _controller.text,
+            request.sourceUrl,
+          );
+        },
+        onSkipped: (request) {
           if (mounted) {
             setState(() {
-              _deferredInlineImageCompleted += 1;
-              _deferredInlineImageActiveProgress = 0;
+              _removeDeferredInlineImageRequest(request);
             });
           } else {
-            _deferredInlineImageCompleted += 1;
-            _deferredInlineImageActiveProgress = 0;
+            _removeDeferredInlineImageRequest(request);
           }
-        }
-      }
+        },
+        handleSeed: (request, seed) =>
+            _applyPrefetchedDeferredInlineImage(request: request, seed: seed),
+      );
     } finally {
       _deferredInlineImagePrefetchFuture = null;
-      if (mounted) {
-        setState(() {
-          _submittingDeferredInlineImages = false;
-          _deferredInlineImageTotal = 0;
-          _deferredInlineImageCompleted = 0;
-          _deferredInlineImageActiveProgress = 0;
-        });
-      } else {
-        _submittingDeferredInlineImages = false;
-        _deferredInlineImageTotal = 0;
-        _deferredInlineImageCompleted = 0;
-        _deferredInlineImageActiveProgress = 0;
-      }
     }
   }
 
@@ -736,143 +629,41 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     );
   }
 
-  _DeferredShareVideoTask? _findDeferredShareVideoTask(String id) {
-    for (final task in _deferredShareVideoTasks) {
-      if (task.id == id) return task;
-    }
-    return null;
+  void _handleDeferredVideoCoordinatorChanged() {
+    if (!mounted) return;
+    setState(() {});
   }
 
-  Future<void> _processDeferredShareVideo(String id) async {
-    final task = _findDeferredShareVideoTask(id);
-    if (task == null || task.cancelled) return;
-
-    try {
-      final uploadSizeLimit = await ref
-          .read(attachmentUploadSizeLimitResolverProvider)
-          .resolve();
-      task.uploadSizeLimitBytes = uploadSizeLimit.bytes;
-      final prepared = await _shareVideoAttachmentPreparer.prepare(
-        result: task.request.captureResult,
-        candidate: task.request.candidate,
-        uploadSizeLimit: uploadSizeLimit,
-        onProbeComplete: (probe) {
-          final stillActive = _findDeferredShareVideoTask(id);
-          if (!mounted || stillActive == null || stillActive.cancelled) {
-            return;
-          }
-          setState(() {
-            stillActive.headers = probe.headers;
-            stillActive.remoteSize = probe.contentLength;
-            stillActive.phase = _DeferredShareVideoPhase.downloading;
-            stillActive.progress = 0;
-          });
-        },
-        onDownloadProgress: (progress) {
-          final activeTask = _findDeferredShareVideoTask(id);
-          if (!mounted || activeTask == null || activeTask.cancelled) return;
-          setState(() {
-            activeTask.phase = _DeferredShareVideoPhase.downloading;
-            activeTask.progress = progress.clamp(0, 1);
-          });
-        },
-        confirmCompression: (fileSize, maxBytes) async {
-          final activeTask = _findDeferredShareVideoTask(id);
-          if (!mounted || activeTask == null || activeTask.cancelled) {
-            return false;
-          }
-          setState(() {
-            activeTask.phase = _DeferredShareVideoPhase.awaitingCompression;
-            activeTask.progress = 1;
-          });
-          final shouldCompress = await _confirmDeferredVideoCompression(
-            fileSize,
-            maxBytes,
-          );
-          final compressionTask = _findDeferredShareVideoTask(id);
-          if (!mounted ||
-              compressionTask == null ||
-              compressionTask.cancelled) {
-            return false;
-          }
-          if (shouldCompress) {
-            setState(() {
-              compressionTask.phase = _DeferredShareVideoPhase.compressing;
-              compressionTask.progress = 0;
-            });
-          }
-          return shouldCompress;
-        },
-        onCompressionProgress: (progress) {
-          final nextTask = _findDeferredShareVideoTask(id);
-          if (!mounted || nextTask == null || nextTask.cancelled) return;
-          setState(() {
-            nextTask.phase = _DeferredShareVideoPhase.compressing;
-            nextTask.progress = progress.clamp(0, 1);
-          });
-        },
-        isCancelled: () {
-          final activeTask = _findDeferredShareVideoTask(id);
-          return !mounted || activeTask == null || activeTask.cancelled;
-        },
-      );
-
-      final completionTask = _findDeferredShareVideoTask(id);
-      if (!mounted || completionTask == null || completionTask.cancelled) {
-        await _cleanupShareVideoFile(prepared.filePath);
-        return;
-      }
-
-      final stagedAttachment = await _stagePendingAttachment(
-        _PendingAttachment(
-          uid: generateUid(),
-          filePath: prepared.filePath,
-          filename: prepared.filename,
-          mimeType: prepared.mimeType,
-          size: prepared.size,
-        ),
-      );
-      setState(() {
-        completionTask.phase = _DeferredShareVideoPhase.completed;
-        completionTask.progress = 1;
-        _composer.addPendingAttachments([stagedAttachment]);
-        completionTask.phase = _DeferredShareVideoPhase.removed;
-      });
-    } on ShareVideoAttachmentCancelled {
-      await _removeDeferredShareVideoTask(id);
-    } on ShareVideoAttachmentCompressionDeclined {
-      await _removeDeferredShareVideoTask(id);
-    } on ShareVideoAttachmentCompressionFailed {
-      await _removeDeferredShareVideoTask(id);
-      _showDeferredVideoFailure(_DeferredShareVideoFailure.compressionFailed);
-    } on ShareVideoAttachmentStillTooLarge {
-      await _removeDeferredShareVideoTask(id);
-      _showDeferredVideoFailure(
-        _DeferredShareVideoFailure.compressionStillTooLarge,
-        uploadSizeLimitBytes: task.uploadSizeLimitBytes,
-      );
-    } catch (_) {
-      final failedTask = _findDeferredShareVideoTask(id);
-      await _removeDeferredShareVideoTask(id);
-      if (failedTask?.cancelled == true) {
-        return;
-      }
-      _showDeferredVideoFailure(_DeferredShareVideoFailure.downloadFailed);
-    }
-  }
-
-  Future<void> _removeDeferredShareVideoTask(String id) async {
-    final task = _findDeferredShareVideoTask(id);
-    if (task == null) return;
+  Future<void> _admitPreparedDeferredVideoAttachment(
+    SharePreparedVideoAttachment prepared,
+  ) async {
     if (!mounted) {
-      task.cancelled = true;
-      task.phase = _DeferredShareVideoPhase.removed;
+      await _cleanupShareVideoFile(prepared.filePath);
+      return;
+    }
+    final stagedAttachment = await _stagePendingAttachment(
+      _PendingAttachment(
+        uid: generateUid(),
+        filePath: prepared.filePath,
+        filename: prepared.filename,
+        mimeType: prepared.mimeType,
+        size: prepared.size,
+      ),
+    );
+    if (!mounted) {
+      await _cleanupShareVideoFile(stagedAttachment.filePath);
       return;
     }
     setState(() {
-      task.cancelled = true;
-      task.phase = _DeferredShareVideoPhase.removed;
+      _composer.addPendingAttachments([stagedAttachment]);
     });
+  }
+
+  void _showDeferredVideoFailureEvent(ShareDeferredVideoFailureEvent event) {
+    _showDeferredVideoFailure(
+      event.failure,
+      uploadSizeLimitBytes: event.uploadSizeLimitBytes,
+    );
   }
 
   Future<void> _cleanupShareVideoFile(String? path) async {
@@ -917,7 +708,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   }
 
   void _showDeferredVideoFailure(
-    _DeferredShareVideoFailure failure, {
+    ShareDeferredVideoFailure failure, {
     int? uploadSizeLimitBytes,
   }) {
     if (!mounted) return;
@@ -931,15 +722,15 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   }
 
   String _deferredVideoFailureMessage(
-    _DeferredShareVideoFailure failure, {
+    ShareDeferredVideoFailure failure, {
     int? uploadSizeLimitBytes,
   }) {
     return switch (failure) {
-      _DeferredShareVideoFailure.downloadFailed =>
+      ShareDeferredVideoFailure.downloadFailed =>
         context.t.strings.shareClip.fallbackDownloadFailed,
-      _DeferredShareVideoFailure.compressionFailed =>
+      ShareDeferredVideoFailure.compressionFailed =>
         context.t.strings.shareClip.fallbackCompressionFailed,
-      _DeferredShareVideoFailure.compressionStillTooLarge =>
+      ShareDeferredVideoFailure.compressionStillTooLarge =>
         shareVideoAttachmentStillTooLargeMessage(
           context.t,
           maxBytes: uploadSizeLimitBytes,
@@ -947,7 +738,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     };
   }
 
-  Future<void> _openDeferredVideoPreview(_DeferredShareVideoTask task) async {
+  Future<void> _openDeferredVideoPreview(ShareDeferredVideoTask task) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => AttachmentVideoScreen(
@@ -1613,16 +1404,47 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     _scheduleDraftSave();
   }
 
-  Widget _buildComposeToolbar({
-    required BuildContext context,
-    required bool isDark,
+  void _requestEditorFocusAfterLayout({
+    required _NoteInputSheetPresentationMode expectedMode,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_presentationMode != expectedMode) return;
+      _editorFocusNode.requestFocus();
+    });
+  }
+
+  void _enterFullscreenCompose() {
+    if (_busy || _isFullscreenCompose) return;
+    if (_editorFocusNode.hasFocus) {
+      _editorFocusNode.unfocus();
+    }
+    setState(() {
+      _presentationMode = _NoteInputSheetPresentationMode.fullscreen;
+    });
+    _requestEditorFocusAfterLayout(
+      expectedMode: _NoteInputSheetPresentationMode.fullscreen,
+    );
+  }
+
+  void _collapseFullscreenCompose() {
+    if (_busy || !_isFullscreenCompose) return;
+    if (_editorFocusNode.hasFocus) {
+      _editorFocusNode.unfocus();
+    }
+    setState(() {
+      _presentationMode = _NoteInputSheetPresentationMode.compact;
+    });
+    _requestEditorFocusAfterLayout(
+      expectedMode: _NoteInputSheetPresentationMode.compact,
+    );
+  }
+
+  List<MemoComposeToolbarActionSpec> _buildComposeToolbarActions({
     required MemoToolbarPreferences preferences,
     required List<MemoTemplate> availableTemplates,
-    required String visibilityLabel,
-    required IconData visibilityIcon,
-    required Color visibilityColor,
   }) {
-    final actions = <MemoComposeToolbarActionSpec>[
+    return <MemoComposeToolbarActionSpec>[
       MemoComposeToolbarActionSpec.builtin(
         id: MemoToolbarActionId.bold,
         enabled: !_busy,
@@ -1787,6 +1609,21 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         ),
       ),
     ];
+  }
+
+  Widget _buildComposeToolbar({
+    required BuildContext context,
+    required bool isDark,
+    required MemoToolbarPreferences preferences,
+    required List<MemoTemplate> availableTemplates,
+    required String visibilityLabel,
+    required IconData visibilityIcon,
+    required Color visibilityColor,
+  }) {
+    final actions = _buildComposeToolbarActions(
+      preferences: preferences,
+      availableTemplates: availableTemplates,
+    );
 
     return MemoComposeToolbar(
       isDark: isDark,
@@ -1812,43 +1649,6 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     );
     if (!mounted || selection == null) return;
     _addLinkedMemo(selection);
-  }
-
-  String _guessMimeType(String filename) {
-    final lower = filename.toLowerCase();
-    final dot = lower.lastIndexOf('.');
-    final ext = dot == -1 ? '' : lower.substring(dot + 1);
-    return switch (ext) {
-      'png' => 'image/png',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'gif' => 'image/gif',
-      'webp' => 'image/webp',
-      'bmp' => 'image/bmp',
-      'heic' => 'image/heic',
-      'heif' => 'image/heif',
-      'mp3' => 'audio/mpeg',
-      'm4a' => 'audio/mp4',
-      'aac' => 'audio/aac',
-      'wav' => 'audio/wav',
-      'flac' => 'audio/flac',
-      'ogg' => 'audio/ogg',
-      'opus' => 'audio/opus',
-      'mp4' => 'video/mp4',
-      'mov' => 'video/quicktime',
-      'mkv' => 'video/x-matroska',
-      'webm' => 'video/webm',
-      'avi' => 'video/x-msvideo',
-      'pdf' => 'application/pdf',
-      'zip' => 'application/zip',
-      'rar' => 'application/vnd.rar',
-      '7z' => 'application/x-7z-compressed',
-      'txt' => 'text/plain',
-      'md' => 'text/markdown',
-      'json' => 'application/json',
-      'csv' => 'text/csv',
-      'log' => 'text/plain',
-      _ => 'application/octet-stream',
-    };
   }
 
   Future<void> _handleGalleryToolbarPressed() async {
@@ -2003,7 +1803,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         final filename = file.name.trim().isNotEmpty
             ? file.name.trim()
             : path.split(Platform.pathSeparator).last;
-        final mimeType = _guessMimeType(filename);
+        final mimeType = guessAttachmentMimeType(filename);
         LogManager.instance.debug(
           'NoteInputSheet: file_picker_attachment_ready',
           context: {
@@ -2101,7 +1901,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     final filename = result.fileName.trim().isNotEmpty
         ? result.fileName.trim()
         : path.split(Platform.pathSeparator).last;
-    final mimeType = _guessMimeType(filename);
+    final mimeType = guessAttachmentMimeType(filename);
     if (!mounted) return;
     await _addPendingAttachmentsStaged([
       _PendingAttachment(
@@ -2219,10 +2019,6 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     );
   }
 
-  bool _isImageMimeType(String mimeType) {
-    return mimeType.trim().toLowerCase().startsWith('image/');
-  }
-
   bool _isVideoMimeType(String mimeType) {
     return mimeType.trim().toLowerCase().startsWith('video');
   }
@@ -2242,7 +2038,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     final items =
         <({ImagePreviewItem item, _PendingAttachment attachment, File file})>[];
     for (final attachment in _pendingAttachments) {
-      if (!_isImageMimeType(attachment.mimeType)) continue;
+      if (!isImageMimeType(attachment.mimeType)) continue;
       final file = _resolvePendingAttachmentFile(attachment);
       if (file == null) continue;
       items.add((
@@ -2347,40 +2143,17 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
 
   Widget _buildAttachmentPreview(bool isDark) {
     final deferredTasks = _visibleDeferredShareVideoTasks;
-    if (_pendingAttachments.isEmpty && deferredTasks.isEmpty) {
-      return const SizedBox.shrink();
-    }
     const tileSize = 62.0;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: SizedBox(
-        height: tileSize,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              for (var i = 0; i < deferredTasks.length; i++) ...[
-                if (i > 0) const SizedBox(width: 10),
-                _buildDeferredVideoTile(
-                  deferredTasks[i],
-                  isDark: isDark,
-                  size: tileSize,
-                ),
-              ],
-              for (var i = 0; i < _pendingAttachments.length; i++) ...[
-                if (i > 0 || deferredTasks.isNotEmpty)
-                  const SizedBox(width: 10),
-                _buildAttachmentTile(
-                  _pendingAttachments[i],
-                  isDark: isDark,
-                  size: tileSize,
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
+    return NoteInputAttachmentPreviewStrip(
+      tileSize: tileSize,
+      deferredTiles: [
+        for (final task in deferredTasks)
+          _buildDeferredVideoTile(task, isDark: isDark, size: tileSize),
+      ],
+      pendingTiles: [
+        for (final attachment in _pendingAttachments)
+          _buildAttachmentTile(attachment, isDark: isDark, size: tileSize),
+      ],
     );
   }
 
@@ -2400,109 +2173,21 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   }
 
   Widget _buildDeferredVideoTile(
-    _DeferredShareVideoTask task, {
+    ShareDeferredVideoTask task, {
     required bool isDark,
     required double size,
   }) {
-    final borderColor = isDark
-        ? MemoFlowPalette.borderDark
-        : MemoFlowPalette.borderLight;
-    final surfaceColor = isDark
-        ? MemoFlowPalette.audioSurfaceDark
-        : MemoFlowPalette.audioSurfaceLight;
-    final removeBg = isDark
-        ? Colors.black.withValues(alpha: 0.55)
-        : Colors.black.withValues(alpha: 0.5);
-    final shadowColor = Colors.black.withValues(alpha: isDark ? 0.35 : 0.12);
     final thumbnailUrl = task.thumbnailUrl?.trim() ?? '';
-
-    final tile = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor.withValues(alpha: 0.7)),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor,
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (thumbnailUrl.isNotEmpty)
-              Image.network(
-                thumbnailUrl,
-                fit: BoxFit.cover,
-                headers: task.headers,
-                errorBuilder: (context, error, stackTrace) {
-                  return _attachmentFallback(
-                    iconColor: Colors.white,
-                    surfaceColor: surfaceColor,
-                    isImage: false,
-                    isVideo: true,
-                  );
-                },
-              )
-            else
-              _attachmentFallback(
-                iconColor: Colors.white,
-                surfaceColor: surfaceColor,
-                isImage: false,
-                isVideo: true,
-              ),
-            Container(color: Colors.black.withValues(alpha: 0.26)),
-            Align(
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: 26,
-                height: 26,
-                child: CircularProgressIndicator(
-                  value: task.overallProgress,
-                  strokeWidth: 2.2,
-                  color: Colors.white,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        GestureDetector(
-          onTap: () => _openDeferredVideoPreview(task),
-          child: tile,
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: GestureDetector(
-            onTap: (_busy || !task.isRemovable)
-                ? null
-                : () => unawaited(_removeDeferredShareVideoTask(task.id)),
-            child: Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                color: removeBg,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.close, size: 12, color: Colors.white),
-            ),
-          ),
-        ),
-      ],
+    return NoteInputDeferredVideoTile(
+      isDark: isDark,
+      size: size,
+      thumbnailUrl: thumbnailUrl,
+      headers: task.headers,
+      progress: task.overallProgress,
+      busy: _busy,
+      isRemovable: task.isRemovable,
+      onOpen: () => _openDeferredVideoPreview(task),
+      onRemove: () => unawaited(_deferredVideoCoordinator.removeTask(task.id)),
     );
   }
 
@@ -2525,8 +2210,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         : Colors.black.withValues(alpha: 0.5);
     final shadowColor = Colors.black.withValues(alpha: isDark ? 0.35 : 0.12);
     final tileBorderColor = borderColor.withValues(alpha: 0.7);
-    final tileRadius = BorderRadius.circular(14);
-    final isImage = _isImageMimeType(attachment.mimeType);
+    final isImage = isImageMimeType(attachment.mimeType);
     final isVideo = _isVideoMimeType(attachment.mimeType);
     final file = _resolvePendingAttachmentFile(attachment);
     final cacheTarget = resolveNoteInputPendingImageThumbnailCacheTarget(
@@ -2572,7 +2256,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         showPlayIcon: false,
       );
     } else {
-      content = _attachmentFallback(
+      content = NoteInputAttachmentFallback(
         iconColor: iconColor,
         surfaceColor: surfaceColor,
         isImage: isImage,
@@ -2580,131 +2264,24 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
       );
     }
 
-    final tile = isImage && file != null
-        ? SizedBox(
-            width: size,
-            height: size,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: tileRadius,
-                boxShadow: [
-                  BoxShadow(
-                    color: shadowColor,
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: tileRadius,
-                child: Stack(fit: StackFit.expand, children: [content]),
-              ),
-            ),
-          )
-        : Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: tileRadius,
-              border: Border.all(color: tileBorderColor),
-              boxShadow: [
-                BoxShadow(
-                  color: shadowColor,
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ClipRRect(borderRadius: tileRadius, child: content),
-          );
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        GestureDetector(
-          onTap: (isImage && file != null)
-              ? () => _openAttachmentViewer(attachment)
-              : (isVideo && file != null)
-              ? () => _openPendingVideoPreview(attachment)
-              : null,
-          child: tile,
-        ),
-        if (attachment.skipCompression && isImage)
-          Positioned(
-            left: 4,
-            bottom: 4,
-            child: IgnorePointer(child: _buildOriginalBadge()),
-          ),
-        if (!attachment.isReadyForSubmit)
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: tileRadius,
-              child: AttachmentProcessingOverlay(
-                status: attachment.processingStatus,
-              ),
-            ),
-          ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: GestureDetector(
-            onTap: _busy
-                ? null
-                : () => _removePendingAttachment(attachment.uid),
-            child: Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                color: removeBg,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.close, size: 12, color: Colors.white),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _attachmentFallback({
-    required Color iconColor,
-    required Color surfaceColor,
-    required bool isImage,
-    bool isVideo = false,
-  }) {
-    return Container(
-      color: surfaceColor,
-      alignment: Alignment.center,
-      child: Icon(
-        isImage
-            ? Icons.image_outlined
-            : (isVideo
-                  ? Icons.videocam_outlined
-                  : Icons.insert_drive_file_outlined),
-        size: 22,
-        color: iconColor,
-      ),
-    );
-  }
-
-  Widget _buildOriginalBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.58),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        context.t.strings.legacy.msg_original_image,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          height: 1,
-        ),
-      ),
+    return NoteInputPendingAttachmentTile(
+      isImage: isImage,
+      isVideo: isVideo,
+      hasFile: file != null,
+      skipCompression: attachment.skipCompression,
+      isReadyForSubmit: attachment.isReadyForSubmit,
+      processingStatus: attachment.processingStatus,
+      busy: _busy,
+      size: size,
+      surfaceColor: surfaceColor,
+      tileBorderColor: tileBorderColor,
+      shadowColor: shadowColor,
+      removeBg: removeBg,
+      content: content,
+      originalBadgeLabel: context.t.strings.legacy.msg_original_image,
+      onOpenImage: () => _openAttachmentViewer(attachment),
+      onOpenVideo: () => _openPendingVideoPreview(attachment),
+      onRemove: () => _removePendingAttachment(attachment.uid),
     );
   }
 
@@ -2750,19 +2327,10 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   Future<void> _submitOrVoice() async {
     if (_busy) return;
     if (_hasPendingDeferredShareVideoTasks) return;
-    var content = _controller.text.trimRight();
-    var relations = _linkedMemos
-        .map((m) => m.toRelationJson())
-        .toList(growable: false);
-    var pendingAttachments = List<_PendingAttachment>.from(_pendingAttachments)
-      ..removeWhere(
-        (attachment) =>
-            attachment.shareInlineImage &&
-            !contentContainsShareInlineLocalUrl(content, attachment.filePath),
-      );
-    var hasAttachments = pendingAttachments.isNotEmpty;
-    if (content.trim().isEmpty && !hasAttachments) {
-      if (relations.isNotEmpty) {
+    var draft = _buildSubmitDraft();
+    if (draft.content.trim().isEmpty &&
+        !draft.hasReferencedPendingAttachments) {
+      if (draft.relations.isNotEmpty) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -2793,108 +2361,18 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         await prefetchFuture;
       }
 
-      content = _controller.text.trimRight();
-      relations = _linkedMemos
-          .map((m) => m.toRelationJson())
-          .toList(growable: false);
-      pendingAttachments = List<_PendingAttachment>.from(_pendingAttachments)
-        ..removeWhere(
-          (attachment) =>
-              attachment.shareInlineImage &&
-              !contentContainsShareInlineLocalUrl(content, attachment.filePath),
-        );
-      final deferredInlineImageRequests =
-          List<ShareDeferredInlineImageAttachmentRequest>.from(
-            _deferredInlineImageRequests,
-          )..removeWhere(
-            (request) =>
-                !contentContainsShareInlineImageUrl(content, request.sourceUrl),
-          );
-      pendingAttachments.sort(
-        (left, right) =>
-            switch ((left.shareInlineImage, right.shareInlineImage)) {
-              (true, false) => 1,
-              (false, true) => -1,
-              _ => 0,
-            },
-      );
-      hasAttachments = pendingAttachments.isNotEmpty;
+      draft = _buildSubmitDraft();
       if (!_ensurePendingAttachmentsReady()) return;
 
-      final now = DateTime.now();
-      final uid = generateUid();
-      final tags = extractTags(content);
-      final visibility = _normalizedVisibility();
-      final syncContent = content;
-
-      final attachments = pendingAttachments
-          .map((p) {
-            final rawPath = p.filePath.trim();
-            final externalLink = rawPath.isEmpty
-                ? ''
-                : rawPath.startsWith('content://')
-                ? rawPath
-                : Uri.file(rawPath).toString();
-            return Attachment(
-              name: 'attachments/${p.uid}',
-              filename: p.filename,
-              type: p.mimeType,
-              size: p.size,
-              externalLink: externalLink,
-            ).toJson();
-          })
-          .toList(growable: false);
-      final pendingUploads = pendingAttachments
-          .map(
-            (attachment) => NoteInputPendingAttachment(
-              uid: attachment.uid,
-              filePath: attachment.filePath,
-              filename: attachment.filename,
-              mimeType: attachment.mimeType,
-              size: attachment.size,
-              skipCompression: attachment.skipCompression,
-              shareInlineImage: attachment.shareInlineImage,
-              fromThirdPartyShare: attachment.fromThirdPartyShare,
-              sourceUrl: attachment.sourceUrl,
-            ),
-          )
-          .toList(growable: false);
-
-      await ref
-          .read(noteInputControllerProvider)
-          .createMemo(
-            uid: uid,
-            content: content,
-            syncContent: syncContent,
-            visibility: visibility,
-            now: now,
-            tags: tags,
-            attachments: attachments,
-            location: _location,
-            hasAttachments: hasAttachments,
-            relations: relations,
-            pendingAttachments: pendingUploads,
-            clipMetadataDraft: widget.initialClipMetadataDraft,
-          );
+      final result = await ref
+          .read(noteInputSubmitCoordinatorProvider)
+          .submit(draft, logShareSaveFlow: widget.showLocalSaveSuccessToast);
 
       await _processDeferredInlineImagesAfterSubmit(
-        memoUid: uid,
-        requests: deferredInlineImageRequests,
+        memoUid: result.memoUid,
+        requests: result.deferredInlineImageRequests,
       );
 
-      if (widget.showLocalSaveSuccessToast) {
-        LogManager.instance.info(
-          'ShareCompose: local_save_committed',
-          context: {
-            'memoUid': uid,
-            'attachmentCount': attachments.length,
-            'pendingUploadCount': pendingUploads.length,
-            'deferredInlineImageCount': deferredInlineImageRequests.length,
-          },
-        );
-      }
-
-      unawaited(_requestSyncBestEffort(memoUid: uid));
       final submittedDraftId = _activeDraftId;
       _draftTimer?.cancel();
       _composer.replaceText('', clearHistory: true);
@@ -2905,10 +2383,9 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
       await ref.read(noteDraftProvider.notifier).clear();
       _activeDraftId = null;
       if (submittedDraftId != null && submittedDraftId.isNotEmpty) {
-        final keepPaths = pendingUploads
-            .map((attachment) => attachment.filePath.trim())
-            .where((path) => path.isNotEmpty)
-            .toSet();
+        final keepPaths = _draftSession.keepPathsForSubmittedDraft(
+          result.pendingUploads.map((attachment) => attachment.filePath),
+        );
         await ref
             .read(composeDraftRepositoryProvider)
             .deleteDraft(submittedDraftId, keepPaths: keepPaths);
@@ -2934,31 +2411,21 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     }
   }
 
-  Future<void> _requestSyncBestEffort({required String memoUid}) async {
-    if (widget.showLocalSaveSuccessToast) {
-      LogManager.instance.info(
-        'ShareCompose: background_sync_requested',
-        context: {'memoUid': memoUid},
-      );
-    }
-    try {
-      await ref
-          .read(syncCoordinatorProvider.notifier)
-          .requestSync(
-            const SyncRequest(
-              kind: SyncRequestKind.memos,
-              reason: SyncRequestReason.manual,
-            ),
-          );
-    } catch (error, stackTrace) {
-      if (!widget.showLocalSaveSuccessToast) return;
-      LogManager.instance.warn(
-        'ShareCompose: background_sync_failed',
-        error: error,
-        stackTrace: stackTrace,
-        context: {'memoUid': memoUid},
-      );
-    }
+  NoteInputSubmitDraft _buildSubmitDraft() {
+    return NoteInputSubmitDraft(
+      content: _controller.text.trimRight(),
+      visibility: _normalizedVisibility(),
+      location: _location,
+      relations: _linkedMemos
+          .map((memo) => memo.toRelationJson())
+          .toList(growable: false),
+      pendingAttachments: List<_PendingAttachment>.from(_pendingAttachments),
+      deferredInlineImageRequests:
+          List<ShareDeferredInlineImageAttachmentRequest>.from(
+            _deferredInlineImageRequests,
+          ),
+      clipMetadataDraft: widget.initialClipMetadataDraft,
+    );
   }
 
   Future<void> _processDeferredInlineImagesAfterSubmit({
@@ -2966,83 +2433,103 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     required List<ShareDeferredInlineImageAttachmentRequest> requests,
   }) async {
     if (requests.isEmpty) return;
-    if (mounted) {
-      setState(() {
-        _submittingDeferredInlineImages = true;
-        _deferredInlineImageTotal = requests.length;
-        _deferredInlineImageCompleted = 0;
-        _deferredInlineImageActiveProgress = 0;
-      });
-    } else {
-      _submittingDeferredInlineImages = true;
-      _deferredInlineImageTotal = requests.length;
-      _deferredInlineImageCompleted = 0;
-      _deferredInlineImageActiveProgress = 0;
-    }
+    await _deferredInlineImageCoordinator.processRequests(
+      requests: requests,
+      shouldProcess: (_) => true,
+      handleSeed: (request, seed) async {
+        await ref
+            .read(noteInputControllerProvider)
+            .appendDeferredThirdPartyShareInlineImage(
+              memoUid: memoUid,
+              sourceUrl: request.sourceUrl,
+              attachment: noteInputPendingUploadFromShareAttachmentSeed(
+                seed,
+                sourceUrl: request.sourceUrl,
+              ),
+            );
+        return true;
+      },
+    );
+  }
 
-    try {
-      for (final request in requests) {
-        ShareAttachmentSeed? seed;
-        try {
-          seed = await _shareInlineImageDownloadService
-              .downloadDeferredInlineImageAttachment(
-                request,
-                onProgress: (progress) {
-                  if (!mounted) return;
-                  setState(() {
-                    _deferredInlineImageActiveProgress = progress.clamp(0, 1);
-                  });
-                },
-              );
-          if (seed != null) {
-            await ref
-                .read(noteInputControllerProvider)
-                .appendDeferredThirdPartyShareInlineImage(
-                  memoUid: memoUid,
-                  sourceUrl: request.sourceUrl,
-                  attachment: NoteInputPendingAttachment(
-                    uid: seed.uid,
-                    filePath: seed.filePath,
-                    filename: seed.filename,
-                    mimeType: seed.mimeType,
-                    size: seed.size,
-                    shareInlineImage: true,
-                    fromThirdPartyShare: true,
-                    sourceUrl: request.sourceUrl,
-                  ),
-                );
-          }
-        } catch (_) {
-          if (seed != null) {
-            await _cleanupShareVideoFile(seed.filePath);
-          }
-        } finally {
-          if (mounted) {
-            setState(() {
-              _deferredInlineImageCompleted += 1;
-              _deferredInlineImageActiveProgress = 0;
-            });
-          } else {
-            _deferredInlineImageCompleted += 1;
-            _deferredInlineImageActiveProgress = 0;
-          }
-        }
-      }
-    } finally {
-      if (mounted) {
+  Widget _buildFullscreenCompose({
+    required bool isDark,
+    required Color sheetColor,
+    required Color chipBg,
+    required Color chipText,
+    required Color chipDelete,
+    required String visibilityLabel,
+    required IconData visibilityIcon,
+    required Color visibilityColor,
+    required List<TagStat> tagSuggestions,
+    required int highlightedTagSuggestionIndex,
+    required TagColorLookup tagColorLookup,
+    required ActiveTagQuery? activeTagQuery,
+    required TextStyle editorTextStyle,
+    required MemoToolbarPreferences toolbarPreferences,
+    required List<MemoTemplate> availableTemplates,
+    required String editorHintText,
+  }) {
+    final toolbarActions = _buildComposeToolbarActions(
+      preferences: toolbarPreferences,
+      availableTemplates: availableTemplates,
+    );
+    return NoteInputFullscreenCompose(
+      isDark: isDark,
+      sheetColor: sheetColor,
+      chipBg: chipBg,
+      chipText: chipText,
+      chipDelete: chipDelete,
+      visibilityLabel: visibilityLabel,
+      visibilityIcon: visibilityIcon,
+      visibilityColor: visibilityColor,
+      tagSuggestions: tagSuggestions,
+      highlightedTagSuggestionIndex: highlightedTagSuggestionIndex,
+      tagColorLookup: tagColorLookup,
+      activeTagQuery: activeTagQuery,
+      editorTextStyle: editorTextStyle,
+      toolbarPreferences: toolbarPreferences,
+      toolbarActions: toolbarActions,
+      editorHintText: editorHintText,
+      attachmentPreview: _buildAttachmentPreview(isDark),
+      linkedMemos: _linkedMemos,
+      location: _location,
+      locating: _locating,
+      busy: _busy,
+      controller: _controller,
+      editorFocusNode: _editorFocusNode,
+      editorFieldKey: _editorFieldKey,
+      autoFocus: widget.autoFocus,
+      deferredProgress:
+          _deferredInlineImageProgress ?? _deferredShareVideoProgress,
+      hasPendingDeferredShareVideoTasks: _hasPendingDeferredShareVideoTasks,
+      hasAttachmentsForSend:
+          _pendingAttachments.isNotEmpty ||
+          _deferredInlineImageRequests.isNotEmpty ||
+          _visibleDeferredShareVideoTasks.isNotEmpty,
+      expandCollapseKey: _fullscreenCollapseButtonKey,
+      closeKey: _fullscreenCloseButtonKey,
+      topToolbarKey: _fullscreenTopToolbarKey,
+      bottomToolbarKey: _fullscreenBottomToolbarKey,
+      sendButtonKey: _fullscreenSendButtonKey,
+      visibilityButtonKey: _visibilityMenuKey,
+      onCollapse: _collapseFullscreenCompose,
+      onClose: () => unawaited(_closeWithDraft()),
+      onVisibilityPressed: () =>
+          unawaited(_openVisibilityMenuFromKey(_visibilityMenuKey)),
+      onSubmitOrVoice: _submitOrVoice,
+      onRemoveLinkedMemo: _removeLinkedMemo,
+      onRequestLocation: () => unawaited(_requestLocation()),
+      onClearLocation: _clearLocation,
+      onTagHighlight: (index) {
+        if (_tagAutocompleteIndex == index) return;
         setState(() {
-          _submittingDeferredInlineImages = false;
-          _deferredInlineImageTotal = 0;
-          _deferredInlineImageCompleted = 0;
-          _deferredInlineImageActiveProgress = 0;
+          _composer.setTagAutocompleteIndex(index);
         });
-      } else {
-        _submittingDeferredInlineImages = false;
-        _deferredInlineImageTotal = 0;
-        _deferredInlineImageCompleted = 0;
-        _deferredInlineImageActiveProgress = 0;
-      }
-    }
+      },
+      onTagSelect: _applyTagSuggestion,
+      onEditorKeyEvent: _handleTagAutocompleteKeyEvent,
+    );
   }
 
   @override
@@ -3100,13 +2587,34 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
           _linkedMemos.isNotEmpty ||
           _location != null ||
           _deferredInlineImageRequests.isNotEmpty ||
-          _deferredShareVideoTasks.isNotEmpty,
+          _visibleDeferredShareVideoTasks.isNotEmpty,
     );
     final editorHintText = shouldShowDraftHint
         ? context.t.strings.legacy.msg_draft_box_pending_hint(
             count: pendingDraftCount,
           )
         : context.t.strings.legacy.msg_write_thoughts;
+
+    if (_isFullscreenCompose) {
+      return _buildFullscreenCompose(
+        isDark: isDark,
+        sheetColor: sheetColor,
+        chipBg: chipBg,
+        chipText: chipText,
+        chipDelete: chipDelete,
+        visibilityLabel: visibilityLabel,
+        visibilityIcon: visibilityIcon,
+        visibilityColor: visibilityColor,
+        tagSuggestions: tagSuggestions,
+        highlightedTagSuggestionIndex: highlightedTagSuggestionIndex,
+        tagColorLookup: tagColorLookup,
+        activeTagQuery: activeTagQuery,
+        editorTextStyle: editorTextStyle,
+        toolbarPreferences: toolbarPreferences,
+        availableTemplates: availableTemplates,
+        editorHintText: editorHintText,
+      );
+    }
 
     return ClipRect(
       child: BackdropFilter(
@@ -3164,18 +2672,12 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(height: 10),
-                              Container(
-                                width: 40,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? Colors.white.withValues(alpha: 0.1)
-                                      : Colors.black.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
+                              NoteInputCompactHeader(
+                                isDark: isDark,
+                                busy: _busy,
+                                expandButtonKey: _fullscreenExpandButtonKey,
+                                onExpand: _enterFullscreenCompose,
                               ),
-                              const SizedBox(height: 10),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
@@ -3271,102 +2773,37 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
                                   ),
                                 ),
                               ),
-                              if (_linkedMemos.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    20,
-                                    0,
-                                    20,
-                                    8,
-                                  ),
-                                  child: Wrap(
-                                    spacing: 8,
-                                    runSpacing: 6,
-                                    children: _linkedMemos
-                                        .map(
-                                          (memo) => InputChip(
-                                            label: Text(
-                                              memo.label,
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: chipText,
-                                              ),
-                                            ),
-                                            backgroundColor: chipBg,
-                                            deleteIconColor: chipDelete,
-                                            onDeleted: _busy
-                                                ? null
-                                                : () => _removeLinkedMemo(
-                                                    memo.name,
-                                                  ),
-                                          ),
-                                        )
-                                        .toList(growable: false),
-                                  ),
+                              NoteInputLinkedMemoChips(
+                                linkedMemos: _linkedMemos,
+                                chipBg: chipBg,
+                                chipText: chipText,
+                                chipDelete: chipDelete,
+                                busy: _busy,
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  0,
+                                  20,
+                                  8,
                                 ),
-                              if (_locating)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    20,
-                                    0,
-                                    20,
-                                    8,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(
-                                        width: 12,
-                                        height: 12,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        context.t.strings.legacy.msg_locating,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: chipText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                onRemove: _removeLinkedMemo,
+                              ),
+                              NoteInputLocationState(
+                                location: _location,
+                                locating: _locating,
+                                chipBg: chipBg,
+                                chipText: chipText,
+                                chipDelete: chipDelete,
+                                busy: _busy,
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  0,
+                                  20,
+                                  8,
                                 ),
-                              if (_location != null)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    20,
-                                    0,
-                                    20,
-                                    8,
-                                  ),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: InputChip(
-                                      avatar: Icon(
-                                        Icons.place_outlined,
-                                        size: 16,
-                                        color: chipText,
-                                      ),
-                                      label: Text(
-                                        _location!.displayText(
-                                          fractionDigits: 6,
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: chipText,
-                                        ),
-                                      ),
-                                      backgroundColor: chipBg,
-                                      deleteIconColor: chipDelete,
-                                      onPressed: _busy
-                                          ? null
-                                          : () => unawaited(_requestLocation()),
-                                      onDeleted: _busy ? null : _clearLocation,
-                                    ),
-                                  ),
-                                ),
+                                onRequestLocation: () =>
+                                    unawaited(_requestLocation()),
+                                onClearLocation: _clearLocation,
+                              ),
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(
                                   20,
@@ -3388,162 +2825,22 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    Builder(
-                                      builder: (context) {
-                                        final deferredProgress =
-                                            _deferredInlineImageProgress ??
-                                            _deferredShareVideoProgress;
-                                        final buttonEnabled =
-                                            !_busy &&
-                                            !_hasPendingDeferredShareVideoTasks;
-                                        final buttonColor = buttonEnabled
-                                            ? MemoFlowPalette.primary
-                                            : Theme.of(context)
-                                                  .colorScheme
-                                                  .surfaceContainerHighest;
-                                        final buttonShadowColor = buttonEnabled
-                                            ? MemoFlowPalette.primary
-                                                  .withValues(
-                                                    alpha: isDark ? 0.3 : 0.4,
-                                                  )
-                                            : Colors.black.withValues(
-                                                alpha: isDark ? 0.18 : 0.1,
-                                              );
-
-                                        return GestureDetector(
-                                          onTap: buttonEnabled
-                                              ? _submitOrVoice
-                                              : null,
-                                          child: AnimatedScale(
-                                            duration: const Duration(
-                                              milliseconds: 120,
-                                            ),
-                                            scale: _busy ? 0.98 : 1.0,
-                                            child: SizedBox(
-                                              width: 64,
-                                              height: 64,
-                                              child: Stack(
-                                                alignment: Alignment.center,
-                                                children: [
-                                                  if (deferredProgress != null)
-                                                    SizedBox(
-                                                      width: 64,
-                                                      height: 64,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                            value:
-                                                                deferredProgress,
-                                                            strokeWidth: 3,
-                                                            color:
-                                                                MemoFlowPalette
-                                                                    .primary,
-                                                            backgroundColor:
-                                                                MemoFlowPalette
-                                                                    .primary
-                                                                    .withValues(
-                                                                      alpha:
-                                                                          0.18,
-                                                                    ),
-                                                          ),
-                                                    ),
-                                                  Container(
-                                                    width: 56,
-                                                    height: 56,
-                                                    decoration: BoxDecoration(
-                                                      color: buttonColor,
-                                                      shape: BoxShape.circle,
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color:
-                                                              buttonShadowColor,
-                                                          blurRadius: 16,
-                                                          offset: const Offset(
-                                                            0,
-                                                            8,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    child: Center(
-                                                      child: _busy
-                                                          ? const SizedBox.square(
-                                                              dimension: 22,
-                                                              child:
-                                                                  CircularProgressIndicator(
-                                                                    strokeWidth:
-                                                                        2,
-                                                                    color: Colors
-                                                                        .white,
-                                                                  ),
-                                                            )
-                                                          : ValueListenableBuilder<
-                                                              TextEditingValue
-                                                            >(
-                                                              valueListenable:
-                                                                  _controller,
-                                                              builder: (context, value, _) {
-                                                                final hasText =
-                                                                    value.text
-                                                                        .trim()
-                                                                        .isNotEmpty;
-                                                                final hasAttachments =
-                                                                    _pendingAttachments
-                                                                        .isNotEmpty ||
-                                                                    _deferredInlineImageRequests
-                                                                        .isNotEmpty ||
-                                                                    _visibleDeferredShareVideoTasks
-                                                                        .isNotEmpty;
-                                                                final showSend =
-                                                                    hasText ||
-                                                                    hasAttachments;
-                                                                return AnimatedSwitcher(
-                                                                  duration:
-                                                                      const Duration(
-                                                                        milliseconds:
-                                                                            160,
-                                                                      ),
-                                                                  transitionBuilder:
-                                                                      (
-                                                                        child,
-                                                                        animation,
-                                                                      ) {
-                                                                        return ScaleTransition(
-                                                                          scale:
-                                                                              animation,
-                                                                          child:
-                                                                              child,
-                                                                        );
-                                                                      },
-                                                                  child: Icon(
-                                                                    showSend
-                                                                        ? Icons
-                                                                              .send_rounded
-                                                                        : Icons
-                                                                              .graphic_eq,
-                                                                    key:
-                                                                        ValueKey<
-                                                                          bool
-                                                                        >(
-                                                                          showSend,
-                                                                        ),
-                                                                    color: Colors
-                                                                        .white,
-                                                                    size:
-                                                                        showSend
-                                                                        ? 24
-                                                                        : 28,
-                                                                  ),
-                                                                );
-                                                              },
-                                                            ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                    NoteInputCompactSendButton(
+                                      isDark: isDark,
+                                      busy: _busy,
+                                      deferredProgress:
+                                          _deferredInlineImageProgress ??
+                                          _deferredShareVideoProgress,
+                                      hasPendingDeferredShareVideoTasks:
+                                          _hasPendingDeferredShareVideoTasks,
+                                      hasAttachmentsForSend:
+                                          _pendingAttachments.isNotEmpty ||
+                                          _deferredInlineImageRequests
+                                              .isNotEmpty ||
+                                          _visibleDeferredShareVideoTasks
+                                              .isNotEmpty,
+                                      controller: _controller,
+                                      onPressed: _submitOrVoice,
                                     ),
                                   ],
                                 ),

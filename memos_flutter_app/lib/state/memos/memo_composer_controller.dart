@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/markdown_editing.dart';
-import '../../features/memos/tag_autocomplete.dart';
 import 'memo_composer_state.dart';
+import 'memo_tag_autocomplete.dart';
 import 'memos_providers.dart';
 
 class MemoComposerController extends ChangeNotifier {

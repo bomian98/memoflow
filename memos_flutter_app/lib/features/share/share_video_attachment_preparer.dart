@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
+import '../../core/attachment_mime_type.dart';
 import '../../data/api/memos_api.dart';
 import 'share_clip_models.dart';
 import 'share_video_compression_service.dart';
@@ -122,7 +123,7 @@ class ShareVideoAttachmentPreparer {
       return SharePreparedVideoAttachment(
         filePath: resolvedPath,
         filename: p.basename(resolvedPath),
-        mimeType: _guessMimeType(resolvedPath),
+        mimeType: guessAttachmentMimeType(resolvedPath, fallback: 'video/mp4'),
         size: resolvedSize,
         wasCompressed: wasCompressed,
       );
@@ -157,12 +158,4 @@ Future<void> _deleteFile(String? path) async {
   try {
     await file.delete();
   } catch (_) {}
-}
-
-String _guessMimeType(String filename) {
-  final lower = filename.toLowerCase();
-  if (lower.endsWith('.webm')) return 'video/webm';
-  if (lower.endsWith('.mov')) return 'video/quicktime';
-  if (lower.endsWith('.m4v')) return 'video/x-m4v';
-  return 'video/mp4';
 }

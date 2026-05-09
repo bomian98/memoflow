@@ -14,6 +14,7 @@ import '../../../application/desktop/desktop_window_resize_frame.dart';
 import '../../../i18n/strings.g.dart';
 import '../../../core/app_localization.dart';
 import '../../../core/app_theme.dart';
+import '../../../core/attachment_mime_type.dart';
 import '../../../core/desktop/shortcuts.dart';
 import '../../../core/desktop_db_write_channel.dart';
 import '../../../core/desktop_quick_input_channel.dart';
@@ -1169,43 +1170,6 @@ class _DesktopQuickInputWindowScreenState
     return '${text.substring(0, maxLength - 3)}...';
   }
 
-  String _guessMimeType(String filename) {
-    final lower = filename.toLowerCase();
-    final dot = lower.lastIndexOf('.');
-    final ext = dot == -1 ? '' : lower.substring(dot + 1);
-    return switch (ext) {
-      'png' => 'image/png',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'gif' => 'image/gif',
-      'webp' => 'image/webp',
-      'bmp' => 'image/bmp',
-      'heic' => 'image/heic',
-      'heif' => 'image/heif',
-      'mp3' => 'audio/mpeg',
-      'm4a' => 'audio/mp4',
-      'aac' => 'audio/aac',
-      'wav' => 'audio/wav',
-      'flac' => 'audio/flac',
-      'ogg' => 'audio/ogg',
-      'opus' => 'audio/opus',
-      'mp4' => 'video/mp4',
-      'mov' => 'video/quicktime',
-      'mkv' => 'video/x-matroska',
-      'webm' => 'video/webm',
-      'avi' => 'video/x-msvideo',
-      'pdf' => 'application/pdf',
-      'zip' => 'application/zip',
-      'rar' => 'application/vnd.rar',
-      '7z' => 'application/x-7z-compressed',
-      'txt' => 'text/plain',
-      'md' => 'text/markdown',
-      'json' => 'application/json',
-      'csv' => 'text/csv',
-      'log' => 'text/plain',
-      _ => 'application/octet-stream',
-    };
-  }
-
   Future<void> _showGalleryMobileOnlyMessage() async {
     _showSnack(context.t.strings.legacy.msg_gallery_mobile_only);
   }
@@ -1238,7 +1202,7 @@ class _DesktopQuickInputWindowScreenState
             uid: generateUid(),
             filePath: path,
             filename: filename,
-            mimeType: _guessMimeType(filename),
+            mimeType: guessAttachmentMimeType(filename),
             size: handle.lengthSync(),
           ),
         );
@@ -1553,7 +1517,7 @@ class _DesktopQuickInputWindowScreenState
             uid: generateUid(),
             filePath: path,
             filename: filename,
-            mimeType: _guessMimeType(filename),
+            mimeType: guessAttachmentMimeType(filename),
             size: file.lengthSync(),
           ),
         );

@@ -6,93 +6,14 @@ import '../../core/memoflow_palette.dart';
 import '../../state/memos/memos_providers.dart';
 import '../../state/tags/tag_color_lookup.dart';
 
-const int kEditorTagSuggestionLimit = 100;
+export '../../state/memos/memo_tag_autocomplete.dart';
+
 const int kEditorTagSuggestionVisibleRows = 6;
 const double _kTagAutocompleteGap = 8;
 const double _kTagAutocompleteViewportPadding = 12;
 const double _kTagAutocompleteRowHeight = 42;
 const double _kTagAutocompletePanelPadding = 12;
 const int _kTagAutocompleteMaxChars = 19;
-
-class ActiveTagQuery {
-  const ActiveTagQuery({
-    required this.start,
-    required this.end,
-    required this.query,
-  });
-
-  final int start;
-  final int end;
-  final String query;
-}
-
-ActiveTagQuery? detectActiveTagQuery(TextEditingValue value) {
-  final selection = value.selection;
-  if (!selection.isValid || !selection.isCollapsed) return null;
-  final text = value.text;
-  final caret = selection.extentOffset;
-  if (caret < 0 || caret > text.length) return null;
-
-  var tokenStart = caret - 1;
-  while (tokenStart >= 0 && !_isTagBoundary(text[tokenStart])) {
-    tokenStart--;
-  }
-  tokenStart += 1;
-  if (tokenStart >= text.length || text[tokenStart] != '#') return null;
-  if (tokenStart + 1 > caret) return null;
-
-  final query = text.substring(tokenStart + 1, caret);
-  if (query.contains('#')) return null;
-  if (!_partialTagPattern.hasMatch(query)) return null;
-  return ActiveTagQuery(start: tokenStart, end: caret, query: query);
-}
-
-List<TagStat> buildTagSuggestions(
-  List<TagStat> tags, {
-  required String query,
-  int limit = kEditorTagSuggestionLimit,
-}) {
-  if (limit <= 0 || tags.isEmpty) return const <TagStat>[];
-  final normalized = query.trim().toLowerCase();
-  final ranked = <({TagStat stat, int score})>[];
-  final seen = <String>{};
-
-  for (final stat in tags) {
-    final path = stat.path.trim();
-    if (path.isEmpty || !seen.add(path)) continue;
-    final leaf = path.split('/').last;
-    final pathLower = path.toLowerCase();
-    final leafLower = leaf.toLowerCase();
-
-    int score;
-    if (normalized.isEmpty) {
-      score = 4;
-    } else if (leafLower.startsWith(normalized)) {
-      score = 0;
-    } else if (pathLower.startsWith(normalized)) {
-      score = 1;
-    } else if (leafLower.contains(normalized)) {
-      score = 2;
-    } else if (pathLower.contains(normalized)) {
-      score = 3;
-    } else {
-      continue;
-    }
-
-    ranked.add((stat: stat, score: score));
-  }
-
-  ranked.sort((a, b) {
-    final byScore = a.score.compareTo(b.score);
-    if (byScore != 0) return byScore;
-    if (a.stat.pinned != b.stat.pinned) return a.stat.pinned ? -1 : 1;
-    final byCount = b.stat.count.compareTo(a.stat.count);
-    if (byCount != 0) return byCount;
-    return a.stat.path.compareTo(b.stat.path);
-  });
-
-  return ranked.take(limit).map((entry) => entry.stat).toList(growable: false);
-}
 
 class TagAutocompletePanel extends StatefulWidget {
   const TagAutocompletePanel({
@@ -121,7 +42,9 @@ class _TagAutocompletePanelState extends State<TagAutocompletePanel> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncHighlightedIntoView());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _syncHighlightedIntoView(),
+    );
   }
 
   @override
@@ -129,7 +52,9 @@ class _TagAutocompletePanelState extends State<TagAutocompletePanel> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.highlightedIndex != widget.highlightedIndex ||
         oldWidget.tags.length != widget.tags.length) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _syncHighlightedIntoView());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _syncHighlightedIntoView(),
+      );
     }
   }
 
@@ -140,12 +65,17 @@ class _TagAutocompletePanelState extends State<TagAutocompletePanel> {
   }
 
   void _syncHighlightedIntoView() {
-    if (!mounted || widget.tags.isEmpty || !_scrollController.hasClients) return;
-    final index = widget.highlightedIndex.clamp(0, widget.tags.length - 1).toInt();
+    if (!mounted || widget.tags.isEmpty || !_scrollController.hasClients) {
+      return;
+    }
+    final index = widget.highlightedIndex
+        .clamp(0, widget.tags.length - 1)
+        .toInt();
     final targetTop = index * _kTagAutocompleteRowHeight;
     final targetBottom = targetTop + _kTagAutocompleteRowHeight;
     final viewportTop = _scrollController.offset;
-    final viewportBottom = viewportTop + _scrollController.position.viewportDimension;
+    final viewportBottom =
+        viewportTop + _scrollController.position.viewportDimension;
 
     double? nextOffset;
     if (targetTop < viewportTop) {
@@ -211,11 +141,12 @@ class _TagAutocompletePanelState extends State<TagAutocompletePanel> {
               itemBuilder: (context, index) {
                 final stat = widget.tags[index];
                 final isHighlighted = index == widget.highlightedIndex;
-                final tagColorsForRow = widget.tagColors.resolveChipColorsByPath(
-                  stat.path,
-                  surfaceColor: theme.colorScheme.surface,
-                  isDark: isDark,
-                );
+                final tagColorsForRow = widget.tagColors
+                    .resolveChipColorsByPath(
+                      stat.path,
+                      surfaceColor: theme.colorScheme.surface,
+                      isDark: isDark,
+                    );
                 final dotColor =
                     tagColorsForRow?.background ?? theme.colorScheme.primary;
                 final displayLabel = _formatAutocompleteLabel(stat.path);
@@ -527,13 +458,3 @@ String _formatAutocompleteLabel(String input) {
   final visibleCount = (_kTagAutocompleteMaxChars - 3).clamp(1, 9999);
   return '${String.fromCharCodes(runes.take(visibleCount))}...';
 }
-
-final RegExp _partialTagPattern = RegExp(
-  r'^[\p{L}\p{N}\p{S}_/\-]*$',
-  unicode: true,
-);
-final RegExp _tagBoundaryPattern = RegExp(
-  "[\\s\\.,;:!\\?\\(\\)\\[\\]\\{\\}\"'`<>]",
-);
-
-bool _isTagBoundary(String char) => _tagBoundaryPattern.hasMatch(char);
