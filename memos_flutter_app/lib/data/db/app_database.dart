@@ -16,6 +16,7 @@ import 'compose_draft_db_persistence.dart';
 import 'memo_auxiliary_db_persistence.dart';
 import 'memo_core_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
+import 'memo_query_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'outbox_db_persistence.dart';
 import 'stats_cache_db_persistence.dart';
@@ -942,12 +943,9 @@ class AppDatabase {
   static Future<void> _normalizeStoredTags(Database db) async {
     var lastId = 0;
     while (true) {
-      final rows = await db.query(
-        'memos',
-        columns: const ['id', 'uid', 'tags'],
-        where: 'id > ?',
-        whereArgs: [lastId],
-        orderBy: 'id ASC',
+      final rows = await MemoQueryDbPersistence.listMemoTagNormalizationRows(
+        db,
+        afterId: lastId,
         limit: _maintenanceBatchSize,
       );
       if (rows.isEmpty) return;
@@ -1070,14 +1068,8 @@ class AppDatabase {
       where: 'uid = ?',
       whereArgs: [normalizedUid],
     );
-    final rows = await txn.query(
-      'memos',
-      columns: const ['id'],
-      where: 'uid = ?',
-      whereArgs: [normalizedUid],
-      limit: 1,
-    );
-    final rowId = _readInt(rows.isEmpty ? null : rows.first['id']) ?? 0;
+    final rowId =
+        await MemoQueryDbPersistence.getMemoIdByUid(txn, normalizedUid) ?? 0;
     if (rowId > 0) {
       await MemoSearchDbPersistence.refreshFtsEntryForMemo(
         txn,
@@ -1754,14 +1746,7 @@ class AppDatabase {
 
   Future<Map<String, dynamic>?> getMemoByUid(String uid) async {
     final db = await this.db;
-    final rows = await db.query(
-      'memos',
-      where: 'uid = ?',
-      whereArgs: [uid],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return rows.first;
+    return MemoQueryDbPersistence.getMemoByUid(db, uid);
   }
 
   Future<Map<String, dynamic>?> getMemoClipCardByUid(String memoUid) async {
@@ -2461,35 +2446,14 @@ class AppDatabase {
 
   Future<List<String>> listTagStrings({String? state}) async {
     final db = await this.db;
-    final normalizedState = (state ?? '').trim();
-    final rows = await db.query(
-      'memos',
-      columns: const ['tags'],
-      where: normalizedState.isEmpty ? null : 'state = ?',
-      whereArgs: normalizedState.isEmpty ? null : [normalizedState],
-    );
-    return rows
-        .map((r) => (r['tags'] as String?) ?? '')
-        .where((s) => s.isNotEmpty)
-        .toList(growable: false);
+    return MemoQueryDbPersistence.listTagStrings(db, state: state);
   }
 
   Future<List<Map<String, dynamic>>> listMemoAttachmentRows({
     String? state,
   }) async {
     final db = await this.db;
-    final normalizedState = (state ?? '').trim();
-    return db.query(
-      'memos',
-      columns: const ['uid', 'update_time', 'attachments_json'],
-      where: [
-        if (normalizedState.isNotEmpty) 'state = ?',
-        "attachments_json <> '[]'",
-      ].join(' AND '),
-      whereArgs: [if (normalizedState.isNotEmpty) normalizedState],
-      orderBy: 'update_time DESC',
-      limit: 2000,
-    );
+    return MemoQueryDbPersistence.listMemoAttachmentRows(db, state: state);
   }
 
   Future<List<Map<String, dynamic>>> listMemos({
@@ -2517,13 +2481,7 @@ class AppDatabase {
     String? state,
   }) async {
     final db = await this.db;
-    final normalizedState = (state ?? '').trim();
-    return db.query(
-      'memos',
-      columns: const ['uid', 'sync_state', 'visibility'],
-      where: normalizedState.isEmpty ? null : 'state = ?',
-      whereArgs: normalizedState.isEmpty ? null : [normalizedState],
-    );
+    return MemoQueryDbPersistence.listMemoUidSyncStates(db, state: state);
   }
 
   Future<Set<String>> listPendingOutboxMemoUids() async {
@@ -2537,27 +2495,11 @@ class AppDatabase {
     bool includeArchived = false,
   }) async {
     final db = await this.db;
-    final whereClauses = <String>[];
-    final whereArgs = <Object?>[];
-
-    if (!includeArchived) {
-      whereClauses.add("state = 'NORMAL'");
-    }
-    if (startTimeSec != null) {
-      whereClauses.add('COALESCE(display_time, create_time) >= ?');
-      whereArgs.add(startTimeSec);
-    }
-    if (endTimeSecExclusive != null) {
-      whereClauses.add('COALESCE(display_time, create_time) < ?');
-      whereArgs.add(endTimeSecExclusive);
-    }
-
-    return db.query(
-      'memos',
-      where: whereClauses.isEmpty ? null : whereClauses.join(' AND '),
-      whereArgs: whereArgs.isEmpty ? null : whereArgs,
-      orderBy: 'COALESCE(display_time, create_time) ASC',
-      limit: 20000,
+    return MemoQueryDbPersistence.listMemosForExport(
+      db,
+      startTimeSec: startTimeSec,
+      endTimeSecExclusive: endTimeSecExclusive,
+      includeArchived: includeArchived,
     );
   }
 
@@ -2567,32 +2509,12 @@ class AppDatabase {
     bool includeArchived = false,
   }) async {
     final db = await this.db;
-    final whereClauses = <String>[];
-    final whereArgs = <Object?>[];
-
-    if (!includeArchived) {
-      whereClauses.add("m.state = 'NORMAL'");
-    }
-    if (startTimeSec != null) {
-      whereClauses.add('COALESCE(m.display_time, m.create_time) >= ?');
-      whereArgs.add(startTimeSec);
-    }
-    if (endTimeSecExclusive != null) {
-      whereClauses.add('COALESCE(m.display_time, m.create_time) < ?');
-      whereArgs.add(endTimeSecExclusive);
-    }
-
-    final whereClause = whereClauses.isEmpty
-        ? ''
-        : 'WHERE ${whereClauses.join(' AND ')}';
-    return db.rawQuery('''
-SELECT m.*, r.relations_json
-FROM memos m
-LEFT JOIN memo_relations_cache r ON r.memo_uid = m.uid
-$whereClause
-ORDER BY COALESCE(m.display_time, m.create_time) ASC
-LIMIT 20000;
-''', whereArgs);
+    return MemoQueryDbPersistence.listMemosForLosslessExport(
+      db,
+      startTimeSec: startTimeSec,
+      endTimeSecExclusive: endTimeSecExclusive,
+      includeArchived: includeArchived,
+    );
   }
 
   Stream<List<Map<String, dynamic>>> watchMemos({
@@ -2644,12 +2566,9 @@ LIMIT 20000;
   static Future<void> _backfillTagsFromMemos(Database db) async {
     var lastId = 0;
     while (true) {
-      final rows = await db.query(
-        'memos',
-        columns: const ['id', 'uid', 'content', 'tags'],
-        where: 'id > ?',
-        whereArgs: [lastId],
-        orderBy: 'id ASC',
+      final rows = await MemoQueryDbPersistence.listMemoTagBackfillRows(
+        db,
+        afterId: lastId,
         limit: _maintenanceBatchSize,
       );
       if (rows.isEmpty) return;

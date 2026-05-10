@@ -18,6 +18,7 @@ import 'compose_draft_db_persistence.dart';
 import 'memo_auxiliary_db_persistence.dart';
 import 'memo_core_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
+import 'memo_query_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'outbox_db_persistence.dart';
 import 'tag_db_persistence.dart';
@@ -1298,7 +1299,7 @@ class AppDatabaseWriteDao {
         );
       }
 
-      final memos = await txn.query('memos', columns: const ['uid', 'tags']);
+      final memos = await MemoQueryDbPersistence.listMemoUidTagRows(txn);
       for (final row in memos) {
         final uid = row['uid'];
         if (uid is! String || uid.trim().isEmpty) continue;
