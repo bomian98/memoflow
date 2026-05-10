@@ -14,6 +14,7 @@ import 'app_database_write_dao.dart';
 import 'collection_db_persistence.dart';
 import 'compose_draft_db_persistence.dart';
 import 'memo_auxiliary_db_persistence.dart';
+import 'memo_core_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'outbox_db_persistence.dart';
@@ -84,48 +85,14 @@ class AppDatabase {
           await db.rawQuery('PRAGMA busy_timeout = $busyTimeoutMs;');
         },
         onCreate: (db, _) async {
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS memos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  uid TEXT NOT NULL UNIQUE,
-  content TEXT NOT NULL,
-  visibility TEXT NOT NULL,
-  pinned INTEGER NOT NULL DEFAULT 0,
-  state TEXT NOT NULL DEFAULT 'NORMAL',
-  create_time INTEGER NOT NULL,
-  display_time INTEGER,
-  update_time INTEGER NOT NULL,
-  tags TEXT NOT NULL DEFAULT '',
-  attachments_json TEXT NOT NULL DEFAULT '[]',
-  location_placeholder TEXT,
-  location_lat REAL,
-  location_lng REAL,
-  relation_count INTEGER NOT NULL DEFAULT 0,
-  sync_state INTEGER NOT NULL DEFAULT 0,
-  last_error TEXT
-);
-''');
+          await MemoCoreDbPersistence.ensureMemoTable(db);
 
           await TagDbPersistence.ensureTables(db);
 
           await MemoAuxiliaryDbPersistence.ensureMemoReminderTable(db);
           await MemoAuxiliaryDbPersistence.ensureMemoClipCardsTable(db);
 
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS attachments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  uid TEXT NOT NULL UNIQUE,
-  memo_uid TEXT,
-  filename TEXT NOT NULL,
-  mime_type TEXT NOT NULL,
-  size INTEGER NOT NULL,
-  external_link TEXT,
-  create_time INTEGER NOT NULL,
-  local_path TEXT,
-  downloaded INTEGER NOT NULL DEFAULT 0,
-  pending_upload INTEGER NOT NULL DEFAULT 0
-);
-''');
+          await MemoCoreDbPersistence.ensureAttachmentTable(db);
 
           await OutboxDbPersistence.ensureTable(db);
 
@@ -152,16 +119,10 @@ CREATE TABLE IF NOT EXISTS attachments (
             await MemoAuxiliaryDbPersistence.ensureMemoReminderTable(db);
           }
           if (oldVersion < 6) {
-            await db.execute(
-              'ALTER TABLE memos ADD COLUMN relation_count INTEGER NOT NULL DEFAULT 0;',
-            );
+            await MemoCoreDbPersistence.ensureRelationCountColumn(db);
           }
           if (oldVersion < 7) {
-            await db.execute(
-              'ALTER TABLE memos ADD COLUMN location_placeholder TEXT;',
-            );
-            await db.execute('ALTER TABLE memos ADD COLUMN location_lat REAL;');
-            await db.execute('ALTER TABLE memos ADD COLUMN location_lng REAL;');
+            await MemoCoreDbPersistence.ensureLocationColumns(db);
           }
           if (oldVersion < 8) {
             await _ensureStatsPersistenceTables(db, rebuild: true);
@@ -210,15 +171,7 @@ CREATE TABLE IF NOT EXISTS attachments (
             await OutboxDbPersistence.migrateLegacyErrorChains(db);
           }
           if (oldVersion < 20) {
-            await _ensureColumnExists(
-              db,
-              table: 'memos',
-              column: 'display_time',
-              definition: 'display_time INTEGER',
-            );
-            await db.execute(
-              'UPDATE memos SET display_time = create_time WHERE display_time IS NULL;',
-            );
+            await MemoCoreDbPersistence.ensureDisplayTimeColumnAndBackfill(db);
           }
           if (oldVersion < 21) {
             await CollectionDbPersistence.ensureCollectionTables(db);
@@ -1907,13 +1860,7 @@ CREATE TABLE IF NOT EXISTS attachments (
 
   Future<int> countMemos() async {
     final db = await this.db;
-    final rows = await db.rawQuery('SELECT COUNT(*) AS count FROM memos');
-    if (rows.isEmpty) return 0;
-    final raw = rows.first['count'];
-    if (raw is int) return raw;
-    if (raw is num) return raw.toInt();
-    if (raw is String) return int.tryParse(raw.trim()) ?? 0;
-    return 0;
+    return MemoCoreDbPersistence.countMemos(db);
   }
 
   Future<List<Map<String, dynamic>>> listOutboxPendingByType(
@@ -2753,35 +2700,5 @@ LIMIT 20000;
       });
       await Future<void>.delayed(const Duration(milliseconds: 1));
     }
-  }
-
-  static String _quoteIdentifier(String identifier) {
-    final escaped = identifier.replaceAll('"', '""');
-    return '"$escaped"';
-  }
-
-  static Future<bool> _tableHasColumn(
-    Database db,
-    String table,
-    String column,
-  ) async {
-    final rows = await db.rawQuery(
-      'PRAGMA table_info(${_quoteIdentifier(table)});',
-    );
-    return rows.any((row) => row['name'] == column);
-  }
-
-  static Future<void> _ensureColumnExists(
-    Database db, {
-    required String table,
-    required String column,
-    required String definition,
-  }) async {
-    if (await _tableHasColumn(db, table, column)) {
-      return;
-    }
-    await db.execute(
-      'ALTER TABLE ${_quoteIdentifier(table)} ADD COLUMN $definition;',
-    );
   }
 }

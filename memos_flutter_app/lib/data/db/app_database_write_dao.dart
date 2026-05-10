@@ -16,6 +16,7 @@ import 'app_database.dart';
 import 'collection_db_persistence.dart';
 import 'compose_draft_db_persistence.dart';
 import 'memo_auxiliary_db_persistence.dart';
+import 'memo_core_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'outbox_db_persistence.dart';
@@ -1371,11 +1372,10 @@ class AppDatabaseWriteDao {
       oldUid: oldUid,
       newUid: newUid,
     );
-    await executor.update(
-      'attachments',
-      {'memo_uid': newUid},
-      where: 'memo_uid = ?',
-      whereArgs: [oldUid],
+    await MemoCoreDbPersistence.renameAttachmentMemoUid(
+      executor,
+      oldUid: oldUid,
+      newUid: newUid,
     );
     await MemoLifecycleDbPersistence.renameMemoUid(
       executor,
