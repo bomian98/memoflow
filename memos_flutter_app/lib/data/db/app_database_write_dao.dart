@@ -11,8 +11,10 @@ import '../models/memo_clip_card_metadata.dart';
 import '../models/memo_location.dart';
 import '../models/tag.dart';
 import '../models/tag_snapshot.dart';
+import 'ai_db_persistence.dart';
 import 'app_database.dart';
 import 'compose_draft_db_persistence.dart';
+import 'memo_lifecycle_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'outbox_db_persistence.dart';
 import 'tag_db_persistence.dart';
@@ -38,12 +40,11 @@ class AppDatabaseWriteDao {
     final trimmedUid = memoUid.trim();
     if (trimmedUid.isEmpty) return;
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await sqlite.insert('ai_memo_policy', <String, Object?>{
-      'memo_uid': trimmedUid,
-      'allow_ai': allowAi ? 1 : 0,
-      'updated_time': now,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await AiDbPersistence.upsertMemoPolicy(
+      sqlite,
+      memoUid: trimmedUid,
+      allowAi: allowAi,
+    );
     _db.notifyDataChanged();
   }
 
@@ -55,17 +56,14 @@ class AppDatabaseWriteDao {
     int priority = 100,
   }) async {
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final id = await sqlite.insert('ai_index_jobs', <String, Object?>{
-      'memo_uid': memoUid?.trim(),
-      'reason': aiIndexJobReasonToStorage(reason),
-      'memo_content_hash': memoContentHash,
-      'embedding_profile_key': embeddingProfileKey,
-      'status': aiIndexJobStatusToStorage(AiIndexJobStatus.queued),
-      'attempt_count': 0,
-      'priority': priority,
-      'created_time': now,
-    });
+    final id = await AiDbPersistence.enqueueIndexJob(
+      sqlite,
+      memoUid: memoUid,
+      reason: reason,
+      memoContentHash: memoContentHash,
+      embeddingProfileKey: embeddingProfileKey,
+      priority: priority,
+    );
     _db.notifyDataChanged();
     return id;
   }
@@ -79,25 +77,14 @@ class AppDatabaseWriteDao {
     bool markFinished = false,
   }) async {
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final values = <String, Object?>{
-      'status': aiIndexJobStatusToStorage(status),
-      'error_text': errorText,
-    };
-    if (attemptCount != null) {
-      values['attempt_count'] = attemptCount;
-    }
-    if (markStarted) {
-      values['started_time'] = now;
-    }
-    if (markFinished) {
-      values['finished_time'] = now;
-    }
-    await sqlite.update(
-      'ai_index_jobs',
-      values,
-      where: 'id = ?',
-      whereArgs: <Object?>[jobId],
+    await AiDbPersistence.updateIndexJobStatus(
+      sqlite,
+      jobId,
+      status: status,
+      attemptCount: attemptCount,
+      errorText: errorText,
+      markStarted: markStarted,
+      markFinished: markFinished,
     );
     _db.notifyDataChanged();
   }
@@ -106,53 +93,8 @@ class AppDatabaseWriteDao {
     final trimmedUid = memoUid.trim();
     if (trimmedUid.isEmpty) return;
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     await sqlite.transaction((txn) async {
-      final rows = await txn.query(
-        'ai_chunks',
-        columns: const ['id'],
-        where: 'memo_uid = ? AND is_active = 1',
-        whereArgs: <Object?>[trimmedUid],
-      );
-      final chunkIds = rows
-          .map((row) => _readInt(row['id']))
-          .whereType<int>()
-          .toList(growable: false);
-      await txn.update(
-        'ai_chunks',
-        <String, Object?>{
-          'is_active': 0,
-          'invalidated_time': now,
-          'updated_time': now,
-        },
-        where: 'memo_uid = ? AND is_active = 1',
-        whereArgs: <Object?>[trimmedUid],
-      );
-      if (chunkIds.isNotEmpty) {
-        final placeholders = List.filled(chunkIds.length, '?').join(', ');
-        await txn.rawUpdate(
-          'UPDATE ai_embeddings SET status = ?, updated_time = ? WHERE chunk_id IN ($placeholders) AND status != ?',
-          <Object?>[
-            aiEmbeddingStatusToStorage(AiEmbeddingStatus.stale),
-            now,
-            ...chunkIds,
-            aiEmbeddingStatusToStorage(AiEmbeddingStatus.stale),
-          ],
-        );
-      }
-      await txn.rawUpdate(
-        '''
-UPDATE ai_analysis_results
-SET is_stale = 1,
-    updated_time = ?
-WHERE id IN (
-  SELECT DISTINCT result_id
-  FROM ai_analysis_evidences
-  WHERE memo_uid = ?
-);
-''',
-        <Object?>[now, trimmedUid],
-      );
+      await AiDbPersistence.invalidateActiveChunksForMemo(txn, trimmedUid);
     });
     _db.notifyDataChanged();
   }
@@ -164,28 +106,13 @@ WHERE id IN (
     final trimmedUid = memoUid.trim();
     if (trimmedUid.isEmpty || chunks.isEmpty) return const <int>[];
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final ids = <int>[];
+    late List<int> ids;
     await sqlite.transaction((txn) async {
-      for (final chunk in chunks) {
-        final id = await txn.insert('ai_chunks', <String, Object?>{
-          'memo_uid': trimmedUid,
-          'chunk_index': chunk.chunkIndex,
-          'content': chunk.content,
-          'content_hash': chunk.contentHash,
-          'memo_content_hash': chunk.memoContentHash,
-          'char_start': chunk.charStart,
-          'char_end': chunk.charEnd,
-          'token_estimate': chunk.tokenEstimate,
-          'memo_create_time': chunk.memoCreateTime,
-          'memo_update_time': chunk.memoUpdateTime,
-          'memo_visibility': chunk.memoVisibility,
-          'is_active': 1,
-          'created_time': now,
-          'updated_time': now,
-        });
-        ids.add(id);
-      }
+      ids = await AiDbPersistence.insertActiveChunks(
+        txn,
+        memoUid: trimmedUid,
+        chunks: chunks,
+      );
     });
     _db.notifyDataChanged();
     return ids;
@@ -199,30 +126,14 @@ WHERE id IN (
     String? errorText,
   }) async {
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    Uint8List? vectorBlob;
-    var dimensions = 0;
-    if (vector != null && vector.isNotEmpty) {
-      vectorBlob = vector.buffer.asUint8List(
-        vector.offsetInBytes,
-        vector.lengthInBytes,
-      );
-      dimensions = vector.length;
-    }
-    await sqlite.insert('ai_embeddings', <String, Object?>{
-      'chunk_id': chunkId,
-      'backend_kind': _backendKindToStorage(profile.backendKind),
-      'provider_kind': _providerKindToStorage(profile.providerKind),
-      'base_url': profile.baseUrl,
-      'model': profile.model,
-      'model_version': '',
-      'dimensions': dimensions,
-      'vector_blob': vectorBlob,
-      'status': aiEmbeddingStatusToStorage(status),
-      'error_text': errorText,
-      'created_time': now,
-      'updated_time': now,
-    });
+    await AiDbPersistence.insertEmbeddingRecord(
+      sqlite,
+      chunkId: chunkId,
+      profile: profile,
+      status: status,
+      vector: vector,
+      errorText: errorText,
+    );
     _db.notifyDataChanged();
   }
 
@@ -245,30 +156,25 @@ WHERE id IN (
     required Map<String, dynamic> retrievalProfile,
   }) async {
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final id = await sqlite.insert('ai_analysis_tasks', <String, Object?>{
-      'task_uid': taskUid,
-      'analysis_type': aiAnalysisTypeToStorage(analysisType),
-      'status': aiTaskStatusToStorage(status),
-      'range_start': rangeStart,
-      'range_end_exclusive': rangeEndExclusive,
-      'include_public': includePublic ? 1 : 0,
-      'include_private': includePrivate ? 1 : 0,
-      'include_protected': includeProtected ? 1 : 0,
-      'prompt_template': promptTemplate,
-      'template_kind': aiAnalysisTemplateKindToStorage(templateKind),
-      'template_id': templateId.trim(),
-      'template_title_snapshot': templateTitleSnapshot.trim(),
-      'template_icon_key_snapshot': templateIconKeySnapshot.trim(),
-      'generation_profile_key': generationProfileKey,
-      'embedding_profile_key': embeddingProfileKey,
-      'retrieval_profile_json': jsonEncode(retrievalProfile),
-      'mailbox_delivery_state': 'hidden',
-      'mailbox_open_state': 'unread',
-      'reply_animation_state': 'idle',
-      'created_time': now,
-      'updated_time': now,
-    });
+    final id = await AiDbPersistence.createAnalysisTask(
+      sqlite,
+      taskUid: taskUid,
+      analysisType: analysisType,
+      status: status,
+      rangeStart: rangeStart,
+      rangeEndExclusive: rangeEndExclusive,
+      includePublic: includePublic,
+      includePrivate: includePrivate,
+      includeProtected: includeProtected,
+      promptTemplate: promptTemplate,
+      templateKind: templateKind,
+      templateId: templateId,
+      templateTitleSnapshot: templateTitleSnapshot,
+      templateIconKeySnapshot: templateIconKeySnapshot,
+      generationProfileKey: generationProfileKey,
+      embeddingProfileKey: embeddingProfileKey,
+      retrievalProfile: retrievalProfile,
+    );
     _db.notifyDataChanged();
     return id;
   }
@@ -280,17 +186,12 @@ WHERE id IN (
     bool markCompleted = false,
   }) async {
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await sqlite.update(
-      'ai_analysis_tasks',
-      <String, Object?>{
-        'status': aiTaskStatusToStorage(status),
-        'error_text': errorText,
-        'updated_time': now,
-        if (markCompleted) 'completed_time': now,
-      },
-      where: 'id = ?',
-      whereArgs: <Object?>[taskId],
+    await AiDbPersistence.updateAnalysisTaskStatus(
+      sqlite,
+      taskId,
+      status: status,
+      errorText: errorText,
+      markCompleted: markCompleted,
     );
     _db.notifyDataChanged();
   }
@@ -300,54 +201,12 @@ WHERE id IN (
     required AiStructuredAnalysisResult result,
   }) async {
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     await sqlite.transaction((txn) async {
-      final resultId = await txn.insert(
-        'ai_analysis_results',
-        <String, Object?>{
-          'task_id': taskId,
-          'schema_version': result.schemaVersion,
-          'analysis_type': aiAnalysisTypeToStorage(result.analysisType),
-          'summary': result.summary,
-          'follow_up_suggestions_json': jsonEncode(result.followUpSuggestions),
-          'raw_response_text': result.rawResponseText,
-          'normalized_result_json': result.normalizedResultJson,
-          'is_stale': 0,
-          'created_time': now,
-          'updated_time': now,
-        },
+      await AiDbPersistence.saveAnalysisResult(
+        txn,
+        taskId: taskId,
+        result: result,
       );
-      final sectionIdByKey = <String, int>{};
-      for (var index = 0; index < result.sections.length; index++) {
-        final section = result.sections[index];
-        final sectionId = await txn
-            .insert('ai_analysis_sections', <String, Object?>{
-              'result_id': resultId,
-              'section_key': section.sectionKey,
-              'section_order': index,
-              'title': section.title,
-              'body': section.body,
-              'created_time': now,
-            });
-        sectionIdByKey[section.sectionKey] = sectionId;
-      }
-      for (var index = 0; index < result.evidences.length; index++) {
-        final evidence = result.evidences[index];
-        final sectionId = sectionIdByKey[evidence.sectionKey];
-        if (sectionId == null) continue;
-        await txn.insert('ai_analysis_evidences', <String, Object?>{
-          'result_id': resultId,
-          'section_id': sectionId,
-          'evidence_order': index,
-          'memo_uid': evidence.memoUid,
-          'chunk_id': evidence.chunkId,
-          'quote_text': evidence.quoteText,
-          'char_start': evidence.charStart,
-          'char_end': evidence.charEnd,
-          'relevance_score': evidence.relevanceScore,
-          'created_time': now,
-        });
-      }
     });
     _db.notifyDataChanged();
   }
@@ -356,20 +215,7 @@ WHERE id IN (
     final trimmedUid = memoUid.trim();
     if (trimmedUid.isEmpty) return;
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await sqlite.rawUpdate(
-      '''
-UPDATE ai_analysis_results
-SET is_stale = 1,
-    updated_time = ?
-WHERE id IN (
-  SELECT DISTINCT result_id
-  FROM ai_analysis_evidences
-  WHERE memo_uid = ?
-);
-''',
-      <Object?>[now, trimmedUid],
-    );
+    await AiDbPersistence.markResultsStaleForMemo(sqlite, trimmedUid);
     _db.notifyDataChanged();
   }
 
@@ -532,7 +378,7 @@ WHERE id IN (
     required String relationsJson,
   }) async {
     final sqlite = await _db.db;
-    await _upsertMemoRelationsCache(
+    await MemoLifecycleDbPersistence.upsertMemoRelationsCache(
       sqlite,
       memoUid,
       relationsJson: relationsJson,
@@ -542,7 +388,7 @@ WHERE id IN (
 
   Future<void> deleteMemoRelationsCache(String memoUid) async {
     final sqlite = await _db.db;
-    await _deleteMemoRelationsCache(sqlite, memoUid);
+    await MemoLifecycleDbPersistence.deleteMemoRelationsCache(sqlite, memoUid);
     _db.notifyDataChanged();
   }
 
@@ -552,37 +398,29 @@ WHERE id IN (
     required String summary,
     required String payloadJson,
   }) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) {
-      throw const FormatException('memo_uid is required');
-    }
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final id = await sqlite.insert('memo_versions', {
-      'memo_uid': normalizedUid,
-      'snapshot_time': snapshotTime,
-      'summary': summary,
-      'payload_json': payloadJson,
-      'created_time': now,
-    });
+    final id = await MemoLifecycleDbPersistence.insertMemoVersion(
+      sqlite,
+      memoUid: memoUid,
+      snapshotTime: snapshotTime,
+      summary: summary,
+      payloadJson: payloadJson,
+    );
     _db.notifyDataChanged();
     return id;
   }
 
   Future<void> deleteMemoVersionById(int id) async {
     final sqlite = await _db.db;
-    await sqlite.delete('memo_versions', where: 'id = ?', whereArgs: [id]);
+    await MemoLifecycleDbPersistence.deleteMemoVersionById(sqlite, id);
     _db.notifyDataChanged();
   }
 
   Future<void> deleteMemoVersionsByMemoUid(String memoUid) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return;
     final sqlite = await _db.db;
-    await sqlite.delete(
-      'memo_versions',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
+    await MemoLifecycleDbPersistence.deleteMemoVersionsByMemoUid(
+      sqlite,
+      memoUid,
     );
     _db.notifyDataChanged();
   }
@@ -594,7 +432,7 @@ WHERE id IN (
     int? deletedTime,
   }) async {
     final sqlite = await _db.db;
-    await _upsertMemoDeleteTombstone(
+    await MemoLifecycleDbPersistence.upsertMemoDeleteTombstone(
       sqlite,
       memoUid: memoUid,
       state: state,
@@ -609,45 +447,28 @@ WHERE id IN (
     required String localUrl,
     required String sourceUrl,
   }) async {
-    final normalizedUid = memoUid.trim();
-    final normalizedLocalUrl = localUrl.trim();
-    final normalizedSourceUrl = sourceUrl.trim();
-    if (normalizedUid.isEmpty ||
-        normalizedLocalUrl.isEmpty ||
-        normalizedSourceUrl.isEmpty) {
-      return;
-    }
     final sqlite = await _db.db;
-    await sqlite.insert('memo_inline_image_sources', {
-      'memo_uid': normalizedUid,
-      'local_url': normalizedLocalUrl,
-      'source_url': normalizedSourceUrl,
-      'updated_time': DateTime.now().toUtc().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await MemoLifecycleDbPersistence.upsertMemoInlineImageSource(
+      sqlite,
+      memoUid: memoUid,
+      localUrl: localUrl,
+      sourceUrl: sourceUrl,
+    );
     _db.notifyDataChanged();
   }
 
   Future<void> deleteMemoInlineImageSources(String memoUid) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return;
     final sqlite = await _db.db;
-    await sqlite.delete(
-      'memo_inline_image_sources',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
+    await MemoLifecycleDbPersistence.deleteMemoInlineImageSources(
+      sqlite,
+      memoUid,
     );
     _db.notifyDataChanged();
   }
 
   Future<void> deleteMemoDeleteTombstone(String memoUid) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return;
     final sqlite = await _db.db;
-    await sqlite.delete(
-      'memo_delete_tombstones',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-    );
+    await MemoLifecycleDbPersistence.deleteMemoDeleteTombstone(sqlite, memoUid);
     _db.notifyDataChanged();
   }
 
@@ -753,12 +574,12 @@ WHERE id IN (
 
       switch (relationsMode) {
         case 'clear':
-          await _deleteMemoRelationsCache(txn, uid);
+          await MemoLifecycleDbPersistence.deleteMemoRelationsCache(txn, uid);
           break;
         case 'set':
           final normalizedRelationsJson = (relationsJson ?? '').trim();
           if (normalizedRelationsJson.isNotEmpty) {
-            await _upsertMemoRelationsCache(
+            await MemoLifecycleDbPersistence.upsertMemoRelationsCache(
               txn,
               uid,
               relationsJson: normalizedRelationsJson,
@@ -794,7 +615,7 @@ WHERE id IN (
 
     final sqlite = await _db.db;
     await sqlite.transaction((txn) async {
-      await _upsertMemoDeleteTombstone(
+      await MemoLifecycleDbPersistence.upsertMemoDeleteTombstone(
         txn,
         memoUid: normalizedMemoUid,
         state: AppDatabase.memoDeleteTombstoneStatePendingRemoteDelete,
@@ -929,27 +750,28 @@ WHERE id IN (
     required int expireTime,
   }) async {
     final sqlite = await _db.db;
-    final id = await sqlite.insert('recycle_bin_items', {
-      'item_type': itemType,
-      'memo_uid': memoUid.trim(),
-      'summary': summary,
-      'payload_json': payloadJson,
-      'deleted_time': deletedTime,
-      'expire_time': expireTime,
-    });
+    final id = await MemoLifecycleDbPersistence.insertRecycleBinItem(
+      sqlite,
+      itemType: itemType,
+      memoUid: memoUid,
+      summary: summary,
+      payloadJson: payloadJson,
+      deletedTime: deletedTime,
+      expireTime: expireTime,
+    );
     _db.notifyDataChanged();
     return id;
   }
 
   Future<void> deleteRecycleBinItemById(int id) async {
     final sqlite = await _db.db;
-    await sqlite.delete('recycle_bin_items', where: 'id = ?', whereArgs: [id]);
+    await MemoLifecycleDbPersistence.deleteRecycleBinItemById(sqlite, id);
     _db.notifyDataChanged();
   }
 
   Future<void> clearRecycleBinItems() async {
     final sqlite = await _db.db;
-    await sqlite.delete('recycle_bin_items');
+    await MemoLifecycleDbPersistence.clearRecycleBinItems(sqlite);
     _db.notifyDataChanged();
   }
 
@@ -1582,29 +1404,10 @@ WHERE id IN (
       where: 'memo_uid = ?',
       whereArgs: [oldUid],
     );
-    await executor.update(
-      'memo_relations_cache',
-      {'memo_uid': newUid},
-      where: 'memo_uid = ?',
-      whereArgs: [oldUid],
-    );
-    await executor.update(
-      'memo_versions',
-      {'memo_uid': newUid},
-      where: 'memo_uid = ?',
-      whereArgs: [oldUid],
-    );
-    await executor.update(
-      'recycle_bin_items',
-      {'memo_uid': newUid},
-      where: 'memo_uid = ?',
-      whereArgs: [oldUid],
-    );
-    await executor.update(
-      'memo_inline_image_sources',
-      {'memo_uid': newUid},
-      where: 'memo_uid = ?',
-      whereArgs: [oldUid],
+    await MemoLifecycleDbPersistence.renameMemoUid(
+      executor,
+      oldUid: oldUid,
+      newUid: newUid,
     );
   }
 
@@ -1806,77 +1609,6 @@ WHERE id IN (
     );
   }
 
-  Future<void> _upsertMemoRelationsCache(
-    DatabaseExecutor executor,
-    String memoUid, {
-    required String relationsJson,
-  }) async {
-    final normalized = memoUid.trim();
-    if (normalized.isEmpty) return;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final updated = await executor.update(
-      'memo_relations_cache',
-      {'relations_json': relationsJson, 'updated_time': now},
-      where: 'memo_uid = ?',
-      whereArgs: [normalized],
-    );
-    if (updated == 0) {
-      await executor.insert('memo_relations_cache', {
-        'memo_uid': normalized,
-        'relations_json': relationsJson,
-        'updated_time': now,
-      }, conflictAlgorithm: ConflictAlgorithm.abort);
-    }
-  }
-
-  Future<void> _deleteMemoRelationsCache(
-    DatabaseExecutor executor,
-    String memoUid,
-  ) async {
-    final normalized = memoUid.trim();
-    if (normalized.isEmpty) return;
-    await executor.delete(
-      'memo_relations_cache',
-      where: 'memo_uid = ?',
-      whereArgs: [normalized],
-    );
-  }
-
-  Future<void> _upsertMemoDeleteTombstone(
-    DatabaseExecutor executor, {
-    required String memoUid,
-    required String state,
-    String? lastError,
-    int? deletedTime,
-  }) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return;
-    final existing = await executor.query(
-      'memo_delete_tombstones',
-      columns: const ['deleted_time'],
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-      limit: 1,
-    );
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final deletedTimeValue = switch (existing.isEmpty
-        ? null
-        : existing.first['deleted_time']) {
-      int value when deletedTime == null => value,
-      num value when deletedTime == null => value.toInt(),
-      String value when deletedTime == null =>
-        int.tryParse(value.trim()) ?? now,
-      _ => deletedTime ?? now,
-    };
-    await executor.insert('memo_delete_tombstones', {
-      'memo_uid': normalizedUid,
-      'state': state,
-      'deleted_time': deletedTimeValue,
-      'updated_time': now,
-      'last_error': lastError,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
   Future<void> _deleteMemoByUid(DatabaseExecutor executor, String uid) async {
     final normalizedUid = uid.trim();
     if (normalizedUid.isEmpty) return;
@@ -1894,15 +1626,9 @@ WHERE id IN (
       where: 'uid = ?',
       whereArgs: [normalizedUid],
     );
-    await executor.delete(
-      'memo_relations_cache',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-    );
-    await executor.delete(
-      'memo_versions',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
+    await MemoLifecycleDbPersistence.deleteMemoLifecycleRowsForMemo(
+      executor,
+      normalizedUid,
     );
     if (rowId != null && rowId > 0) {
       await MemoSearchDbPersistence.deleteFtsEntry(executor, rowId: rowId);
@@ -2008,16 +1734,6 @@ WHERE id IN (
     });
     _db.notifyDataChanged();
   }
-
-  String _backendKindToStorage(AiBackendKind value) => switch (value) {
-    AiBackendKind.remoteApi => 'remote_api',
-    AiBackendKind.localApi => 'local_api',
-  };
-
-  String _providerKindToStorage(AiProviderKind value) => switch (value) {
-    AiProviderKind.openAiCompatible => 'openai_compatible',
-    AiProviderKind.anthropicCompatible => 'anthropic_compatible',
-  };
 
   List<String> _normalizeMemoTags(List<String> tags) {
     if (tags.isEmpty) return const [];

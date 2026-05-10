@@ -9,8 +9,10 @@ import '../../core/memo_search_document_builder.dart';
 import '../../core/tags.dart';
 import 'db_write_protocol.dart';
 import 'desktop_db_write_gateway.dart';
+import 'ai_db_persistence.dart';
 import 'app_database_write_dao.dart';
 import 'compose_draft_db_persistence.dart';
+import 'memo_lifecycle_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'outbox_db_persistence.dart';
 import 'tag_db_persistence.dart';
@@ -151,74 +153,12 @@ CREATE TABLE IF NOT EXISTS import_history (
 );
 ''');
 
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_relations_cache (
-  memo_uid TEXT NOT NULL PRIMARY KEY,
-  relations_json TEXT NOT NULL DEFAULT '[]',
-  updated_time INTEGER NOT NULL
-);
-''');
-
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_versions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  memo_uid TEXT NOT NULL,
-  snapshot_time INTEGER NOT NULL,
-  summary TEXT NOT NULL DEFAULT '',
-  payload_json TEXT NOT NULL DEFAULT '{}',
-  created_time INTEGER NOT NULL
-);
-''');
-          await db.execute(
-            'CREATE INDEX IF NOT EXISTS idx_memo_versions_memo_time ON memo_versions(memo_uid, snapshot_time DESC);',
-          );
-
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS recycle_bin_items (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  item_type TEXT NOT NULL,
-  memo_uid TEXT NOT NULL DEFAULT '',
-  summary TEXT NOT NULL DEFAULT '',
-  payload_json TEXT NOT NULL DEFAULT '{}',
-  deleted_time INTEGER NOT NULL,
-  expire_time INTEGER NOT NULL
-);
-''');
-          await db.execute(
-            'CREATE INDEX IF NOT EXISTS idx_recycle_bin_items_deleted_time ON recycle_bin_items(deleted_time DESC);',
-          );
-          await db.execute(
-            'CREATE INDEX IF NOT EXISTS idx_recycle_bin_items_expire_time ON recycle_bin_items(expire_time ASC);',
-          );
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_delete_tombstones (
-  memo_uid TEXT NOT NULL PRIMARY KEY,
-  state TEXT NOT NULL,
-  deleted_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  last_error TEXT
-);
-''');
-          await db.execute(
-            'CREATE INDEX IF NOT EXISTS idx_memo_delete_tombstones_state_updated ON memo_delete_tombstones(state, updated_time DESC);',
-          );
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_inline_image_sources (
-  memo_uid TEXT NOT NULL,
-  local_url TEXT NOT NULL,
-  source_url TEXT NOT NULL,
-  updated_time INTEGER NOT NULL,
-  PRIMARY KEY (memo_uid, local_url)
-);
-''');
-          await db.execute(
-            'CREATE INDEX IF NOT EXISTS idx_memo_inline_image_sources_memo ON memo_inline_image_sources(memo_uid, updated_time DESC);',
-          );
+          await MemoLifecycleDbPersistence.ensureTables(db);
           await ComposeDraftDbPersistence.ensureTable(db);
 
           await _ensureCollectionTables(db);
           await _ensureCollectionReaderProgressTable(db);
-          await _ensureAiTables(db);
+          await AiDbPersistence.ensureTables(db);
 
           await _ensureStatsCache(db, rebuild: true);
           await MemoSearchDbPersistence.ensureFts(db, rebuild: true);
@@ -279,45 +219,11 @@ CREATE TABLE IF NOT EXISTS memo_reminders (
             await _ensureStatsCache(db, rebuild: true);
           }
           if (oldVersion < 10) {
-            await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_relations_cache (
-  memo_uid TEXT NOT NULL PRIMARY KEY,
-  relations_json TEXT NOT NULL DEFAULT '[]',
-  updated_time INTEGER NOT NULL
-);
-''');
+            await MemoLifecycleDbPersistence.ensureMemoRelationsCacheTable(db);
           }
           if (oldVersion < 11) {
-            await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_versions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  memo_uid TEXT NOT NULL,
-  snapshot_time INTEGER NOT NULL,
-  summary TEXT NOT NULL DEFAULT '',
-  payload_json TEXT NOT NULL DEFAULT '{}',
-  created_time INTEGER NOT NULL
-);
-''');
-            await db.execute(
-              'CREATE INDEX IF NOT EXISTS idx_memo_versions_memo_time ON memo_versions(memo_uid, snapshot_time DESC);',
-            );
-            await db.execute('''
-CREATE TABLE IF NOT EXISTS recycle_bin_items (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  item_type TEXT NOT NULL,
-  memo_uid TEXT NOT NULL DEFAULT '',
-  summary TEXT NOT NULL DEFAULT '',
-  payload_json TEXT NOT NULL DEFAULT '{}',
-  deleted_time INTEGER NOT NULL,
-  expire_time INTEGER NOT NULL
-);
-''');
-            await db.execute(
-              'CREATE INDEX IF NOT EXISTS idx_recycle_bin_items_deleted_time ON recycle_bin_items(deleted_time DESC);',
-            );
-            await db.execute(
-              'CREATE INDEX IF NOT EXISTS idx_recycle_bin_items_expire_time ON recycle_bin_items(expire_time ASC);',
-            );
+            await MemoLifecycleDbPersistence.ensureMemoVersionsTable(db);
+            await MemoLifecycleDbPersistence.ensureRecycleBinTable(db);
           }
           if (oldVersion < 12) {
             await OutboxDbPersistence.ensureRetryColumnAndNormalizeLegacyStates(
@@ -331,42 +237,17 @@ CREATE TABLE IF NOT EXISTS recycle_bin_items (
             await _ensureStatsCache(db, rebuild: true);
           }
           if (oldVersion < 14) {
-            await _ensureAiTables(db);
+            await AiDbPersistence.ensureTables(db);
           }
           if (oldVersion < 15) {
-            await _ensureColumnExists(
-              db,
-              table: 'ai_analysis_tasks',
-              column: 'include_public',
-              definition: 'include_public INTEGER NOT NULL DEFAULT 1',
-            );
+            await AiDbPersistence.ensureAnalysisTaskIncludePublicColumn(db);
           }
           if (oldVersion < 16) {
-            await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_delete_tombstones (
-  memo_uid TEXT NOT NULL PRIMARY KEY,
-  state TEXT NOT NULL,
-  deleted_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  last_error TEXT
-);
-''');
-            await db.execute(
-              'CREATE INDEX IF NOT EXISTS idx_memo_delete_tombstones_state_updated ON memo_delete_tombstones(state, updated_time DESC);',
-            );
+            await MemoLifecycleDbPersistence.ensureMemoDeleteTombstoneTable(db);
           }
           if (oldVersion < 17) {
-            await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_inline_image_sources (
-  memo_uid TEXT NOT NULL,
-  local_url TEXT NOT NULL,
-  source_url TEXT NOT NULL,
-  updated_time INTEGER NOT NULL,
-  PRIMARY KEY (memo_uid, local_url)
-);
-''');
-            await db.execute(
-              'CREATE INDEX IF NOT EXISTS idx_memo_inline_image_sources_memo ON memo_inline_image_sources(memo_uid, updated_time DESC);',
+            await MemoLifecycleDbPersistence.ensureMemoInlineImageSourceTable(
+              db,
             );
           }
           if (oldVersion < 18) {
@@ -422,31 +303,8 @@ CREATE TABLE IF NOT EXISTS memo_inline_image_sources (
             await _ensureMemoClipCardsTable(db);
           }
           if (oldVersion < 26) {
-            await _ensureAiTables(db);
-            await _ensureColumnExists(
-              db,
-              table: 'ai_analysis_tasks',
-              column: 'template_kind',
-              definition: "template_kind TEXT NOT NULL DEFAULT 'legacy'",
-            );
-            await _ensureColumnExists(
-              db,
-              table: 'ai_analysis_tasks',
-              column: 'template_id',
-              definition: "template_id TEXT NOT NULL DEFAULT ''",
-            );
-            await _ensureColumnExists(
-              db,
-              table: 'ai_analysis_tasks',
-              column: 'template_title_snapshot',
-              definition: "template_title_snapshot TEXT NOT NULL DEFAULT ''",
-            );
-            await _ensureColumnExists(
-              db,
-              table: 'ai_analysis_tasks',
-              column: 'template_icon_key_snapshot',
-              definition: "template_icon_key_snapshot TEXT NOT NULL DEFAULT ''",
-            );
+            await AiDbPersistence.ensureTables(db);
+            await AiDbPersistence.ensureAnalysisTaskTemplateColumns(db);
           }
           if (oldVersion < 27) {
             await MemoSearchDbPersistence.ensureIndex(db, rebuild: true);
@@ -1782,19 +1640,8 @@ WHERE id = 1;
   }
 
   Future<String?> getMemoRelationsCacheJson(String memoUid) async {
-    final normalized = memoUid.trim();
-    if (normalized.isEmpty) return null;
     final db = await this.db;
-    final rows = await db.query(
-      'memo_relations_cache',
-      columns: const ['relations_json'],
-      where: 'memo_uid = ?',
-      whereArgs: [normalized],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    final raw = rows.first['relations_json'];
-    return raw is String ? raw : null;
+    return MemoLifecycleDbPersistence.getMemoRelationsCacheJson(db, memoUid);
   }
 
   Future<void> upsertMemoRelationsCache(
@@ -1860,15 +1707,11 @@ WHERE id = 1;
     String memoUid, {
     int? limit,
   }) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return const [];
     final db = await this.db;
-    return db.query(
-      'memo_versions',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-      orderBy: 'snapshot_time DESC, id DESC',
-      limit: (limit != null && limit > 0) ? limit : null,
+    return MemoLifecycleDbPersistence.listMemoVersionsByUid(
+      db,
+      memoUid,
+      limit: limit,
     );
   }
 
@@ -1876,43 +1719,17 @@ WHERE id = 1;
     String memoUid, {
     required int keep,
   }) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return const [];
-    if (keep < 0) return const [];
     final db = await this.db;
-    final rows = await db.query(
-      'memo_versions',
-      columns: const ['id'],
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-      orderBy: 'snapshot_time DESC, id DESC',
-      offset: keep,
+    return MemoLifecycleDbPersistence.listMemoVersionIdsExceedLimit(
+      db,
+      memoUid,
+      keep: keep,
     );
-    final ids = <int>[];
-    for (final row in rows) {
-      final id = row['id'];
-      if (id is int) {
-        ids.add(id);
-      } else if (id is num) {
-        ids.add(id.toInt());
-      } else if (id is String) {
-        final parsed = int.tryParse(id.trim());
-        if (parsed != null) ids.add(parsed);
-      }
-    }
-    return ids;
   }
 
   Future<Map<String, dynamic>?> getMemoVersionById(int id) async {
     final db = await this.db;
-    final rows = await db.query(
-      'memo_versions',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return rows.first;
+    return MemoLifecycleDbPersistence.getMemoVersionById(db, id);
   }
 
   Future<void> deleteMemoVersionById(int id) async {
@@ -1973,35 +1790,12 @@ WHERE id = 1;
 
   Future<Set<String>> listRecycleBinMemoUids() async {
     final db = await this.db;
-    final rows = await db.query(
-      'recycle_bin_items',
-      columns: const ['memo_uid'],
-      where: 'item_type = ? AND memo_uid <> ?',
-      whereArgs: const ['memo', ''],
-    );
-    final uids = <String>{};
-    for (final row in rows) {
-      final raw = row['memo_uid'];
-      final uid = raw is String ? raw.trim() : '';
-      if (uid.isNotEmpty) {
-        uids.add(uid);
-      }
-    }
-    return uids;
+    return MemoLifecycleDbPersistence.listRecycleBinMemoUids(db);
   }
 
   Future<bool> hasRecycleBinMemoItem(String memoUid) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return false;
     final db = await this.db;
-    final rows = await db.query(
-      'recycle_bin_items',
-      columns: const ['id'],
-      where: 'item_type = ? AND memo_uid = ?',
-      whereArgs: ['memo', normalizedUid],
-      limit: 1,
-    );
-    return rows.isNotEmpty;
+    return MemoLifecycleDbPersistence.hasRecycleBinMemoItem(db, memoUid);
   }
 
   Future<void> upsertMemoDeleteTombstone({
@@ -2032,40 +1826,18 @@ WHERE id = 1;
   }
 
   Future<Map<String, dynamic>?> getMemoDeleteTombstone(String memoUid) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return null;
     final db = await this.db;
-    final rows = await db.query(
-      'memo_delete_tombstones',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return rows.first;
+    return MemoLifecycleDbPersistence.getMemoDeleteTombstone(db, memoUid);
   }
 
   Future<String?> getMemoDeleteTombstoneState(String memoUid) async {
-    final row = await getMemoDeleteTombstone(memoUid);
-    final state = row?['state'];
-    return state is String && state.trim().isNotEmpty ? state.trim() : null;
+    final db = await this.db;
+    return MemoLifecycleDbPersistence.getMemoDeleteTombstoneState(db, memoUid);
   }
 
   Future<Set<String>> listMemoDeleteTombstoneUids() async {
     final db = await this.db;
-    final rows = await db.query(
-      'memo_delete_tombstones',
-      columns: const ['memo_uid'],
-    );
-    final uids = <String>{};
-    for (final row in rows) {
-      final raw = row['memo_uid'];
-      final uid = raw is String ? raw.trim() : '';
-      if (uid.isNotEmpty) {
-        uids.add(uid);
-      }
-    }
-    return uids;
+    return MemoLifecycleDbPersistence.listMemoDeleteTombstoneUids(db);
   }
 
   Future<bool> hasMemoDeleteMarker(String memoUid) async {
@@ -2107,24 +1879,8 @@ WHERE id = 1;
   }
 
   Future<Map<String, String>> listMemoInlineImageSources(String memoUid) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return const <String, String>{};
     final db = await this.db;
-    final rows = await db.query(
-      'memo_inline_image_sources',
-      columns: const ['local_url', 'source_url'],
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-      orderBy: 'updated_time DESC',
-    );
-    final mappings = <String, String>{};
-    for (final row in rows) {
-      final localUrl = (row['local_url'] as String? ?? '').trim();
-      final sourceUrl = (row['source_url'] as String? ?? '').trim();
-      if (localUrl.isEmpty || sourceUrl.isEmpty) continue;
-      mappings.putIfAbsent(localUrl, () => sourceUrl);
-    }
-    return mappings;
+    return MemoLifecycleDbPersistence.listMemoInlineImageSources(db, memoUid);
   }
 
   Future<void> deleteMemoInlineImageSources(String memoUid) async {
@@ -2258,43 +2014,20 @@ WHERE id = 1;
 
   Future<List<Map<String, dynamic>>> listRecycleBinItems() async {
     final db = await this.db;
-    return db.query('recycle_bin_items', orderBy: 'deleted_time DESC, id DESC');
+    return MemoLifecycleDbPersistence.listRecycleBinItems(db);
   }
 
   Future<Map<String, dynamic>?> getRecycleBinItemById(int id) async {
     final db = await this.db;
-    final rows = await db.query(
-      'recycle_bin_items',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return rows.first;
+    return MemoLifecycleDbPersistence.getRecycleBinItemById(db, id);
   }
 
   Future<List<int>> listExpiredRecycleBinItemIds({required int nowMs}) async {
     final db = await this.db;
-    final rows = await db.query(
-      'recycle_bin_items',
-      columns: const ['id'],
-      where: 'expire_time <= ?',
-      whereArgs: [nowMs],
-      orderBy: 'expire_time ASC, id ASC',
+    return MemoLifecycleDbPersistence.listExpiredRecycleBinItemIds(
+      db,
+      nowMs: nowMs,
     );
-    final ids = <int>[];
-    for (final row in rows) {
-      final id = row['id'];
-      if (id is int) {
-        ids.add(id);
-      } else if (id is num) {
-        ids.add(id.toInt());
-      } else if (id is String) {
-        final parsed = int.tryParse(id.trim());
-        if (parsed != null) ids.add(parsed);
-      }
-    }
-    return ids;
   }
 
   Future<void> deleteRecycleBinItemById(int id) async {
@@ -3636,221 +3369,6 @@ CREATE TABLE IF NOT EXISTS collection_read_progress (
 ''');
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_collection_read_progress_updated ON collection_read_progress(updated_time DESC);',
-    );
-  }
-
-  static Future<void> _ensureAiTables(Database db) async {
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS ai_memo_policy (
-  memo_uid TEXT PRIMARY KEY,
-  allow_ai INTEGER NOT NULL DEFAULT 1,
-  updated_time INTEGER NOT NULL,
-  FOREIGN KEY (memo_uid) REFERENCES memos(uid) ON DELETE CASCADE ON UPDATE CASCADE
-);
-''');
-
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS ai_chunks (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  memo_uid TEXT NOT NULL,
-  chunk_index INTEGER NOT NULL,
-  content TEXT NOT NULL,
-  content_hash TEXT NOT NULL,
-  memo_content_hash TEXT NOT NULL,
-  char_start INTEGER NOT NULL,
-  char_end INTEGER NOT NULL,
-  token_estimate INTEGER NOT NULL,
-  memo_create_time INTEGER NOT NULL,
-  memo_update_time INTEGER NOT NULL,
-  memo_visibility TEXT NOT NULL,
-  is_active INTEGER NOT NULL DEFAULT 1,
-  invalidated_time INTEGER,
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  FOREIGN KEY (memo_uid) REFERENCES memos(uid) ON DELETE CASCADE ON UPDATE CASCADE
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_chunks_memo_active_idx ON ai_chunks(memo_uid, is_active, chunk_index);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_chunks_time_active ON ai_chunks(memo_create_time DESC, is_active);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_chunks_content_hash ON ai_chunks(content_hash);',
-    );
-
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS ai_embeddings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  chunk_id INTEGER NOT NULL,
-  backend_kind TEXT NOT NULL,
-  provider_kind TEXT NOT NULL,
-  base_url TEXT NOT NULL,
-  model TEXT NOT NULL,
-  model_version TEXT NOT NULL DEFAULT '',
-  dimensions INTEGER NOT NULL,
-  vector_blob BLOB,
-  status TEXT NOT NULL,
-  error_text TEXT,
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  FOREIGN KEY (chunk_id) REFERENCES ai_chunks(id) ON DELETE CASCADE
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_embeddings_chunk_status ON ai_embeddings(chunk_id, status);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_embeddings_model_status ON ai_embeddings(model, status);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_embeddings_profile ON ai_embeddings(base_url, model, chunk_id);',
-    );
-
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS ai_index_jobs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  memo_uid TEXT,
-  reason TEXT NOT NULL,
-  memo_content_hash TEXT NOT NULL DEFAULT '',
-  embedding_profile_key TEXT NOT NULL,
-  status TEXT NOT NULL,
-  attempt_count INTEGER NOT NULL DEFAULT 0,
-  priority INTEGER NOT NULL DEFAULT 100,
-  retry_at INTEGER,
-  error_text TEXT,
-  created_time INTEGER NOT NULL,
-  started_time INTEGER,
-  finished_time INTEGER
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_index_jobs_status_priority ON ai_index_jobs(status, priority, created_time);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_index_jobs_memo_profile_hash ON ai_index_jobs(memo_uid, embedding_profile_key, memo_content_hash);',
-    );
-
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS ai_analysis_tasks (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  task_uid TEXT NOT NULL UNIQUE,
-  analysis_type TEXT NOT NULL,
-  status TEXT NOT NULL,
-  range_start INTEGER NOT NULL,
-  range_end_exclusive INTEGER NOT NULL,
-  include_public INTEGER NOT NULL DEFAULT 1,
-  include_private INTEGER NOT NULL DEFAULT 0,
-  include_protected INTEGER NOT NULL DEFAULT 0,
-  prompt_template TEXT NOT NULL,
-  template_kind TEXT NOT NULL DEFAULT 'legacy',
-  template_id TEXT NOT NULL DEFAULT '',
-  template_title_snapshot TEXT NOT NULL DEFAULT '',
-  template_icon_key_snapshot TEXT NOT NULL DEFAULT '',
-  generation_profile_key TEXT NOT NULL,
-  embedding_profile_key TEXT NOT NULL,
-  retrieval_profile_json TEXT NOT NULL,
-  error_text TEXT,
-  mailbox_delivery_state TEXT NOT NULL DEFAULT 'hidden',
-  mailbox_open_state TEXT NOT NULL DEFAULT 'unread',
-  reply_animation_state TEXT NOT NULL DEFAULT 'idle',
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  completed_time INTEGER
-);
-''');
-    await _ensureColumnExists(
-      db,
-      table: 'ai_analysis_tasks',
-      column: 'template_kind',
-      definition: "template_kind TEXT NOT NULL DEFAULT 'legacy'",
-    );
-    await _ensureColumnExists(
-      db,
-      table: 'ai_analysis_tasks',
-      column: 'template_id',
-      definition: "template_id TEXT NOT NULL DEFAULT ''",
-    );
-    await _ensureColumnExists(
-      db,
-      table: 'ai_analysis_tasks',
-      column: 'template_title_snapshot',
-      definition: "template_title_snapshot TEXT NOT NULL DEFAULT ''",
-    );
-    await _ensureColumnExists(
-      db,
-      table: 'ai_analysis_tasks',
-      column: 'template_icon_key_snapshot',
-      definition: "template_icon_key_snapshot TEXT NOT NULL DEFAULT ''",
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_analysis_tasks_status_time ON ai_analysis_tasks(status, created_time DESC);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_analysis_tasks_type_time ON ai_analysis_tasks(analysis_type, created_time DESC);',
-    );
-
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS ai_analysis_results (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  task_id INTEGER NOT NULL UNIQUE,
-  schema_version INTEGER NOT NULL,
-  analysis_type TEXT NOT NULL,
-  summary TEXT NOT NULL,
-  follow_up_suggestions_json TEXT NOT NULL,
-  raw_response_text TEXT NOT NULL DEFAULT '',
-  normalized_result_json TEXT NOT NULL,
-  is_stale INTEGER NOT NULL DEFAULT 0,
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  FOREIGN KEY (task_id) REFERENCES ai_analysis_tasks(id) ON DELETE CASCADE
-);
-''');
-
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS ai_analysis_sections (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  result_id INTEGER NOT NULL,
-  section_key TEXT NOT NULL,
-  section_order INTEGER NOT NULL,
-  title TEXT NOT NULL,
-  body TEXT NOT NULL,
-  created_time INTEGER NOT NULL,
-  FOREIGN KEY (result_id) REFERENCES ai_analysis_results(id) ON DELETE CASCADE,
-  UNIQUE(result_id, section_key)
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_analysis_sections_result_order ON ai_analysis_sections(result_id, section_order);',
-    );
-
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS ai_analysis_evidences (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  result_id INTEGER NOT NULL,
-  section_id INTEGER NOT NULL,
-  evidence_order INTEGER NOT NULL,
-  memo_uid TEXT NOT NULL,
-  chunk_id INTEGER NOT NULL,
-  quote_text TEXT NOT NULL,
-  char_start INTEGER NOT NULL,
-  char_end INTEGER NOT NULL,
-  relevance_score REAL NOT NULL,
-  created_time INTEGER NOT NULL,
-  FOREIGN KEY (result_id) REFERENCES ai_analysis_results(id) ON DELETE CASCADE,
-  FOREIGN KEY (section_id) REFERENCES ai_analysis_sections(id) ON DELETE CASCADE,
-  FOREIGN KEY (chunk_id) REFERENCES ai_chunks(id) ON DELETE CASCADE
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_analysis_evidences_result_section_order ON ai_analysis_evidences(result_id, section_id, evidence_order);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_analysis_evidences_memo_uid ON ai_analysis_evidences(memo_uid);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ai_analysis_evidences_chunk_id ON ai_analysis_evidences(chunk_id);',
     );
   }
 }
