@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:sqflite/sqflite.dart';
@@ -20,6 +19,7 @@ import 'memo_core_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
 import 'memo_query_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
+import 'memo_write_db_persistence.dart';
 import 'outbox_db_persistence.dart';
 import 'tag_db_persistence.dart';
 
@@ -269,11 +269,11 @@ class AppDatabaseWriteDao {
     String? lastError,
   }) async {
     final sqlite = await _db.db;
-    await sqlite.update(
-      'memos',
-      {'sync_state': syncState, 'last_error': lastError},
-      where: 'uid = ?',
-      whereArgs: [uid],
+    await MemoWriteDbPersistence.updateMemoSyncState(
+      sqlite,
+      uid,
+      syncState: syncState,
+      lastError: lastError,
     );
     _db.notifyDataChanged();
   }
@@ -283,11 +283,10 @@ class AppDatabaseWriteDao {
     required String attachmentsJson,
   }) async {
     final sqlite = await _db.db;
-    await sqlite.update(
-      'memos',
-      {'attachments_json': attachmentsJson},
-      where: 'uid = ?',
-      whereArgs: [uid],
+    await MemoWriteDbPersistence.updateMemoAttachmentsJson(
+      sqlite,
+      uid,
+      attachmentsJson: attachmentsJson,
     );
     _db.notifyDataChanged();
   }
@@ -302,39 +301,15 @@ class AppDatabaseWriteDao {
       return;
     }
 
-    final row = await _db.getMemoByUid(trimmedMemoUid);
-    final raw = row?['attachments_json'];
-    if (raw is! String || raw.trim().isEmpty) return;
-
-    dynamic decoded;
-    try {
-      decoded = jsonDecode(raw);
-    } catch (_) {
-      return;
-    }
-    if (decoded is! List) return;
-
-    final expectedNames = <String>{
-      'attachments/$trimmedAttachmentUid',
-      'resources/$trimmedAttachmentUid',
-    };
-    var changed = false;
-    final next = <Map<String, dynamic>>[];
-    for (final item in decoded) {
-      if (item is! Map) continue;
-      final map = item.cast<String, dynamic>();
-      final name = (map['name'] as String?)?.trim() ?? '';
-      if (expectedNames.contains(name)) {
-        changed = true;
-        continue;
-      }
-      next.add(map);
-    }
+    final sqlite = await _db.db;
+    final changed =
+        await MemoWriteDbPersistence.removePendingAttachmentPlaceholder(
+          sqlite,
+          memoUid: trimmedMemoUid,
+          attachmentUid: trimmedAttachmentUid,
+        );
     if (!changed) return;
-    await updateMemoAttachmentsJson(
-      trimmedMemoUid,
-      attachmentsJson: jsonEncode(next),
-    );
+    _db.notifyDataChanged();
   }
 
   Future<void> discardMissingSourceUploadTask({
@@ -363,14 +338,10 @@ class AppDatabaseWriteDao {
         txn,
         trimmedMemoUid,
       );
-      await txn.update(
-        'memos',
-        <String, Object?>{
-          'sync_state': hasMorePending ? 1 : 0,
-          'last_error': null,
-        },
-        where: 'uid = ?',
-        whereArgs: [trimmedMemoUid],
+      await MemoWriteDbPersistence.updateMemoSyncState(
+        txn,
+        trimmedMemoUid,
+        syncState: hasMorePending ? 1 : 0,
       );
     });
 
@@ -1362,11 +1333,10 @@ class AppDatabaseWriteDao {
     required String oldUid,
     required String newUid,
   }) async {
-    await executor.update(
-      'memos',
-      {'uid': newUid},
-      where: 'uid = ?',
-      whereArgs: [oldUid],
+    await MemoWriteDbPersistence.renameMemoUidRow(
+      executor,
+      oldUid: oldUid,
+      newUid: newUid,
     );
     await MemoAuxiliaryDbPersistence.renameMemoReminderUid(
       executor,
@@ -1409,48 +1379,10 @@ class AppDatabaseWriteDao {
     required String memoUid,
     required String attachmentUid,
   }) async {
-    final rows = await executor.query(
-      'memos',
-      columns: const ['attachments_json'],
-      where: 'uid = ?',
-      whereArgs: [memoUid],
-      limit: 1,
-    );
-    if (rows.isEmpty) return;
-    final raw = rows.first['attachments_json'];
-    if (raw is! String || raw.trim().isEmpty) return;
-
-    dynamic decoded;
-    try {
-      decoded = jsonDecode(raw);
-    } catch (_) {
-      return;
-    }
-    if (decoded is! List) return;
-
-    final expectedNames = <String>{
-      'attachments/$attachmentUid',
-      'resources/$attachmentUid',
-    };
-    var changed = false;
-    final next = <Map<String, dynamic>>[];
-    for (final item in decoded) {
-      if (item is! Map) continue;
-      final map = item.cast<String, dynamic>();
-      final name = (map['name'] as String?)?.trim() ?? '';
-      if (expectedNames.contains(name)) {
-        changed = true;
-        continue;
-      }
-      next.add(map);
-    }
-    if (!changed) return;
-
-    await executor.update(
-      'memos',
-      <String, Object?>{'attachments_json': jsonEncode(next)},
-      where: 'uid = ?',
-      whereArgs: [memoUid],
+    await MemoWriteDbPersistence.removePendingAttachmentPlaceholder(
+      executor,
+      memoUid: memoUid,
+      attachmentUid: attachmentUid,
     );
   }
 
@@ -1472,7 +1404,6 @@ class AppDatabaseWriteDao {
     required int syncState,
     String? lastError,
   }) async {
-    final attachmentsJson = jsonEncode(attachments);
     final locationPlaceholder = location?.placeholder;
     final locationLat = location?.latitude;
     final locationLng = location?.longitude;
@@ -1491,65 +1422,29 @@ class AppDatabaseWriteDao {
     final tagsText = canonicalTags.join(' ');
 
     final before = await _db.loadMemoSnapshotPayload(executor, uid);
-    final values = <String, Object?>{
-      'content': content,
-      'visibility': visibility,
-      'pinned': pinned ? 1 : 0,
-      'state': state,
-      'create_time': createTimeSec,
-      'update_time': updateTimeSec,
-      'tags': tagsText,
-      'attachments_json': attachmentsJson,
-      'location_placeholder': locationPlaceholder,
-      'location_lat': locationLat,
-      'location_lng': locationLng,
-      'relation_count': relationCount,
-      'sync_state': syncState,
-      'last_error': lastError,
-    };
-    if (!preserveDisplayTime) {
-      values['display_time'] = normalizedDisplayTimeSec;
-    }
-    final updated = await executor.update(
-      'memos',
-      values,
-      where: 'uid = ?',
-      whereArgs: [uid],
+    final rowId = await MemoWriteDbPersistence.upsertMemoRow(
+      executor,
+      MemoWriteRowDraft(
+        uid: uid,
+        content: content,
+        visibility: visibility,
+        pinned: pinned,
+        state: state,
+        createTimeSec: createTimeSec,
+        displayTimeSec: normalizedDisplayTimeSec,
+        preserveDisplayTime: preserveDisplayTime,
+        updateTimeSec: updateTimeSec,
+        tagsText: tagsText,
+        attachments: attachments,
+        locationPlaceholder: locationPlaceholder,
+        locationLat: locationLat,
+        locationLng: locationLng,
+        relationCount: relationCount,
+        syncState: syncState,
+        lastError: lastError,
+      ),
     );
-
-    int rowId;
-    if (updated == 0) {
-      rowId = await executor.insert('memos', {
-        'uid': uid,
-        'content': content,
-        'visibility': visibility,
-        'pinned': pinned ? 1 : 0,
-        'state': state,
-        'create_time': createTimeSec,
-        'display_time': normalizedDisplayTimeSec,
-        'update_time': updateTimeSec,
-        'tags': tagsText,
-        'attachments_json': attachmentsJson,
-        'location_placeholder': locationPlaceholder,
-        'location_lat': locationLat,
-        'location_lng': locationLng,
-        'relation_count': relationCount,
-        'sync_state': syncState,
-        'last_error': lastError,
-      }, conflictAlgorithm: ConflictAlgorithm.abort);
-    } else {
-      final rows = await executor.query(
-        'memos',
-        columns: const ['id'],
-        where: 'uid = ?',
-        whereArgs: [uid],
-        limit: 1,
-      );
-      rowId = rows.isEmpty ? 0 : (_readInt(rows.first['id']) ?? 0);
-      if (rowId <= 0) {
-        return;
-      }
-    }
+    if (rowId <= 0) return;
 
     await MemoSearchDbPersistence.refreshFtsEntryForMemo(
       executor,
@@ -1587,18 +1482,9 @@ class AppDatabaseWriteDao {
     final normalizedUid = uid.trim();
     if (normalizedUid.isEmpty) return;
     final before = await _db.loadMemoSnapshotPayload(executor, normalizedUid);
-    final rows = await executor.query(
-      'memos',
-      columns: const ['id'],
-      where: 'uid = ?',
-      whereArgs: [normalizedUid],
-      limit: 1,
-    );
-    final rowId = rows.isEmpty ? null : _readInt(rows.first['id']);
-    await executor.delete(
-      'memos',
-      where: 'uid = ?',
-      whereArgs: [normalizedUid],
+    final rowId = await MemoWriteDbPersistence.deleteMemoRowByUid(
+      executor,
+      normalizedUid,
     );
     await MemoLifecycleDbPersistence.deleteMemoLifecycleRowsForMemo(
       executor,
@@ -1624,26 +1510,21 @@ class AppDatabaseWriteDao {
 
     await MemoAuxiliaryDbPersistence.upsertMemoClipCard(executor, metadata);
 
-    final memoRows = await executor.query(
-      'memos',
-      columns: const ['id', 'content', 'tags'],
-      where: 'uid = ?',
-      whereArgs: [memoUid],
-      limit: 1,
+    final memoRow = await MemoWriteDbPersistence.getMemoSearchRefreshRow(
+      executor,
+      memoUid,
     );
-    if (memoRows.isEmpty) return;
-    final rowId = _readInt(memoRows.first['id']) ?? 0;
-    if (rowId <= 0) return;
+    if (memoRow == null) return;
     await MemoSearchDbPersistence.refreshFtsEntryForMemo(
       executor,
-      rowId: rowId,
+      rowId: memoRow.rowId,
       memoUid: memoUid,
-      content: (memoRows.first['content'] as String?) ?? '',
-      tags: (memoRows.first['tags'] as String?) ?? '',
+      content: memoRow.content,
+      tags: memoRow.tags,
     );
     await MemoSearchDbPersistence.markDirty(
       executor,
-      rowId: rowId,
+      rowId: memoRow.rowId,
       memoUid: memoUid,
     );
   }
@@ -1660,26 +1541,21 @@ class AppDatabaseWriteDao {
       normalizedUid,
     );
 
-    final memoRows = await executor.query(
-      'memos',
-      columns: const ['id', 'content', 'tags'],
-      where: 'uid = ?',
-      whereArgs: [normalizedUid],
-      limit: 1,
+    final memoRow = await MemoWriteDbPersistence.getMemoSearchRefreshRow(
+      executor,
+      normalizedUid,
     );
-    if (memoRows.isEmpty) return;
-    final rowId = _readInt(memoRows.first['id']) ?? 0;
-    if (rowId <= 0) return;
+    if (memoRow == null) return;
     await MemoSearchDbPersistence.refreshFtsEntryForMemo(
       executor,
-      rowId: rowId,
+      rowId: memoRow.rowId,
       memoUid: normalizedUid,
-      content: (memoRows.first['content'] as String?) ?? '',
-      tags: (memoRows.first['tags'] as String?) ?? '',
+      content: memoRow.content,
+      tags: memoRow.tags,
     );
     await MemoSearchDbPersistence.markDirty(
       executor,
-      rowId: rowId,
+      rowId: memoRow.rowId,
       memoUid: normalizedUid,
     );
   }

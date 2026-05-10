@@ -18,6 +18,7 @@ import 'memo_core_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
 import 'memo_query_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
+import 'memo_write_db_persistence.dart';
 import 'outbox_db_persistence.dart';
 import 'stats_cache_db_persistence.dart';
 import 'tag_db_persistence.dart';
@@ -964,11 +965,10 @@ class AppDatabase {
       if (updates.isNotEmpty) {
         await AppDatabaseWriteDao.runTransaction<void>(db, (txn) async {
           for (final update in updates) {
-            await txn.update(
-              'memos',
-              {'tags': update.tags},
-              where: 'id = ?',
-              whereArgs: [update.id],
+            await MemoWriteDbPersistence.updateMemoTagsTextById(
+              txn,
+              update.id,
+              tagsText: update.tags,
             );
           }
         });
@@ -1062,11 +1062,10 @@ class AppDatabase {
       normalizedUid,
     );
     if (before == null) return;
-    await txn.update(
-      'memos',
-      {'tags': tagsText},
-      where: 'uid = ?',
-      whereArgs: [normalizedUid],
+    await MemoWriteDbPersistence.updateMemoTagsTextByUid(
+      txn,
+      normalizedUid,
+      tagsText: tagsText,
     );
     final rowId =
         await MemoQueryDbPersistence.getMemoIdByUid(txn, normalizedUid) ?? 0;
@@ -2593,11 +2592,10 @@ class AppDatabase {
           );
           final updatedTagsText = canonicalTags.join(' ');
           if (updatedTagsText != tagsText) {
-            await txn.update(
-              'memos',
-              {'tags': updatedTagsText},
-              where: 'uid = ?',
-              whereArgs: [uid],
+            await MemoWriteDbPersistence.updateMemoTagsTextByUid(
+              txn,
+              uid,
+              tagsText: updatedTagsText,
             );
           }
           final rowId = _readInt(row['id']) ?? 0;
