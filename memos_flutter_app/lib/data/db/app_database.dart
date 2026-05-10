@@ -13,6 +13,7 @@ import 'ai_db_persistence.dart';
 import 'app_database_write_dao.dart';
 import 'collection_db_persistence.dart';
 import 'compose_draft_db_persistence.dart';
+import 'memo_auxiliary_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'outbox_db_persistence.dart';
@@ -106,18 +107,8 @@ CREATE TABLE IF NOT EXISTS memos (
 
           await TagDbPersistence.ensureTables(db);
 
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_reminders (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  memo_uid TEXT NOT NULL UNIQUE,
-  mode TEXT NOT NULL,
-  times_json TEXT NOT NULL,
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  FOREIGN KEY (memo_uid) REFERENCES memos(uid) ON DELETE CASCADE ON UPDATE CASCADE
-);
-''');
-          await _ensureMemoClipCardsTable(db);
+          await MemoAuxiliaryDbPersistence.ensureMemoReminderTable(db);
+          await MemoAuxiliaryDbPersistence.ensureMemoClipCardsTable(db);
 
           await db.execute('''
 CREATE TABLE IF NOT EXISTS attachments (
@@ -137,22 +128,7 @@ CREATE TABLE IF NOT EXISTS attachments (
 
           await OutboxDbPersistence.ensureTable(db);
 
-          await db.execute('''
-CREATE TABLE IF NOT EXISTS import_history (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source TEXT NOT NULL,
-  file_md5 TEXT NOT NULL,
-  file_name TEXT NOT NULL,
-  memo_count INTEGER NOT NULL DEFAULT 0,
-  attachment_count INTEGER NOT NULL DEFAULT 0,
-  failed_count INTEGER NOT NULL DEFAULT 0,
-  status INTEGER NOT NULL DEFAULT 0,
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  error TEXT,
-  UNIQUE(source, file_md5)
-);
-''');
+          await MemoAuxiliaryDbPersistence.ensureImportHistoryTable(db);
 
           await MemoLifecycleDbPersistence.ensureTables(db);
           await ComposeDraftDbPersistence.ensureTable(db);
@@ -169,35 +145,10 @@ CREATE TABLE IF NOT EXISTS import_history (
             await MemoSearchDbPersistence.recreateFts(db);
           }
           if (oldVersion < 4) {
-            await db.execute('''
-CREATE TABLE IF NOT EXISTS import_history (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source TEXT NOT NULL,
-  file_md5 TEXT NOT NULL,
-  file_name TEXT NOT NULL,
-  memo_count INTEGER NOT NULL DEFAULT 0,
-  attachment_count INTEGER NOT NULL DEFAULT 0,
-  failed_count INTEGER NOT NULL DEFAULT 0,
-  status INTEGER NOT NULL DEFAULT 0,
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  error TEXT,
-  UNIQUE(source, file_md5)
-);
-''');
+            await MemoAuxiliaryDbPersistence.ensureImportHistoryTable(db);
           }
           if (oldVersion < 5) {
-            await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_reminders (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  memo_uid TEXT NOT NULL UNIQUE,
-  mode TEXT NOT NULL,
-  times_json TEXT NOT NULL,
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  FOREIGN KEY (memo_uid) REFERENCES memos(uid) ON DELETE CASCADE ON UPDATE CASCADE
-);
-''');
+            await MemoAuxiliaryDbPersistence.ensureMemoReminderTable(db);
           }
           if (oldVersion < 6) {
             await db.execute(
@@ -282,7 +233,7 @@ CREATE TABLE IF NOT EXISTS memo_reminders (
             await CollectionDbPersistence.ensureReaderProgressPageColumns(db);
           }
           if (oldVersion < 25) {
-            await _ensureMemoClipCardsTable(db);
+            await MemoAuxiliaryDbPersistence.ensureMemoClipCardsTable(db);
           }
           if (oldVersion < 26) {
             await AiDbPersistence.ensureTables(db);
@@ -296,7 +247,7 @@ CREATE TABLE IF NOT EXISTS memo_reminders (
           }
         },
         onOpen: (db) async {
-          await _ensureMemoClipCardsTable(db);
+          await MemoAuxiliaryDbPersistence.ensureMemoClipCardsTable(db);
           await _ensureStatsCache(db);
           await MemoSearchDbPersistence.ensureFts(db);
           await MemoSearchDbPersistence.ensureIndex(db);
@@ -2096,19 +2047,12 @@ WHERE id = 1;
 
   Future<Map<String, dynamic>?> getMemoClipCardByUid(String memoUid) async {
     final db = await this.db;
-    final rows = await db.query(
-      'memo_clip_cards',
-      where: 'memo_uid = ?',
-      whereArgs: [memoUid],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return rows.first;
+    return MemoAuxiliaryDbPersistence.getMemoClipCardByUid(db, memoUid);
   }
 
   Future<List<Map<String, dynamic>>> listMemoClipCards() async {
     final db = await this.db;
-    return db.query('memo_clip_cards', orderBy: 'updated_time DESC, id DESC');
+    return MemoAuxiliaryDbPersistence.listMemoClipCards(db);
   }
 
   Stream<List<Map<String, dynamic>>> watchMemoClipCards() async* {
@@ -2496,14 +2440,11 @@ WHERE id = 1;
     required String fileMd5,
   }) async {
     final db = await this.db;
-    final rows = await db.query(
-      'import_history',
-      where: 'source = ? AND file_md5 = ?',
-      whereArgs: [source, fileMd5],
-      limit: 1,
+    return MemoAuxiliaryDbPersistence.getImportHistory(
+      db,
+      source: source,
+      fileMd5: fileMd5,
     );
-    if (rows.isEmpty) return null;
-    return rows.first;
   }
 
   Future<int> upsertImportHistory({
@@ -2615,19 +2556,12 @@ WHERE id = 1;
 
   Future<Map<String, dynamic>?> getMemoReminderByUid(String memoUid) async {
     final db = await this.db;
-    final rows = await db.query(
-      'memo_reminders',
-      where: 'memo_uid = ?',
-      whereArgs: [memoUid],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return rows.first;
+    return MemoAuxiliaryDbPersistence.getMemoReminderByUid(db, memoUid);
   }
 
   Future<List<Map<String, dynamic>>> listMemoReminders() async {
     final db = await this.db;
-    return db.query('memo_reminders', orderBy: 'updated_time DESC');
+    return MemoAuxiliaryDbPersistence.listMemoReminders(db);
   }
 
   Stream<List<Map<String, dynamic>>> watchMemoReminders() async* {
@@ -3049,33 +2983,6 @@ LIMIT 20000;
       });
       await Future<void>.delayed(const Duration(milliseconds: 1));
     }
-  }
-
-  static Future<void> _ensureMemoClipCardsTable(Database db) async {
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_clip_cards (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  memo_uid TEXT NOT NULL UNIQUE,
-  clip_kind TEXT NOT NULL,
-  platform TEXT NOT NULL,
-  source_name TEXT NOT NULL DEFAULT '',
-  source_avatar_url TEXT NOT NULL DEFAULT '',
-  author_name TEXT NOT NULL DEFAULT '',
-  author_avatar_url TEXT NOT NULL DEFAULT '',
-  source_url TEXT NOT NULL DEFAULT '',
-  lead_image_url TEXT NOT NULL DEFAULT '',
-  parser_tag TEXT NOT NULL DEFAULT '',
-  created_time INTEGER NOT NULL,
-  updated_time INTEGER NOT NULL,
-  FOREIGN KEY (memo_uid) REFERENCES memos(uid) ON DELETE CASCADE ON UPDATE CASCADE
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_memo_clip_cards_platform ON memo_clip_cards(platform);',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_memo_clip_cards_updated_time ON memo_clip_cards(updated_time DESC);',
-    );
   }
 
   static Future<void> _ensureStatsCache(

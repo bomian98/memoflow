@@ -15,6 +15,7 @@ import 'ai_db_persistence.dart';
 import 'app_database.dart';
 import 'collection_db_persistence.dart';
 import 'compose_draft_db_persistence.dart';
+import 'memo_auxiliary_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'outbox_db_persistence.dart';
@@ -660,32 +661,18 @@ class AppDatabaseWriteDao {
     required String timesJson,
   }) async {
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final updated = await sqlite.update(
-      'memo_reminders',
-      {'mode': mode, 'times_json': timesJson, 'updated_time': now},
-      where: 'memo_uid = ?',
-      whereArgs: [memoUid],
+    await MemoAuxiliaryDbPersistence.upsertMemoReminder(
+      sqlite,
+      memoUid: memoUid,
+      mode: mode,
+      timesJson: timesJson,
     );
-    if (updated == 0) {
-      await sqlite.insert('memo_reminders', {
-        'memo_uid': memoUid,
-        'mode': mode,
-        'times_json': timesJson,
-        'created_time': now,
-        'updated_time': now,
-      }, conflictAlgorithm: ConflictAlgorithm.abort);
-    }
     _db.notifyDataChanged();
   }
 
   Future<void> deleteMemoReminder(String memoUid) async {
     final sqlite = await _db.db;
-    await sqlite.delete(
-      'memo_reminders',
-      where: 'memo_uid = ?',
-      whereArgs: [memoUid],
-    );
+    await MemoAuxiliaryDbPersistence.deleteMemoReminder(sqlite, memoUid);
     _db.notifyDataChanged();
   }
 
@@ -779,19 +766,17 @@ class AppDatabaseWriteDao {
     String? error,
   }) async {
     final sqlite = await _db.db;
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final id = await sqlite.insert('import_history', {
-      'source': source,
-      'file_md5': fileMd5,
-      'file_name': fileName,
-      'memo_count': memoCount,
-      'attachment_count': attachmentCount,
-      'failed_count': failedCount,
-      'status': status,
-      'created_time': now,
-      'updated_time': now,
-      'error': error,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final id = await MemoAuxiliaryDbPersistence.upsertImportHistory(
+      sqlite,
+      source: source,
+      fileMd5: fileMd5,
+      fileName: fileName,
+      status: status,
+      memoCount: memoCount,
+      attachmentCount: attachmentCount,
+      failedCount: failedCount,
+      error: error,
+    );
     _db.notifyDataChanged();
     return id;
   }
@@ -805,18 +790,14 @@ class AppDatabaseWriteDao {
     String? error,
   }) async {
     final sqlite = await _db.db;
-    await sqlite.update(
-      'import_history',
-      {
-        'status': status,
-        'memo_count': memoCount,
-        'attachment_count': attachmentCount,
-        'failed_count': failedCount,
-        'updated_time': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'error': error,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
+    await MemoAuxiliaryDbPersistence.updateImportHistory(
+      sqlite,
+      id: id,
+      status: status,
+      memoCount: memoCount,
+      attachmentCount: attachmentCount,
+      failedCount: failedCount,
+      error: error,
     );
     _db.notifyDataChanged();
   }
@@ -1385,11 +1366,10 @@ class AppDatabaseWriteDao {
       where: 'uid = ?',
       whereArgs: [oldUid],
     );
-    await executor.update(
-      'memo_reminders',
-      {'memo_uid': newUid},
-      where: 'memo_uid = ?',
-      whereArgs: [oldUid],
+    await MemoAuxiliaryDbPersistence.renameMemoReminderUid(
+      executor,
+      oldUid: oldUid,
+      newUid: newUid,
     );
     await executor.update(
       'attachments',
@@ -1641,11 +1621,7 @@ class AppDatabaseWriteDao {
     final memoUid = metadata.memoUid.trim();
     if (memoUid.isEmpty) return;
 
-    await executor.insert(
-      'memo_clip_cards',
-      metadata.toDbRow(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await MemoAuxiliaryDbPersistence.upsertMemoClipCard(executor, metadata);
 
     final memoRows = await executor.query(
       'memos',
@@ -1678,10 +1654,9 @@ class AppDatabaseWriteDao {
     final normalizedUid = memoUid.trim();
     if (normalizedUid.isEmpty) return;
 
-    await executor.delete(
-      'memo_clip_cards',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
+    await MemoAuxiliaryDbPersistence.deleteMemoClipCard(
+      executor,
+      normalizedUid,
     );
 
     final memoRows = await executor.query(
