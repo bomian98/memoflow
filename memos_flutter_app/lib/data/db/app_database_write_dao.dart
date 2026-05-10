@@ -14,6 +14,7 @@ import '../models/tag_snapshot.dart';
 import 'app_database.dart';
 import 'compose_draft_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
+import 'outbox_db_persistence.dart';
 
 class AppDatabaseWriteDao {
   AppDatabaseWriteDao({required AppDatabase db}) : _db = db;
@@ -495,7 +496,7 @@ WHERE id IN (
     final sqlite = await _db.db;
 
     await sqlite.transaction((txn) async {
-      await txn.delete('outbox', where: 'id = ?', whereArgs: [outboxId]);
+      await OutboxDbPersistence.deleteById(txn, outboxId);
 
       if (trimmedMemoUid.isNotEmpty && trimmedAttachmentUid.isNotEmpty) {
         await _removePendingAttachmentPlaceholder(
@@ -507,7 +508,7 @@ WHERE id IN (
 
       if (trimmedMemoUid.isEmpty) return;
 
-      final hasMorePending = await _hasPendingOutboxTaskForMemo(
+      final hasMorePending = await OutboxDbPersistence.hasPendingTaskForMemo(
         txn,
         trimmedMemoUid,
       );
@@ -665,7 +666,7 @@ WHERE id IN (
     required String newUid,
   }) async {
     final sqlite = await _db.db;
-    final changedCount = await _rewriteOutboxMemoUids(
+    final changedCount = await OutboxDbPersistence.rewriteMemoUids(
       sqlite,
       oldUid: oldUid,
       newUid: newUid,
@@ -684,7 +685,7 @@ WHERE id IN (
     late int changedCount;
     await sqlite.transaction((txn) async {
       await _renameMemoUid(txn, oldUid: oldUid, newUid: newUid);
-      changedCount = await _rewriteOutboxMemoUids(
+      changedCount = await OutboxDbPersistence.rewriteMemoUids(
         txn,
         oldUid: oldUid,
         newUid: newUid,
@@ -727,7 +728,7 @@ WHERE id IN (
     final sqlite = await _db.db;
     await sqlite.transaction((txn) async {
       if (clearOutbox) {
-        await _deleteOutboxForMemo(txn, uid);
+        await OutboxDbPersistence.deleteForMemo(txn, uid);
       }
 
       await _upsertMemo(
@@ -777,7 +778,7 @@ WHERE id IN (
 
     final sqlite = await _db.db;
     await sqlite.transaction((txn) async {
-      await _deleteOutboxForMemo(txn, normalizedMemoUid);
+      await OutboxDbPersistence.deleteForMemo(txn, normalizedMemoUid);
       await _deleteMemoByUid(txn, normalizedMemoUid);
     });
     _db.notifyDataChanged();
@@ -797,7 +798,7 @@ WHERE id IN (
         memoUid: normalizedMemoUid,
         state: AppDatabase.memoDeleteTombstoneStatePendingRemoteDelete,
       );
-      await _deleteOutboxForMemo(txn, normalizedMemoUid);
+      await OutboxDbPersistence.deleteForMemo(txn, normalizedMemoUid);
 
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
       final attachmentItems = <Map<String, Object?>>[
@@ -812,7 +813,7 @@ WHERE id IN (
             },
       ];
       if (attachmentItems.isNotEmpty) {
-        await _enqueueOutboxBatch(
+        await OutboxDbPersistence.enqueueBatch(
           txn,
           items: attachmentItems,
           createdTimeMs: now,
@@ -820,7 +821,7 @@ WHERE id IN (
       }
 
       await _deleteMemoByUid(txn, normalizedMemoUid);
-      await _insertOutboxItem(
+      await OutboxDbPersistence.insertItem(
         txn,
         type: 'delete_memo',
         payload: <String, Object?>{'uid': normalizedMemoUid, 'force': false},
@@ -1009,7 +1010,7 @@ WHERE id IN (
     required Map<String, dynamic> payload,
   }) async {
     final sqlite = await _db.db;
-    final id = await _insertOutboxItem(
+    final id = await OutboxDbPersistence.insertItem(
       sqlite,
       type: type,
       payload: payload,
@@ -1025,7 +1026,7 @@ WHERE id IN (
     if (items.isEmpty) return 0;
     final sqlite = await _db.db;
     await sqlite.transaction((txn) async {
-      await _enqueueOutboxBatch(
+      await OutboxDbPersistence.enqueueBatch(
         txn,
         items: items,
         createdTimeMs: DateTime.now().toUtc().millisecondsSinceEpoch,
@@ -1041,43 +1042,7 @@ WHERE id IN (
     final claimed = await sqlite.transaction<Map<String, dynamic>?>((
       txn,
     ) async {
-      final rows = await txn.query(
-        'outbox',
-        where:
-            '(state = ? OR state = ?) AND (retry_at IS NULL OR retry_at <= ?)',
-        whereArgs: [
-          AppDatabase.outboxStatePending,
-          AppDatabase.outboxStateRetry,
-          now,
-        ],
-        orderBy: 'id ASC',
-        limit: 1,
-      );
-      if (rows.isEmpty) return null;
-
-      final id = _readInt(rows.first['id']);
-      if (id == null) return null;
-
-      final updated = await txn.update(
-        'outbox',
-        {'state': AppDatabase.outboxStateRunning},
-        where: 'id = ? AND (state = ? OR state = ?)',
-        whereArgs: [
-          id,
-          AppDatabase.outboxStatePending,
-          AppDatabase.outboxStateRetry,
-        ],
-      );
-      if (updated <= 0) return null;
-
-      final claimedRows = await txn.query(
-        'outbox',
-        where: 'id = ?',
-        whereArgs: [id],
-        limit: 1,
-      );
-      if (claimedRows.isEmpty) return null;
-      return Map<String, dynamic>.from(claimedRows.first);
+      return OutboxDbPersistence.claimNextRunnable(txn, nowMs: now);
     });
     if (claimed != null) {
       _db.notifyDataChanged();
@@ -1094,33 +1059,7 @@ WHERE id IN (
     final claimed = await sqlite.transaction<Map<String, dynamic>?>((
       txn,
     ) async {
-      final updated = await txn.rawUpdate(
-        '''
-UPDATE outbox
-SET state = ?
-WHERE id = ?
-  AND (
-    state = ?
-    OR (state = ? AND (retry_at IS NULL OR retry_at <= ?))
-  );
-''',
-        [
-          AppDatabase.outboxStateRunning,
-          id,
-          AppDatabase.outboxStatePending,
-          AppDatabase.outboxStateRetry,
-          now,
-        ],
-      );
-      if (updated <= 0) return null;
-      final rows = await txn.query(
-        'outbox',
-        where: 'id = ?',
-        whereArgs: [id],
-        limit: 1,
-      );
-      if (rows.isEmpty) return null;
-      return Map<String, dynamic>.from(rows.first);
+      return OutboxDbPersistence.claimTaskById(txn, id, nowMs: now);
     });
     if (claimed != null) {
       _db.notifyDataChanged();
@@ -1130,10 +1069,7 @@ WHERE id = ?
 
   Future<int> recoverOutboxRunningTasks() async {
     final sqlite = await _db.db;
-    final updated = await sqlite.rawUpdate(
-      'UPDATE outbox SET state = ?, retry_at = NULL WHERE state = ?',
-      [AppDatabase.outboxStatePending, AppDatabase.outboxStateRunning],
-    );
+    final updated = await OutboxDbPersistence.recoverRunningTasks(sqlite);
     if (updated > 0) {
       _db.notifyDataChanged();
     }
@@ -1142,31 +1078,21 @@ WHERE id = ?
 
   Future<void> markOutboxDone(int id) async {
     final sqlite = await _db.db;
-    await sqlite.rawUpdate(
-      'UPDATE outbox SET state = ?, retry_at = NULL, last_error = NULL, failure_code = NULL, failure_kind = NULL, quarantined_at = NULL WHERE id = ?',
-      [AppDatabase.outboxStateDone, id],
-    );
+    await OutboxDbPersistence.markDone(sqlite, id);
     _db.notifyDataChanged();
   }
 
   Future<void> completeOutboxTask(int id) async {
     final sqlite = await _db.db;
     await sqlite.transaction((txn) async {
-      await txn.rawUpdate(
-        'UPDATE outbox SET state = ?, retry_at = NULL, last_error = NULL, failure_code = NULL, failure_kind = NULL, quarantined_at = NULL WHERE id = ?',
-        [AppDatabase.outboxStateDone, id],
-      );
-      await txn.delete('outbox', where: 'id = ?', whereArgs: [id]);
+      await OutboxDbPersistence.completeTask(txn, id);
     });
     _db.notifyDataChanged();
   }
 
   Future<void> markOutboxError(int id, {required String error}) async {
     final sqlite = await _db.db;
-    await sqlite.rawUpdate(
-      'UPDATE outbox SET state = ?, attempts = attempts + 1, retry_at = NULL, last_error = ?, failure_code = NULL, failure_kind = NULL, quarantined_at = NULL WHERE id = ?',
-      [AppDatabase.outboxStateError, error, id],
-    );
+    await OutboxDbPersistence.markError(sqlite, id, error: error);
     _db.notifyDataChanged();
   }
 
@@ -1176,9 +1102,11 @@ WHERE id = ?
     required int retryAtMs,
   }) async {
     final sqlite = await _db.db;
-    await sqlite.rawUpdate(
-      'UPDATE outbox SET state = ?, attempts = attempts + 1, retry_at = ?, last_error = ?, failure_code = NULL, failure_kind = ?, quarantined_at = NULL WHERE id = ?',
-      [AppDatabase.outboxStateRetry, retryAtMs, error, 'retryable', id],
+    await OutboxDbPersistence.markRetryScheduled(
+      sqlite,
+      id,
+      error: error,
+      retryAtMs: retryAtMs,
     );
     _db.notifyDataChanged();
   }
@@ -1192,31 +1120,15 @@ WHERE id = ?
   }) async {
     final sqlite = await _db.db;
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    if (incrementAttempts) {
-      await sqlite.rawUpdate(
-        'UPDATE outbox SET state = ?, attempts = attempts + 1, retry_at = NULL, last_error = ?, failure_code = ?, failure_kind = ?, quarantined_at = ? WHERE id = ?',
-        [
-          AppDatabase.outboxStateQuarantined,
-          error,
-          failureCode,
-          failureKind,
-          now,
-          id,
-        ],
-      );
-    } else {
-      await sqlite.rawUpdate(
-        'UPDATE outbox SET state = ?, retry_at = NULL, last_error = ?, failure_code = ?, failure_kind = ?, quarantined_at = ? WHERE id = ?',
-        [
-          AppDatabase.outboxStateQuarantined,
-          error,
-          failureCode,
-          failureKind,
-          now,
-          id,
-        ],
-      );
-    }
+    await OutboxDbPersistence.markQuarantined(
+      sqlite,
+      id,
+      error: error,
+      failureCode: failureCode,
+      failureKind: failureKind,
+      quarantinedAtMs: now,
+      incrementAttempts: incrementAttempts,
+    );
     _db.notifyDataChanged();
   }
 
@@ -1230,75 +1142,32 @@ WHERE id = ?
 
   Future<int> retryOutboxErrors({String? memoUid}) async {
     final sqlite = await _db.db;
-    final normalizedMemoUid = (memoUid ?? '').trim();
-    final rows = await sqlite.query(
-      'outbox',
-      columns: const ['id', 'type', 'payload'],
-      where: 'state IN (?, ?)',
-      whereArgs: const [
-        AppDatabase.outboxStateError,
-        AppDatabase.outboxStateQuarantined,
-      ],
-      orderBy: 'id ASC',
+    final retried = await OutboxDbPersistence.retryErrors(
+      sqlite,
+      memoUid: memoUid,
     );
-
-    final ids = <int>[];
-    for (final row in rows) {
-      final id = _readInt(row['id']);
-      if (id == null) continue;
-      if (normalizedMemoUid.isEmpty) {
-        ids.add(id);
-        continue;
-      }
-      final type = row['type'];
-      final payloadRaw = row['payload'];
-      if (type is! String || payloadRaw is! String) continue;
-      final payload = _decodeOutboxPayload(payloadRaw);
-      if (payload == null) continue;
-      final targetUid = _extractOutboxMemoUid(type, payload);
-      if (targetUid == null || targetUid.trim() != normalizedMemoUid) {
-        continue;
-      }
-      ids.add(id);
+    if (retried > 0) {
+      _db.notifyDataChanged();
     }
-
-    if (ids.isEmpty) return 0;
-    for (final id in ids) {
-      await sqlite.rawUpdate(
-        'UPDATE outbox SET state = ?, retry_at = NULL, last_error = NULL, failure_code = NULL, failure_kind = NULL, quarantined_at = NULL WHERE id = ?',
-        [AppDatabase.outboxStatePending, id],
-      );
-    }
-    _db.notifyDataChanged();
-    return ids.length;
+    return retried;
   }
 
   Future<void> retryOutboxItem(int id) async {
     final sqlite = await _db.db;
-    await sqlite.rawUpdate(
-      'UPDATE outbox SET state = ?, retry_at = NULL, last_error = NULL, failure_code = NULL, failure_kind = NULL, quarantined_at = NULL WHERE id = ?',
-      [AppDatabase.outboxStatePending, id],
-    );
+    await OutboxDbPersistence.retryItem(sqlite, id);
     _db.notifyDataChanged();
   }
 
   Future<void> deleteOutbox(int id) async {
     final sqlite = await _db.db;
-    await sqlite.delete('outbox', where: 'id = ?', whereArgs: [id]);
+    await OutboxDbPersistence.deleteById(sqlite, id);
     _db.notifyDataChanged();
   }
 
   Future<int> deleteOutboxItems(List<int> ids) async {
     if (ids.isEmpty) return 0;
-    final normalizedIds = ids.where((id) => id > 0).toList(growable: false);
-    if (normalizedIds.isEmpty) return 0;
     final sqlite = await _db.db;
-    final placeholders = List.filled(normalizedIds.length, '?').join(', ');
-    final deleted = await sqlite.delete(
-      'outbox',
-      where: 'id IN ($placeholders)',
-      whereArgs: normalizedIds,
-    );
+    final deleted = await OutboxDbPersistence.deleteItems(sqlite, ids);
     if (deleted > 0) {
       _db.notifyDataChanged();
     }
@@ -1307,7 +1176,7 @@ WHERE id = ?
 
   Future<void> deleteOutboxForMemo(String memoUid) async {
     final sqlite = await _db.db;
-    final deleted = await _deleteOutboxForMemo(sqlite, memoUid);
+    final deleted = await OutboxDbPersistence.deleteForMemo(sqlite, memoUid);
     if (deleted > 0) {
       _db.notifyDataChanged();
     }
@@ -1315,7 +1184,7 @@ WHERE id = ?
 
   Future<void> clearOutbox() async {
     final sqlite = await _db.db;
-    await sqlite.delete('outbox');
+    await OutboxDbPersistence.clear(sqlite);
     _db.notifyDataChanged();
   }
 
@@ -1909,28 +1778,6 @@ WHERE id = ?
     return null;
   }
 
-  Map<String, dynamic>? _decodeOutboxPayload(String raw) {
-    if (raw.trim().isEmpty) return null;
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! Map) return null;
-      return decoded.cast<String, dynamic>();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  String? _extractOutboxMemoUid(String type, Map<String, dynamic> payload) {
-    return switch (type) {
-      'create_memo' ||
-      'update_memo' ||
-      'delete_memo' => payload['uid'] as String?,
-      'upload_attachment' ||
-      'delete_attachment' => payload['memo_uid'] as String?,
-      _ => null,
-    };
-  }
-
   Future<void> _renameMemoUid(
     DatabaseExecutor executor, {
     required String oldUid,
@@ -1980,146 +1827,19 @@ WHERE id = ?
     );
   }
 
-  Future<int> _rewriteOutboxMemoUids(
-    DatabaseExecutor executor, {
-    required String oldUid,
-    required String newUid,
-  }) async {
-    var changedCount = 0;
-    final rows = await executor.query(
-      'outbox',
-      columns: const ['id', 'type', 'payload'],
-    );
-    for (final row in rows) {
-      final id = _readInt(row['id']);
-      final type = row['type'];
-      final payloadRaw = row['payload'];
-      if (id == null || type is! String || payloadRaw is! String) continue;
-
-      final payload = _decodeOutboxPayload(payloadRaw);
-      if (payload == null) continue;
-
-      var changed = false;
-      switch (type) {
-        case 'create_memo':
-        case 'update_memo':
-        case 'delete_memo':
-          if (payload['uid'] == oldUid) {
-            payload['uid'] = newUid;
-            changed = true;
-          }
-          break;
-        case 'upload_attachment':
-        case 'delete_attachment':
-          if (payload['memo_uid'] == oldUid) {
-            payload['memo_uid'] = newUid;
-            changed = true;
-          }
-          break;
-      }
-      if (!changed) continue;
-
-      await executor.update(
-        'outbox',
-        {'payload': jsonEncode(payload)},
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      changedCount++;
-    }
-    return changedCount;
-  }
-
-  Future<bool> _hasPendingOutboxTaskForMemo(
-    DatabaseExecutor executor,
-    String memoUid, {
-    Set<String>? types,
-  }) async {
-    final trimmed = memoUid.trim();
-    if (trimmed.isEmpty) return false;
-    final rows = await executor.query(
-      'outbox',
-      columns: const ['type', 'payload'],
-      where: 'state IN (?, ?, ?, ?, ?)',
-      whereArgs: const [
-        AppDatabase.outboxStatePending,
-        AppDatabase.outboxStateRunning,
-        AppDatabase.outboxStateRetry,
-        AppDatabase.outboxStateError,
-        AppDatabase.outboxStateQuarantined,
-      ],
-    );
-
-    for (final row in rows) {
-      final type = row['type'];
-      final payloadRaw = row['payload'];
-      if (type is! String || payloadRaw is! String) continue;
-      if (types != null && !types.contains(type)) continue;
-      final payload = _decodeOutboxPayload(payloadRaw);
-      if (payload == null) continue;
-      final targetUid = _extractOutboxMemoUid(type, payload);
-      if (targetUid is String && targetUid.trim() == trimmed) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   Future<int> updatePendingCreateMemoContent({
     required String memoUid,
     required String content,
     String? visibility,
   }) async {
-    final trimmedMemoUid = memoUid.trim();
-    if (trimmedMemoUid.isEmpty) return 0;
-
     final sqlite = await _db.db;
-    final rows = await sqlite.query(
-      'outbox',
-      columns: const ['id', 'payload'],
-      where: 'type = ? AND state IN (?, ?, ?, ?, ?)',
-      whereArgs: const [
-        'create_memo',
-        AppDatabase.outboxStatePending,
-        AppDatabase.outboxStateRunning,
-        AppDatabase.outboxStateRetry,
-        AppDatabase.outboxStateError,
-        AppDatabase.outboxStateQuarantined,
-      ],
-    );
-
-    var updatedCount = 0;
-    for (final row in rows) {
-      final id = _readInt(row['id']);
-      final payloadRaw = row['payload'];
-      if (id == null || payloadRaw is! String) continue;
-
-      final payload = _decodeOutboxPayload(payloadRaw);
-      if (payload == null) continue;
-      final payloadUid = (payload['uid'] as String? ?? '').trim();
-      if (payloadUid != trimmedMemoUid) continue;
-
-      var changed = false;
-      if (payload['content'] != content) {
-        payload['content'] = content;
-        changed = true;
-      }
-      if (visibility != null && payload['visibility'] != visibility) {
-        payload['visibility'] = visibility;
-        changed = true;
-      }
-      if (!changed) continue;
-
-      await sqlite.update(
-        'outbox',
-        {'payload': jsonEncode(payload)},
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      updatedCount++;
-    }
-
+    final updatedCount =
+        await OutboxDbPersistence.updatePendingCreateMemoContent(
+          sqlite,
+          memoUid: memoUid,
+          content: content,
+          visibility: visibility,
+        );
     if (updatedCount > 0) {
       _db.notifyDataChanged();
     }
@@ -2506,90 +2226,6 @@ WHERE id = ?
       await _deleteMemoClipCard(txn, trimmedMemoUid);
     });
     _db.notifyDataChanged();
-  }
-
-  Future<int> _enqueueOutboxBatch(
-    DatabaseExecutor executor, {
-    required List<Map<String, Object?>> items,
-    required int createdTimeMs,
-  }) async {
-    var insertedCount = 0;
-    for (final item in items) {
-      final type = (item['type'] as String? ?? '').trim();
-      final payload = item['payload'];
-      if (type.isEmpty || payload is! Map) continue;
-      await _insertOutboxItem(
-        executor,
-        type: type,
-        payload: Map<Object?, Object?>.from(payload),
-        createdTimeMs: createdTimeMs,
-      );
-      insertedCount++;
-    }
-    return insertedCount;
-  }
-
-  Future<int> _insertOutboxItem(
-    DatabaseExecutor executor, {
-    required String type,
-    required Map<Object?, Object?> payload,
-    required int createdTimeMs,
-  }) {
-    return executor.insert('outbox', {
-      'type': type,
-      'payload': jsonEncode(
-        payload.map<String, Object?>(
-          (mapKey, mapValue) => MapEntry(mapKey.toString(), mapValue),
-        ),
-      ),
-      'state': AppDatabase.outboxStatePending,
-      'attempts': 0,
-      'last_error': null,
-      'failure_code': null,
-      'failure_kind': null,
-      'retry_at': null,
-      'quarantined_at': null,
-      'created_time': createdTimeMs,
-    });
-  }
-
-  Future<int> _deleteOutboxForMemo(
-    DatabaseExecutor executor,
-    String memoUid,
-  ) async {
-    final trimmed = memoUid.trim();
-    if (trimmed.isEmpty) return 0;
-
-    final rows = await executor.query(
-      'outbox',
-      columns: const ['id', 'type', 'payload'],
-      where: 'state IN (?, ?, ?, ?, ?)',
-      whereArgs: const [
-        AppDatabase.outboxStatePending,
-        AppDatabase.outboxStateRunning,
-        AppDatabase.outboxStateRetry,
-        AppDatabase.outboxStateError,
-        AppDatabase.outboxStateQuarantined,
-      ],
-    );
-    final ids = <int>[];
-    for (final row in rows) {
-      final id = _readInt(row['id']);
-      final type = row['type'];
-      final payloadRaw = row['payload'];
-      if (id == null || type is! String || payloadRaw is! String) continue;
-      final payload = _decodeOutboxPayload(payloadRaw);
-      if (payload == null) continue;
-      final target = _extractOutboxMemoUid(type, payload);
-      if (target is String && target.trim() == trimmed) {
-        ids.add(id);
-      }
-    }
-    if (ids.isEmpty) return 0;
-    for (final id in ids) {
-      await executor.delete('outbox', where: 'id = ?', whereArgs: [id]);
-    }
-    return ids.length;
   }
 
   String _backendKindToStorage(AiBackendKind value) => switch (value) {
