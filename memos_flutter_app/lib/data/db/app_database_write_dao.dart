@@ -12,6 +12,7 @@ import '../models/memo_location.dart';
 import '../models/tag.dart';
 import '../models/tag_snapshot.dart';
 import 'app_database.dart';
+import 'compose_draft_db_persistence.dart';
 
 class AppDatabaseWriteDao {
   AppDatabaseWriteDao({required AppDatabase db}) : _db = db;
@@ -865,11 +866,7 @@ WHERE id IN (
 
   Future<void> upsertComposeDraftRow(Map<String, Object?> row) async {
     final sqlite = await _db.db;
-    await sqlite.insert(
-      'compose_drafts',
-      row,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await ComposeDraftDbPersistence.upsertRow(sqlite, row);
     _db.notifyDataChanged();
   }
 
@@ -878,36 +875,25 @@ WHERE id IN (
     required List<Map<String, Object?>> rows,
   }) async {
     final sqlite = await _db.db;
-    await sqlite.transaction((txn) async {
-      await txn.delete(
-        'compose_drafts',
-        where: 'workspace_key = ?',
-        whereArgs: [workspaceKey],
-      );
-      for (final row in rows) {
-        await txn.insert(
-          'compose_drafts',
-          row,
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-    });
+    await sqlite.transaction(
+      (txn) => ComposeDraftDbPersistence.replaceRowsInExecutor(
+        txn,
+        workspaceKey: workspaceKey,
+        rows: rows,
+      ),
+    );
     _db.notifyDataChanged();
   }
 
   Future<void> deleteComposeDraft(String uid) async {
     final sqlite = await _db.db;
-    await sqlite.delete('compose_drafts', where: 'uid = ?', whereArgs: [uid]);
+    await ComposeDraftDbPersistence.deleteRow(sqlite, uid);
     _db.notifyDataChanged();
   }
 
   Future<void> deleteComposeDraftsByWorkspace(String workspaceKey) async {
     final sqlite = await _db.db;
-    await sqlite.delete(
-      'compose_drafts',
-      where: 'workspace_key = ?',
-      whereArgs: [workspaceKey],
-    );
+    await ComposeDraftDbPersistence.deleteRowsByWorkspace(sqlite, workspaceKey);
     _db.notifyDataChanged();
   }
 
