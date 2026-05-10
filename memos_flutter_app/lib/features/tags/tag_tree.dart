@@ -108,7 +108,7 @@ List<TagTreeNode> buildTagTree(
     attached.add(node.path);
   }
 
-  for (final node in nodesByPath.values) {
+  for (final node in List<TagTreeNode>.of(nodesByPath.values)) {
     if (attached.contains(node.path)) continue;
     _attachByPath(node, nodesByPath, rootNodes, attached);
   }
