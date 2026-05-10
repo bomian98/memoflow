@@ -13,6 +13,7 @@ import '../models/tag.dart';
 import '../models/tag_snapshot.dart';
 import 'app_database.dart';
 import 'compose_draft_db_persistence.dart';
+import 'memo_search_db_persistence.dart';
 
 class AppDatabaseWriteDao {
   AppDatabaseWriteDao({required AppDatabase db}) : _db = db;
@@ -2272,14 +2273,18 @@ WHERE id = ?
       }
     }
 
-    await _db.refreshMemoFtsEntryForMemo(
+    await MemoSearchDbPersistence.refreshFtsEntryForMemo(
       executor,
       rowId: rowId,
       memoUid: uid,
       content: content,
       tags: tagsText,
     );
-    await _db.markMemoSearchEntryDirty(executor, rowId: rowId, memoUid: uid);
+    await MemoSearchDbPersistence.markDirty(
+      executor,
+      rowId: rowId,
+      memoUid: uid,
+    );
 
     await _db.updateMemoTagsMapping(
       executor,
@@ -2399,8 +2404,8 @@ WHERE id = ?
       whereArgs: [normalizedUid],
     );
     if (rowId != null && rowId > 0) {
-      await _db.deleteMemoFtsEntry(executor, rowId: rowId);
-      await _db.deleteMemoSearchIndexEntry(
+      await MemoSearchDbPersistence.deleteFtsEntry(executor, rowId: rowId);
+      await MemoSearchDbPersistence.deleteIndexEntry(
         executor,
         rowId: rowId,
         memoUid: normalizedUid,
@@ -2432,14 +2437,14 @@ WHERE id = ?
     if (memoRows.isEmpty) return;
     final rowId = _readInt(memoRows.first['id']) ?? 0;
     if (rowId <= 0) return;
-    await _db.refreshMemoFtsEntryForMemo(
+    await MemoSearchDbPersistence.refreshFtsEntryForMemo(
       executor,
       rowId: rowId,
       memoUid: memoUid,
       content: (memoRows.first['content'] as String?) ?? '',
       tags: (memoRows.first['tags'] as String?) ?? '',
     );
-    await _db.markMemoSearchEntryDirty(
+    await MemoSearchDbPersistence.markDirty(
       executor,
       rowId: rowId,
       memoUid: memoUid,
@@ -2469,14 +2474,14 @@ WHERE id = ?
     if (memoRows.isEmpty) return;
     final rowId = _readInt(memoRows.first['id']) ?? 0;
     if (rowId <= 0) return;
-    await _db.refreshMemoFtsEntryForMemo(
+    await MemoSearchDbPersistence.refreshFtsEntryForMemo(
       executor,
       rowId: rowId,
       memoUid: normalizedUid,
       content: (memoRows.first['content'] as String?) ?? '',
       tags: (memoRows.first['tags'] as String?) ?? '',
     );
-    await _db.markMemoSearchEntryDirty(
+    await MemoSearchDbPersistence.markDirty(
       executor,
       rowId: rowId,
       memoUid: normalizedUid,

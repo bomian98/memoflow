@@ -608,7 +608,7 @@ class MemoSearchCoordinator {
               uid.isNotEmpty && matchedLocalUids.contains(uid);
           if (!matchedLocally &&
               !MemoSearchMatcher.matchesText(
-                text: AppDatabase.buildCanonicalMemoSearchDocument(
+                text: MemoSearchDocumentBuilder.buildCanonical(
                   content: memo.content,
                   tagsText: memo.tags.join(' '),
                 ),

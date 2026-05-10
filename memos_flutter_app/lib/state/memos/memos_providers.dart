@@ -12,6 +12,7 @@ import '../../application/attachments/queued_attachment_stager.dart';
 import '../../application/sync/sync_error.dart';
 import '../../application/sync/sync_types.dart';
 import '../../core/image_bed_url.dart';
+import '../../core/memo_search_document_builder.dart';
 import '../../core/memo_search_matcher.dart';
 import '../../core/memo_relations.dart';
 import '../../core/tags.dart';

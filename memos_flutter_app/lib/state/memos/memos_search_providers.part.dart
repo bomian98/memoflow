@@ -389,7 +389,7 @@ bool _matchesRemoteSearchMemoLocally({
         memoKey.isNotEmpty && matchedLocalMemoKeys.contains(memoKey);
     if (!matchedLocally &&
         !MemoSearchMatcher.matchesText(
-          text: AppDatabase.buildCanonicalMemoSearchDocument(
+          text: MemoSearchDocumentBuilder.buildCanonical(
             content: memo.content,
             tagsText: memo.tags.join(' '),
           ),

@@ -6,12 +6,13 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/debug_ephemeral_storage.dart';
-import '../../core/memo_search_matcher.dart';
+import '../../core/memo_search_document_builder.dart';
 import '../../core/tags.dart';
 import 'db_write_protocol.dart';
 import 'desktop_db_write_gateway.dart';
 import 'app_database_write_dao.dart';
 import 'compose_draft_db_persistence.dart';
+import 'memo_search_db_persistence.dart';
 import '../models/memo_clip_card_metadata.dart';
 import '../models/memo_location.dart';
 
@@ -231,12 +232,12 @@ CREATE TABLE IF NOT EXISTS memo_inline_image_sources (
           await _ensureAiTables(db);
 
           await _ensureStatsCache(db, rebuild: true);
-          await _ensureFts(db, rebuild: true);
-          await _ensureMemoSearchIndex(db, rebuild: true);
+          await MemoSearchDbPersistence.ensureFts(db, rebuild: true);
+          await MemoSearchDbPersistence.ensureIndex(db, rebuild: true);
         },
         onUpgrade: (db, oldVersion, newVersion) async {
           if (oldVersion < 3) {
-            await _recreateFts(db);
+            await MemoSearchDbPersistence.recreateFts(db);
           }
           if (oldVersion < 4) {
             await db.execute('''
@@ -499,7 +500,7 @@ CREATE TABLE IF NOT EXISTS outbox (
             );
           }
           if (oldVersion < 27) {
-            await _ensureMemoSearchIndex(db, rebuild: true);
+            await MemoSearchDbPersistence.ensureIndex(db, rebuild: true);
           }
           if (oldVersion < 28) {
             await ComposeDraftDbPersistence.ensureEditDraftColumns(db);
@@ -508,8 +509,8 @@ CREATE TABLE IF NOT EXISTS outbox (
         onOpen: (db) async {
           await _ensureMemoClipCardsTable(db);
           await _ensureStatsCache(db);
-          await _ensureFts(db);
-          await _ensureMemoSearchIndex(db);
+          await MemoSearchDbPersistence.ensureFts(db);
+          await MemoSearchDbPersistence.ensureIndex(db);
         },
       );
     }
@@ -1285,12 +1286,7 @@ CREATE TABLE IF NOT EXISTS outbox (
   }
 
   static List<String> _splitTagsText(String tagsText) {
-    if (tagsText.trim().isEmpty) return const [];
-    return tagsText
-        .split(' ')
-        .map((t) => t.trim())
-        .where((t) => t.isNotEmpty)
-        .toList(growable: false);
+    return MemoSearchDocumentBuilder.splitTagsText(tagsText);
   }
 
   static Map<String, int> _countTags(List<String> tags) {
@@ -1417,14 +1413,18 @@ WHERE mt.memo_uid = ?;
     );
     final rowId = _readInt(rows.firstOrNull?['id']) ?? 0;
     if (rowId > 0) {
-      await refreshMemoFtsEntryForMemo(
+      await MemoSearchDbPersistence.refreshFtsEntryForMemo(
         txn,
         rowId: rowId,
         memoUid: normalizedUid,
         content: before.content,
         tags: tagsText,
       );
-      await markMemoSearchEntryDirty(txn, rowId: rowId, memoUid: normalizedUid);
+      await MemoSearchDbPersistence.markDirty(
+        txn,
+        rowId: rowId,
+        memoUid: normalizedUid,
+      );
     }
     final after = _MemoSnapshot(
       state: before.state,
@@ -1459,102 +1459,6 @@ WHERE mt.memo_uid = ?;
         const <String, dynamic>{};
   }
 
-  Future<Map<String, dynamic>?> getMemoClipCardByUidFromExecutor(
-    DatabaseExecutor executor,
-    String memoUid,
-  ) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return null;
-    final rows = await executor.query(
-      'memo_clip_cards',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return rows.first;
-  }
-
-  Future<String> buildMemoSearchDocumentForMemo(
-    DatabaseExecutor executor, {
-    required String memoUid,
-    required String content,
-  }) async {
-    final clipRow = await getMemoClipCardByUidFromExecutor(executor, memoUid);
-    return buildMemoSearchDocument(
-      content: content,
-      sourceName: (clipRow?['source_name'] as String? ?? '').trim(),
-      authorName: (clipRow?['author_name'] as String? ?? '').trim(),
-      sourceUrl: (clipRow?['source_url'] as String? ?? '').trim(),
-    );
-  }
-
-  Future<String> buildCanonicalMemoSearchDocumentForMemo(
-    DatabaseExecutor executor, {
-    required String memoUid,
-    required String content,
-    required String tags,
-  }) async {
-    final clipRow = await getMemoClipCardByUidFromExecutor(executor, memoUid);
-    return buildCanonicalMemoSearchDocument(
-      content: content,
-      tagsText: tags,
-      sourceName: (clipRow?['source_name'] as String? ?? '').trim(),
-      authorName: (clipRow?['author_name'] as String? ?? '').trim(),
-      sourceUrl: (clipRow?['source_url'] as String? ?? '').trim(),
-    );
-  }
-
-  static String buildMemoSearchDocument({
-    required String content,
-    String sourceName = '',
-    String authorName = '',
-    String sourceUrl = '',
-  }) {
-    final parts = <String>[
-      content.trimRight(),
-      sourceName.trim(),
-      authorName.trim(),
-    ];
-    final normalizedUrl = sourceUrl.trim();
-    if (normalizedUrl.isNotEmpty) {
-      final parsed = Uri.tryParse(normalizedUrl);
-      final host = (parsed?.host ?? '').trim().toLowerCase();
-      final hostWithoutWww = host.startsWith('www.') ? host.substring(4) : host;
-      if (host.isNotEmpty) {
-        parts.add(host);
-      }
-      if (hostWithoutWww.isNotEmpty && hostWithoutWww != host) {
-        parts.add(hostWithoutWww);
-      }
-      parts.add(normalizedUrl);
-    }
-    return parts.where((part) => part.trim().isNotEmpty).join('\n');
-  }
-
-  static String buildCanonicalMemoSearchDocument({
-    required String content,
-    String tagsText = '',
-    String sourceName = '',
-    String authorName = '',
-    String sourceUrl = '',
-  }) {
-    final parts = <String>[
-      buildMemoSearchDocument(
-        content: content,
-        sourceName: sourceName,
-        authorName: authorName,
-        sourceUrl: sourceUrl,
-      ),
-      ..._splitTagsText(tagsText),
-    ];
-    return parts
-        .map((part) => part.trim())
-        .where((part) => part.isNotEmpty)
-        .join('\n')
-        .toLowerCase();
-  }
-
   Future<void> applyMemoCacheDeltaPayload(
     DatabaseExecutor txn, {
     required Map<String, dynamic>? before,
@@ -1564,71 +1468,6 @@ WHERE mt.memo_uid = ?;
       txn,
       before: _memoSnapshotFromPayload(before),
       after: _memoSnapshotFromPayload(after),
-    );
-  }
-
-  Future<void> replaceMemoFtsEntry(
-    DatabaseExecutor executor, {
-    required int rowId,
-    required String content,
-    required String tags,
-  }) {
-    return _replaceMemoFtsEntry(
-      executor,
-      rowId: rowId,
-      content: content,
-      tags: tags,
-    );
-  }
-
-  Future<void> refreshMemoFtsEntryForMemo(
-    DatabaseExecutor executor, {
-    required int rowId,
-    required String memoUid,
-    required String content,
-    required String tags,
-  }) async {
-    final searchDocument = await buildMemoSearchDocumentForMemo(
-      executor,
-      memoUid: memoUid,
-      content: content,
-    );
-    await replaceMemoFtsEntry(
-      executor,
-      rowId: rowId,
-      content: searchDocument,
-      tags: tags,
-    );
-  }
-
-  Future<void> deleteMemoFtsEntry(
-    DatabaseExecutor executor, {
-    required int rowId,
-  }) {
-    return _deleteMemoFtsEntry(executor, rowId: rowId);
-  }
-
-  Future<void> markMemoSearchEntryDirty(
-    DatabaseExecutor executor, {
-    required int rowId,
-    required String memoUid,
-  }) {
-    return _upsertMemoSearchDirtyEntry(
-      executor,
-      rowId: rowId,
-      memoUid: memoUid,
-    );
-  }
-
-  Future<void> deleteMemoSearchIndexEntry(
-    DatabaseExecutor executor, {
-    required int rowId,
-    required String memoUid,
-  }) {
-    return _deleteMemoSearchIndexEntry(
-      executor,
-      rowId: rowId,
-      memoUid: memoUid,
     );
   }
 
@@ -3603,182 +3442,16 @@ WHERE id = 1;
     int? limit = 100,
   }) async {
     final db = await this.db;
-    final trimmedTag = (tag ?? '').trim();
-    final withoutHash = trimmedTag.startsWith('#')
-        ? trimmedTag.substring(1)
-        : trimmedTag;
-    final normalizedTag = withoutHash.toLowerCase();
-    final normalizedState = (state ?? '').trim();
-    final normalizedSearch = MemoSearchMatcher.normalizeQuery(searchQuery);
-    final normalizedLimit = (limit != null && limit > 0) ? limit : null;
-
-    final baseWhereClauses = <String>[];
-    final baseWhereArgs = <Object?>[];
-    if (normalizedState.isNotEmpty) {
-      baseWhereClauses.add('state = ?');
-      baseWhereArgs.add(normalizedState);
-    }
-    if (normalizedTag.isNotEmpty) {
-      baseWhereClauses.add("(' ' || tags || ' ') LIKE ?");
-      baseWhereArgs.add('% $normalizedTag %');
-    }
-    if (startTimeSec != null) {
-      baseWhereClauses.add('COALESCE(display_time, create_time) >= ?');
-      baseWhereArgs.add(startTimeSec);
-    }
-    if (endTimeSecExclusive != null) {
-      baseWhereClauses.add('COALESCE(display_time, create_time) < ?');
-      baseWhereArgs.add(endTimeSecExclusive);
-    }
-
-    Future<List<Map<String, dynamic>>> listBase() {
-      return db.query(
-        'memos',
-        where: baseWhereClauses.isEmpty ? null : baseWhereClauses.join(' AND '),
-        whereArgs: baseWhereArgs.isEmpty ? null : baseWhereArgs,
-        orderBy: 'pinned DESC, COALESCE(display_time, create_time) DESC',
-        limit: normalizedLimit,
-      );
-    }
-
-    if (normalizedSearch.isEmpty) {
-      return listBase();
-    }
-
-    final like = MemoSearchMatcher.toSqlLikePattern(normalizedSearch);
-    final literalSearchClauses = <String>[
-      if (normalizedState.isNotEmpty) 'm.state = ?',
-      if (normalizedTag.isNotEmpty) "(' ' || m.tags || ' ') LIKE ?",
-      if (startTimeSec != null) 'COALESCE(m.display_time, m.create_time) >= ?',
-      if (endTimeSecExclusive != null)
-        'COALESCE(m.display_time, m.create_time) < ?',
-      '''
-(
-  m.content LIKE ? ESCAPE '\\'
-  OR m.tags LIKE ? ESCAPE '\\'
-  OR COALESCE(c.source_name, '') LIKE ? ESCAPE '\\'
-  OR COALESCE(c.author_name, '') LIKE ? ESCAPE '\\'
-  OR COALESCE(c.source_url, '') LIKE ? ESCAPE '\\'
-)
-''',
-    ];
-
-    Future<List<Map<String, dynamic>>> listByLiteralSearch() {
-      final args = <Object?>[
-        if (normalizedState.isNotEmpty) normalizedState,
-        if (normalizedTag.isNotEmpty) '% $normalizedTag %',
-        if (startTimeSec != null) startTimeSec,
-        if (endTimeSecExclusive != null) endTimeSecExclusive,
-        like,
-        like,
-        like,
-        like,
-        like,
-      ];
-      final limitClause = normalizedLimit == null ? '' : '\nLIMIT ?';
-      if (normalizedLimit != null) {
-        args.add(normalizedLimit);
-      }
-      return db.rawQuery('''
-SELECT DISTINCT m.*
-FROM memos m
-LEFT JOIN memo_clip_cards c ON c.memo_uid = m.uid
-WHERE ${literalSearchClauses.join(' AND ')}
-ORDER BY m.pinned DESC, COALESCE(m.display_time, m.create_time) DESC
-$limitClause;
-''', args);
-    }
-
-    try {
-      await _drainMemoSearchDirtyEntries(db, limit: _memoSearchDrainBatchSize);
-
-      final dirtyRows = await _listDirtyMemoSearchRows(
-        db,
-        normalizedSearch: normalizedSearch,
-        normalizedState: normalizedState,
-        normalizedTag: normalizedTag,
-        startTimeSec: startTimeSec,
-        endTimeSecExclusive: endTimeSecExclusive,
-      );
-      final dirtyMatched = <Map<String, dynamic>>[];
-      for (final row in dirtyRows) {
-        final document = buildCanonicalMemoSearchDocument(
-          content: (row['content'] as String?) ?? '',
-          tagsText: (row['tags'] as String?) ?? '',
-          sourceName: (row['source_name'] as String?) ?? '',
-          authorName: (row['author_name'] as String?) ?? '',
-          sourceUrl: (row['source_url'] as String?) ?? '',
-        );
-        if (!MemoSearchMatcher.matchesText(
-          text: document,
-          query: normalizedSearch,
-        )) {
-          continue;
-        }
-        dirtyMatched.add(
-          Map<String, dynamic>.from(row)
-            ..remove('source_name')
-            ..remove('author_name')
-            ..remove('source_url'),
-        );
-      }
-
-      final grams = _buildMemoSearchQueryGrams(normalizedSearch);
-      if (grams.isEmpty) {
-        return _mergeMemoSearchRows(
-          primary: dirtyMatched,
-          secondary: await listByLiteralSearch(),
-          limit: normalizedLimit,
-        );
-      }
-
-      final gramPlaceholders = List.filled(grams.length, '?').join(', ');
-      final indexedLike = MemoSearchMatcher.toSqlLikePattern(
-        normalizedSearch.toLowerCase(),
-      );
-      final cleanWhereClauses = <String>[
-        if (normalizedState.isNotEmpty) 'm.state = ?',
-        if (normalizedTag.isNotEmpty) "(' ' || m.tags || ' ') LIKE ?",
-        if (startTimeSec != null)
-          'COALESCE(m.display_time, m.create_time) >= ?',
-        if (endTimeSecExclusive != null)
-          'COALESCE(m.display_time, m.create_time) < ?',
-        "sd.document LIKE ? ESCAPE '\\'",
-      ];
-      final cleanWhereArgs = <Object?>[
-        ...grams,
-        grams.length,
-        if (normalizedState.isNotEmpty) normalizedState,
-        if (normalizedTag.isNotEmpty) '% $normalizedTag %',
-        if (startTimeSec != null) startTimeSec,
-        if (endTimeSecExclusive != null) endTimeSecExclusive,
-        indexedLike,
-      ];
-      final cleanRows = await db.rawQuery('''
-WITH candidate_rows AS (
-  SELECT s.memo_row_id
-  FROM memo_search_substrings s
-  LEFT JOIN memo_search_dirty d ON d.memo_row_id = s.memo_row_id
-  WHERE d.memo_row_id IS NULL
-    AND s.gram IN ($gramPlaceholders)
-  GROUP BY s.memo_row_id
-  HAVING COUNT(DISTINCT s.gram) = ?
-)
-SELECT DISTINCT m.*
-FROM candidate_rows cr
-JOIN memos m ON m.id = cr.memo_row_id
-JOIN memo_search_documents sd ON sd.memo_row_id = m.id
-WHERE ${cleanWhereClauses.join(' AND ')}
-ORDER BY m.pinned DESC, COALESCE(m.display_time, m.create_time) DESC;
-''', cleanWhereArgs);
-      return _mergeMemoSearchRows(
-        primary: dirtyMatched,
-        secondary: cleanRows,
-        limit: normalizedLimit,
-      );
-    } on DatabaseException {
-      return listByLiteralSearch();
-    }
+    return MemoSearchDbPersistence.listRows(
+      db,
+      searchQuery: searchQuery,
+      state: state,
+      tag: tag,
+      startTimeSec: startTimeSec,
+      endTimeSecExclusive: endTimeSecExclusive,
+      limit: limit,
+      dirtyDrainLimit: _memoSearchDrainBatchSize,
+    );
   }
 
   Future<List<Map<String, dynamic>>> listMemoUidSyncStates({
@@ -4205,21 +3878,13 @@ CREATE TABLE IF NOT EXISTS memo_tags (
           }
           final rowId = _readInt(row['id']) ?? 0;
           if (rowId > 0) {
-            final clipRows = await txn.query(
-              'memo_clip_cards',
-              columns: const ['source_name', 'author_name', 'source_url'],
-              where: 'memo_uid = ?',
-              whereArgs: [uid],
-              limit: 1,
-            );
-            final clipRow = clipRows.firstOrNull;
-            final searchDocument = buildMemoSearchDocument(
-              content: (row['content'] as String?) ?? '',
-              sourceName: (clipRow?['source_name'] as String?) ?? '',
-              authorName: (clipRow?['author_name'] as String?) ?? '',
-              sourceUrl: (clipRow?['source_url'] as String?) ?? '',
-            );
-            await _replaceMemoFtsEntry(
+            final searchDocument =
+                await MemoSearchDbPersistence.buildDocumentForMemo(
+                  txn,
+                  memoUid: uid,
+                  content: (row['content'] as String?) ?? '',
+                );
+            await MemoSearchDbPersistence.replaceFtsEntry(
               txn,
               rowId: rowId,
               content: searchDocument,
@@ -4399,578 +4064,6 @@ CREATE TABLE IF NOT EXISTS tag_stats_cache (
     });
   }
 
-  static Future<void> _recreateFts(Database db) async {
-    await db.execute('DROP TRIGGER IF EXISTS memos_ai;');
-    await db.execute('DROP TRIGGER IF EXISTS memos_ad;');
-    await db.execute('DROP TRIGGER IF EXISTS memos_au;');
-    await db.execute('DROP TABLE IF EXISTS memos_fts;');
-    await _ensureFts(db, rebuild: true);
-  }
-
-  static Future<void> _ensureFts(Database db, {bool rebuild = false}) async {
-    // Ensure legacy triggers from previous versions are removed.
-    await db.execute('DROP TRIGGER IF EXISTS memos_ai;');
-    await db.execute('DROP TRIGGER IF EXISTS memos_ad;');
-    await db.execute('DROP TRIGGER IF EXISTS memos_au;');
-    await _dropLegacyFtsTriggers(db);
-
-    // Prefer FTS5; fallback to FTS4; if both are unavailable, use a plain table
-    // so writes keep working and search can gracefully fallback to LIKE.
-    try {
-      await _ensureFtsTable(db);
-    } on DatabaseException catch (e) {
-      if (await _recoverBrokenFtsModule(db, e)) {
-        return;
-      }
-      rethrow;
-    }
-
-    if (rebuild) {
-      try {
-        await _backfillFts(db);
-      } on DatabaseException catch (e) {
-        if (await _recoverBrokenFtsModule(db, e)) {
-          return;
-        }
-        rethrow;
-      }
-    } else {
-      try {
-        final counts = await db.rawQuery('''
-SELECT
-  (SELECT COUNT(*) FROM memos) AS memos_count,
-  (SELECT COUNT(*) FROM memos_fts) AS fts_count;
-''');
-        final memosCount = (counts.firstOrNull?['memos_count'] as int?) ?? 0;
-        final ftsCount = (counts.firstOrNull?['fts_count'] as int?) ?? 0;
-        if (memosCount > 0 && ftsCount == 0) {
-          await _backfillFts(db);
-        }
-      } on DatabaseException catch (e) {
-        if (await _recoverBrokenFtsModule(db, e)) {
-          return;
-        }
-      } catch (_) {}
-    }
-  }
-
-  static bool _isMissingFtsModuleError(Object error) {
-    final message = error.toString().toLowerCase();
-    return message.contains('no such module') &&
-        (message.contains('fts5') || message.contains('fts4'));
-  }
-
-  static Future<bool> _recoverBrokenFtsModule(
-    Database db,
-    DatabaseException error,
-  ) async {
-    if (!_isMissingFtsModuleError(error)) {
-      return false;
-    }
-
-    await _resetBrokenFtsSchema(db);
-
-    try {
-      await _ensureFtsTable(db);
-      await _backfillFts(db);
-      return true;
-    } on DatabaseException catch (rebuildError) {
-      if (_isMissingFtsModuleError(rebuildError)) {
-        await _forceDropBrokenFtsSchema(db);
-        try {
-          await _ensureFtsTable(db);
-          await _backfillFts(db);
-          return true;
-        } on DatabaseException catch (forcedRebuildError) {
-          if (_isMissingFtsModuleError(forcedRebuildError)) {
-            return true;
-          }
-          rethrow;
-        }
-      }
-      rethrow;
-    }
-  }
-
-  static Future<void> _resetBrokenFtsSchema(Database db) async {
-    try {
-      await db.execute('DROP TABLE IF EXISTS memos_fts;');
-    } on DatabaseException catch (dropError) {
-      if (!_isMissingFtsModuleError(dropError)) {
-        rethrow;
-      }
-      await _forceDropBrokenFtsSchema(db);
-    }
-  }
-
-  static Future<void> _forceDropBrokenFtsSchema(Database db) async {
-    final schemaVersionRows = await db.rawQuery('PRAGMA schema_version;');
-    final schemaVersion =
-        (schemaVersionRows.firstOrNull?['schema_version'] as int?) ?? 0;
-
-    await db.rawQuery('PRAGMA writable_schema = 1;');
-    try {
-      await db.rawDelete(
-        "DELETE FROM sqlite_master WHERE name = ? OR name LIKE ?;",
-        ['memos_fts', 'memos_fts_%'],
-      );
-    } finally {
-      await db.rawQuery('PRAGMA writable_schema = 0;');
-    }
-
-    await db.rawQuery('PRAGMA schema_version = ${schemaVersion + 1};');
-  }
-
-  static Future<void> _ensureFtsTable(Database db) async {
-    Future<bool> tryCreateVirtual(String module) async {
-      try {
-        await db.execute('''
-CREATE VIRTUAL TABLE IF NOT EXISTS memos_fts USING $module(
-  content,
-  tags
-);
-''');
-        return true;
-      } on DatabaseException catch (e) {
-        final msg = e.toString().toLowerCase();
-        if (msg.contains('no such module') || msg.contains(module)) {
-          return false;
-        }
-        rethrow;
-      }
-    }
-
-    if (await tryCreateVirtual('fts5')) return;
-    if (await tryCreateVirtual('fts4')) return;
-
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS memos_fts (
-  content TEXT NOT NULL DEFAULT '',
-  tags TEXT NOT NULL DEFAULT ''
-);
-''');
-  }
-
-  static Future<void> _backfillFts(Database db) async {
-    await db.execute('DELETE FROM memos_fts;');
-    final rows = await db.rawQuery('''
-SELECT
-  m.id,
-  m.content,
-  m.tags,
-  c.source_name,
-  c.author_name,
-  c.source_url
-FROM memos m
-LEFT JOIN memo_clip_cards c ON c.memo_uid = m.uid;
-''');
-    for (final row in rows) {
-      final id = row['id'] as int?;
-      if (id == null) continue;
-      final document = buildMemoSearchDocument(
-        content: (row['content'] as String?) ?? '',
-        sourceName: (row['source_name'] as String?) ?? '',
-        authorName: (row['author_name'] as String?) ?? '',
-        sourceUrl: (row['source_url'] as String?) ?? '',
-      );
-      await _replaceMemoFtsEntry(
-        db,
-        rowId: id,
-        content: document,
-        tags: (row['tags'] as String?) ?? '',
-      );
-    }
-  }
-
-  static Future<void> _replaceMemoFtsEntry(
-    DatabaseExecutor executor, {
-    required int rowId,
-    required String content,
-    required String tags,
-  }) async {
-    try {
-      await executor.insert('memos_fts', {
-        'rowid': rowId,
-        'content': content,
-        'tags': tags,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-    } on DatabaseException catch (e) {
-      if (_isMissingFtsModuleError(e)) {
-        return;
-      }
-      rethrow;
-    }
-  }
-
-  static Future<void> _deleteMemoFtsEntry(
-    DatabaseExecutor executor, {
-    required int rowId,
-  }) async {
-    try {
-      await executor.delete(
-        'memos_fts',
-        where: 'rowid = ?',
-        whereArgs: [rowId],
-      );
-    } on DatabaseException catch (e) {
-      if (_isMissingFtsModuleError(e)) {
-        return;
-      }
-      rethrow;
-    }
-  }
-
-  static Future<void> _ensureMemoSearchIndex(
-    Database db, {
-    bool rebuild = false,
-  }) async {
-    await _ensureMemoSearchIndexTables(db);
-    if (rebuild) {
-      await AppDatabaseWriteDao.runTransaction(db, (txn) async {
-        await txn.delete('memo_search_substrings');
-        await txn.delete('memo_search_documents');
-        await txn.delete('memo_search_dirty');
-      });
-      await _enqueueAllMemosForMemoSearchIndex(db, replace: true);
-      return;
-    }
-    try {
-      final rows = await db.rawQuery('''
-SELECT
-  (SELECT COUNT(*) FROM memos) AS memos_count,
-  (SELECT COUNT(*) FROM memo_search_documents) AS documents_count,
-  (SELECT COUNT(*) FROM memo_search_dirty) AS dirty_count;
-''');
-      final memosCount = (rows.firstOrNull?['memos_count'] as int?) ?? 0;
-      final documentsCount =
-          (rows.firstOrNull?['documents_count'] as int?) ?? 0;
-      final dirtyCount = (rows.firstOrNull?['dirty_count'] as int?) ?? 0;
-      if (memosCount > 0 && documentsCount == 0 && dirtyCount == 0) {
-        await _enqueueAllMemosForMemoSearchIndex(db);
-      }
-    } on DatabaseException {
-      return;
-    }
-  }
-
-  static Future<void> _ensureMemoSearchIndexTables(Database db) async {
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_search_documents (
-  memo_row_id INTEGER PRIMARY KEY,
-  memo_uid TEXT NOT NULL UNIQUE,
-  document TEXT NOT NULL DEFAULT '',
-  updated_time INTEGER NOT NULL,
-  FOREIGN KEY (memo_row_id) REFERENCES memos(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_memo_search_documents_uid ON memo_search_documents(memo_uid);',
-    );
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_search_substrings (
-  gram TEXT NOT NULL,
-  memo_row_id INTEGER NOT NULL,
-  PRIMARY KEY (gram, memo_row_id),
-  FOREIGN KEY (memo_row_id) REFERENCES memos(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_memo_search_substrings_row ON memo_search_substrings(memo_row_id);',
-    );
-    await db.execute('''
-CREATE TABLE IF NOT EXISTS memo_search_dirty (
-  memo_uid TEXT PRIMARY KEY,
-  memo_row_id INTEGER,
-  updated_time INTEGER NOT NULL
-);
-''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_memo_search_dirty_row ON memo_search_dirty(memo_row_id);',
-    );
-  }
-
-  static Future<void> _enqueueAllMemosForMemoSearchIndex(
-    Database db, {
-    bool replace = false,
-  }) async {
-    final rows = await db.query('memos', columns: const ['id', 'uid']);
-    if (rows.isEmpty) return;
-    await AppDatabaseWriteDao.runTransaction(db, (txn) async {
-      if (replace) {
-        await txn.delete('memo_search_dirty');
-      }
-      for (final row in rows) {
-        final rowId = _readInt(row['id']) ?? 0;
-        final uid = (row['uid'] as String? ?? '').trim();
-        if (rowId <= 0 || uid.isEmpty) continue;
-        await _upsertMemoSearchDirtyEntry(txn, rowId: rowId, memoUid: uid);
-      }
-    });
-  }
-
-  static Set<String> _buildMemoSearchIndexGrams(String document) {
-    final normalized = document.trim().toLowerCase();
-    if (normalized.isEmpty) return const <String>{};
-    final chars = normalized.runes
-        .map(String.fromCharCode)
-        .toList(growable: false);
-    final grams = <String>{};
-    for (final char in chars) {
-      grams.add(char);
-    }
-    for (var i = 0; i < chars.length - 1; i += 1) {
-      grams.add('${chars[i]}${chars[i + 1]}');
-    }
-    return grams;
-  }
-
-  static List<String> _buildMemoSearchQueryGrams(String query) {
-    final normalized = MemoSearchMatcher.normalizeQuery(query).toLowerCase();
-    if (normalized.isEmpty) return const <String>[];
-    final chars = normalized.runes
-        .map(String.fromCharCode)
-        .toList(growable: false);
-    if (chars.length == 1) {
-      return <String>[chars.first];
-    }
-    final grams = <String>{};
-    for (var i = 0; i < chars.length - 1; i += 1) {
-      grams.add('${chars[i]}${chars[i + 1]}');
-    }
-    return grams.toList(growable: false);
-  }
-
-  static Future<void> _upsertMemoSearchDirtyEntry(
-    DatabaseExecutor executor, {
-    required int rowId,
-    required String memoUid,
-  }) async {
-    final normalizedUid = memoUid.trim();
-    if (rowId <= 0 || normalizedUid.isEmpty) return;
-    await executor.insert('memo_search_dirty', {
-      'memo_uid': normalizedUid,
-      'memo_row_id': rowId,
-      'updated_time': DateTime.now().toUtc().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  static Future<void> _deleteMemoSearchDirtyEntry(
-    DatabaseExecutor executor, {
-    required String memoUid,
-  }) async {
-    final normalizedUid = memoUid.trim();
-    if (normalizedUid.isEmpty) return;
-    await executor.delete(
-      'memo_search_dirty',
-      where: 'memo_uid = ?',
-      whereArgs: [normalizedUid],
-    );
-  }
-
-  static Future<void> _replaceMemoSearchIndexEntry(
-    DatabaseExecutor executor, {
-    required int rowId,
-    required String memoUid,
-    required String document,
-  }) async {
-    final normalizedUid = memoUid.trim();
-    if (rowId <= 0 || normalizedUid.isEmpty) return;
-    final normalizedDocument = document.trim().toLowerCase();
-    await executor.delete(
-      'memo_search_substrings',
-      where: 'memo_row_id = ?',
-      whereArgs: [rowId],
-    );
-    await executor.insert('memo_search_documents', {
-      'memo_row_id': rowId,
-      'memo_uid': normalizedUid,
-      'document': normalizedDocument,
-      'updated_time': DateTime.now().toUtc().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-    final grams = _buildMemoSearchIndexGrams(normalizedDocument);
-    for (final gram in grams) {
-      await executor.insert('memo_search_substrings', {
-        'gram': gram,
-        'memo_row_id': rowId,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-  }
-
-  static Future<void> _deleteMemoSearchIndexEntry(
-    DatabaseExecutor executor, {
-    required int rowId,
-    required String memoUid,
-  }) async {
-    if (rowId > 0) {
-      await executor.delete(
-        'memo_search_substrings',
-        where: 'memo_row_id = ?',
-        whereArgs: [rowId],
-      );
-      await executor.delete(
-        'memo_search_documents',
-        where: 'memo_row_id = ?',
-        whereArgs: [rowId],
-      );
-    }
-    await _deleteMemoSearchDirtyEntry(executor, memoUid: memoUid);
-  }
-
-  static Future<void> _drainMemoSearchDirtyEntries(
-    Database db, {
-    required int limit,
-  }) async {
-    if (limit <= 0) return;
-    final dirtyRows = await db.query(
-      'memo_search_dirty',
-      columns: const ['memo_uid', 'memo_row_id'],
-      orderBy: 'updated_time ASC, memo_uid ASC',
-      limit: limit,
-    );
-    if (dirtyRows.isEmpty) return;
-    await AppDatabaseWriteDao.runTransaction(db, (txn) async {
-      for (final dirtyRow in dirtyRows) {
-        final memoUid = (dirtyRow['memo_uid'] as String? ?? '').trim();
-        if (memoUid.isEmpty) continue;
-        final rowIdHint = _readInt(dirtyRow['memo_row_id']) ?? 0;
-        final memoRows = await txn.rawQuery(
-          '''
-SELECT
-  m.id,
-  m.uid,
-  m.content,
-  m.tags,
-  c.source_name,
-  c.author_name,
-  c.source_url
-FROM memos m
-LEFT JOIN memo_clip_cards c ON c.memo_uid = m.uid
-WHERE m.uid = ?
-LIMIT 1;
-''',
-          [memoUid],
-        );
-        if (memoRows.isEmpty) {
-          await _deleteMemoSearchIndexEntry(
-            txn,
-            rowId: rowIdHint,
-            memoUid: memoUid,
-          );
-          continue;
-        }
-        final memoRow = memoRows.first;
-        final rowId = _readInt(memoRow['id']) ?? rowIdHint;
-        if (rowId <= 0) {
-          await _deleteMemoSearchDirtyEntry(txn, memoUid: memoUid);
-          continue;
-        }
-        final document = buildCanonicalMemoSearchDocument(
-          content: (memoRow['content'] as String?) ?? '',
-          tagsText: (memoRow['tags'] as String?) ?? '',
-          sourceName: (memoRow['source_name'] as String?) ?? '',
-          authorName: (memoRow['author_name'] as String?) ?? '',
-          sourceUrl: (memoRow['source_url'] as String?) ?? '',
-        );
-        await _replaceMemoSearchIndexEntry(
-          txn,
-          rowId: rowId,
-          memoUid: memoUid,
-          document: document,
-        );
-        await _deleteMemoSearchDirtyEntry(txn, memoUid: memoUid);
-      }
-    });
-  }
-
-  static Future<List<Map<String, dynamic>>> _listDirtyMemoSearchRows(
-    Database db, {
-    required String normalizedSearch,
-    required String normalizedState,
-    required String normalizedTag,
-    required int? startTimeSec,
-    required int? endTimeSecExclusive,
-  }) async {
-    final whereClauses = <String>[
-      if (normalizedState.isNotEmpty) 'm.state = ?',
-      if (normalizedTag.isNotEmpty) "(' ' || m.tags || ' ') LIKE ?",
-      if (startTimeSec != null) 'COALESCE(m.display_time, m.create_time) >= ?',
-      if (endTimeSecExclusive != null)
-        'COALESCE(m.display_time, m.create_time) < ?',
-    ];
-    final whereArgs = <Object?>[
-      if (normalizedState.isNotEmpty) normalizedState,
-      if (normalizedTag.isNotEmpty) '% $normalizedTag %',
-      if (startTimeSec != null) startTimeSec,
-      if (endTimeSecExclusive != null) endTimeSecExclusive,
-    ];
-    final whereClause = whereClauses.isEmpty
-        ? ''
-        : 'WHERE ${whereClauses.join(' AND ')}';
-    return db.rawQuery('''
-SELECT DISTINCT
-  m.*,
-  c.source_name,
-  c.author_name,
-  c.source_url
-FROM memo_search_dirty d
-JOIN memos m ON m.uid = d.memo_uid
-LEFT JOIN memo_clip_cards c ON c.memo_uid = m.uid
-$whereClause
-ORDER BY m.pinned DESC, COALESCE(m.display_time, m.create_time) DESC;
-''', whereArgs);
-  }
-
-  static List<Map<String, dynamic>> _mergeMemoSearchRows({
-    required Iterable<Map<String, dynamic>> primary,
-    required Iterable<Map<String, dynamic>> secondary,
-    required int? limit,
-  }) {
-    final merged = <Map<String, dynamic>>[];
-    final seen = <String>{};
-
-    void addRow(Map<String, dynamic> row) {
-      final uid = (row['uid'] as String? ?? '').trim();
-      final id = _readInt(row['id']) ?? 0;
-      final key = uid.isNotEmpty ? uid : 'row:$id';
-      if (!seen.add(key)) return;
-      merged.add(row);
-    }
-
-    for (final row in primary) {
-      addRow(row);
-    }
-    for (final row in secondary) {
-      addRow(Map<String, dynamic>.from(row));
-    }
-    merged.sort(_compareMemoSearchRows);
-    if (limit != null && limit > 0 && merged.length > limit) {
-      return merged.take(limit).toList(growable: false);
-    }
-    return merged;
-  }
-
-  static int _compareMemoSearchRows(
-    Map<String, dynamic> a,
-    Map<String, dynamic> b,
-  ) {
-    final aPinned = (_readInt(a['pinned']) ?? 0) != 0;
-    final bPinned = (_readInt(b['pinned']) ?? 0) != 0;
-    if (aPinned != bPinned) {
-      return aPinned ? -1 : 1;
-    }
-    final timeCompare = _memoSearchRowSortTime(
-      b,
-    ).compareTo(_memoSearchRowSortTime(a));
-    if (timeCompare != 0) return timeCompare;
-    return (_readInt(b['id']) ?? 0).compareTo(_readInt(a['id']) ?? 0);
-  }
-
-  static int _memoSearchRowSortTime(Map<String, dynamic> row) {
-    final displayTime = _readInt(row['display_time']);
-    if (displayTime != null) return displayTime;
-    return _readInt(row['create_time']) ?? 0;
-  }
-
   static Map<String, dynamic>? _memoSnapshotToPayload(_MemoSnapshot? snapshot) {
     if (snapshot == null) return null;
     return <String, dynamic>{
@@ -5000,19 +4093,6 @@ ORDER BY m.pinned DESC, COALESCE(m.display_time, m.create_time) DESC;
       content: (payload['content'] as String?) ?? '',
       tags: tags,
     );
-  }
-
-  static Future<void> _dropLegacyFtsTriggers(Database db) async {
-    try {
-      final rows = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type = 'trigger' AND sql LIKE '%memos_fts%';",
-      );
-      for (final row in rows) {
-        final name = row['name'];
-        if (name is! String || name.trim().isEmpty) continue;
-        await db.execute('DROP TRIGGER IF EXISTS ${_quoteIdentifier(name)};');
-      }
-    } catch (_) {}
   }
 
   static String _quoteIdentifier(String identifier) {
