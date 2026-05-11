@@ -90,7 +90,8 @@ bool shouldEnqueueCreateMemoAfterAttachmentUploads(MemoProviderReader read) {
         MemoApiVersion.v024 ||
         MemoApiVersion.v025 ||
         MemoApiVersion.v026 ||
-        MemoApiVersion.v027 => true,
+        MemoApiVersion.v027 ||
+        MemoApiVersion.v028 => true,
         _ => false,
       };
     } catch (_) {

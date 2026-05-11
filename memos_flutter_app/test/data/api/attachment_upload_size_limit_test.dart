@@ -480,7 +480,8 @@ class _FakeLimitServer {
       MemoApiVersion.v024 => '/api/v1/workspace/settings/STORAGE',
       MemoApiVersion.v025 ||
       MemoApiVersion.v026 ||
-      MemoApiVersion.v027 => '/api/v1/instance/settings/STORAGE',
+      MemoApiVersion.v027 ||
+      MemoApiVersion.v028 => '/api/v1/instance/settings/STORAGE',
       MemoApiVersion.v021 => '',
     };
     if (request.method == 'GET' && request.uri.path == expectedStoragePath) {
@@ -668,7 +669,8 @@ class _FakeServerSettingsServer {
       MemoApiVersion.v024 => '/api/v1/workspace/settings/MEMO_RELATED',
       MemoApiVersion.v025 ||
       MemoApiVersion.v026 ||
-      MemoApiVersion.v027 => '/api/v1/instance/settings/MEMO_RELATED',
+      MemoApiVersion.v027 ||
+      MemoApiVersion.v028 => '/api/v1/instance/settings/MEMO_RELATED',
       MemoApiVersion.v021 => '',
     };
   }
@@ -680,7 +682,8 @@ class _FakeServerSettingsServer {
       MemoApiVersion.v024 => '/api/v1/workspace/settings/STORAGE',
       MemoApiVersion.v025 ||
       MemoApiVersion.v026 ||
-      MemoApiVersion.v027 => '/api/v1/instance/settings/STORAGE',
+      MemoApiVersion.v027 ||
+      MemoApiVersion.v028 => '/api/v1/instance/settings/STORAGE',
       MemoApiVersion.v021 => '',
     };
   }

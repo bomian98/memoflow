@@ -9,6 +9,7 @@ import 'memo_api_024.dart';
 import 'memo_api_025.dart';
 import 'memo_api_026.dart';
 import 'memo_api_027.dart';
+import 'memo_api_028.dart';
 import 'memo_api_version.dart';
 import 'memos_api.dart';
 import 'password_sign_in_api.dart';
@@ -66,6 +67,13 @@ class MemoApiFacade {
         logManager: logManager,
       ),
       MemoApiVersion.v027 => MemoApi027.unauthenticated(
+        baseUrl,
+        logStore: logStore,
+        logBuffer: logBuffer,
+        breadcrumbStore: breadcrumbStore,
+        logManager: logManager,
+      ),
+      MemoApiVersion.v028 => MemoApi028.unauthenticated(
         baseUrl,
         logStore: logStore,
         logBuffer: logBuffer,
@@ -134,6 +142,14 @@ class MemoApiFacade {
         logManager: logManager,
       ),
       MemoApiVersion.v027 => MemoApi027.authenticated(
+        baseUrl: baseUrl,
+        personalAccessToken: personalAccessToken,
+        logStore: logStore,
+        logBuffer: logBuffer,
+        breadcrumbStore: breadcrumbStore,
+        logManager: logManager,
+      ),
+      MemoApiVersion.v028 => MemoApi028.authenticated(
         baseUrl: baseUrl,
         personalAccessToken: personalAccessToken,
         logStore: logStore,
@@ -210,6 +226,14 @@ class MemoApiFacade {
         breadcrumbStore: breadcrumbStore,
         logManager: logManager,
       ),
+      MemoApiVersion.v028 => MemoApi028.sessionAuthenticated(
+        baseUrl: baseUrl,
+        sessionCookie: sessionCookie,
+        logStore: logStore,
+        logBuffer: logBuffer,
+        breadcrumbStore: breadcrumbStore,
+        logManager: logManager,
+      ),
     };
   }
 
@@ -255,6 +279,11 @@ class MemoApiFacade {
         username: username,
         password: password,
       ),
+      MemoApiVersion.v028 => MemoApi028.passwordSignIn(
+        baseUrl: baseUrl,
+        username: username,
+        password: password,
+      ),
     };
   }
 
@@ -267,7 +296,7 @@ class MemoApiFacade {
     BreadcrumbStore? breadcrumbStore,
     LogManager? logManager,
   }) {
-    final parsed = parseMemoApiVersion(version) ?? MemoApiVersion.v027;
+    final parsed = parseMemoApiVersion(version) ?? MemoApiVersion.v028;
     return authenticated(
       baseUrl: baseUrl,
       personalAccessToken: personalAccessToken,

@@ -128,6 +128,36 @@ mixin _MemosApiMemos on _MemosApiBase {
     return conditions.join(' && ');
   }
 
+  String? _compatibleMemoListOrderBy(String? orderBy) {
+    final normalized = (orderBy ?? '').trim();
+    if (normalized.isEmpty) return null;
+    if (!_isMemos028OrNewer()) return normalized;
+
+    final parts = normalized
+        .split(',')
+        .map(_compatibleMemoListOrderByPart)
+        .where((part) => part.isNotEmpty)
+        .toList(growable: false);
+    if (parts.isEmpty) return null;
+    return parts.join(', ');
+  }
+
+  String _compatibleMemoListOrderByPart(String rawPart) {
+    final part = rawPart.trim();
+    if (part.isEmpty) return '';
+
+    final tokens = part.split(RegExp(r'\s+'));
+    final field = tokens.first.trim();
+    final mappedField = _isDisplayTimeOrderField(field) ? 'create_time' : field;
+    if (tokens.length == 1) return mappedField;
+    return <String>[mappedField, ...tokens.skip(1)].join(' ');
+  }
+
+  bool _isDisplayTimeOrderField(String field) {
+    final normalized = field.trim();
+    return normalized == 'display_time' || normalized == 'displayTime';
+  }
+
   Future<(List<Memo> memos, String nextPageToken)> _listMemosModern({
     required int pageSize,
     String? pageToken,
@@ -144,6 +174,7 @@ mixin _MemosApiMemos on _MemosApiBase {
     final effectiveFilter = _routeAdapter.usesLegacyRowStatusFilterInListMemos
         ? _mergeLegacyRowStatusFilter(filter: filter, state: state)
         : filter;
+    final effectiveOrderBy = _compatibleMemoListOrderBy(orderBy);
     final timeout =
         receiveTimeout ?? (pageSize >= 500 ? _largeListReceiveTimeout : null);
     final response = await _dio.get(
@@ -164,8 +195,10 @@ mixin _MemosApiMemos on _MemosApiBase {
           'state': state,
         if (effectiveFilter != null && effectiveFilter.isNotEmpty)
           'filter': effectiveFilter,
-        if (orderBy != null && orderBy.isNotEmpty) 'orderBy': orderBy,
-        if (orderBy != null && orderBy.isNotEmpty) 'order_by': orderBy,
+        if (effectiveOrderBy != null && effectiveOrderBy.isNotEmpty)
+          'orderBy': effectiveOrderBy,
+        if (effectiveOrderBy != null && effectiveOrderBy.isNotEmpty)
+          'order_by': effectiveOrderBy,
         if (normalizedOldFilter.isNotEmpty) 'oldFilter': normalizedOldFilter,
         if (normalizedOldFilter.isNotEmpty) 'old_filter': normalizedOldFilter,
       },
@@ -350,6 +383,7 @@ mixin _MemosApiMemos on _MemosApiBase {
     final supportsPinned = _supportsPinnedInModernMemoBody();
     final supportsCreateTimestamps =
         _supportsCreateMemoTimestampFieldsInModernBody();
+    final supportsDisplayTime = _supportsDisplayTimeInModernMemoBody();
     final supportsCreateRelations = _supportsCreateMemoRelationsInModernBody();
     final supportsCreateAttachments = supportsCreateMemoAttachmentsInCreateBody;
     final attachmentField = _createMemoAttachmentFieldName();
@@ -368,7 +402,9 @@ mixin _MemosApiMemos on _MemosApiBase {
         if (supportsLocation && location != null) 'location': location.toJson(),
         if (supportsCreateTimestamps && createTime != null)
           'createTime': createTime.toUtc().toIso8601String(),
-        if (supportsCreateTimestamps && resolvedDisplayTime != null)
+        if (supportsCreateTimestamps &&
+            supportsDisplayTime &&
+            resolvedDisplayTime != null)
           'displayTime': resolvedDisplayTime.toUtc().toIso8601String(),
         if (supportsCreateAttachments &&
             attachmentField != null &&
@@ -449,6 +485,7 @@ mixin _MemosApiMemos on _MemosApiBase {
     final updateMask = <String>[];
     final data = <String, Object?>{'name': 'memos/$memoUid'};
     final supportsPinned = _supportsPinnedInModernMemoBody();
+    final supportsDisplayTime = _supportsDisplayTimeUpdate();
     if (content != null) {
       updateMask.add('content');
       data['content'] = content;
@@ -476,7 +513,7 @@ mixin _MemosApiMemos on _MemosApiBase {
       updateMask.add('create_time');
       data['createTime'] = createTime.toUtc().toIso8601String();
     }
-    if (displayTime != null) {
+    if (displayTime != null && supportsDisplayTime) {
       updateMask.add(_displayTimeUpdateMaskField());
       data['displayTime'] = displayTime.toUtc().toIso8601String();
     }
@@ -489,6 +526,8 @@ mixin _MemosApiMemos on _MemosApiBase {
           : (location as MemoLocation).toJson();
     }
     final droppedUnsupportedLocation = locationRequested && !supportsLocation;
+    final droppedUnsupportedDisplayTime =
+        displayTime != null && !supportsDisplayTime;
     if (updateMask.isEmpty) {
       if (pinnedNeedsLegacyOrganizer) {
         return _setMemoPinnedWithLegacyOrganizer(
@@ -498,6 +537,9 @@ mixin _MemosApiMemos on _MemosApiBase {
         );
       }
       if (droppedUnsupportedLocation) {
+        return getMemo(memoUid: memoUid);
+      }
+      if (droppedUnsupportedDisplayTime) {
         return getMemo(memoUid: memoUid);
       }
       throw ArgumentError('updateMemo requires at least one field');
@@ -600,6 +642,10 @@ mixin _MemosApiMemos on _MemosApiBase {
     return version.major == 0 && version.minor == 26;
   }
 
+  bool _supportsDisplayTimeInModernMemoBody() {
+    return !_isMemos028OrNewer();
+  }
+
   bool _supportsCreateMemoRelationsInModernBody() {
     return _supportsModernCreateMemoBodyFields(
       minimum: const _ServerVersion(0, 26, 0),
@@ -610,6 +656,10 @@ mixin _MemosApiMemos on _MemosApiBase {
     return _supportsModernCreateMemoBodyFields(
       minimum: const _ServerVersion(0, 26, 0),
     );
+  }
+
+  bool _supportsDisplayTimeUpdate() {
+    return !_isMemos028OrNewer();
   }
 
   String? _createMemoAttachmentFieldName() {
@@ -629,6 +679,13 @@ mixin _MemosApiMemos on _MemosApiBase {
       return true;
     }
     return version >= minimum;
+  }
+
+  bool _isMemos028OrNewer() {
+    final version = _serverVersion;
+    if (version == null) return false;
+    if (version.major > 0) return true;
+    return version.major == 0 && version.minor >= 28;
   }
 
   Future<Memo> _setMemoPinnedWithLegacyOrganizer({

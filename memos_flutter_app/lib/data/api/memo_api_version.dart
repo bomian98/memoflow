@@ -1,4 +1,4 @@
-enum MemoApiVersion { v021, v022, v023, v024, v025, v026, v027 }
+enum MemoApiVersion { v021, v022, v023, v024, v025, v026, v027, v028 }
 
 const List<MemoApiVersion> kMemoApiVersionsProbeOrder = <MemoApiVersion>[
   MemoApiVersion.v021,
@@ -8,6 +8,7 @@ const List<MemoApiVersion> kMemoApiVersionsProbeOrder = <MemoApiVersion>[
   MemoApiVersion.v025,
   MemoApiVersion.v026,
   MemoApiVersion.v027,
+  MemoApiVersion.v028,
 ];
 
 extension MemoApiVersionX on MemoApiVersion {
@@ -20,6 +21,7 @@ extension MemoApiVersionX on MemoApiVersion {
       MemoApiVersion.v025 => '0.25.0',
       MemoApiVersion.v026 => '0.26.0',
       MemoApiVersion.v027 => '0.27.0',
+      MemoApiVersion.v028 => '0.28.0',
     };
   }
 
@@ -46,6 +48,7 @@ MemoApiVersion? parseMemoApiVersion(String? raw) {
     25 => MemoApiVersion.v025,
     26 => MemoApiVersion.v026,
     27 => MemoApiVersion.v027,
+    28 => MemoApiVersion.v028,
     _ => null,
   };
 }

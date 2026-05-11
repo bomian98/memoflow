@@ -103,7 +103,10 @@ class LoginController {
 
   bool _supportsForceDeleteMemo(MemoApiVersion version) {
     return switch (version) {
-      MemoApiVersion.v025 || MemoApiVersion.v026 || MemoApiVersion.v027 => true,
+      MemoApiVersion.v025 ||
+      MemoApiVersion.v026 ||
+      MemoApiVersion.v027 ||
+      MemoApiVersion.v028 => true,
       MemoApiVersion.v021 ||
       MemoApiVersion.v022 ||
       MemoApiVersion.v023 ||

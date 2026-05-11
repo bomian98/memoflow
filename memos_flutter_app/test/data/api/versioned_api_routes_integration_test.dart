@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/data/api/memo_api_facade.dart';
 import 'package:memos_flutter_app/data/api/memo_api_version.dart';
+import 'package:memos_flutter_app/data/api/password_sign_in_api.dart';
 
 const Set<String> _allCurrentUserEndpoints = <String>{
   'GET /api/v1/auth/sessions/current',
@@ -19,6 +20,74 @@ const String _v027AmpersandTag = 'science&tech';
 const String _v027EmojiTag = 'watch\u{1F441}\uFE0F';
 
 void main() {
+  group('MemoApiVersion 0.28 support', () {
+    test('parses and normalizes 0.28 versions', () {
+      expect(parseMemoApiVersion('0.28'), MemoApiVersion.v028);
+      expect(parseMemoApiVersion('0.28.0'), MemoApiVersion.v028);
+      expect(parseMemoApiVersion('0.28.7'), MemoApiVersion.v028);
+      expect(normalizeMemoApiVersion(' 0.28 '), '0.28.0');
+      expect(MemoApiVersion.v028.label, 'v0.28.0');
+    });
+
+    test('includes 0.28.0 in probe order', () {
+      expect(kMemoApiVersionsProbeOrder.last, MemoApiVersion.v028);
+      expect(
+        kMemoApiVersionsProbeOrder.map((version) => version.versionString),
+        contains('0.28.0'),
+      );
+    });
+  });
+
+  group('MemoApiFacade 0.28 profile', () {
+    test('creates strict 0.28 clients', () {
+      final baseUrl = Uri.parse('http://127.0.0.1:1');
+
+      final unauthenticated = MemoApiFacade.unauthenticated(
+        baseUrl: baseUrl,
+        version: MemoApiVersion.v028,
+      );
+      expect(unauthenticated.isStrictRouteLocked, isTrue);
+      expect(unauthenticated.effectiveServerVersion, '0.28.0');
+
+      final authenticated = MemoApiFacade.authenticated(
+        baseUrl: baseUrl,
+        personalAccessToken: 'test-pat',
+        version: MemoApiVersion.v028,
+      );
+      expect(authenticated.isStrictRouteLocked, isTrue);
+      expect(authenticated.effectiveServerVersion, '0.28.0');
+
+      final sessionAuthenticated = MemoApiFacade.sessionAuthenticated(
+        baseUrl: baseUrl,
+        sessionCookie: 'user_session=test-session',
+        version: MemoApiVersion.v028,
+      );
+      expect(sessionAuthenticated.isStrictRouteLocked, isTrue);
+      expect(sessionAuthenticated.effectiveServerVersion, '0.28.0');
+    });
+
+    test('routes password sign-in through the modern v1 endpoint', () async {
+      final harness = await _FakeMemosServer.start(MemoApiVersion.v028);
+      addTearDown(() async {
+        await harness.close();
+      });
+
+      final result = await MemoApiFacade.passwordSignIn(
+        baseUrl: harness.baseUrl,
+        username: 'demo',
+        password: 'secret',
+        version: MemoApiVersion.v028,
+      );
+
+      expect(result.endpoint, MemoPasswordSignInEndpoint.signinV1);
+      expect(result.accessToken, 'test-token');
+      expect(
+        harness.findRequest(method: 'POST', path: '/api/v1/auth/signin'),
+        isNotNull,
+      );
+    });
+  });
+
   group('MemoApiFacade versioned route compatibility', () {
     for (final version in kMemoApiVersionsProbeOrder) {
       test(
@@ -108,6 +177,7 @@ void main() {
             case MemoApiVersion.v025:
             case MemoApiVersion.v026:
             case MemoApiVersion.v027:
+            case MemoApiVersion.v028:
               expect(capturedListRequest.queryParameters['state'], 'NORMAL');
               expect(
                 capturedListRequest.queryParameters.containsKey('view'),
@@ -135,6 +205,78 @@ void main() {
         },
       );
     }
+
+    test('version 0.27.0 preserves display_time list ordering', () async {
+      final harness = await _FakeMemosServer.start(MemoApiVersion.v027);
+      addTearDown(() async {
+        await harness.close();
+      });
+
+      final api = MemoApiFacade.authenticated(
+        baseUrl: harness.baseUrl,
+        personalAccessToken: 'test-pat',
+        version: MemoApiVersion.v027,
+      );
+
+      await api.listMemos(
+        pageSize: 10,
+        state: 'NORMAL',
+        orderBy: 'display_time desc',
+      );
+
+      final listRequest = harness.findRequest(
+        method: 'GET',
+        path: _expectedRoutes(MemoApiVersion.v027).listMemosPath,
+      );
+      expect(listRequest, isNotNull);
+      expect(listRequest!.queryParameters['orderBy'], 'display_time desc');
+      expect(listRequest.queryParameters['order_by'], 'display_time desc');
+    });
+
+    test('version 0.28.0 remaps display_time list ordering', () async {
+      final harness = await _FakeMemosServer.start(MemoApiVersion.v028);
+      addTearDown(() async {
+        await harness.close();
+      });
+
+      final api = MemoApiFacade.authenticated(
+        baseUrl: harness.baseUrl,
+        personalAccessToken: 'test-pat',
+        version: MemoApiVersion.v028,
+      );
+
+      await api.listMemos(
+        pageSize: 10,
+        state: 'NORMAL',
+        orderBy: 'display_time desc',
+      );
+      await api.listExploreMemos(
+        pageSize: 10,
+        state: 'NORMAL',
+        orderBy: 'display_time desc',
+      );
+
+      final listRequests = harness.requests
+          .where(
+            (request) =>
+                request.method == 'GET' &&
+                request.path ==
+                    _expectedRoutes(MemoApiVersion.v028).listMemosPath,
+          )
+          .toList(growable: false);
+      expect(listRequests, hasLength(2));
+
+      for (final request in listRequests) {
+        expect(request.queryParameters['orderBy'], 'create_time desc');
+        expect(request.queryParameters['order_by'], 'create_time desc');
+        expect(
+          request.queryParameters.values.any(
+            (value) => value.contains('display_time'),
+          ),
+          isFalse,
+        );
+      }
+    });
   });
 }
 
@@ -191,6 +333,12 @@ _ExpectedRoutes _expectedRoutes(MemoApiVersion version) {
       usesLegacyMemoListRoute: false,
     ),
     MemoApiVersion.v027 => const _ExpectedRoutes(
+      currentUserMethod: 'GET',
+      currentUserPath: '/api/v1/auth/me',
+      listMemosPath: '/api/v1/memos',
+      usesLegacyMemoListRoute: false,
+    ),
+    MemoApiVersion.v028 => const _ExpectedRoutes(
       currentUserMethod: 'GET',
       currentUserPath: '/api/v1/auth/me',
       listMemosPath: '/api/v1/memos',
@@ -258,6 +406,20 @@ class _FakeMemosServer {
     );
 
     final expected = _expectedRoutes(version);
+    if (request.method == 'POST' && request.uri.path == '/api/v1/auth/signin') {
+      await _writeJson(request.response, <String, Object?>{
+        'accessToken': 'test-token',
+        'user': <String, Object?>{
+          'name': 'users/demo',
+          'username': 'demo',
+          'displayName': 'Demo User',
+          'avatarUrl': '',
+          'description': '',
+        },
+      });
+      return;
+    }
+
     final isCurrentUserRoute =
         request.method == expected.currentUserMethod &&
         request.uri.path == expected.currentUserPath;

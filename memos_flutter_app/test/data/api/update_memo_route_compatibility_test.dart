@@ -211,6 +211,37 @@ void main() {
         );
       },
     );
+
+    test('version 0.28.0 sends create_time without display_time', () async {
+      final harness = await _FakeUpdateMemoServer.start(MemoApiVersion.v028);
+      addTearDown(() async {
+        await harness.close();
+      });
+
+      final api = MemoApiFacade.authenticated(
+        baseUrl: harness.baseUrl,
+        personalAccessToken: 'test-pat',
+        version: MemoApiVersion.v028,
+      );
+
+      final memo = await api.updateMemo(
+        memoUid: '101',
+        createTime: DateTime.utc(2026, 3, 13, 18, 0),
+        displayTime: DateTime.utc(2026, 3, 13, 18, 0),
+      );
+      expect(memo.uid, '101');
+
+      final capturedRequest = harness.findUpdateRequest();
+      expect(capturedRequest, isNotNull);
+      expect(capturedRequest!.path, '/api/v1/memos/101');
+      expect(capturedRequest.queryParameters['updateMask'], 'create_time');
+      expect(
+        capturedRequest.queryParameters['updateMask'],
+        isNot(contains('display_time')),
+      );
+      expect(capturedRequest.jsonBody?['createTime'], isNotNull);
+      expect(capturedRequest.jsonBody?.containsKey('displayTime'), isFalse);
+    });
   });
 }
 
@@ -219,11 +250,13 @@ class _CapturedRequest {
     required this.method,
     required this.path,
     required this.queryParameters,
+    required this.jsonBody,
   });
 
   final String method;
   final String path;
   final Map<String, String> queryParameters;
+  final Map<String, dynamic>? jsonBody;
 }
 
 class _FakeUpdateMemoServer {
@@ -273,12 +306,29 @@ class _FakeUpdateMemoServer {
   }
 
   Future<void> _handleRequest(HttpRequest request) async {
-    await request.drain<List<int>>(<int>[]);
+    final bodyBytes = await request.fold<BytesBuilder>(BytesBuilder(), (
+      builder,
+      chunk,
+    ) {
+      builder.add(chunk);
+      return builder;
+    });
+    final body = bodyBytes.toBytes();
+    Map<String, dynamic>? jsonBody;
+    if (body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(utf8.decode(body));
+        if (decoded is Map) {
+          jsonBody = decoded.cast<String, dynamic>();
+        }
+      } catch (_) {}
+    }
     requests.add(
       _CapturedRequest(
         method: request.method,
         path: request.uri.path,
         queryParameters: request.uri.queryParameters,
+        jsonBody: jsonBody,
       ),
     );
 
