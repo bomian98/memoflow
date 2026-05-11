@@ -27,6 +27,7 @@ import '../system/update_config_provider.dart';
 import '../settings/user_settings_provider.dart';
 import '../webdav/webdav_backup_provider.dart';
 import '../settings/workspace_preferences_provider.dart';
+
 final appBootstrapAdapterProvider = Provider<AppBootstrapAdapter>((ref) {
   return const AppBootstrapAdapter();
 });
@@ -88,7 +89,8 @@ class AppBootstrapAdapter {
     void Function(
       AsyncValue<AppSessionState>? prev,
       AsyncValue<AppSessionState> next,
-    ) listener,
+    )
+    listener,
   ) {
     return ref.listenManual<AsyncValue<AppSessionState>>(
       appSessionProvider,
@@ -108,10 +110,8 @@ class AppBootstrapAdapter {
 
   ProviderSubscription<WorkspacePreferences> listenWorkspacePreferences(
     WidgetRef ref,
-    void Function(
-      WorkspacePreferences? prev,
-      WorkspacePreferences next,
-    ) listener,
+    void Function(WorkspacePreferences? prev, WorkspacePreferences next)
+    listener,
   ) {
     return ref.listenManual<WorkspacePreferences>(
       currentWorkspacePreferencesProvider,
@@ -158,8 +158,9 @@ class AppBootstrapAdapter {
   Future<void> reloadDevicePreferencesFromStorage(WidgetRef ref) =>
       ref.read(devicePreferencesProvider.notifier).reloadFromStorage();
 
-  Future<void> reloadWorkspacePreferencesFromStorage(WidgetRef ref) =>
-      ref.read(currentWorkspacePreferencesProvider.notifier).reloadFromStorage();
+  Future<void> reloadWorkspacePreferencesFromStorage(WidgetRef ref) => ref
+      .read(currentWorkspacePreferencesProvider.notifier)
+      .reloadFromStorage();
 
   Future<void> setCurrentSessionKey(WidgetRef ref, String? key) =>
       ref.read(appSessionProvider.notifier).setCurrentKey(key);
@@ -185,11 +186,23 @@ class AppBootstrapAdapter {
     required WidgetRef ref,
     required String version,
   }) {
-    ref.read(devicePreferencesProvider.notifier).setSkippedUpdateVersion(version);
+    ref
+        .read(devicePreferencesProvider.notifier)
+        .setSkippedUpdateVersion(version);
   }
 
   void setLastSeenNoticeHash(WidgetRef ref, String hash) {
     ref.read(devicePreferencesProvider.notifier).setLastSeenNoticeHash(hash);
+  }
+
+  void setSeenNoticeRevision({
+    required WidgetRef ref,
+    required String id,
+    required int revision,
+  }) {
+    ref
+        .read(devicePreferencesProvider.notifier)
+        .setSeenNoticeRevision(id: id, revision: revision);
   }
 
   void forceHomeLoadingOverlay(WidgetRef ref) {

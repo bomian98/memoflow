@@ -276,9 +276,7 @@ class DevicePreferencesController extends StateNotifier<DevicePreferences> {
     );
   }
 
-  void setCollectionReaderBrightnessMode(
-    CollectionReaderBrightnessMode value,
-  ) {
+  void setCollectionReaderBrightnessMode(CollectionReaderBrightnessMode value) {
     _setAndPersist(
       _queuedState.copyWith(
         collectionReaderPreferences: _queuedState.collectionReaderPreferences
@@ -348,9 +346,7 @@ class DevicePreferencesController extends StateNotifier<DevicePreferences> {
     );
   }
 
-  void setCollectionReaderFontWeightMode(
-    CollectionReaderFontWeightMode value,
-  ) {
+  void setCollectionReaderFontWeightMode(CollectionReaderFontWeightMode value) {
     _setAndPersist(
       _queuedState.copyWith(
         collectionReaderPreferences: _queuedState.collectionReaderPreferences
@@ -530,7 +526,11 @@ class DevicePreferencesController extends StateNotifier<DevicePreferences> {
     _setAndPersist(
       _queuedState.copyWith(
         collectionReaderPreferences: _queuedState.collectionReaderPreferences
-            .copyWith(savedStyleCards: List<CollectionReaderStyleCard>.unmodifiable(value)),
+            .copyWith(
+              savedStyleCards: List<CollectionReaderStyleCard>.unmodifiable(
+                value,
+              ),
+            ),
       ),
       triggerSync: false,
     );
@@ -616,6 +616,20 @@ class DevicePreferencesController extends StateNotifier<DevicePreferences> {
   void setLastSeenNoticeHash(String value) {
     _setAndPersist(
       _queuedState.copyWith(lastSeenNoticeHash: value),
+      triggerSync: false,
+    );
+  }
+
+  void setSeenNoticeRevision({required String id, required int revision}) {
+    final normalized = id.trim();
+    if (normalized.isEmpty) return;
+    _setAndPersist(
+      _queuedState.copyWith(
+        seenNoticeRevisions: {
+          ..._queuedState.seenNoticeRevisions,
+          normalized: revision,
+        },
+      ),
       triggerSync: false,
     );
   }

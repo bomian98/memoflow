@@ -151,5 +151,147 @@ void main() {
       expect(entry.items.first.contentForLanguageCode('de'), 'Added feature A');
       expect(entry.items.last.contentForLanguageCode('zh-CN'), '新增功能B');
     });
+
+    test('parses schema v3 notice candidates', () {
+      final config = UpdateAnnouncementConfig.fromJson({
+        'schema_version': 3,
+        'notices': [
+          {
+            'id': 'notice-2026-05-maintenance',
+            'revision': 2,
+            'status': 'public',
+            'priority': 50,
+            'severity': 'critical',
+            'publish_at': '2026-05-10T00:00:00Z',
+            'expire_at': '2026-05-12T00:00:00Z',
+            'audience': {
+              'platforms': ['android'],
+              'channels': ['full'],
+              'min_app_version': '1.0.0',
+              'max_app_version': '1.9.9',
+            },
+            'display': {
+              'surface': 'startup_dialog',
+              'dismiss_policy': 'once_per_revision',
+              'blocking': true,
+            },
+            'content': {
+              'title': {'en': 'Maintenance'},
+              'body': {
+                'en': ['Line one', 'Line two'],
+              },
+            },
+          },
+        ],
+      });
+
+      expect(config.schemaVersion, 3);
+      expect(config.noticeCandidates, hasLength(1));
+      final notice = config.noticeCandidates.single;
+      expect(notice.id, 'notice-2026-05-maintenance');
+      expect(notice.revision, 2);
+      expect(notice.status, AnnouncementDeliveryStatus.public);
+      expect(notice.priority, 50);
+      expect(notice.severity, AnnouncementSeverity.critical);
+      expect(notice.audience.platforms, {'android'});
+      expect(notice.audience.channels, {'full'});
+      expect(notice.audience.minAppVersion, '1.0.0');
+      expect(notice.audience.maxAppVersion, '1.9.9');
+      expect(
+        notice.display.dismissPolicy,
+        AnnouncementDismissPolicy.oncePerRevision,
+      );
+      expect(notice.display.blocking, isTrue);
+      expect(notice.titleForLanguageCode('en'), 'Maintenance');
+      expect(notice.contentsForLanguageCode('de'), ['Line one', 'Line two']);
+    });
+
+    test('parses schema v3 update candidates', () {
+      final config = UpdateAnnouncementConfig.fromJson({
+        'schema_version': 3,
+        'updates': [
+          {
+            'id': 'update-1.0.17-android-full',
+            'status': 'public',
+            'priority': 80,
+            'platform': 'android',
+            'channel': 'full',
+            'version': '1.0.17',
+            'force': true,
+            'download_url': 'https://example.com/app.apk',
+            'release_note_id': 'release-1.0.17',
+            'publish_at': '2026-05-10T00:00:00Z',
+          },
+        ],
+      });
+
+      expect(config.updateCandidates, hasLength(1));
+      final update = config.updateCandidates.single;
+      expect(update.id, 'update-1.0.17-android-full');
+      expect(update.status, AnnouncementDeliveryStatus.public);
+      expect(update.priority, 80);
+      expect(update.platform, 'android');
+      expect(update.channel, 'full');
+      expect(update.version, '1.0.17');
+      expect(update.force, isTrue);
+      expect(update.downloadUrl, 'https://example.com/app.apk');
+      expect(update.releaseNoteId, 'release-1.0.17');
+    });
+
+    test('keeps legacy fields when schema v3 candidates are present', () {
+      final config = UpdateAnnouncementConfig.fromJson({
+        'schema_version': 3,
+        'version_info': {'latest_version': '1.0.16'},
+        'notice_enabled': true,
+        'notice': {
+          'title': 'Legacy notice',
+          'contents': ['Legacy body'],
+        },
+        'notices': [
+          {
+            'id': 'notice-v3',
+            'status': 'public',
+            'content': {
+              'title': {'en': 'V3 notice'},
+              'body': {
+                'en': ['V3 body'],
+              },
+            },
+          },
+        ],
+      });
+
+      expect(config.versionInfo.latestVersion, '1.0.16');
+      expect(config.noticeEnabled, isTrue);
+      expect(config.notice?.title, 'Legacy notice');
+      expect(config.noticeCandidates.single.id, 'notice-v3');
+    });
+
+    test('tolerates malformed optional schema v3 fields', () {
+      final config = UpdateAnnouncementConfig.fromJson({
+        'schema_version': 3,
+        'notices': [
+          {
+            'id': 'notice-minimal',
+            'status': 'not-a-status',
+            'audience': {'platforms': 'android'},
+            'display': {'dismiss_policy': 'not-a-policy'},
+            'content': {'body': 'Fallback body'},
+          },
+          {
+            'status': 'public',
+            'content': {'body': 'Missing id'},
+          },
+        ],
+      });
+
+      expect(config.noticeCandidates, hasLength(1));
+      final notice = config.noticeCandidates.single;
+      expect(notice.id, 'notice-minimal');
+      expect(notice.status, AnnouncementDeliveryStatus.draft);
+      expect(notice.audience.platforms, {'android'});
+      expect(notice.display.dismissPolicy, AnnouncementDismissPolicy.oncePerId);
+      expect(notice.fallbackContents, ['Fallback body']);
+    });
   });
 }

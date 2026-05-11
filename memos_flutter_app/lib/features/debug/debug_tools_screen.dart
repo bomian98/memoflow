@@ -11,7 +11,7 @@ import '../../core/memoflow_palette.dart';
 import '../../core/url.dart';
 import '../../data/logs/debug_log_store.dart';
 import '../../data/models/user.dart';
-import '../../data/updates/update_config.dart';
+import '../../data/updates/update_config_service.dart';
 import '../../state/system/debug_log_provider.dart';
 import '../../state/system/debug_screenshot_mode_provider.dart';
 import '../../state/system/login_draft_provider.dart';
@@ -24,6 +24,7 @@ import '../auth/login_screen.dart';
 import 'debug_logs_screen.dart';
 import 'system_logs_screen.dart';
 import '../onboarding/language_selection_screen.dart';
+import '../updates/announcement_notice_resolver.dart';
 import '../updates/notice_dialog.dart';
 import '../../i18n/strings.g.dart';
 
@@ -422,10 +423,13 @@ class _DebugToolsScreenState extends ConsumerState<DebugToolsScreen> {
   final _apiPathController = TextEditingController(text: '/api/v1/auth/me');
   final _apiQueryController = TextEditingController();
   final _apiBodyController = TextEditingController();
+  final _noticePreviewUrlController = TextEditingController();
+  final _noticePreviewJsonController = TextEditingController();
 
   var _loginBusy = false;
   var _apiBusy = false;
   var _noticePreviewBusy = false;
+  var _noticePreviewSource = UpdateConfigSourceType.preview;
   var _obscurePassword = true;
   var _obscureToken = true;
   String? _activeToken;
@@ -441,6 +445,8 @@ class _DebugToolsScreenState extends ConsumerState<DebugToolsScreen> {
     _apiPathController.dispose();
     _apiQueryController.dispose();
     _apiBodyController.dispose();
+    _noticePreviewUrlController.dispose();
+    _noticePreviewJsonController.dispose();
     super.dispose();
   }
 
@@ -530,9 +536,13 @@ class _DebugToolsScreenState extends ConsumerState<DebugToolsScreen> {
 
   Future<void> _previewNoticeDialog() async {
     if (_noticePreviewBusy) return;
+    final source = _buildNoticePreviewSource();
+    if (source == null) return;
     setState(() => _noticePreviewBusy = true);
     try {
-      final config = await ref.read(updateConfigServiceProvider).fetchLatest();
+      final config = await ref
+          .read(updateConfigServiceProvider)
+          .fetchLatest(source: source);
       if (!mounted) return;
       if (config == null) {
         _showMessage(
@@ -541,7 +551,10 @@ class _DebugToolsScreenState extends ConsumerState<DebugToolsScreen> {
         return;
       }
 
-      final UpdateNotice? notice = config.notice;
+      final notice = previewNoticeForAnnouncementConfig(
+        config,
+        Localizations.localeOf(context).languageCode,
+      );
       if (notice == null || !notice.hasContents) {
         _showMessage(context.t.strings.legacy.msg_no_data);
         return;
@@ -549,7 +562,9 @@ class _DebugToolsScreenState extends ConsumerState<DebugToolsScreen> {
 
       _logAction(
         'Preview notice dialog',
-        detail: config.noticeEnabled ? 'enabled' : 'disabled',
+        detail:
+            '${_noticePreviewSourceLabel(_noticePreviewSource)} | '
+            '${config.noticeEnabled ? 'enabled' : 'disabled'}',
       );
       await NoticeDialog.show(context, notice: notice);
     } catch (_) {
@@ -562,6 +577,41 @@ class _DebugToolsScreenState extends ConsumerState<DebugToolsScreen> {
         setState(() => _noticePreviewBusy = false);
       }
     }
+  }
+
+  UpdateConfigSource? _buildNoticePreviewSource() {
+    switch (_noticePreviewSource) {
+      case UpdateConfigSourceType.production:
+        return const UpdateConfigSource.production();
+      case UpdateConfigSourceType.preview:
+        return const UpdateConfigSource.preview();
+      case UpdateConfigSourceType.customUrl:
+        final url = _noticePreviewUrlController.text.trim();
+        final uri = Uri.tryParse(url);
+        if (url.isEmpty ||
+            uri == null ||
+            (uri.scheme != 'http' && uri.scheme != 'https')) {
+          _showMessage('Enter a valid preview config URL.');
+          return null;
+        }
+        return UpdateConfigSource.customUrl(url);
+      case UpdateConfigSourceType.localJson:
+        final jsonText = _noticePreviewJsonController.text.trim();
+        if (jsonText.isEmpty) {
+          _showMessage('Paste announcement config JSON first.');
+          return null;
+        }
+        return UpdateConfigSource.localJson(jsonText);
+    }
+  }
+
+  String _noticePreviewSourceLabel(UpdateConfigSourceType source) {
+    return switch (source) {
+      UpdateConfigSourceType.production => 'Production',
+      UpdateConfigSourceType.preview => 'Preview',
+      UpdateConfigSourceType.customUrl => 'Custom URL',
+      UpdateConfigSourceType.localJson => 'Local JSON',
+    };
   }
 
   Map<String, String> _flattenHeaders(Headers headers) {
@@ -1140,6 +1190,87 @@ class _DebugToolsScreenState extends ConsumerState<DebugToolsScreen> {
                 card: card,
                 divider: divider,
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.account_tree_outlined,
+                              size: 20,
+                              color: textMuted,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Announcement source',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: textMain,
+                                ),
+                              ),
+                            ),
+                            DropdownButton<UpdateConfigSourceType>(
+                              value: _noticePreviewSource,
+                              underline: const SizedBox.shrink(),
+                              onChanged: _noticePreviewBusy
+                                  ? null
+                                  : (value) {
+                                      if (value == null) return;
+                                      setState(() {
+                                        _noticePreviewSource = value;
+                                      });
+                                    },
+                              items: [
+                                for (final source
+                                    in UpdateConfigSourceType.values)
+                                  DropdownMenuItem<UpdateConfigSourceType>(
+                                    value: source,
+                                    child: Text(
+                                      _noticePreviewSourceLabel(source),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        if (_noticePreviewSource ==
+                            UpdateConfigSourceType.customUrl) ...[
+                          const SizedBox(height: 12),
+                          _Field(
+                            label: 'Config URL',
+                            controller: _noticePreviewUrlController,
+                            hintText:
+                                'https://example.com/update/latest.preview.json',
+                            obscureText: false,
+                            textMain: textMain,
+                            textMuted: textMuted,
+                            enabled: !_noticePreviewBusy,
+                          ),
+                        ],
+                        if (_noticePreviewSource ==
+                            UpdateConfigSourceType.localJson) ...[
+                          const SizedBox(height: 12),
+                          _Field(
+                            label: 'Config JSON',
+                            controller: _noticePreviewJsonController,
+                            hintText: '{"notice": {"contents": ["..."]}}',
+                            obscureText: false,
+                            textMain: textMain,
+                            textMuted: textMuted,
+                            enabled: !_noticePreviewBusy,
+                            minLines: 4,
+                            maxLines: 8,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                   _ActionRow(
                     icon: Icons.campaign_outlined,
                     label: context.t.strings.legacy.msg_preview_2,

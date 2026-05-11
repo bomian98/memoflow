@@ -141,6 +141,7 @@ class AppPreferences {
     lastSeenAnnouncementVersion: '',
     lastSeenAnnouncementId: 0,
     lastSeenNoticeHash: '',
+    seenNoticeRevisions: {},
   );
 
   static AppPreferences defaultsForLanguage(AppLanguage language) {
@@ -196,6 +197,7 @@ class AppPreferences {
     required this.lastSeenAnnouncementVersion,
     required this.lastSeenAnnouncementId,
     required this.lastSeenNoticeHash,
+    required this.seenNoticeRevisions,
   });
 
   final AppLanguage language;
@@ -243,6 +245,7 @@ class AppPreferences {
   final String lastSeenAnnouncementVersion;
   final int lastSeenAnnouncementId;
   final String lastSeenNoticeHash;
+  final Map<String, int> seenNoticeRevisions;
 
   @Deprecated(
     'Use ResolvedAppSettings.resolvedThemeColor or '
@@ -319,6 +322,7 @@ class AppPreferences {
     'lastSeenAnnouncementVersion': lastSeenAnnouncementVersion,
     'lastSeenAnnouncementId': lastSeenAnnouncementId,
     'lastSeenNoticeHash': lastSeenNoticeHash,
+    'seenNoticeRevisions': seenNoticeRevisions,
   };
 
   factory AppPreferences.fromJson(Map<String, dynamic> json) {
@@ -544,6 +548,25 @@ class AppPreferences {
       return '';
     }
 
+    Map<String, int> parseSeenNoticeRevisions() {
+      final raw = json['seenNoticeRevisions'];
+      if (raw is! Map) return const {};
+      final parsed = <String, int>{};
+      raw.forEach((key, value) {
+        final id = key is String ? key.trim() : key.toString().trim();
+        if (id.isEmpty) return;
+        if (value is int) {
+          parsed[id] = value;
+        } else if (value is num) {
+          parsed[id] = value.toInt();
+        } else if (value is String) {
+          final revision = int.tryParse(value.trim());
+          if (revision != null) parsed[id] = revision;
+        }
+      });
+      return parsed;
+    }
+
     int parseLastSeenAnnouncementId() {
       final raw = json['lastSeenAnnouncementId'];
       if (raw is int) return raw;
@@ -694,6 +717,7 @@ class AppPreferences {
       lastSeenAnnouncementVersion: parseLastSeenAnnouncementVersion(),
       lastSeenAnnouncementId: parseLastSeenAnnouncementId(),
       lastSeenNoticeHash: parseLastSeenNoticeHash(),
+      seenNoticeRevisions: parseSeenNoticeRevisions(),
     );
   }
 
@@ -742,6 +766,7 @@ class AppPreferences {
     String? lastSeenAnnouncementVersion,
     int? lastSeenAnnouncementId,
     String? lastSeenNoticeHash,
+    Map<String, int>? seenNoticeRevisions,
   }) {
     return AppPreferences(
       language: language ?? this.language,
@@ -810,6 +835,7 @@ class AppPreferences {
       lastSeenAnnouncementId:
           lastSeenAnnouncementId ?? this.lastSeenAnnouncementId,
       lastSeenNoticeHash: lastSeenNoticeHash ?? this.lastSeenNoticeHash,
+      seenNoticeRevisions: seenNoticeRevisions ?? this.seenNoticeRevisions,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/application/startup/startup_coordinator.dart';
+import 'package:memos_flutter_app/application/updates/announcement_presenter.dart';
 import 'package:memos_flutter_app/application/updates/update_announcement_channel_policy.dart';
 import 'package:memos_flutter_app/application/updates/update_announcement_runner.dart';
 import 'package:memos_flutter_app/core/app_channel.dart';
@@ -152,9 +153,19 @@ void main() {
   });
 
   group('Startup update announcement channel policy', () {
-    test('disables startup update fetches for Android Play channel', () {
+    test('keeps startup config fetches enabled for Android Play channel', () {
       expect(
         shouldFetchStartupUpdateAnnouncements(
+          channel: AppChannel.play,
+          targetPlatform: TargetPlatform.android,
+        ),
+        isTrue,
+      );
+    });
+
+    test('suppresses startup update prompts for Android Play channel', () {
+      expect(
+        shouldShowStartupUpdatePrompt(
           channel: AppChannel.play,
           targetPlatform: TargetPlatform.android,
         ),
@@ -162,9 +173,9 @@ void main() {
       );
     });
 
-    test('allows startup update fetches for Android full channel', () {
+    test('allows startup update prompts for Android full channel', () {
       expect(
-        shouldFetchStartupUpdateAnnouncements(
+        shouldShowStartupUpdatePrompt(
           channel: AppChannel.full,
           targetPlatform: TargetPlatform.android,
         ),
@@ -176,7 +187,7 @@ void main() {
       'keeps desktop fetches enabled even when channel defaults to Play',
       () {
         expect(
-          shouldFetchStartupUpdateAnnouncements(
+          shouldShowStartupUpdatePrompt(
             channel: AppChannel.play,
             targetPlatform: TargetPlatform.windows,
           ),
@@ -187,7 +198,7 @@ void main() {
 
     test('does not treat web as Android Play distribution', () {
       expect(
-        shouldFetchStartupUpdateAnnouncements(
+        shouldShowStartupUpdatePrompt(
           channel: AppChannel.play,
           targetPlatform: TargetPlatform.android,
           isWeb: true,
@@ -204,7 +215,7 @@ void main() {
         var mountedChecked = false;
         final runner = UpdateAnnouncementRunner(
           bootstrapAdapter: const AppBootstrapAdapter(),
-          navigatorKey: GlobalKey<NavigatorState>(),
+          presenter: const _UnusedAnnouncementPresenter(),
           isMounted: () {
             mountedChecked = true;
             return true;
@@ -227,7 +238,7 @@ void main() {
         var mountedChecked = false;
         final runner = UpdateAnnouncementRunner(
           bootstrapAdapter: const AppBootstrapAdapter(),
-          navigatorKey: GlobalKey<NavigatorState>(),
+          presenter: const _UnusedAnnouncementPresenter(),
           isMounted: () {
             mountedChecked = true;
             return false;
@@ -249,5 +260,16 @@ class _UnusedWidgetRef implements WidgetRef {
   @override
   dynamic noSuchMethod(Invocation invocation) {
     throw StateError('WidgetRef should not be used by this test');
+  }
+}
+
+class _UnusedAnnouncementPresenter implements AnnouncementPresenter {
+  const _UnusedAnnouncementPresenter();
+
+  @override
+  Future<AnnouncementPresentationResult?> present(
+    AnnouncementPresentationRequest request,
+  ) {
+    throw StateError('AnnouncementPresenter should not be used by this test');
   }
 }

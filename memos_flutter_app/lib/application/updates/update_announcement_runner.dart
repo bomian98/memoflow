@@ -3,33 +3,37 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../data/models/device_preferences.dart';
 import '../../data/updates/update_config.dart';
-import '../../features/updates/notice_dialog.dart';
-import '../../features/updates/update_announcement_dialog.dart';
 import '../../state/memos/app_bootstrap_adapter_provider.dart';
+import 'announcement_delivery_policy.dart';
+import 'announcement_presenter.dart';
 import 'update_announcement_channel_policy.dart';
 
 class UpdateAnnouncementRunner {
   UpdateAnnouncementRunner({
     required AppBootstrapAdapter bootstrapAdapter,
-    required GlobalKey<NavigatorState> navigatorKey,
+    required AnnouncementPresenter presenter,
     required bool Function() isMounted,
     bool Function()? shouldFetchStartupUpdateAnnouncements,
+    AnnouncementDeliveryPolicy deliveryPolicy =
+        const AnnouncementDeliveryPolicy(),
   }) : _bootstrapAdapter = bootstrapAdapter,
-       _navigatorKey = navigatorKey,
+       _presenter = presenter,
        _isMounted = isMounted,
+       _deliveryPolicy = deliveryPolicy,
        _shouldFetchStartupUpdateAnnouncements =
            shouldFetchStartupUpdateAnnouncements ??
            shouldFetchStartupUpdateAnnouncementsForCurrentBuild;
 
   final AppBootstrapAdapter _bootstrapAdapter;
-  final GlobalKey<NavigatorState> _navigatorKey;
+  final AnnouncementPresenter _presenter;
   final bool Function() _isMounted;
+  final AnnouncementDeliveryPolicy _deliveryPolicy;
   final bool Function() _shouldFetchStartupUpdateAnnouncements;
 
   bool _updateAnnouncementChecked = false;
@@ -129,6 +133,28 @@ class UpdateAnnouncementRunner {
       displayVersion = debugVersion.isNotEmpty ? debugVersion : '999.0';
     }
 
+    final hasV3Candidates =
+        effectiveConfig.noticeCandidates.isNotEmpty ||
+        effectiveConfig.updateCandidates.isNotEmpty;
+    if (hasV3Candidates) {
+      final selection = _deliveryPolicy.selectStartupCandidate(
+        config: effectiveConfig,
+        context: AnnouncementDeliveryContext.current(
+          currentVersion: displayVersion,
+          seenNoticeRevisions: prefs.seenNoticeRevisions,
+          skippedUpdateVersion: prefs.skippedUpdateVersion,
+        ),
+      );
+      if (selection == null) return;
+      await _maybeShowDeliverySelection(
+        ref: ref,
+        config: effectiveConfig,
+        currentVersion: displayVersion,
+        selection: selection,
+      );
+      return;
+    }
+
     await _maybeShowUpdateAnnouncementWithConfig(
       ref: ref,
       config: effectiveConfig,
@@ -139,6 +165,103 @@ class UpdateAnnouncementRunner {
       ref: ref,
       config: effectiveConfig,
       prefs: prefs,
+    );
+  }
+
+  Future<void> _maybeShowDeliverySelection({
+    required WidgetRef ref,
+    required UpdateAnnouncementConfig config,
+    required String currentVersion,
+    required AnnouncementDeliverySelection selection,
+  }) async {
+    switch (selection.kind) {
+      case AnnouncementDeliveryKind.update:
+        final update = selection.update;
+        if (update == null) return;
+        await _maybeShowUpdateCandidate(
+          ref: ref,
+          config: config,
+          currentVersion: currentVersion,
+          update: update,
+        );
+      case AnnouncementDeliveryKind.notice:
+        final notice = selection.notice;
+        if (notice == null) return;
+        await _maybeShowNoticeCandidate(ref: ref, notice: notice);
+    }
+  }
+
+  Future<void> _maybeShowUpdateCandidate({
+    required WidgetRef ref,
+    required UpdateAnnouncementConfig config,
+    required String currentVersion,
+    required AnnouncementUpdateCandidate update,
+  }) async {
+    final result = await _presenter.present(
+      AnnouncementPresentationRequest.update(
+        config: _configForUpdateCandidate(config, update),
+        currentVersion: currentVersion,
+      ),
+    );
+    if (!_isMounted() || update.force) return;
+    if (result?.action == AnnouncementPresentationAction.later) {
+      _bootstrapAdapter.setSkippedUpdateVersion(
+        ref: ref,
+        version: update.version,
+      );
+    }
+  }
+
+  Future<void> _maybeShowNoticeCandidate({
+    required WidgetRef ref,
+    required AnnouncementNoticeCandidate notice,
+  }) async {
+    final result = await _presenter.present(
+      AnnouncementPresentationRequest.notice(candidate: notice),
+    );
+    if (!_isMounted()) return;
+    if (result?.action != AnnouncementPresentationAction.acknowledged) return;
+    if (notice.display.dismissPolicy == AnnouncementDismissPolicy.everyStart) {
+      return;
+    }
+    _bootstrapAdapter.setSeenNoticeRevision(
+      ref: ref,
+      id: notice.id,
+      revision: notice.revision,
+    );
+  }
+
+  UpdateAnnouncementConfig _configForUpdateCandidate(
+    UpdateAnnouncementConfig config,
+    AnnouncementUpdateCandidate update,
+  ) {
+    return UpdateAnnouncementConfig(
+      schemaVersion: config.schemaVersion,
+      versionInfo: UpdateVersionInfo(
+        latestVersion: update.version,
+        isForce: update.force,
+        downloadUrl: update.downloadUrl,
+        updateSource: update.channel,
+        publishAt: update.publishAt,
+        debugVersion: config.versionInfo.debugVersion,
+        skipUpdateVersion: '',
+      ),
+      announcement: const UpdateAnnouncement(
+        id: 0,
+        title: '',
+        showWhenUpToDate: false,
+        contentsByLocale: {},
+        fallbackContents: [],
+        newDonorIds: [],
+      ),
+      donors: config.donors,
+      releaseNotes: config.releaseNotes,
+      noticeEnabled: false,
+      notice: null,
+      debugAnnouncement: config.debugAnnouncement,
+      debugAnnouncementSource: config.debugAnnouncementSource,
+      noticeCandidates: config.noticeCandidates,
+      updateCandidates: config.updateCandidates,
     );
   }
 
@@ -174,24 +297,22 @@ class UpdateAnnouncementRunner {
         (showWhenUpToDate && hasUnseenAnnouncement);
     if (!shouldShow) return;
 
-    final dialogContext = _navigatorKey.currentContext;
-    if (dialogContext == null || !dialogContext.mounted) return;
-
-    final action = await UpdateAnnouncementDialog.show(
-      dialogContext,
-      config: config,
-      currentVersion: currentVersion,
+    final action = await _presenter.present(
+      AnnouncementPresentationRequest.update(
+        config: config,
+        currentVersion: currentVersion,
+      ),
     );
     if (!_isMounted() || isForce) return;
-    if (action == AnnouncementAction.update ||
-        action == AnnouncementAction.later) {
+    if (action?.action == AnnouncementPresentationAction.update ||
+        action?.action == AnnouncementPresentationAction.later) {
       _bootstrapAdapter.setLastSeenAnnouncement(
         ref: ref,
         version: currentVersion,
         announcementId: config.announcement.id,
       );
     }
-    if (action == AnnouncementAction.later && hasUpdate) {
+    if (action?.action == AnnouncementPresentationAction.later && hasUpdate) {
       _bootstrapAdapter.setSkippedUpdateVersion(
         ref: ref,
         version: latestVersion,
@@ -212,11 +333,13 @@ class UpdateAnnouncementRunner {
     if (noticeHash.isEmpty) return;
     if (prefs.lastSeenNoticeHash.trim() == noticeHash) return;
 
-    final dialogContext = _navigatorKey.currentContext;
-    if (dialogContext == null || !dialogContext.mounted) return;
-
-    final acknowledged = await NoticeDialog.show(dialogContext, notice: notice);
-    if (!_isMounted() || acknowledged != true) return;
+    final acknowledged = await _presenter.present(
+      AnnouncementPresentationRequest.notice(notice: notice),
+    );
+    if (!_isMounted() ||
+        acknowledged?.action != AnnouncementPresentationAction.acknowledged) {
+      return;
+    }
     _bootstrapAdapter.setLastSeenNoticeHash(ref, noticeHash);
   }
 

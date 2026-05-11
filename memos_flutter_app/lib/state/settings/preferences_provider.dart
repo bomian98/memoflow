@@ -491,6 +491,20 @@ class AppPreferencesController extends StateNotifier<AppPreferences> {
       triggerSync: false,
     );
   }
+
+  void setSeenNoticeRevision({required String id, required int revision}) {
+    final normalized = id.trim();
+    if (normalized.isEmpty) return;
+    _setAndPersist(
+      state.copyWith(
+        seenNoticeRevisions: {
+          ...state.seenNoticeRevisions,
+          normalized: revision,
+        },
+      ),
+      triggerSync: false,
+    );
+  }
 }
 
 class AppPreferencesRepository {

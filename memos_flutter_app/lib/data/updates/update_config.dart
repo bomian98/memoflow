@@ -2,6 +2,16 @@ import 'package:flutter/foundation.dart';
 
 enum DebugAnnouncementSource { releaseNotes, debugAnnouncement }
 
+enum AnnouncementDeliveryStatus { draft, preview, public, archived }
+
+enum AnnouncementDeliveryKind { notice, update }
+
+enum AnnouncementSeverity { info, warning, critical }
+
+enum AnnouncementDismissPolicy { oncePerId, oncePerRevision, everyStart }
+
+enum AnnouncementDisplaySurface { startupDialog, releaseHighlight }
+
 class UpdateAnnouncementConfig {
   const UpdateAnnouncementConfig({
     required this.schemaVersion,
@@ -13,6 +23,8 @@ class UpdateAnnouncementConfig {
     required this.notice,
     this.debugAnnouncement,
     this.debugAnnouncementSource = DebugAnnouncementSource.releaseNotes,
+    this.noticeCandidates = const [],
+    this.updateCandidates = const [],
   });
 
   final int schemaVersion;
@@ -24,6 +36,8 @@ class UpdateAnnouncementConfig {
   final UpdateNotice? notice;
   final UpdateAnnouncement? debugAnnouncement;
   final DebugAnnouncementSource debugAnnouncementSource;
+  final List<AnnouncementNoticeCandidate> noticeCandidates;
+  final List<AnnouncementUpdateCandidate> updateCandidates;
 
   bool get hasDonors => donors.isNotEmpty;
   bool get hasReleaseNotes => releaseNotes.isNotEmpty;
@@ -47,6 +61,8 @@ class UpdateAnnouncementConfig {
       fallbackKey: 'noticeEnabled',
     );
     final notice = _readNotice(json['notice']);
+    final noticeCandidates = _readNoticeCandidates(json['notices']);
+    final updateCandidates = _readUpdateCandidates(json['updates']);
     final donors = _readList(json['donors'])
         .whereType<Map>()
         .map((raw) => UpdateDonor.fromJson(raw.cast<String, dynamic>()))
@@ -66,6 +82,8 @@ class UpdateAnnouncementConfig {
       notice: notice,
       debugAnnouncement: debugAnnouncement,
       debugAnnouncementSource: debugAnnouncementSource,
+      noticeCandidates: noticeCandidates,
+      updateCandidates: updateCandidates,
     );
   }
 
@@ -309,6 +327,163 @@ class UpdateNotice {
     }
     return fallbackContents;
   }
+}
+
+class AnnouncementAudience {
+  const AnnouncementAudience({
+    required this.platforms,
+    required this.channels,
+    required this.minAppVersion,
+    required this.maxAppVersion,
+  });
+
+  final Set<String> platforms;
+  final Set<String> channels;
+  final String minAppVersion;
+  final String maxAppVersion;
+
+  bool get isEmpty =>
+      platforms.isEmpty &&
+      channels.isEmpty &&
+      minAppVersion.trim().isEmpty &&
+      maxAppVersion.trim().isEmpty;
+
+  factory AnnouncementAudience.fromJson(Map<String, dynamic> json) {
+    return AnnouncementAudience(
+      platforms: _readStringSet(json['platforms']),
+      channels: _readStringSet(json['channels']),
+      minAppVersion: _readString(
+        json,
+        'min_app_version',
+        fallbackKey: 'minAppVersion',
+      ),
+      maxAppVersion: _readString(
+        json,
+        'max_app_version',
+        fallbackKey: 'maxAppVersion',
+      ),
+    );
+  }
+}
+
+class AnnouncementDisplayPolicy {
+  const AnnouncementDisplayPolicy({
+    required this.surface,
+    required this.dismissPolicy,
+    required this.blocking,
+  });
+
+  final AnnouncementDisplaySurface surface;
+  final AnnouncementDismissPolicy dismissPolicy;
+  final bool blocking;
+
+  factory AnnouncementDisplayPolicy.fromJson(Map<String, dynamic> json) {
+    return AnnouncementDisplayPolicy(
+      surface: _readDisplaySurface(json['surface']),
+      dismissPolicy: _readDismissPolicy(
+        json['dismiss_policy'] ?? json['dismissPolicy'],
+      ),
+      blocking: _readBool(json, 'blocking'),
+    );
+  }
+}
+
+class AnnouncementNoticeCandidate {
+  const AnnouncementNoticeCandidate({
+    required this.id,
+    required this.revision,
+    required this.status,
+    required this.priority,
+    required this.severity,
+    required this.publishAt,
+    required this.expireAt,
+    required this.audience,
+    required this.display,
+    required this.titleByLocale,
+    required this.fallbackTitle,
+    required this.contentsByLocale,
+    required this.fallbackContents,
+  });
+
+  final String id;
+  final int revision;
+  final AnnouncementDeliveryStatus status;
+  final int priority;
+  final AnnouncementSeverity severity;
+  final DateTime? publishAt;
+  final DateTime? expireAt;
+  final AnnouncementAudience audience;
+  final AnnouncementDisplayPolicy display;
+  final Map<String, String> titleByLocale;
+  final String fallbackTitle;
+  final Map<String, List<String>> contentsByLocale;
+  final List<String> fallbackContents;
+
+  bool get hasContents =>
+      contentsByLocale.values.any((entries) => entries.isNotEmpty) ||
+      fallbackContents.isNotEmpty;
+
+  String titleForLanguageCode(String languageCode) {
+    final normalized = _normalizeLangKey(languageCode);
+    if (normalized.isNotEmpty) {
+      final exact = titleByLocale[normalized];
+      if (exact != null && exact.trim().isNotEmpty) return exact;
+    }
+    final en = titleByLocale['en'];
+    if (en != null && en.trim().isNotEmpty) return en;
+    final zh = titleByLocale['zh'];
+    if (zh != null && zh.trim().isNotEmpty) return zh;
+    for (final value in titleByLocale.values) {
+      if (value.trim().isNotEmpty) return value;
+    }
+    return fallbackTitle;
+  }
+
+  List<String> contentsForLanguageCode(String languageCode) {
+    final normalized = _normalizeLangKey(languageCode);
+    if (normalized.isNotEmpty) {
+      final exact = contentsByLocale[normalized];
+      if (exact != null && exact.isNotEmpty) return exact;
+    }
+    final en = contentsByLocale['en'];
+    if (en != null && en.isNotEmpty) return en;
+    final zh = contentsByLocale['zh'];
+    if (zh != null && zh.isNotEmpty) return zh;
+    for (final entries in contentsByLocale.values) {
+      if (entries.isNotEmpty) return entries;
+    }
+    return fallbackContents;
+  }
+}
+
+class AnnouncementUpdateCandidate {
+  const AnnouncementUpdateCandidate({
+    required this.id,
+    required this.status,
+    required this.priority,
+    required this.platform,
+    required this.channel,
+    required this.version,
+    required this.force,
+    required this.downloadUrl,
+    required this.releaseNoteId,
+    required this.publishAt,
+    required this.expireAt,
+    required this.audience,
+  });
+
+  final String id;
+  final AnnouncementDeliveryStatus status;
+  final int priority;
+  final String platform;
+  final String channel;
+  final String version;
+  final bool force;
+  final String downloadUrl;
+  final String releaseNoteId;
+  final DateTime? publishAt;
+  final DateTime? expireAt;
+  final AnnouncementAudience audience;
 }
 
 class UpdateDonor {
@@ -571,6 +746,35 @@ Map<String, List<String>> _readLocalizedStringLists(dynamic value) {
   return localized;
 }
 
+Map<String, String> _readLocalizedStrings(dynamic value) {
+  if (value is! Map) return const {};
+  final localized = <String, String>{};
+  value.forEach((key, rawValue) {
+    if (key is! String) return;
+    final normalized = _normalizeLangKey(key);
+    if (normalized.isEmpty) return;
+    final text = rawValue is String ? rawValue.trim() : '';
+    if (text.isEmpty) return;
+    localized[normalized] = text;
+  });
+  return localized;
+}
+
+Set<String> _readStringSet(dynamic value) {
+  if (value is List) {
+    return value
+        .map((entry) => entry.toString().trim().toLowerCase())
+        .where((entry) => entry.isNotEmpty)
+        .toSet();
+  }
+  if (value is String) {
+    final trimmed = value.trim().toLowerCase();
+    if (trimmed.isEmpty) return const {};
+    return {trimmed};
+  }
+  return const {};
+}
+
 List<UpdateReleaseNoteEntry> _readReleaseNotes(dynamic value) {
   if (value is! List) return const [];
   return value
@@ -582,6 +786,188 @@ List<UpdateReleaseNoteEntry> _readReleaseNotes(dynamic value) {
         (entry) => entry.version.trim().isNotEmpty || entry.items.isNotEmpty,
       )
       .toList(growable: false);
+}
+
+List<AnnouncementNoticeCandidate> _readNoticeCandidates(dynamic value) {
+  if (value is! List) return const [];
+  final out = <AnnouncementNoticeCandidate>[];
+  for (final raw in value) {
+    if (raw is! Map) continue;
+    final json = raw.cast<String, dynamic>();
+    final id = _readString(json, 'id');
+    if (id.isEmpty) continue;
+    final content = _readMapValue(json['content']) ?? json;
+    final titleByLocale = _readLocalizedStrings(content['title']);
+    final fallbackTitle = titleByLocale.isEmpty
+        ? _readString(content, 'title')
+        : '';
+    final contentsByLocale = _readLocalizedContents(
+      content['body'] ?? content['contents'],
+    );
+    final fallbackContents = contentsByLocale.isEmpty
+        ? _readStringList(content['body'] ?? content['contents'])
+        : const <String>[];
+    final audience = _readAudience(json['audience']);
+    final display = _readDisplayPolicy(json['display']);
+    out.add(
+      AnnouncementNoticeCandidate(
+        id: id,
+        revision: _readInt(json, 'revision').clamp(0, 999999999),
+        status: _readDeliveryStatus(json['status']),
+        priority: _readInt(json, 'priority'),
+        severity: _readSeverity(json['severity']),
+        publishAt: _readDateTime(json, 'publish_at', fallbackKey: 'publishAt'),
+        expireAt: _readDateTime(json, 'expire_at', fallbackKey: 'expireAt'),
+        audience: audience,
+        display: display,
+        titleByLocale: titleByLocale,
+        fallbackTitle: fallbackTitle,
+        contentsByLocale: contentsByLocale,
+        fallbackContents: fallbackContents,
+      ),
+    );
+  }
+  return out;
+}
+
+List<AnnouncementUpdateCandidate> _readUpdateCandidates(dynamic value) {
+  if (value is! List) return const [];
+  final out = <AnnouncementUpdateCandidate>[];
+  for (final raw in value) {
+    if (raw is! Map) continue;
+    final json = raw.cast<String, dynamic>();
+    final version = _readString(json, 'version').ifEmpty(
+      _readString(json, 'latest_version', fallbackKey: 'latestVersion'),
+    );
+    final id = _readString(
+      json,
+      'id',
+    ).ifEmpty(version.isEmpty ? '' : 'update-$version');
+    if (id.isEmpty) continue;
+    final audience = _readAudience(json['audience']);
+    final force =
+        _readBool(json, 'force') ||
+        _readBool(json, 'force_update', fallbackKey: 'is_force') ||
+        _readBool(json, 'isForce');
+    out.add(
+      AnnouncementUpdateCandidate(
+        id: id,
+        status: _readDeliveryStatus(json['status']),
+        priority: _readInt(json, 'priority'),
+        platform: _readString(json, 'platform'),
+        channel: _readString(json, 'channel'),
+        version: version,
+        force: force,
+        downloadUrl: _readString(
+          json,
+          'download_url',
+          fallbackKey: 'url',
+        ).ifEmpty(_readString(json, 'downloadUrl')),
+        releaseNoteId: _readString(
+          json,
+          'release_note_id',
+          fallbackKey: 'releaseNoteId',
+        ),
+        publishAt: _readDateTime(json, 'publish_at', fallbackKey: 'publishAt'),
+        expireAt: _readDateTime(json, 'expire_at', fallbackKey: 'expireAt'),
+        audience: audience,
+      ),
+    );
+  }
+  return out;
+}
+
+AnnouncementAudience _readAudience(dynamic value) {
+  final map = _readMapValue(value);
+  if (map == null) {
+    return const AnnouncementAudience(
+      platforms: <String>{},
+      channels: <String>{},
+      minAppVersion: '',
+      maxAppVersion: '',
+    );
+  }
+  return AnnouncementAudience.fromJson(map);
+}
+
+AnnouncementDisplayPolicy _readDisplayPolicy(dynamic value) {
+  final map = _readMapValue(value);
+  if (map == null) {
+    return const AnnouncementDisplayPolicy(
+      surface: AnnouncementDisplaySurface.startupDialog,
+      dismissPolicy: AnnouncementDismissPolicy.oncePerId,
+      blocking: false,
+    );
+  }
+  return AnnouncementDisplayPolicy.fromJson(map);
+}
+
+AnnouncementDeliveryStatus _readDeliveryStatus(dynamic value) {
+  if (value is String) {
+    switch (value.trim().toLowerCase()) {
+      case 'draft':
+        return AnnouncementDeliveryStatus.draft;
+      case 'preview':
+        return AnnouncementDeliveryStatus.preview;
+      case 'archived':
+      case 'archive':
+        return AnnouncementDeliveryStatus.archived;
+      case 'public':
+      case 'published':
+        return AnnouncementDeliveryStatus.public;
+    }
+  }
+  return AnnouncementDeliveryStatus.draft;
+}
+
+AnnouncementSeverity _readSeverity(dynamic value) {
+  if (value is String) {
+    switch (value.trim().toLowerCase()) {
+      case 'warning':
+      case 'warn':
+        return AnnouncementSeverity.warning;
+      case 'critical':
+      case 'blocker':
+      case 'blocking':
+        return AnnouncementSeverity.critical;
+      case 'info':
+        return AnnouncementSeverity.info;
+    }
+  }
+  return AnnouncementSeverity.info;
+}
+
+AnnouncementDismissPolicy _readDismissPolicy(dynamic value) {
+  if (value is String) {
+    switch (value.trim().toLowerCase()) {
+      case 'once_per_revision':
+      case 'onceperrevision':
+        return AnnouncementDismissPolicy.oncePerRevision;
+      case 'every_start':
+      case 'everystart':
+      case 'always':
+        return AnnouncementDismissPolicy.everyStart;
+      case 'once_per_id':
+      case 'onceperid':
+        return AnnouncementDismissPolicy.oncePerId;
+    }
+  }
+  return AnnouncementDismissPolicy.oncePerId;
+}
+
+AnnouncementDisplaySurface _readDisplaySurface(dynamic value) {
+  if (value is String) {
+    switch (value.trim().toLowerCase()) {
+      case 'release_highlight':
+      case 'releasehighlight':
+        return AnnouncementDisplaySurface.releaseHighlight;
+      case 'startup_dialog':
+      case 'startupdialog':
+      case 'dialog':
+        return AnnouncementDisplaySurface.startupDialog;
+    }
+  }
+  return AnnouncementDisplaySurface.startupDialog;
 }
 
 List<String> _readIdList(dynamic value) {

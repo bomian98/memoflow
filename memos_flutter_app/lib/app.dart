@@ -33,6 +33,7 @@ import 'features/lock/app_lock_gate.dart';
 import 'features/memos/memos_list_screen.dart';
 import 'features/share/clipboard_share_detector.dart';
 import 'features/share/share_handler.dart';
+import 'features/updates/announcement_dialog_presenter.dart';
 import 'application/widgets/home_widget_service.dart';
 import 'i18n/strings.g.dart';
 import 'private_hooks/private_extension_bundle_provider.dart';
@@ -223,7 +224,10 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
     unawaited(_exitCoordinator?.attachWindowListener());
     _updateAnnouncementRunner = UpdateAnnouncementRunner(
       bootstrapAdapter: _bootstrapAdapter,
-      navigatorKey: _navigatorKey,
+      presenter: DialogAnnouncementPresenter(
+        navigatorKey: _navigatorKey,
+        isMounted: () => mounted,
+      ),
       isMounted: () => mounted,
     );
 

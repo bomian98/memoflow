@@ -133,6 +133,7 @@ class DevicePreferences {
     lastSeenAnnouncementVersion: '',
     lastSeenAnnouncementId: 0,
     lastSeenNoticeHash: '',
+    seenNoticeRevisions: {},
     desktopHomeLayoutPreference: DesktopHomeLayoutPreference.defaults,
     homeInlineComposePanelLayout: null,
     collectionReaderPreferences: CollectionReaderPreferences.defaults,
@@ -173,6 +174,7 @@ class DevicePreferences {
     required this.lastSeenAnnouncementVersion,
     required this.lastSeenAnnouncementId,
     required this.lastSeenNoticeHash,
+    required this.seenNoticeRevisions,
     required this.desktopHomeLayoutPreference,
     required this.homeInlineComposePanelLayout,
     required this.collectionReaderPreferences,
@@ -205,6 +207,7 @@ class DevicePreferences {
   final String lastSeenAnnouncementVersion;
   final int lastSeenAnnouncementId;
   final String lastSeenNoticeHash;
+  final Map<String, int> seenNoticeRevisions;
   final DesktopHomeLayoutPreference desktopHomeLayoutPreference;
   final HomeInlineComposePanelLayoutPreference? homeInlineComposePanelLayout;
   final CollectionReaderPreferences collectionReaderPreferences;
@@ -242,6 +245,7 @@ class DevicePreferences {
     'lastSeenAnnouncementVersion': lastSeenAnnouncementVersion,
     'lastSeenAnnouncementId': lastSeenAnnouncementId,
     'lastSeenNoticeHash': lastSeenNoticeHash,
+    'seenNoticeRevisions': seenNoticeRevisions,
     'desktopHomeLayoutPreference': desktopHomeLayoutPreference.toJson(),
     'homeInlineComposePanelLayout': homeInlineComposePanelLayout?.toJson(),
     'collectionReaderPreferences': collectionReaderPreferences.toJson(),
@@ -276,6 +280,7 @@ class DevicePreferences {
       'lastSeenAnnouncementVersion': json['lastSeenAnnouncementVersion'],
       'lastSeenAnnouncementId': json['lastSeenAnnouncementId'],
       'lastSeenNoticeHash': json['lastSeenNoticeHash'],
+      'seenNoticeRevisions': json['seenNoticeRevisions'],
     });
     final desktopHomeLayoutRaw = json['desktopHomeLayoutPreference'];
     final layoutRaw = json['homeInlineComposePanelLayout'];
@@ -337,6 +342,7 @@ class DevicePreferences {
       lastSeenAnnouncementVersion: legacy.lastSeenAnnouncementVersion,
       lastSeenAnnouncementId: legacy.lastSeenAnnouncementId,
       lastSeenNoticeHash: legacy.lastSeenNoticeHash,
+      seenNoticeRevisions: legacy.seenNoticeRevisions,
       desktopHomeLayoutPreference: DesktopHomeLayoutPreference.defaults,
       homeInlineComposePanelLayout: null,
       collectionReaderPreferences:
@@ -372,6 +378,7 @@ class DevicePreferences {
       lastSeenAnnouncementVersion: lastSeenAnnouncementVersion,
       lastSeenAnnouncementId: lastSeenAnnouncementId,
       lastSeenNoticeHash: lastSeenNoticeHash,
+      seenNoticeRevisions: seenNoticeRevisions,
     );
   }
 
@@ -402,6 +409,7 @@ class DevicePreferences {
     String? lastSeenAnnouncementVersion,
     int? lastSeenAnnouncementId,
     String? lastSeenNoticeHash,
+    Map<String, int>? seenNoticeRevisions,
     DesktopHomeLayoutPreference? desktopHomeLayoutPreference,
     Object? homeInlineComposePanelLayout = _unset,
     CollectionReaderPreferences? collectionReaderPreferences,
@@ -448,6 +456,7 @@ class DevicePreferences {
       lastSeenAnnouncementId:
           lastSeenAnnouncementId ?? this.lastSeenAnnouncementId,
       lastSeenNoticeHash: lastSeenNoticeHash ?? this.lastSeenNoticeHash,
+      seenNoticeRevisions: seenNoticeRevisions ?? this.seenNoticeRevisions,
       desktopHomeLayoutPreference:
           desktopHomeLayoutPreference ?? this.desktopHomeLayoutPreference,
       homeInlineComposePanelLayout:

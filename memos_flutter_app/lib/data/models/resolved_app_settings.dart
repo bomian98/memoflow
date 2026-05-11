@@ -74,6 +74,7 @@ class ResolvedAppSettings {
       lastSeenAnnouncementVersion: device.lastSeenAnnouncementVersion,
       lastSeenAnnouncementId: device.lastSeenAnnouncementId,
       lastSeenNoticeHash: device.lastSeenNoticeHash,
+      seenNoticeRevisions: device.seenNoticeRevisions,
     );
   }
 

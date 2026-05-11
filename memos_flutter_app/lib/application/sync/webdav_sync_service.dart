@@ -605,6 +605,7 @@ class WebDavSyncService {
     json.remove('lastSeenAnnouncementVersion');
     json.remove('lastSeenAnnouncementId');
     json.remove('lastSeenNoticeHash');
+    json.remove('seenNoticeRevisions');
     json.remove('fontFile');
     json.remove('homeInitialLoadingOverlayShown');
     return json;
@@ -884,6 +885,7 @@ class WebDavSyncService {
         current.lastSeenAnnouncementVersion;
     mergedJson['lastSeenAnnouncementId'] = current.lastSeenAnnouncementId;
     mergedJson['lastSeenNoticeHash'] = current.lastSeenNoticeHash;
+    mergedJson['seenNoticeRevisions'] = current.seenNoticeRevisions;
     mergedJson['fontFile'] = current.fontFile;
     mergedJson['homeInitialLoadingOverlayShown'] =
         current.homeInitialLoadingOverlayShown;
