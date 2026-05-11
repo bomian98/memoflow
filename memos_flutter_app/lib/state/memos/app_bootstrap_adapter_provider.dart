@@ -212,8 +212,10 @@ class AppBootstrapAdapter {
   Future<void> requestSync(WidgetRef ref, SyncRequest request) =>
       ref.read(syncCoordinatorProvider.notifier).requestSync(request);
 
-  Future<UpdateAnnouncementConfig?> fetchLatestUpdateConfig(WidgetRef ref) =>
-      ref.read(updateConfigServiceProvider).fetchLatest();
+  Future<UpdateAnnouncementConfig?> fetchLatestUpdateConfig(
+    WidgetRef ref, {
+    String localeTag = '',
+  }) => ref.read(updateConfigServiceProvider).fetchLatest(localeTag: localeTag);
 
   void resumeWebDavBackupProgress(WidgetRef ref) {
     ref.read(webDavBackupProgressTrackerProvider).resume();

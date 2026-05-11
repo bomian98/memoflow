@@ -188,11 +188,6 @@ extension VersionAnnouncementItemLocalizationX on VersionAnnouncementItem {
     }
     final en = localizedDetails['en'];
     if (en != null && en.trim().isNotEmpty) return en;
-    final zh = localizedDetails['zh'];
-    if (zh != null && zh.trim().isNotEmpty) return zh;
-    for (final value in localizedDetails.values) {
-      if (value.trim().isNotEmpty) return value;
-    }
     return fallbackDetail;
   }
 }

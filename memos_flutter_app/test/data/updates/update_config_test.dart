@@ -155,6 +155,8 @@ void main() {
     test('parses schema v3 notice candidates', () {
       final config = UpdateAnnouncementConfig.fromJson({
         'schema_version': 3,
+        'locale': 'pt-BR',
+        'fallback_locale': 'en',
         'notices': [
           {
             'id': 'notice-2026-05-maintenance',
@@ -186,6 +188,8 @@ void main() {
       });
 
       expect(config.schemaVersion, 3);
+      expect(config.locale, 'pt-BR');
+      expect(config.fallbackLocale, 'en');
       expect(config.noticeCandidates, hasLength(1));
       final notice = config.noticeCandidates.single;
       expect(notice.id, 'notice-2026-05-maintenance');
@@ -204,6 +208,69 @@ void main() {
       expect(notice.display.blocking, isTrue);
       expect(notice.titleForLanguageCode('en'), 'Maintenance');
       expect(notice.contentsForLanguageCode('de'), ['Line one', 'Line two']);
+    });
+
+    test('uses English fallback before unrelated localized content', () {
+      final config = UpdateAnnouncementConfig.fromJson({
+        'schema_version': 3,
+        'announcement': {
+          'id': 20260511,
+          'title': 'Release',
+          'contents': {
+            'zh': ['Chinese summary'],
+            'en': ['English summary'],
+          },
+        },
+        'notice': {
+          'title': 'Notice',
+          'contents': {
+            'zh': ['Chinese notice'],
+            'en': ['English notice'],
+          },
+        },
+      });
+
+      expect(config.announcement.contentsForLanguageCode('de'), [
+        'English summary',
+      ]);
+      expect(config.notice?.contentsForLanguageCode('de'), ['English notice']);
+    });
+
+    test('missing English fallback does not use arbitrary locale content', () {
+      final config = UpdateAnnouncementConfig.fromJson({
+        'schema_version': 3,
+        'locale': 'de',
+        'fallback_locale': 'en',
+        'announcement': {
+          'id': 20260511,
+          'title': 'Release',
+          'contents': {
+            'zh': ['Chinese summary'],
+          },
+        },
+        'notices': [
+          {
+            'id': 'notice-de',
+            'status': 'public',
+            'content': {
+              'title': {'zh': '中文通知'},
+              'body': {
+                'zh': ['中文正文'],
+              },
+            },
+          },
+        ],
+      });
+
+      expect(config.announcement.contentsForLanguageCode('de'), isEmpty);
+      expect(
+        config.noticeCandidates.single.contentsForLanguageCode('de'),
+        isEmpty,
+      );
+      expect(
+        config.noticeCandidates.single.titleForLanguageCode('de'),
+        isEmpty,
+      );
     });
 
     test('parses schema v3 update candidates', () {

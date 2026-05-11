@@ -542,7 +542,10 @@ class _DebugToolsScreenState extends ConsumerState<DebugToolsScreen> {
     try {
       final config = await ref
           .read(updateConfigServiceProvider)
-          .fetchLatest(source: source);
+          .fetchLatest(
+            source: source,
+            localeTag: Localizations.localeOf(context).toLanguageTag(),
+          );
       if (!mounted) return;
       if (config == null) {
         _showMessage(

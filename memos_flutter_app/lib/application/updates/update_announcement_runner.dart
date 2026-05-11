@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../core/app_localization.dart';
 import '../../data/models/device_preferences.dart';
 import '../../data/updates/update_config.dart';
 import '../../state/memos/app_bootstrap_adapter_provider.dart';
@@ -123,7 +124,10 @@ class UpdateAnnouncementRunner {
     final prefs = _bootstrapAdapter.readDevicePreferences(ref);
     if (!prefs.hasSelectedLanguage) return;
 
-    final config = await _bootstrapAdapter.fetchLatestUpdateConfig(ref);
+    final config = await _bootstrapAdapter.fetchLatestUpdateConfig(
+      ref,
+      localeTag: localeTagForAppLanguage(prefs.language),
+    );
     if (!_isMounted()) return;
     final effectiveConfig = config ?? _fallbackUpdateConfig;
 
@@ -237,6 +241,8 @@ class UpdateAnnouncementRunner {
   ) {
     return UpdateAnnouncementConfig(
       schemaVersion: config.schemaVersion,
+      locale: config.locale,
+      fallbackLocale: config.fallbackLocale,
       versionInfo: UpdateVersionInfo(
         latestVersion: update.version,
         isForce: update.force,

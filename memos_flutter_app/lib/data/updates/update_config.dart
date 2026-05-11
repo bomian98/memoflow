@@ -15,6 +15,8 @@ enum AnnouncementDisplaySurface { startupDialog, releaseHighlight }
 class UpdateAnnouncementConfig {
   const UpdateAnnouncementConfig({
     required this.schemaVersion,
+    this.locale = '',
+    this.fallbackLocale = '',
     required this.versionInfo,
     required this.announcement,
     required this.donors,
@@ -28,6 +30,8 @@ class UpdateAnnouncementConfig {
   });
 
   final int schemaVersion;
+  final String locale;
+  final String fallbackLocale;
   final UpdateVersionInfo versionInfo;
   final UpdateAnnouncement announcement;
   final List<UpdateDonor> donors;
@@ -74,6 +78,12 @@ class UpdateAnnouncementConfig {
     final releaseNotes = _readReleaseNotes(json['release_notes']);
     return UpdateAnnouncementConfig(
       schemaVersion: _readInt(json, 'schema_version').clamp(1, 9999),
+      locale: _readString(json, 'locale'),
+      fallbackLocale: _readString(
+        json,
+        'fallback_locale',
+        fallbackKey: 'fallbackLocale',
+      ),
       versionInfo: versionInfo,
       announcement: announcement,
       donors: donors,
@@ -251,13 +261,8 @@ class UpdateAnnouncement {
       if (exact != null && exact.isNotEmpty) return exact;
     }
     if (contentsByLocale.isNotEmpty) {
-      final zh = contentsByLocale['zh'];
-      if (zh != null && zh.isNotEmpty) return zh;
       final en = contentsByLocale['en'];
       if (en != null && en.isNotEmpty) return en;
-      for (final entries in contentsByLocale.values) {
-        if (entries.isNotEmpty) return entries;
-      }
     }
     return fallbackContents;
   }
@@ -317,13 +322,8 @@ class UpdateNotice {
       if (exact != null && exact.isNotEmpty) return exact;
     }
     if (contentsByLocale.isNotEmpty) {
-      final zh = contentsByLocale['zh'];
-      if (zh != null && zh.isNotEmpty) return zh;
       final en = contentsByLocale['en'];
       if (en != null && en.isNotEmpty) return en;
-      for (final entries in contentsByLocale.values) {
-        if (entries.isNotEmpty) return entries;
-      }
     }
     return fallbackContents;
   }
@@ -431,11 +431,6 @@ class AnnouncementNoticeCandidate {
     }
     final en = titleByLocale['en'];
     if (en != null && en.trim().isNotEmpty) return en;
-    final zh = titleByLocale['zh'];
-    if (zh != null && zh.trim().isNotEmpty) return zh;
-    for (final value in titleByLocale.values) {
-      if (value.trim().isNotEmpty) return value;
-    }
     return fallbackTitle;
   }
 
@@ -447,11 +442,6 @@ class AnnouncementNoticeCandidate {
     }
     final en = contentsByLocale['en'];
     if (en != null && en.isNotEmpty) return en;
-    final zh = contentsByLocale['zh'];
-    if (zh != null && zh.isNotEmpty) return zh;
-    for (final entries in contentsByLocale.values) {
-      if (entries.isNotEmpty) return entries;
-    }
     return fallbackContents;
   }
 }
@@ -597,11 +587,6 @@ class UpdateReleaseNoteItem {
     }
     final en = localizedContents['en'];
     if (en != null && en.trim().isNotEmpty) return en;
-    final zh = localizedContents['zh'];
-    if (zh != null && zh.trim().isNotEmpty) return zh;
-    for (final value in localizedContents.values) {
-      if (value.trim().isNotEmpty) return value;
-    }
     return fallbackContent;
   }
 }
