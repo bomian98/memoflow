@@ -63,6 +63,7 @@ import 'tag_autocomplete.dart';
 import 'widgets/attachment_processing_overlay.dart';
 import '../location_picker/show_location_picker.dart';
 import '../../i18n/strings.g.dart';
+import 'android_memo_keyboard_resume_controller.dart';
 
 typedef _PendingAttachment = MemoComposerPendingAttachment;
 typedef _LinkedMemo = MemoComposerLinkedMemo;
@@ -114,6 +115,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   static const _editDraftSessionHelper = MemoEditorDraftSessionHelper();
   late final TextEditingController _contentController;
   late final FocusNode _editorFocusNode;
+  late final AndroidMemoKeyboardResumeController _keyboardResumeController;
   final _editorFieldKey = GlobalKey();
   final _tagMenuKey = GlobalKey();
   final _templateMenuKey = GlobalKey();
@@ -171,6 +173,12 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     );
     _contentController = _composer.textController;
     _editorFocusNode = FocusNode();
+    _keyboardResumeController = AndroidMemoKeyboardResumeController(
+      focusNode: _editorFocusNode,
+      isSurfaceEligible: () => mounted && !_saving,
+      isRouteCurrent: _isKeyboardResumeRouteCurrent,
+      isKeyboardVisible: _isKeyboardVisibleForResume,
+    );
     _contentController.addListener(_handleContentChanged);
     _contentController.addListener(_scheduleDraftSave);
     _loadTagStats();
@@ -213,9 +221,22 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     if (!_skipDraftPersistOnDispose) {
       unawaited(_persistEditorDraftNow());
     }
+    _keyboardResumeController.dispose();
     _editorFocusNode.dispose();
     _composer.dispose();
     super.dispose();
+  }
+
+  bool _isKeyboardResumeRouteCurrent() {
+    if (!mounted) return false;
+    final route = ModalRoute.of(context);
+    return route?.isCurrent ?? true;
+  }
+
+  bool _isKeyboardVisibleForResume() {
+    if (!mounted) return false;
+    final mediaQuery = MediaQuery.maybeOf(context);
+    return (mediaQuery?.viewInsets.bottom ?? 0) > 0;
   }
 
   void _handleContentChanged() {
@@ -2744,6 +2765,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _keyboardResumeController.updateKeyboardVisibility();
     final existing = widget.existing;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark

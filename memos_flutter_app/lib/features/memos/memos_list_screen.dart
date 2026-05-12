@@ -74,6 +74,7 @@ import '../stats/stats_screen.dart';
 import '../tags/tag_edit_sheet.dart';
 import '../voice/voice_record_screen.dart';
 import 'advanced_search_sheet.dart';
+import 'android_memo_keyboard_resume_controller.dart';
 import 'draft_box_screen.dart';
 import 'memo_detail_screen.dart';
 import 'memo_editor_screen.dart';
@@ -174,6 +175,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   final GlobalKey _floatingCollapseViewportKey = GlobalKey();
   final GlobalKey _homeInlineComposeCardKey = GlobalKey();
   final FocusNode _inlineComposeFocusNode = FocusNode();
+  late final AndroidMemoKeyboardResumeController
+  _inlineComposeKeyboardResumeController;
   final GlobalKey _inlineEditorFieldKey = GlobalKey();
   final GlobalKey _inlineTagMenuKey = GlobalKey();
   final GlobalKey _inlineTemplateMenuKey = GlobalKey();
@@ -227,6 +230,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   bool _desktopPreviewPressOpened = false;
   bool _desktopPreviewPressShouldDeselect = false;
   int _ignoredDesktopPreviewTapCount = 0;
+  bool _inlineComposeKeyboardResumeVisible = false;
   String? _desktopComposeInitialText;
   List<String> _desktopComposeInitialAttachmentPaths = const <String>[];
   bool _desktopComposeIgnoreDraft = false;
@@ -1128,6 +1132,13 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           ref.read(noteDraftProvider.notifier).setDraft(value),
       busy: () => _mutationCoordinator.inlineComposeSubmitting,
     );
+    _inlineComposeKeyboardResumeController =
+        AndroidMemoKeyboardResumeController(
+          focusNode: _inlineComposeFocusNode,
+          isSurfaceEligible: _isInlineComposeKeyboardResumeEligible,
+          isRouteCurrent: _isKeyboardResumeRouteCurrent,
+          isKeyboardVisible: _isKeyboardVisibleForResume,
+        );
     _localLibraryCoordinator = MemosListLocalLibraryCoordinator(
       read: ref.read,
       errorFormatter: (error) =>
@@ -1437,6 +1448,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     _scrollPerfIdleTimer = null;
     _voiceOverlayDragSession?.dispose();
     unawaited(_saveInlineComposeDraft(triggerSync: false));
+    _inlineComposeKeyboardResumeController.dispose();
     _inlineComposeCoordinator.dispose();
     _audioPlaybackCoordinator.dispose();
     _mutationCoordinator.dispose();
@@ -2090,6 +2102,24 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       searching: _searching,
       screenWidth: MediaQuery.sizeOf(context).width,
     );
+  }
+
+  bool _isInlineComposeKeyboardResumeEligible() {
+    if (!mounted || !widget.enableCompose || _inlineComposeBusy) return false;
+    if (!_inlineComposeKeyboardResumeVisible) return false;
+    return _homeInlineComposeCardKey.currentContext != null;
+  }
+
+  bool _isKeyboardResumeRouteCurrent() {
+    if (!mounted) return false;
+    final route = ModalRoute.of(context);
+    return route?.isCurrent ?? true;
+  }
+
+  bool _isKeyboardVisibleForResume() {
+    if (!mounted) return false;
+    final mediaQuery = MediaQuery.maybeOf(context);
+    return (mediaQuery?.viewInsets.bottom ?? 0) > 0;
   }
 
   bool _isDesktopShortcutRouteActive() {
@@ -3190,6 +3220,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       tagColorLookup: tagColorLookup,
       templateSettings: templateSettings,
     );
+    _inlineComposeKeyboardResumeVisible = viewState.layout.useInlineCompose;
+    _inlineComposeKeyboardResumeController.updateKeyboardVisibility();
     _syncDesktopPreviewSelection(
       layout: viewState.layout,
       visibleMemos: visibleMemos,

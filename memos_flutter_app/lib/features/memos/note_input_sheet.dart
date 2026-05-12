@@ -70,6 +70,7 @@ import 'widgets/note_input_fullscreen_compose.dart';
 import '../voice/voice_record_screen.dart';
 import '../location_picker/show_location_picker.dart';
 import '../../i18n/strings.g.dart';
+import 'android_memo_keyboard_resume_controller.dart';
 
 typedef _PendingAttachment = MemoComposerPendingAttachment;
 typedef _LinkedMemo = MemoComposerLinkedMemo;
@@ -197,6 +198,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
 
   late final MemoComposerController _composer;
   late final FocusNode _editorFocusNode;
+  late final AndroidMemoKeyboardResumeController _keyboardResumeController;
   TextEditingController get _controller => _composer.textController;
   final _editorFieldKey = GlobalKey();
   var _busy = false;
@@ -317,6 +319,12 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
       initialSelection: widget.initialSelection,
     );
     _editorFocusNode = FocusNode();
+    _keyboardResumeController = AndroidMemoKeyboardResumeController(
+      focusNode: _editorFocusNode,
+      isSurfaceEligible: () => mounted && !_busy,
+      isRouteCurrent: _isKeyboardResumeRouteCurrent,
+      isKeyboardVisible: _isKeyboardVisibleForResume,
+    );
     _controller.addListener(_handleContentChanged);
     _controller.addListener(_scheduleDraftSave);
     _applyDefaultVisibility(ref.read(userGeneralSettingProvider));
@@ -347,9 +355,22 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     _controller.removeListener(_scheduleDraftSave);
     // Defer provider mutation to avoid updating Riverpod state during unmount.
     unawaited(Future<void>(() => _saveCurrentDraft(triggerSync: false)));
+    _keyboardResumeController.dispose();
     _composer.dispose();
     _editorFocusNode.dispose();
     super.dispose();
+  }
+
+  bool _isKeyboardResumeRouteCurrent() {
+    if (!mounted) return false;
+    final route = ModalRoute.of(context);
+    return route?.isCurrent ?? true;
+  }
+
+  bool _isKeyboardVisibleForResume() {
+    if (!mounted) return false;
+    final mediaQuery = MediaQuery.maybeOf(context);
+    return (mediaQuery?.viewInsets.bottom ?? 0) > 0;
   }
 
   void _applyDefaultVisibility(AsyncValue<UserGeneralSetting> value) {
@@ -2585,6 +2606,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   Widget build(BuildContext context) {
     _composeDraftRepository = ref.watch(composeDraftRepositoryProvider);
     _noteDraftRepository = ref.watch(noteDraftRepositoryProvider);
+    _keyboardResumeController.updateKeyboardVisibility();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetColor = isDark
         ? MemoFlowPalette.cardDark

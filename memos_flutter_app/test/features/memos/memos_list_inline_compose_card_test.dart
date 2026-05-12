@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/features/image_preview/widgets/image_preview_tile.dart';
 import 'package:memos_flutter_app/features/memos/compose_toolbar_shared.dart';
 import 'package:memos_flutter_app/features/memos/note_input_sheet.dart';
+import 'package:memos_flutter_app/features/memos/tag_autocomplete.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_inline_compose_card.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memo_composer_controller.dart';
@@ -223,6 +224,44 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
     expect(composer.textController.text, '#world ');
+  });
+
+  testWidgets('tag autocomplete overlay removes root entry on focus loss', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'See #wo')
+      ..selection = const TextSelection.collapsed(offset: 7);
+    final focusNode = FocusNode();
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: _TagAutocompleteOverlayHarness(
+              controller: controller,
+              focusNode: focusNode,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    focusNode.requestFocus();
+    await tester.pump();
+    await tester.pump();
+
+    expect(focusNode.hasFocus, isTrue);
+    expect(find.text('#work'), findsOneWidget);
+
+    focusNode.unfocus();
+    await tester.pump();
+
+    expect(focusNode.hasFocus, isFalse);
+    expect(find.text('#work'), findsNothing);
   });
 
   testWidgets('gallery toolbar action clears focus before picker callback', (
@@ -509,6 +548,60 @@ class _InlineComposeCardHarnessState extends State<_InlineComposeCardHarness> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TagAutocompleteOverlayHarness extends StatefulWidget {
+  const _TagAutocompleteOverlayHarness({
+    required this.controller,
+    required this.focusNode,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+
+  @override
+  State<_TagAutocompleteOverlayHarness> createState() =>
+      _TagAutocompleteOverlayHarnessState();
+}
+
+class _TagAutocompleteOverlayHarnessState
+    extends State<_TagAutocompleteOverlayHarness> {
+  final _editorKey = GlobalKey();
+
+  static const _tags = <TagStat>[TagStat(tag: 'work', path: 'work', count: 3)];
+
+  @override
+  Widget build(BuildContext context) {
+    const textStyle = TextStyle(fontSize: 16, height: 1.35);
+    return SizedBox(
+      width: 320,
+      height: 120,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          KeyedSubtree(
+            key: _editorKey,
+            child: TextField(
+              controller: widget.controller,
+              focusNode: widget.focusNode,
+              style: textStyle,
+              decoration: const InputDecoration(border: InputBorder.none),
+            ),
+          ),
+          TagAutocompleteOverlay(
+            editorKey: _editorKey,
+            focusNode: widget.focusNode,
+            value: widget.controller.value,
+            textStyle: textStyle,
+            tags: _tags,
+            tagColors: TagColorLookup(_tags),
+            highlightedIndex: 0,
+            onSelect: (_) {},
+          ),
+        ],
       ),
     );
   }
