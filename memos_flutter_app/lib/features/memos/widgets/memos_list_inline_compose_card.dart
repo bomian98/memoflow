@@ -340,6 +340,7 @@ class MemosListInlineComposeCard extends StatelessWidget {
                                 child: IgnorePointer(
                                   child: TagAutocompleteOverlay(
                                     editorKey: editorFieldKey,
+                                    focusNode: focusNode,
                                     value: value,
                                     textStyle: inlineEditorTextStyle,
                                     tags: inlineTagSuggestions,
@@ -591,6 +592,14 @@ class _InlineComposeToolbar extends StatelessWidget {
   final VoidCallback onOpenVisibilityMenu;
   final VoidCallback onCutParagraphs;
 
+  void _runExternalPickerAction(VoidCallback action) {
+    if (focusNode.hasFocus) {
+      focusNode.unfocus();
+      FocusManager.instance.applyFocusChangesIfNeeded();
+    }
+    action();
+  }
+
   @override
   Widget build(BuildContext context) {
     final actions = <MemoComposeToolbarActionSpec>[
@@ -715,12 +724,12 @@ class _InlineComposeToolbar extends StatelessWidget {
       MemoComposeToolbarActionSpec.builtin(
         id: MemoToolbarActionId.attachment,
         enabled: !busy,
-        onPressed: onPickFile,
+        onPressed: () => _runExternalPickerAction(onPickFile),
       ),
       MemoComposeToolbarActionSpec.builtin(
         id: MemoToolbarActionId.gallery,
         enabled: !busy,
-        onPressed: onPickGallery,
+        onPressed: () => _runExternalPickerAction(onPickGallery),
       ),
       MemoComposeToolbarActionSpec.builtin(
         id: MemoToolbarActionId.todo,
@@ -736,7 +745,7 @@ class _InlineComposeToolbar extends StatelessWidget {
       MemoComposeToolbarActionSpec.builtin(
         id: MemoToolbarActionId.camera,
         enabled: !busy,
-        onPressed: onCaptureCamera,
+        onPressed: () => _runExternalPickerAction(onCaptureCamera),
       ),
       MemoComposeToolbarActionSpec.builtin(
         id: MemoToolbarActionId.location,

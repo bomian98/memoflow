@@ -218,6 +218,7 @@ class TagAutocompleteOverlay extends StatefulWidget {
   const TagAutocompleteOverlay({
     super.key,
     required this.editorKey,
+    required this.focusNode,
     required this.value,
     required this.textStyle,
     required this.tags,
@@ -228,6 +229,7 @@ class TagAutocompleteOverlay extends StatefulWidget {
   });
 
   final GlobalKey editorKey;
+  final FocusNode focusNode;
   final TextEditingValue value;
   final TextStyle textStyle;
   final List<TagStat> tags;
@@ -246,24 +248,40 @@ class _TagAutocompleteOverlayState extends State<TagAutocompleteOverlay> {
   @override
   void initState() {
     super.initState();
+    widget.focusNode.addListener(_handleFocusChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncOverlayEntry());
   }
 
   @override
   void didUpdateWidget(covariant TagAutocompleteOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode != widget.focusNode) {
+      oldWidget.focusNode.removeListener(_handleFocusChanged);
+      widget.focusNode.addListener(_handleFocusChanged);
+      _handleFocusChanged();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncOverlayEntry());
   }
 
   @override
   void dispose() {
+    widget.focusNode.removeListener(_handleFocusChanged);
     _removeOverlayEntry();
     super.dispose();
   }
 
+  void _handleFocusChanged() {
+    if (!mounted) return;
+    if (!widget.focusNode.hasFocus) {
+      _removeOverlayEntry();
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncOverlayEntry());
+  }
+
   void _syncOverlayEntry() {
     if (!mounted) return;
-    if (widget.tags.isEmpty) {
+    if (!widget.focusNode.hasFocus || widget.tags.isEmpty) {
       _removeOverlayEntry();
       return;
     }

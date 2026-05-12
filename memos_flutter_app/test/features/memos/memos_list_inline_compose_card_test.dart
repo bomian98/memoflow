@@ -225,6 +225,63 @@ void main() {
     expect(composer.textController.text, '#world ');
   });
 
+  testWidgets('gallery toolbar action clears focus before picker callback', (
+    tester,
+  ) async {
+    final composer = MemoComposerController(initialText: '#wo');
+    final focusNode = FocusNode();
+    var pickGalleryCalled = false;
+    addTearDown(() {
+      focusNode.dispose();
+      composer.dispose();
+    });
+
+    final tagStats = <TagStat>[
+      const TagStat(tag: 'work', path: 'work', count: 10),
+    ];
+
+    await tester.pumpWidget(
+      _InlineComposeCardHarness(
+        composer: composer,
+        focusNode: focusNode,
+        tagStats: tagStats,
+        toolbarPreferences: MemoToolbarPreferences(
+          topRowItems: const [],
+          bottomRowItems: [MemoToolbarActionId.gallery.itemId],
+          hiddenItemIds: const {},
+          customButtons: const [],
+        ),
+        onPickGallery: () {
+          pickGalleryCalled = true;
+          expect(focusNode.hasFocus, isFalse);
+        },
+      ),
+    );
+
+    final field = find.byKey(
+      const ValueKey<String>('memos-inline-compose-text-field'),
+    );
+    await tester.tap(field);
+    await tester.showKeyboard(field);
+    focusNode.requestFocus();
+    composer.textController.selection = TextSelection.collapsed(
+      offset: composer.text.length,
+    );
+    composer.syncTagAutocompleteState(tagStats: tagStats, hasFocus: true);
+    await tester.pump();
+    await tester.pump();
+
+    expect(focusNode.hasFocus, isTrue);
+    expect(find.text('#work'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Gallery'));
+    await tester.pump();
+
+    expect(pickGalleryCalled, isTrue);
+    expect(focusNode.hasFocus, isFalse);
+    expect(find.text('#work'), findsNothing);
+  });
+
   testWidgets('shows draft-box hint for blank composer when drafts exist', (
     tester,
   ) async {
@@ -336,9 +393,11 @@ class _InlineComposeCardHarness extends StatefulWidget {
     this.busy = false,
     this.pendingDraftCount = 0,
     this.tagStats = const <TagStat>[],
+    this.toolbarPreferences,
     this.onSubmit,
     this.onRemoveAttachment,
     this.onRemoveLinkedMemo,
+    this.onPickGallery,
   });
 
   final MemoComposerController composer;
@@ -346,9 +405,11 @@ class _InlineComposeCardHarness extends StatefulWidget {
   final bool busy;
   final int pendingDraftCount;
   final List<TagStat> tagStats;
+  final MemoToolbarPreferences? toolbarPreferences;
   final VoidCallback? onSubmit;
   final ValueChanged<String>? onRemoveAttachment;
   final ValueChanged<String>? onRemoveLinkedMemo;
+  final VoidCallback? onPickGallery;
 
   @override
   State<_InlineComposeCardHarness> createState() =>
@@ -421,7 +482,9 @@ class _InlineComposeCardHarnessState extends State<_InlineComposeCardHarness> {
                 tagStats: widget.tagStats,
                 availableTemplates: const [],
                 tagColorLookup: TagColorLookup(widget.tagStats),
-                toolbarPreferences: MemoToolbarPreferences.defaults,
+                toolbarPreferences:
+                    widget.toolbarPreferences ??
+                    MemoToolbarPreferences.defaults,
                 editorFieldKey: GlobalKey(),
                 tagMenuKey: GlobalKey(),
                 templateMenuKey: GlobalKey(),
@@ -434,7 +497,7 @@ class _InlineComposeCardHarnessState extends State<_InlineComposeCardHarness> {
                 onRequestLocation: () {},
                 onClearLocation: () {},
                 onOpenTemplateMenu: () {},
-                onPickGallery: () {},
+                onPickGallery: widget.onPickGallery ?? () {},
                 onPickFile: () {},
                 onOpenLinkMemo: () {},
                 onCaptureCamera: () {},

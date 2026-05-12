@@ -777,6 +777,7 @@ class _FullscreenEditor extends StatelessWidget {
             child: IgnorePointer(
               child: TagAutocompleteOverlay(
                 editorKey: editorFieldKey,
+                focusNode: editorFocusNode,
                 value: controller.value,
                 textStyle: editorTextStyle,
                 tags: tagSuggestions,

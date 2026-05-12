@@ -246,6 +246,7 @@ class _ShareQuickClipSheetState extends ConsumerState<_ShareQuickClipSheet> {
                             child: IgnorePointer(
                               child: TagAutocompleteOverlay(
                                 editorKey: _tagFieldKey,
+                                focusNode: _tagFocusNode,
                                 value: _tagController.value,
                                 textStyle: tagTextStyle,
                                 tags: tagSuggestions,

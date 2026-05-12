@@ -235,6 +235,17 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     );
   }
 
+  void _dismissTagAutocompleteForExternalPicker() {
+    if (_editorFocusNode.hasFocus) {
+      _editorFocusNode.unfocus();
+      FocusManager.instance.applyFocusChangesIfNeeded();
+    }
+    _composer.syncTagAutocompleteState(
+      tagStats: _currentTagStats(),
+      hasFocus: false,
+    );
+  }
+
   List<TagStat> _currentTagStats() {
     return ref.read(tagStatsProvider).valueOrNull ?? _tagStatsCache;
   }
@@ -1611,6 +1622,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
 
   Future<void> _pickGalleryAttachments() async {
     if (_saving) return;
+    _dismissTagAutocompleteForExternalPicker();
     try {
       final compressionPolicy = ref.read(imageCompressionUiPolicyProvider);
       if (!mounted) return;
@@ -1669,6 +1681,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
 
   Future<void> _pickAttachments() async {
     if (_saving) return;
+    _dismissTagAutocompleteForExternalPicker();
     try {
       final result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
@@ -1822,6 +1835,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
 
   Future<void> _capturePhoto() async {
     if (_saving) return;
+    _dismissTagAutocompleteForExternalPicker();
     final messenger = ScaffoldMessenger.of(context);
     try {
       final attachment = await captureCameraAttachment(
@@ -2894,6 +2908,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
                           child: IgnorePointer(
                             child: TagAutocompleteOverlay(
                               editorKey: _editorFieldKey,
+                              focusNode: _editorFocusNode,
                               value: _contentController.value,
                               textStyle: editorTextStyle,
                               tags: tagSuggestions,
