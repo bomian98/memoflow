@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/local_memo.dart';
 import '../../i18n/strings.g.dart';
+import 'memo_card_action.dart';
 import 'memo_time_adjustment_sheet.dart';
 import 'memo_task_list_service.dart';
 import 'memos_list_mutation_coordinator.dart';
-import 'widgets/memos_list_memo_card.dart';
 
 class MemosListMemoActionDelegate {
   MemosListMemoActionDelegate({

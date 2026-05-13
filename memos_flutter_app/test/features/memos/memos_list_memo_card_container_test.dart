@@ -76,6 +76,176 @@ void main() {
     );
   });
 
+  testWidgets('normal memo more menu renders grouped action popover', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_buildHarness(memo: _buildMemo()));
+
+    await _openCardMoreMenu(tester);
+
+    expect(find.byKey(memoCardActionPopoverKey), findsOneWidget);
+    expect(find.byKey(memoCardActionPrimarySectionKey), findsOneWidget);
+    expect(find.byKey(memoCardActionSecondarySectionKey), findsOneWidget);
+    expect(find.byKey(memoCardActionDangerSectionKey), findsOneWidget);
+    expect(
+      find.text(t.strings.collections.reader.moreSettingsTitle),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.copy)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.edit)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.reminder)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.togglePinned)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.addToCollection)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.archive)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.adjustTime)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.history)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.delete)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('archived memo more menu renders archived action subset', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_buildHarness(memo: _buildMemo(state: 'ARCHIVED')));
+
+    await _openCardMoreMenu(tester);
+
+    expect(find.byKey(memoCardActionPopoverKey), findsOneWidget);
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.copy)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.history)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.restore)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.delete)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.edit)),
+      findsNothing,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.reminder)),
+      findsNothing,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.togglePinned)),
+      findsNothing,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.addToCollection)),
+      findsNothing,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.archive)),
+      findsNothing,
+    );
+    expect(
+      find.byKey(memoCardActionItemKey(MemoCardAction.adjustTime)),
+      findsNothing,
+    );
+  });
+
+  testWidgets('memo more menu selects one action and dismisses outside', (
+    tester,
+  ) async {
+    final selectedActions = <MemoCardAction>[];
+    await tester.pumpWidget(
+      _buildHarness(memo: _buildMemo(), onAction: selectedActions.add),
+    );
+
+    await _openCardMoreMenu(tester);
+    await tester.tap(find.byKey(memoCardActionItemKey(MemoCardAction.edit)));
+    await tester.pumpAndSettle();
+
+    expect(selectedActions, [MemoCardAction.edit]);
+    expect(find.byKey(memoCardActionPopoverKey), findsNothing);
+
+    await _openCardMoreMenu(tester);
+    await tester.tapAt(const Offset(6, 6));
+    await tester.pumpAndSettle();
+
+    expect(selectedActions, [MemoCardAction.edit]);
+    expect(find.byKey(memoCardActionPopoverKey), findsNothing);
+  });
+
+  testWidgets('memo more menu stays within viewport near bottom right edge', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(360, 480));
+    await tester.pumpWidget(_buildPopoverEdgeHarness(memo: _buildMemo()));
+
+    await tester.tap(find.byTooltip('edge-menu'));
+    await tester.pumpAndSettle();
+
+    final rect = tester.getRect(find.byKey(memoCardActionPopoverKey));
+    expect(rect.left, greaterThanOrEqualTo(0));
+    expect(rect.top, greaterThanOrEqualTo(0));
+    expect(rect.right, lessThanOrEqualTo(360));
+    expect(rect.bottom, lessThanOrEqualTo(480));
+  });
+
+  testWidgets('button and context menu paths expose shared action metadata', (
+    tester,
+  ) async {
+    final memo = _buildMemo();
+    await tester.pumpWidget(_buildHarness(memo: memo));
+    await _openCardMoreMenu(tester);
+    final buttonActions = _visiblePopoverActions();
+    await tester.tapAt(const Offset(6, 6));
+    await tester.pumpAndSettle();
+    expect(find.byKey(memoCardActionPopoverKey), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(_buildContextMenuHarness(memo: memo));
+    await tester.tap(find.text('context-menu'));
+    await tester.pumpAndSettle();
+    final contextActions = _visiblePopoverActions();
+    await tester.tapAt(const Offset(6, 6));
+    await tester.pumpAndSettle();
+
+    expect(contextActions, buttonActions);
+    expect(
+      contextActions,
+      unorderedEquals(_descriptorActionsForContext(tester, memo)),
+    );
+  });
+
   testWidgets('creation time sheet cancels without a result', (tester) async {
     var completed = false;
     DateTime? result;
@@ -1292,6 +1462,27 @@ List<MemoCardAction?> _menuValues(List<PopupMenuEntry<MemoCardAction>> items) {
       .toList(growable: false);
 }
 
+Future<void> _openCardMoreMenu(WidgetTester tester) async {
+  await tester.tap(find.byTooltip(t.strings.legacy.msg_more).first);
+  await tester.pumpAndSettle();
+}
+
+List<MemoCardAction> _visiblePopoverActions() {
+  return [
+    for (final action in MemoCardAction.values)
+      if (find.byKey(memoCardActionItemKey(action)).evaluate().isNotEmpty)
+        action,
+  ];
+}
+
+List<MemoCardAction> _descriptorActionsForContext(
+  WidgetTester tester,
+  LocalMemo memo,
+) {
+  final context = tester.element(find.byType(Scaffold).first);
+  return buildMemoCardActionOrder(context: context, memo: memo);
+}
+
 Widget _buildTimeAdjustmentHarness(Widget child) {
   LocaleSettings.setLocale(AppLocale.en);
   return TranslationProvider(
@@ -1300,6 +1491,62 @@ Widget _buildTimeAdjustmentHarness(Widget child) {
       supportedLocales: AppLocaleUtils.supportedLocales,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       home: Scaffold(body: Center(child: child)),
+    ),
+  );
+}
+
+Widget _buildPopoverEdgeHarness({required LocalMemo memo}) {
+  LocaleSettings.setLocale(AppLocale.en);
+  return TranslationProvider(
+    child: MaterialApp(
+      locale: AppLocale.en.flutterLocale,
+      supportedLocales: AppLocaleUtils.supportedLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: Scaffold(
+        body: Align(
+          alignment: Alignment.bottomRight,
+          child: Builder(
+            builder: (context) => IconButton(
+              tooltip: 'edge-menu',
+              onPressed: () {
+                showMemoCardActionPopover(
+                  context: context,
+                  memo: memo,
+                  anchorContext: context,
+                );
+              },
+              icon: const Icon(Icons.more_horiz),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildContextMenuHarness({required LocalMemo memo}) {
+  LocaleSettings.setLocale(AppLocale.en);
+  return TranslationProvider(
+    child: MaterialApp(
+      locale: AppLocale.en.flutterLocale,
+      supportedLocales: AppLocaleUtils.supportedLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: Scaffold(
+        body: Center(
+          child: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                showMemoCardContextMenu(
+                  context: context,
+                  memo: memo,
+                  globalPosition: const Offset(320, 220),
+                );
+              },
+              child: const Text('context-menu'),
+            ),
+          ),
+        ),
+      ),
     ),
   );
 }

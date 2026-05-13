@@ -31,11 +31,27 @@ import '../memo_inline_image_syntax.dart';
 import '../memo_location_line.dart';
 import '../memo_markdown.dart';
 import '../memo_media_grid.dart';
+import '../memo_card_action.dart';
 import 'audio_row.dart';
+import 'memo_card_action_menu.dart';
 import 'memo_engagement_surface.dart';
 import '../../../i18n/strings.g.dart';
 
-enum MemoSyncStatus { none, pending, failed }
+export '../memo_card_action.dart';
+export 'memo_card_action_menu.dart'
+    show
+        MemoCardActionDescriptor,
+        MemoCardActionMenuSection,
+        buildMemoCardActionDescriptors,
+        buildMemoCardActionMenuItems,
+        buildMemoCardActionOrder,
+        memoCardActionDangerSectionKey,
+        memoCardActionItemKey,
+        memoCardActionPopoverKey,
+        memoCardActionPrimarySectionKey,
+        memoCardActionSecondarySectionKey,
+        showMemoCardActionPopover,
+        showMemoCardContextMenu;
 
 @visibleForTesting
 const Key memoListCardPressOffsetKey = ValueKey<String>(
@@ -141,130 +157,6 @@ void invalidateMemoRenderCacheForUid(String memoUid) {
   final trimmed = memoUid.trim();
   if (trimmed.isEmpty) return;
   _memoRenderCache.removeWhere((key) => key.startsWith('$trimmed|'));
-}
-
-enum MemoCardAction {
-  copy,
-  togglePinned,
-  edit,
-  adjustTime,
-  history,
-  reminder,
-  addToCollection,
-  archive,
-  restore,
-  delete,
-}
-
-List<PopupMenuEntry<MemoCardAction>> buildMemoCardActionMenuItems({
-  required BuildContext context,
-  required LocalMemo memo,
-  required Color deleteColor,
-  bool includeCopy = true,
-}) {
-  if (memo.state == 'ARCHIVED') {
-    return [
-      if (includeCopy)
-        PopupMenuItem(
-          value: MemoCardAction.copy,
-          child: Text(context.t.strings.legacy.msg_copy),
-        ),
-      PopupMenuItem(
-        value: MemoCardAction.history,
-        child: Text(context.t.strings.settings.preferences.history),
-      ),
-      PopupMenuItem(
-        value: MemoCardAction.restore,
-        child: Text(context.t.strings.legacy.msg_restore),
-      ),
-      PopupMenuItem(
-        value: MemoCardAction.delete,
-        child: Text(
-          context.t.strings.legacy.msg_delete,
-          style: TextStyle(color: deleteColor, fontWeight: FontWeight.w600),
-        ),
-      ),
-    ];
-  }
-
-  return [
-    if (includeCopy)
-      PopupMenuItem(
-        value: MemoCardAction.copy,
-        child: Text(context.t.strings.legacy.msg_copy),
-      ),
-    PopupMenuItem(
-      value: MemoCardAction.togglePinned,
-      child: Text(
-        memo.pinned
-            ? context.t.strings.legacy.msg_unpin
-            : context.t.strings.legacy.msg_pin,
-      ),
-    ),
-    PopupMenuItem(
-      value: MemoCardAction.edit,
-      child: Text(context.t.strings.legacy.msg_edit),
-    ),
-    PopupMenuItem(
-      value: MemoCardAction.adjustTime,
-      child: Text(context.t.strings.memoTimeAdjustment.action),
-    ),
-    PopupMenuItem(
-      value: MemoCardAction.history,
-      child: Text(context.t.strings.settings.preferences.history),
-    ),
-    PopupMenuItem(
-      value: MemoCardAction.reminder,
-      child: Text(context.t.strings.legacy.msg_reminder),
-    ),
-    PopupMenuItem(
-      value: MemoCardAction.addToCollection,
-      child: Text(context.t.strings.collections.addToCollection),
-    ),
-    PopupMenuItem(
-      value: MemoCardAction.archive,
-      child: Text(context.t.strings.legacy.msg_archive),
-    ),
-    const PopupMenuDivider(),
-    PopupMenuItem(
-      value: MemoCardAction.delete,
-      child: Text(
-        context.t.strings.legacy.msg_delete,
-        style: TextStyle(color: deleteColor, fontWeight: FontWeight.w600),
-      ),
-    ),
-  ];
-}
-
-Future<MemoCardAction?> showMemoCardContextMenu({
-  required BuildContext context,
-  required LocalMemo memo,
-  required Offset globalPosition,
-  bool includeCopy = true,
-}) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  final menuColor = isDark ? const Color(0xFF2B2523) : const Color(0xFFF6E7E3);
-  final deleteColor = isDark
-      ? const Color(0xFFFF7A7A)
-      : const Color(0xFFE05656);
-  final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-  final position = RelativeRect.fromRect(
-    Rect.fromLTWH(globalPosition.dx, globalPosition.dy, 0, 0),
-    Offset.zero & overlay.size,
-  );
-  return showMenu<MemoCardAction>(
-    context: context,
-    position: position,
-    color: menuColor,
-    surfaceTintColor: Colors.transparent,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    items: buildMemoCardActionMenuItems(
-      context: context,
-      memo: memo,
-      deleteColor: deleteColor,
-      includeCopy: includeCopy,
-    ),
-  );
 }
 
 class MemoListCard extends StatefulWidget {
@@ -590,9 +482,6 @@ class MemoListCardState extends State<MemoListCard> {
     final cardBorderColor = widget.selected
         ? selectedBorderColor
         : (isPinned ? pinBorderColor : borderColor);
-    final menuColor = isDark
-        ? const Color(0xFF2B2523)
-        : const Color(0xFFF6E7E3);
     final deleteColor = isDark
         ? const Color(0xFFFF7A7A)
         : const Color(0xFFE05656);
@@ -1169,28 +1058,37 @@ class MemoListCardState extends State<MemoListCard> {
                               width: 32,
                               height: 32,
                               child: Center(
-                                child: PopupMenuButton<MemoCardAction>(
-                                  tooltip: context.t.strings.legacy.msg_more,
-                                  padding: EdgeInsets.zero,
-                                  icon: Icon(
-                                    Icons.more_horiz,
-                                    size: 20,
-                                    color: textMain.withValues(
-                                      alpha: isDark ? 0.4 : 0.5,
-                                    ),
-                                  ),
-                                  onSelected: onAction,
-                                  color: menuColor,
-                                  surfaceTintColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  itemBuilder: (context) =>
-                                      buildMemoCardActionMenuItems(
-                                        context: context,
-                                        memo: memo,
-                                        deleteColor: deleteColor,
+                                child: Builder(
+                                  builder: (buttonContext) {
+                                    return IconButton(
+                                      tooltip:
+                                          context.t.strings.legacy.msg_more,
+                                      padding: EdgeInsets.zero,
+                                      constraints:
+                                          const BoxConstraints.tightFor(
+                                            width: 32,
+                                            height: 32,
+                                          ),
+                                      splashRadius: 16,
+                                      icon: Icon(
+                                        Icons.more_horiz,
+                                        size: 20,
+                                        color: textMain.withValues(
+                                          alpha: isDark ? 0.4 : 0.5,
+                                        ),
                                       ),
+                                      onPressed: () async {
+                                        final action =
+                                            await showMemoCardActionPopover(
+                                              context: buttonContext,
+                                              memo: memo,
+                                              anchorContext: buttonContext,
+                                            );
+                                        if (!mounted || action == null) return;
+                                        onAction(action);
+                                      },
+                                    );
+                                  },
                                 ),
                               ),
                             ),
