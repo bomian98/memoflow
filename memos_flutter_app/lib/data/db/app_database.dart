@@ -20,10 +20,12 @@ import 'memo_query_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'memo_write_db_persistence.dart';
 import 'outbox_db_persistence.dart';
+import 'quick_clip_recovery_db_persistence.dart';
 import 'stats_cache_db_persistence.dart';
 import 'tag_db_persistence.dart';
 import '../models/memo_clip_card_metadata.dart';
 import '../models/memo_location.dart';
+import '../models/quick_clip_recovery_job.dart';
 
 export 'tag_db_persistence.dart' show ResolvedTag;
 
@@ -41,7 +43,7 @@ class AppDatabase {
   final DesktopDbWriteGateway? _writeGateway;
   late final AppDatabaseWriteDao _writeDao = AppDatabaseWriteDao(db: this);
   static const Object _displayTimeUnspecified = Object();
-  static const _dbVersion = 28;
+  static const _dbVersion = 29;
   static const int outboxStatePending = 0;
   static const int outboxStateRunning = 1;
   static const int outboxStateRetry = 2;
@@ -93,6 +95,7 @@ class AppDatabase {
 
           await MemoAuxiliaryDbPersistence.ensureMemoReminderTable(db);
           await MemoAuxiliaryDbPersistence.ensureMemoClipCardsTable(db);
+          await QuickClipRecoveryDbPersistence.ensureTable(db);
 
           await MemoCoreDbPersistence.ensureAttachmentTable(db);
 
@@ -201,9 +204,13 @@ class AppDatabase {
           if (oldVersion < 28) {
             await ComposeDraftDbPersistence.ensureEditDraftColumns(db);
           }
+          if (oldVersion < 29) {
+            await QuickClipRecoveryDbPersistence.ensureTable(db);
+          }
         },
         onOpen: (db) async {
           await MemoAuxiliaryDbPersistence.ensureMemoClipCardsTable(db);
+          await QuickClipRecoveryDbPersistence.ensureTable(db);
           await _ensureStatsPersistenceTables(db);
           await MemoSearchDbPersistence.ensureFts(db);
           await MemoSearchDbPersistence.ensureIndex(db);
@@ -718,6 +725,56 @@ class AppDatabase {
           () => deleteMemoClipCard(_requiredString(payload, 'memoUid')),
         );
         return null;
+      case 'upsertQuickClipRecoveryJob':
+        await _runLocalWrite(
+          () => upsertQuickClipRecoveryJob(
+            QuickClipRecoveryJob.fromDb(
+              _readObjectMapPayload(
+                payload,
+                'row',
+              ).map<String, dynamic>((key, value) => MapEntry(key, value)),
+            ),
+          ),
+        );
+        return null;
+      case 'markQuickClipRecoveryJobRunning':
+        return _runLocalWrite(
+          () => markQuickClipRecoveryJobRunning(
+            memoUid: _requiredString(payload, 'memoUid'),
+            now: _readDateTimePayload(payload, 'nowMs'),
+            lastError: payload['lastError'] as String?,
+          ),
+        );
+      case 'markQuickClipRecoveryJobCompleted':
+        return _runLocalWrite(
+          () => markQuickClipRecoveryJobCompleted(
+            memoUid: _requiredString(payload, 'memoUid'),
+            now: _readDateTimePayload(payload, 'nowMs'),
+          ),
+        );
+      case 'markQuickClipRecoveryJobAbandoned':
+        return _runLocalWrite(
+          () => markQuickClipRecoveryJobAbandoned(
+            memoUid: _requiredString(payload, 'memoUid'),
+            now: _readDateTimePayload(payload, 'nowMs'),
+            lastError: payload['lastError'] as String?,
+          ),
+        );
+      case 'markQuickClipRecoveryJobFailed':
+        return _runLocalWrite(
+          () => markQuickClipRecoveryJobFailed(
+            memoUid: _requiredString(payload, 'memoUid'),
+            now: _readDateTimePayload(payload, 'nowMs'),
+            lastError: payload['lastError'] as String?,
+          ),
+        );
+      case 'deleteTerminalQuickClipRecoveryJobs':
+        return _runLocalWrite(
+          () => deleteTerminalQuickClipRecoveryJobs(
+            completedBefore: _readDateTimePayload(payload, 'completedBeforeMs'),
+            limit: _optionalInt(payload, 'limit') ?? 100,
+          ),
+        );
       case 'upsertMemoReminder':
         await _runLocalWrite(
           () => upsertMemoReminder(
@@ -793,6 +850,17 @@ class AppDatabase {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return null;
+  }
+
+  static DateTime _readDateTimePayload(
+    Map<String, dynamic> payload,
+    String key,
+  ) {
+    final ms = _optionalInt(payload, key);
+    if (ms == null || ms <= 0) {
+      return DateTime.now();
+    }
+    return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal();
   }
 
   static String _requiredString(Map<String, dynamic> payload, String key) {
@@ -2249,6 +2317,153 @@ class AppDatabase {
       return;
     }
     await _writeDao.deleteMemoClipCard(memoUid);
+  }
+
+  Future<QuickClipRecoveryJob?> getQuickClipRecoveryJobByMemoUid(
+    String memoUid,
+  ) async {
+    final db = await this.db;
+    return QuickClipRecoveryDbPersistence.getJobByMemoUid(db, memoUid);
+  }
+
+  Future<List<QuickClipRecoveryJob>> listRecoverableQuickClipRecoveryJobs({
+    int limit = 20,
+  }) async {
+    final db = await this.db;
+    return QuickClipRecoveryDbPersistence.listRecoverableJobs(db, limit: limit);
+  }
+
+  Future<List<QuickClipRecoveryJob>> listStaleQuickClipRecoveryJobs({
+    required DateTime staleBefore,
+    int limit = 20,
+  }) async {
+    final db = await this.db;
+    return QuickClipRecoveryDbPersistence.listStaleJobs(
+      db,
+      staleBefore: staleBefore,
+      limit: limit,
+    );
+  }
+
+  Future<void> upsertQuickClipRecoveryJob(QuickClipRecoveryJob job) async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      await _dispatchWriteCommand<void>(
+        operation: 'upsertQuickClipRecoveryJob',
+        payload: <String, dynamic>{'row': job.toDbRow()},
+        decode: (_) {},
+      );
+      return;
+    }
+    await _writeDao.upsertQuickClipRecoveryJob(job);
+  }
+
+  Future<int> markQuickClipRecoveryJobRunning({
+    required String memoUid,
+    required DateTime now,
+    String? lastError,
+  }) async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      return _dispatchWriteCommand<int>(
+        operation: 'markQuickClipRecoveryJobRunning',
+        payload: <String, dynamic>{
+          'memoUid': memoUid,
+          'nowMs': now.toUtc().millisecondsSinceEpoch,
+          'lastError': lastError,
+        },
+        decode: _decodeIntResult,
+      );
+    }
+    return _writeDao.markQuickClipRecoveryJobRunning(
+      memoUid: memoUid,
+      now: now,
+      lastError: lastError,
+    );
+  }
+
+  Future<int> markQuickClipRecoveryJobCompleted({
+    required String memoUid,
+    required DateTime now,
+  }) async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      return _dispatchWriteCommand<int>(
+        operation: 'markQuickClipRecoveryJobCompleted',
+        payload: <String, dynamic>{
+          'memoUid': memoUid,
+          'nowMs': now.toUtc().millisecondsSinceEpoch,
+        },
+        decode: _decodeIntResult,
+      );
+    }
+    return _writeDao.markQuickClipRecoveryJobCompleted(
+      memoUid: memoUid,
+      now: now,
+    );
+  }
+
+  Future<int> markQuickClipRecoveryJobAbandoned({
+    required String memoUid,
+    required DateTime now,
+    String? lastError,
+  }) async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      return _dispatchWriteCommand<int>(
+        operation: 'markQuickClipRecoveryJobAbandoned',
+        payload: <String, dynamic>{
+          'memoUid': memoUid,
+          'nowMs': now.toUtc().millisecondsSinceEpoch,
+          'lastError': lastError,
+        },
+        decode: _decodeIntResult,
+      );
+    }
+    return _writeDao.markQuickClipRecoveryJobAbandoned(
+      memoUid: memoUid,
+      now: now,
+      lastError: lastError,
+    );
+  }
+
+  Future<int> markQuickClipRecoveryJobFailed({
+    required String memoUid,
+    required DateTime now,
+    String? lastError,
+  }) async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      return _dispatchWriteCommand<int>(
+        operation: 'markQuickClipRecoveryJobFailed',
+        payload: <String, dynamic>{
+          'memoUid': memoUid,
+          'nowMs': now.toUtc().millisecondsSinceEpoch,
+          'lastError': lastError,
+        },
+        decode: _decodeIntResult,
+      );
+    }
+    return _writeDao.markQuickClipRecoveryJobFailed(
+      memoUid: memoUid,
+      now: now,
+      lastError: lastError,
+    );
+  }
+
+  Future<int> deleteTerminalQuickClipRecoveryJobs({
+    required DateTime completedBefore,
+    int limit = 100,
+  }) async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      return _dispatchWriteCommand<int>(
+        operation: 'deleteTerminalQuickClipRecoveryJobs',
+        payload: <String, dynamic>{
+          'completedBeforeMs': completedBefore.toUtc().millisecondsSinceEpoch,
+          'limit': limit,
+        },
+        decode: _decodeIntResult,
+      );
+    }
+    return _writeDao.deleteTerminalQuickClipRecoveryJobs(
+      completedBefore: completedBefore,
+      limit: limit,
+    );
   }
 
   Future<Map<String, dynamic>?> getMemoReminderByUid(String memoUid) async {

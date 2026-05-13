@@ -110,6 +110,9 @@ class StartupCoordinator extends ChangeNotifier {
   Future<void>? _pendingShareLoad;
   SharePayload? _startupSharePreviewPayload;
   bool _shareFlowActive = false;
+  bool _quickClipRecoveryScheduled = false;
+  bool _quickClipRecoveryStartupTriggered = false;
+  bool _quickClipRecoveryPendingAfterDefer = false;
   WorkspacePreferences? _deferredLaunchSyncPreferences;
 
   SharePayload? get startupSharePreviewPayload => _startupSharePreviewPayload;
@@ -265,11 +268,53 @@ class StartupCoordinator extends ChangeNotifier {
       source: source ?? 'build',
       force: force,
     );
+    if (!hasWorkspace) {
+      _quickClipRecoveryStartupTriggered = false;
+      return;
+    }
+    if (prefsLoaded && !_quickClipRecoveryStartupTriggered) {
+      _quickClipRecoveryStartupTriggered = true;
+      scheduleQuickClipRecovery(source: source ?? 'startup');
+    }
   }
 
   void scheduleShareHandling() => _scheduleShareHandling();
 
   void scheduleWidgetHandling() => _scheduleWidgetHandling();
+
+  void scheduleQuickClipRecovery({required String source}) {
+    if (!_isMounted()) return;
+    if (shouldDeferHeavyStartupWork) {
+      _quickClipRecoveryPendingAfterDefer = true;
+      return;
+    }
+    if (_quickClipRecoveryScheduled) return;
+    if (!_bootstrapAdapter.readDevicePreferencesLoaded(_ref)) return;
+    final session = _bootstrapAdapter.readSession(_ref);
+    final localLibrary = _bootstrapAdapter.readCurrentLocalLibrary(_ref);
+    if (session?.currentAccount == null && localLibrary == null) return;
+
+    _quickClipRecoveryScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _quickClipRecoveryScheduled = false;
+      if (!_isMounted()) return;
+      if (shouldDeferHeavyStartupWork) {
+        _quickClipRecoveryPendingAfterDefer = true;
+        return;
+      }
+      final recovery = ShareQuickClipRecoveryService(
+        ref: _ref,
+        bootstrapAdapter: _bootstrapAdapter,
+      );
+      unawaited(recovery.recoverPending(trigger: source));
+    });
+  }
+
+  void _flushDeferredQuickClipRecoveryIfNeeded({required String source}) {
+    if (!_quickClipRecoveryPendingAfterDefer) return;
+    _quickClipRecoveryPendingAfterDefer = false;
+    scheduleQuickClipRecovery(source: source);
+  }
 
   @override
   void dispose() {

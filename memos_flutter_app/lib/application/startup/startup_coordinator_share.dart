@@ -182,6 +182,8 @@ extension _StartupCoordinatorShare on StartupCoordinator {
     } finally {
       _clearStartupShareLaunchUi();
       _setShareFlowActive(false);
+      _flushDeferredQuickClipRecoveryIfNeeded(source: 'share_flow_completed');
+      scheduleQuickClipRecovery(source: 'share_flow_completed');
       unawaited(_flushDeferredLaunchSyncIfNeeded());
     }
   }

@@ -314,6 +314,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
         _desktopWindowManager.bindMethodHandler();
         _triggerLifecycleSync(isResume: true);
         _bootstrapController.rescheduleRemindersIfNeeded(ref: ref);
+        _startupCoordinator.scheduleQuickClipRecovery(source: 'resume');
         _scheduleClipboardShareChecks(source: 'resumed');
         break;
       case AppLifecycleState.paused:

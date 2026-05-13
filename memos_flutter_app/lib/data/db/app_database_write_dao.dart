@@ -8,6 +8,7 @@ import '../ai/ai_analysis_models.dart';
 import '../ai/ai_settings_models.dart';
 import '../models/memo_clip_card_metadata.dart';
 import '../models/memo_location.dart';
+import '../models/quick_clip_recovery_job.dart';
 import '../models/tag.dart';
 import '../models/tag_snapshot.dart';
 import 'ai_db_persistence.dart';
@@ -21,6 +22,7 @@ import 'memo_query_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
 import 'memo_write_db_persistence.dart';
 import 'outbox_db_persistence.dart';
+import 'quick_clip_recovery_db_persistence.dart';
 import 'tag_db_persistence.dart';
 
 class AppDatabaseWriteDao {
@@ -1578,6 +1580,99 @@ class AppDatabaseWriteDao {
       await _deleteMemoClipCard(txn, trimmedMemoUid);
     });
     _db.notifyDataChanged();
+  }
+
+  Future<void> upsertQuickClipRecoveryJob(QuickClipRecoveryJob job) async {
+    final sqlite = await _db.db;
+    await QuickClipRecoveryDbPersistence.upsertJob(sqlite, job);
+    _db.notifyDataChanged();
+  }
+
+  Future<int> markQuickClipRecoveryJobRunning({
+    required String memoUid,
+    required DateTime now,
+    String? lastError,
+  }) async {
+    final sqlite = await _db.db;
+    final updated = await QuickClipRecoveryDbPersistence.markRunning(
+      sqlite,
+      memoUid: memoUid,
+      now: now,
+      lastError: lastError,
+    );
+    if (updated > 0) {
+      _db.notifyDataChanged();
+    }
+    return updated;
+  }
+
+  Future<int> markQuickClipRecoveryJobCompleted({
+    required String memoUid,
+    required DateTime now,
+  }) async {
+    final sqlite = await _db.db;
+    final updated = await QuickClipRecoveryDbPersistence.markCompleted(
+      sqlite,
+      memoUid: memoUid,
+      now: now,
+    );
+    if (updated > 0) {
+      _db.notifyDataChanged();
+    }
+    return updated;
+  }
+
+  Future<int> markQuickClipRecoveryJobAbandoned({
+    required String memoUid,
+    required DateTime now,
+    String? lastError,
+  }) async {
+    final sqlite = await _db.db;
+    final updated = await QuickClipRecoveryDbPersistence.markAbandoned(
+      sqlite,
+      memoUid: memoUid,
+      now: now,
+      lastError: lastError,
+    );
+    if (updated > 0) {
+      _db.notifyDataChanged();
+    }
+    return updated;
+  }
+
+  Future<int> markQuickClipRecoveryJobFailed({
+    required String memoUid,
+    required DateTime now,
+    String? lastError,
+  }) async {
+    final sqlite = await _db.db;
+    final updated = await QuickClipRecoveryDbPersistence.markFailed(
+      sqlite,
+      memoUid: memoUid,
+      now: now,
+      lastError: lastError,
+    );
+    if (updated > 0) {
+      _db.notifyDataChanged();
+    }
+    return updated;
+  }
+
+  Future<int> deleteTerminalQuickClipRecoveryJobs({
+    required DateTime completedBefore,
+    int limit = 100,
+  }) async {
+    final sqlite = await _db.db;
+    final deleted =
+        await QuickClipRecoveryDbPersistence.deleteTerminalJobsOlderThan(
+          sqlite,
+          completedBefore: completedBefore,
+          limit: limit,
+        );
+    if (deleted > 0) {
+      _db.notifyDataChanged();
+    }
+    return deleted;
   }
 
   List<String> _normalizeMemoTags(List<String> tags) {

@@ -11,10 +11,12 @@ import '../../data/api/memos_api.dart';
 import '../../data/logs/log_manager.dart';
 import '../../data/models/memo_clip_card_metadata.dart';
 import '../../data/models/local_memo.dart';
+import '../../data/models/quick_clip_recovery_job.dart';
 import '../../state/memos/attachment_upload_size_limit_provider.dart';
 import '../../state/memos/app_bootstrap_adapter_provider.dart';
 import '../../state/memos/memo_composer_state.dart';
 import '../../state/memos/memo_mutation_service.dart';
+import '../../state/memos/quick_clip_recovery_mutation_service.dart';
 import '../../state/memos/third_party_share_attachment_appender.dart';
 import 'share_capture_engine.dart';
 import 'share_capture_formatter.dart';
@@ -35,6 +37,29 @@ String buildQuickClipHiddenMarker(String memoUid) {
   return '<!-- memoflow_quick_clip:$normalizedUid -->';
 }
 
+String stripQuickClipHiddenMarker(String content) {
+  final trimmed = content.trim();
+  if (trimmed.isEmpty) return trimmed;
+  return trimmed
+      .replaceAll(RegExp(r'<!--\s*memoflow_quick_clip:[^>]+-->'), '')
+      .trim();
+}
+
+bool isQuickClipPlaceholderContentMatch(
+  String content, {
+  required String placeholderMarker,
+  required String placeholderLookupContent,
+}) {
+  final rowContent = content.trim();
+  final normalizedMarker = placeholderMarker.trim();
+  final normalizedLookupContent = placeholderLookupContent.trim();
+  if (normalizedMarker.isNotEmpty && rowContent.contains(normalizedMarker)) {
+    return true;
+  }
+  return normalizedLookupContent.isNotEmpty &&
+      stripQuickClipHiddenMarker(rowContent) == normalizedLookupContent;
+}
+
 Map<String, dynamic>? findQuickClipPlaceholderMemoRow(
   List<Map<String, dynamic>> rows, {
   required String memoUid,
@@ -47,18 +72,25 @@ Map<String, dynamic>? findQuickClipPlaceholderMemoRow(
 
   for (final row in rows) {
     final rowUid = (row['uid'] as String? ?? '').trim();
-    if (normalizedUid.isNotEmpty && rowUid == normalizedUid) {
+    final rowContent = (row['content'] as String? ?? '').trim();
+    if (normalizedUid.isNotEmpty &&
+        rowUid == normalizedUid &&
+        isQuickClipPlaceholderContentMatch(
+          rowContent,
+          placeholderMarker: normalizedMarker,
+          placeholderLookupContent: normalizedLookupContent,
+        )) {
       return row;
     }
   }
 
   for (final row in rows) {
     final rowContent = (row['content'] as String? ?? '').trim();
-    if (normalizedMarker.isNotEmpty && rowContent.contains(normalizedMarker)) {
-      return row;
-    }
-    if (normalizedLookupContent.isNotEmpty &&
-        _stripQuickClipHiddenMarker(rowContent) == normalizedLookupContent) {
+    if (isQuickClipPlaceholderContentMatch(
+      rowContent,
+      placeholderMarker: normalizedMarker,
+      placeholderLookupContent: normalizedLookupContent,
+    )) {
       return row;
     }
   }
@@ -66,12 +98,97 @@ Map<String, dynamic>? findQuickClipPlaceholderMemoRow(
   return null;
 }
 
-String _stripQuickClipHiddenMarker(String content) {
-  final trimmed = content.trim();
-  if (trimmed.isEmpty) return trimmed;
-  return trimmed
-      .replaceAll(RegExp(r'<!--\s*memoflow_quick_clip:[^>]+-->'), '')
-      .trim();
+String buildQuickClipPlaceholderContent({
+  required ShareCaptureRequest request,
+  required List<String> tags,
+  required Locale locale,
+}) {
+  final buffer = StringBuffer()
+    ..writeln('# ${_quickClipPlaceholderTitle(locale)}')
+    ..writeln()
+    ..writeln('${_quickClipLinkLabel(locale)}: ${request.url}')
+    ..writeln()
+    ..writeln(_quickClipProcessingLabel(locale));
+  if (tags.isNotEmpty) {
+    buffer
+      ..writeln()
+      ..writeln(tags.join(' '));
+  }
+  return buffer.toString().trimRight();
+}
+
+String buildQuickClipFailureContent({
+  required ShareCaptureRequest request,
+  required List<String> tags,
+  required Locale locale,
+}) {
+  final buffer = StringBuffer()
+    ..writeln('# ${_quickClipFailureTitle(locale)}')
+    ..writeln()
+    ..writeln('${_quickClipLinkLabel(locale)}: ${request.url}')
+    ..writeln()
+    ..writeln(_quickClipFailureBody(locale));
+  if (tags.isNotEmpty) {
+    buffer
+      ..writeln()
+      ..writeln(tags.join(' '));
+  }
+  return buffer.toString().trimRight();
+}
+
+String appendQuickClipHiddenMarker(String content, String marker) {
+  final normalizedMarker = marker.trim();
+  if (normalizedMarker.isEmpty) return content.trimRight();
+  final normalizedContent = content.trimRight();
+  if (normalizedContent.isEmpty) return normalizedMarker;
+  return '$normalizedContent\n\n$normalizedMarker';
+}
+
+String appendTagsToQuickClipCapturedContent(String content, List<String> tags) {
+  final normalizedTags = tags
+      .map((tag) => tag.trim())
+      .where((tag) => tag.isNotEmpty)
+      .toList(growable: false);
+  if (normalizedTags.isEmpty) return content.trimRight();
+  final normalizedContent = content.trimRight();
+  const marker = '<!-- memoflow-third-party-share -->';
+  if (normalizedContent.endsWith(marker)) {
+    final body = normalizedContent
+        .substring(0, normalizedContent.length - marker.length)
+        .trimRight();
+    return '$body\n\n${normalizedTags.join(' ')}\n\n$marker';
+  }
+  return '$normalizedContent\n\n${normalizedTags.join(' ')}';
+}
+
+String _quickClipPlaceholderTitle(Locale locale) {
+  return _quickClipIsZh(locale) ? '\u526a\u85cf\u4e2d\u2026' : 'Clipping...';
+}
+
+String _quickClipProcessingLabel(Locale locale) {
+  return _quickClipIsZh(locale)
+      ? '\u6b63\u5728\u63d0\u53d6\u94fe\u63a5\u5185\u5bb9\uff0c\u8bf7\u7a0d\u5019\u3002'
+      : 'Extracting content...';
+}
+
+String _quickClipFailureTitle(Locale locale) {
+  return _quickClipIsZh(locale)
+      ? '\u5df2\u4fdd\u5b58\u94fe\u63a5'
+      : 'Link saved';
+}
+
+String _quickClipFailureBody(Locale locale) {
+  return _quickClipIsZh(locale)
+      ? '\u5185\u5bb9\u89e3\u6790\u5931\u8d25\uff0c\u5f53\u524d\u5df2\u5148\u4fdd\u5b58\u539f\u59cb\u94fe\u63a5\u3002'
+      : 'Content parsing failed, so the original link was saved.';
+}
+
+String _quickClipLinkLabel(Locale locale) {
+  return _quickClipIsZh(locale) ? '\u539f\u59cb\u94fe\u63a5' : 'Original link';
+}
+
+bool _quickClipIsZh(Locale locale) {
+  return locale.languageCode.toLowerCase().startsWith('zh');
 }
 
 class ShareQuickClipService {
@@ -203,6 +320,24 @@ class ShareQuickClipService {
       },
     );
 
+    await _persistRecoveryJob(
+      memoUid: uid,
+      payload: payload,
+      request: request,
+      submission: submission,
+      locale: locale,
+      placeholderMarker: placeholderMarker,
+      placeholderLookupContent: placeholderLookupContent,
+    );
+
+    final reserved = ShareQuickClipRecoveryService._reserveMemoUid(uid);
+    if (!reserved) {
+      LogManager.instance.warn(
+        'ShareQuickClip: capture_deduped',
+        context: {'memoUid': uid, 'host': request.url.host},
+      );
+      return;
+    }
     unawaited(
       _captureAndUpdate(
         memoUid: uid,
@@ -212,8 +347,48 @@ class ShareQuickClipService {
         locale: locale,
         placeholderMarker: placeholderMarker,
         placeholderLookupContent: placeholderLookupContent,
+        reservationHeld: true,
       ),
     );
+  }
+
+  Future<void> _persistRecoveryJob({
+    required String memoUid,
+    required SharePayload payload,
+    required ShareCaptureRequest request,
+    required ShareQuickClipSubmission submission,
+    required Locale locale,
+    required String placeholderMarker,
+    required String placeholderLookupContent,
+  }) async {
+    final job = QuickClipRecoveryJob.pending(
+      memoUid: memoUid,
+      sourceUrl: request.url.toString(),
+      payloadType: payload.type.name,
+      payloadText: payload.text ?? '',
+      payloadTitle: payload.title,
+      payloadPaths: payload.paths,
+      textOnly: submission.textOnly,
+      titleAndLinkOnly: submission.titleAndLinkOnly,
+      tags: submission.tags,
+      localeLanguageCode: locale.languageCode,
+      placeholderMarker: placeholderMarker,
+      placeholderLookupContent: placeholderLookupContent,
+    );
+    try {
+      await _ref.read(quickClipRecoveryMutationServiceProvider).upsertJob(job);
+      LogManager.instance.info(
+        'ShareQuickClip: recovery_job_created',
+        context: {'memoUid': memoUid, 'host': request.url.host},
+      );
+    } catch (error, stackTrace) {
+      LogManager.instance.error(
+        'ShareQuickClip: recovery_job_create_failed',
+        error: error,
+        stackTrace: stackTrace,
+        context: {'memoUid': memoUid, 'host': request.url.host},
+      );
+    }
   }
 
   String _resolveVisibility() {
@@ -233,11 +408,27 @@ class ShareQuickClipService {
     required Locale locale,
     required String placeholderMarker,
     required String placeholderLookupContent,
+    bool reservationHeld = false,
+    String? recoveryTrigger,
   }) async {
+    final reservedHere = reservationHeld
+        ? false
+        : ShareQuickClipRecoveryService._reserveMemoUid(memoUid);
+    if (!reservationHeld && !reservedHere) {
+      LogManager.instance.info(
+        'ShareQuickClip: capture_skip_in_flight',
+        context: {'memoUid': memoUid, 'host': request.url.host},
+      );
+      return;
+    }
     try {
       LogManager.instance.info(
         'ShareQuickClip: capture_start',
-        context: {'memoUid': memoUid, 'host': request.url.host},
+        context: {
+          'memoUid': memoUid,
+          'host': request.url.host,
+          if (recoveryTrigger != null) 'recoveryTrigger': recoveryTrigger,
+        },
       );
       final result = await _engine
           .capture(
@@ -324,6 +515,10 @@ class ShareQuickClipService {
             'success': result.isSuccess,
           },
         );
+        await _markRecoveryJobAbandoned(
+          memoUid: memoUid,
+          reason: 'placeholder_not_safe_or_missing',
+        );
         return;
       }
       if (clipMetadataDraft != null) {
@@ -380,6 +575,21 @@ class ShareQuickClipService {
           'appendedVideos': appendedVideos,
         },
       );
+      await _markRecoveryJobCompleted(memoUid: memoUid);
+      if (recoveryTrigger != null) {
+        LogManager.instance.info(
+          result.isSuccess
+              ? 'ShareQuickClipRecovery: retry_success'
+              : 'ShareQuickClipRecovery: fallback_saved',
+          context: {
+            'memoUid': resolvedMemoUid,
+            'requestedMemoUid': memoUid,
+            'host': request.url.host,
+            'trigger': recoveryTrigger,
+            'success': result.isSuccess,
+          },
+        );
+      }
       unawaited(
         _requestMemoSyncBestEffort(
           memoUid: resolvedMemoUid,
@@ -399,7 +609,7 @@ class ShareQuickClipService {
         stackTrace: stackTrace,
         context: {'memoUid': memoUid, 'host': request.url.host},
       );
-      await _replaceWithFailureContent(
+      final resolvedMemoUid = await _replaceWithFailureContent(
         memoUid: memoUid,
         request: request,
         tags: submission.tags,
@@ -407,6 +617,26 @@ class ShareQuickClipService {
         placeholderMarker: placeholderMarker,
         placeholderLookupContent: placeholderLookupContent,
       );
+      if (resolvedMemoUid == null) {
+        await _markRecoveryJobAbandoned(
+          memoUid: memoUid,
+          reason: 'fallback_skipped_after_timeout',
+        );
+      } else {
+        await _markRecoveryJobCompleted(memoUid: memoUid);
+        if (recoveryTrigger != null) {
+          LogManager.instance.info(
+            'ShareQuickClipRecovery: fallback_saved',
+            context: {
+              'memoUid': resolvedMemoUid,
+              'requestedMemoUid': memoUid,
+              'host': request.url.host,
+              'trigger': recoveryTrigger,
+              'reason': 'timeout',
+            },
+          );
+        }
+      }
     } catch (error, stackTrace) {
       LogManager.instance.error(
         'ShareQuickClip: capture_failed',
@@ -414,7 +644,7 @@ class ShareQuickClipService {
         stackTrace: stackTrace,
         context: {'memoUid': memoUid, 'host': request.url.host},
       );
-      await _replaceWithFailureContent(
+      final resolvedMemoUid = await _replaceWithFailureContent(
         memoUid: memoUid,
         request: request,
         tags: submission.tags,
@@ -422,6 +652,30 @@ class ShareQuickClipService {
         placeholderMarker: placeholderMarker,
         placeholderLookupContent: placeholderLookupContent,
       );
+      if (resolvedMemoUid == null) {
+        await _markRecoveryJobAbandoned(
+          memoUid: memoUid,
+          reason: 'fallback_skipped_after_error',
+        );
+      } else {
+        await _markRecoveryJobCompleted(memoUid: memoUid);
+        if (recoveryTrigger != null) {
+          LogManager.instance.info(
+            'ShareQuickClipRecovery: fallback_saved',
+            context: {
+              'memoUid': resolvedMemoUid,
+              'requestedMemoUid': memoUid,
+              'host': request.url.host,
+              'trigger': recoveryTrigger,
+              'reason': 'error',
+            },
+          );
+        }
+      }
+    } finally {
+      if (reservationHeld || reservedHere) {
+        ShareQuickClipRecoveryService._releaseMemoUid(memoUid);
+      }
     }
   }
 
@@ -458,6 +712,43 @@ class ShareQuickClipService {
         error: error,
         stackTrace: stackTrace,
         context: context,
+      );
+    }
+  }
+
+  Future<void> _markRecoveryJobCompleted({required String memoUid}) async {
+    try {
+      await _ref
+          .read(quickClipRecoveryMutationServiceProvider)
+          .markCompleted(memoUid: memoUid, now: DateTime.now());
+    } catch (error, stackTrace) {
+      LogManager.instance.warn(
+        'ShareQuickClip: recovery_job_complete_failed',
+        error: error,
+        stackTrace: stackTrace,
+        context: {'memoUid': memoUid},
+      );
+    }
+  }
+
+  Future<void> _markRecoveryJobAbandoned({
+    required String memoUid,
+    required String reason,
+  }) async {
+    try {
+      await _ref
+          .read(quickClipRecoveryMutationServiceProvider)
+          .markAbandoned(
+            memoUid: memoUid,
+            now: DateTime.now(),
+            lastError: reason,
+          );
+    } catch (error, stackTrace) {
+      LogManager.instance.warn(
+        'ShareQuickClip: recovery_job_abandon_failed',
+        error: error,
+        stackTrace: stackTrace,
+        context: {'memoUid': memoUid, 'reason': reason},
       );
     }
   }
@@ -687,6 +978,18 @@ class ShareQuickClipService {
     final db = _bootstrapAdapter.readDatabase(_ref);
     final directRow = await db.getMemoByUid(memoUid);
     if (directRow != null) {
+      final content = directRow['content'] as String? ?? '';
+      if (!isQuickClipPlaceholderContentMatch(
+        content,
+        placeholderMarker: placeholderMarker,
+        placeholderLookupContent: placeholderLookupContent,
+      )) {
+        LogManager.instance.warn(
+          'ShareQuickClip: memo_update_skipped_user_edited',
+          context: {'memoUid': memoUid},
+        );
+        return null;
+      }
       return LocalMemo.fromDb(directRow);
     }
 
@@ -716,7 +1019,7 @@ class ShareQuickClipService {
     return resolvedMemo;
   }
 
-  Future<void> _replaceWithFailureContent({
+  Future<String?> _replaceWithFailureContent({
     required String memoUid,
     required ShareCaptureRequest request,
     required List<String> tags,
@@ -741,7 +1044,7 @@ class ShareQuickClipService {
           'ShareQuickClip: fallback_skipped',
           context: {'requestedMemoUid': memoUid, 'host': request.url.host},
         );
-        return;
+        return null;
       }
       unawaited(
         _requestMemoSyncBestEffort(
@@ -760,6 +1063,7 @@ class ShareQuickClipService {
           'contentLength': content.length,
         },
       );
+      return resolvedMemoUid;
     } catch (error, stackTrace) {
       LogManager.instance.error(
         'ShareQuickClip: fallback_save_failed',
@@ -767,6 +1071,7 @@ class ShareQuickClipService {
         stackTrace: stackTrace,
         context: {'memoUid': memoUid, 'host': request.url.host},
       );
+      return null;
     }
   }
 
@@ -943,3 +1248,374 @@ class ShareQuickClipService {
     return locale.languageCode.toLowerCase().startsWith('zh');
   }
 }
+
+class ShareQuickClipRecoveryService {
+  ShareQuickClipRecoveryService({
+    required WidgetRef ref,
+    required AppBootstrapAdapter bootstrapAdapter,
+    ShareCaptureEngine? engine,
+    ShareInlineImageDownloadService? inlineImageDownloadService,
+    ShareVideoAttachmentPreparer? videoAttachmentPreparer,
+    this.staleThreshold = const Duration(minutes: 10),
+    this.terminalCleanupRetention = const Duration(days: 7),
+    this.maxRecoveryAttempts = 1,
+  }) : _ref = ref,
+       _bootstrapAdapter = bootstrapAdapter,
+       _engine = engine,
+       _inlineImageDownloadService = inlineImageDownloadService,
+       _videoAttachmentPreparer = videoAttachmentPreparer;
+
+  static const int defaultJobLimit = 8;
+
+  static final Set<String> _inFlightMemoUids = <String>{};
+  static bool _scanInFlight = false;
+
+  final WidgetRef _ref;
+  final AppBootstrapAdapter _bootstrapAdapter;
+  final ShareCaptureEngine? _engine;
+  final ShareInlineImageDownloadService? _inlineImageDownloadService;
+  final ShareVideoAttachmentPreparer? _videoAttachmentPreparer;
+  final Duration staleThreshold;
+  final Duration terminalCleanupRetention;
+  final int maxRecoveryAttempts;
+
+  Future<void> recoverPending({
+    String trigger = 'manual',
+    int limit = defaultJobLimit,
+  }) async {
+    if (_scanInFlight) {
+      LogManager.instance.debug(
+        'ShareQuickClipRecovery: scan_deduped',
+        context: {'trigger': trigger},
+      );
+      return;
+    }
+
+    _scanInFlight = true;
+    try {
+      late final QuickClipRecoveryMutationService recoveryStore;
+      try {
+        recoveryStore = _ref.read(quickClipRecoveryMutationServiceProvider);
+      } catch (error, stackTrace) {
+        LogManager.instance.debug(
+          'ShareQuickClipRecovery: scan_skipped',
+          error: error,
+          stackTrace: stackTrace,
+          context: {'trigger': trigger, 'reason': 'database_unavailable'},
+        );
+        return;
+      }
+
+      final jobs = await recoveryStore.listRecoverableJobs(limit: limit);
+      if (jobs.isEmpty) {
+        LogManager.instance.debug(
+          'ShareQuickClipRecovery: scan_empty',
+          context: {'trigger': trigger},
+        );
+        return;
+      }
+
+      LogManager.instance.info(
+        'ShareQuickClipRecovery: scan_start',
+        context: {'trigger': trigger, 'jobCount': jobs.length},
+      );
+      for (final job in jobs) {
+        if (!_reserveMemoUid(job.memoUid)) {
+          LogManager.instance.debug(
+            'ShareQuickClipRecovery: job_deduped',
+            context: {'memoUid': job.memoUid, 'trigger': trigger},
+          );
+          continue;
+        }
+        try {
+          await _recoverJob(
+            job,
+            recoveryStore: recoveryStore,
+            trigger: trigger,
+            now: DateTime.now(),
+          );
+        } finally {
+          _releaseMemoUid(job.memoUid);
+        }
+      }
+
+      await recoveryStore.deleteTerminalJobs(
+        completedBefore: DateTime.now().subtract(terminalCleanupRetention),
+        limit: 50,
+      );
+    } catch (error, stackTrace) {
+      LogManager.instance.error(
+        'ShareQuickClipRecovery: unexpected_failure',
+        error: error,
+        stackTrace: stackTrace,
+        context: {'trigger': trigger},
+      );
+    } finally {
+      _scanInFlight = false;
+    }
+  }
+
+  Future<void> _recoverJob(
+    QuickClipRecoveryJob job, {
+    required QuickClipRecoveryMutationService recoveryStore,
+    required String trigger,
+    required DateTime now,
+  }) async {
+    if (job.isTerminal) return;
+    if (job.titleAndLinkOnly) {
+      await recoveryStore.markAbandoned(
+        memoUid: job.memoUid,
+        now: now,
+        lastError: 'unexpected_title_and_link_only_job',
+      );
+      LogManager.instance.warn(
+        'ShareQuickClipRecovery: malformed_job',
+        context: {
+          'memoUid': job.memoUid,
+          'trigger': trigger,
+          'reason': 'title_and_link_only',
+        },
+      );
+      return;
+    }
+
+    final payload = _payloadFromJob(job);
+    final request = _requestFromJob(job, payload);
+    if (request == null) {
+      await recoveryStore.markFailed(
+        memoUid: job.memoUid,
+        now: now,
+        lastError: 'malformed_job',
+      );
+      LogManager.instance.warn(
+        'ShareQuickClipRecovery: malformed_job',
+        context: {
+          'memoUid': job.memoUid,
+          'trigger': trigger,
+          'sourceUrl': job.sourceUrl,
+        },
+      );
+      return;
+    }
+
+    final placeholderState = await _readPlaceholderState(job);
+    switch (placeholderState) {
+      case _QuickClipRecoveryPlaceholderState.safe:
+        break;
+      case _QuickClipRecoveryPlaceholderState.userEdited:
+        await recoveryStore.markAbandoned(
+          memoUid: job.memoUid,
+          now: now,
+          lastError: 'placeholder_user_edited',
+        );
+        LogManager.instance.info(
+          'ShareQuickClipRecovery: user_edited_placeholder_skipped',
+          context: {'memoUid': job.memoUid, 'trigger': trigger},
+        );
+        return;
+      case _QuickClipRecoveryPlaceholderState.missing:
+        await recoveryStore.markAbandoned(
+          memoUid: job.memoUid,
+          now: now,
+          lastError: 'placeholder_missing',
+        );
+        LogManager.instance.info(
+          'ShareQuickClipRecovery: memo_missing',
+          context: {'memoUid': job.memoUid, 'trigger': trigger},
+        );
+        return;
+    }
+
+    final age = now.difference(job.createdTime);
+    if (age >= staleThreshold) {
+      await _saveFallback(
+        job,
+        request: request,
+        recoveryStore: recoveryStore,
+        trigger: trigger,
+        reason: 'expired',
+      );
+      return;
+    }
+
+    if (job.attemptCount >= maxRecoveryAttempts) {
+      await _saveFallback(
+        job,
+        request: request,
+        recoveryStore: recoveryStore,
+        trigger: trigger,
+        reason: 'retry_exhausted',
+      );
+      return;
+    }
+
+    final updated = await recoveryStore.markRunning(
+      memoUid: job.memoUid,
+      now: now,
+    );
+    if (updated == 0) {
+      LogManager.instance.debug(
+        'ShareQuickClipRecovery: job_claim_skipped',
+        context: {'memoUid': job.memoUid, 'trigger': trigger},
+      );
+      return;
+    }
+
+    final service = _buildQuickClipService();
+    await service._captureAndUpdate(
+      memoUid: job.memoUid,
+      payload: payload,
+      request: request,
+      submission: ShareQuickClipSubmission(
+        tags: job.tags,
+        textOnly: job.textOnly,
+        titleAndLinkOnly: false,
+      ),
+      locale: _localeFromJob(job),
+      placeholderMarker: job.placeholderMarker,
+      placeholderLookupContent: job.placeholderLookupContent,
+      reservationHeld: true,
+      recoveryTrigger: trigger,
+    );
+  }
+
+  Future<void> _saveFallback(
+    QuickClipRecoveryJob job, {
+    required ShareCaptureRequest request,
+    required QuickClipRecoveryMutationService recoveryStore,
+    required String trigger,
+    required String reason,
+  }) async {
+    final service = _buildQuickClipService();
+    final resolvedMemoUid = await service._replaceWithFailureContent(
+      memoUid: job.memoUid,
+      request: request,
+      tags: job.tags,
+      locale: _localeFromJob(job),
+      placeholderMarker: job.placeholderMarker,
+      placeholderLookupContent: job.placeholderLookupContent,
+    );
+    if (resolvedMemoUid == null) {
+      await recoveryStore.markAbandoned(
+        memoUid: job.memoUid,
+        now: DateTime.now(),
+        lastError: 'fallback_skipped_$reason',
+      );
+      LogManager.instance.info(
+        'ShareQuickClipRecovery: fallback_skipped',
+        context: {'memoUid': job.memoUid, 'trigger': trigger, 'reason': reason},
+      );
+      return;
+    }
+
+    await recoveryStore.markCompleted(
+      memoUid: job.memoUid,
+      now: DateTime.now(),
+    );
+    LogManager.instance.info(
+      'ShareQuickClipRecovery: fallback_saved',
+      context: {
+        'memoUid': resolvedMemoUid,
+        'requestedMemoUid': job.memoUid,
+        'trigger': trigger,
+        'reason': reason,
+      },
+    );
+  }
+
+  Future<_QuickClipRecoveryPlaceholderState> _readPlaceholderState(
+    QuickClipRecoveryJob job,
+  ) async {
+    final db = _bootstrapAdapter.readDatabase(_ref);
+    final directRow = await db.getMemoByUid(job.memoUid);
+    if (directRow != null) {
+      final content = directRow['content'] as String? ?? '';
+      return isQuickClipPlaceholderContentMatch(
+            content,
+            placeholderMarker: job.placeholderMarker,
+            placeholderLookupContent: job.placeholderLookupContent,
+          )
+          ? _QuickClipRecoveryPlaceholderState.safe
+          : _QuickClipRecoveryPlaceholderState.userEdited;
+    }
+
+    final recentRows = await db.listMemos(
+      limit: _quickClipResolveMemoScanLimit,
+    );
+    final resolved = findQuickClipPlaceholderMemoRow(
+      recentRows,
+      memoUid: job.memoUid,
+      placeholderMarker: job.placeholderMarker,
+      placeholderLookupContent: job.placeholderLookupContent,
+    );
+    return resolved == null
+        ? _QuickClipRecoveryPlaceholderState.missing
+        : _QuickClipRecoveryPlaceholderState.safe;
+  }
+
+  ShareQuickClipService _buildQuickClipService() {
+    return ShareQuickClipService(
+      ref: _ref,
+      bootstrapAdapter: _bootstrapAdapter,
+      engine: _engine,
+      inlineImageDownloadService: _inlineImageDownloadService,
+      videoAttachmentPreparer: _videoAttachmentPreparer,
+    );
+  }
+
+  SharePayload _payloadFromJob(QuickClipRecoveryJob job) {
+    final type = switch (job.payloadType.trim().toLowerCase()) {
+      'images' || 'image' => SharePayloadType.images,
+      _ => SharePayloadType.text,
+    };
+    final payloadText = job.payloadText.trim().isEmpty
+        ? job.sourceUrl
+        : job.payloadText;
+    return SharePayload(
+      type: type,
+      text: payloadText,
+      title: job.payloadTitle,
+      paths: job.payloadPaths,
+    );
+  }
+
+  ShareCaptureRequest? _requestFromJob(
+    QuickClipRecoveryJob job,
+    SharePayload payload,
+  ) {
+    final request = buildShareCaptureRequest(payload);
+    if (request != null) return request;
+    final uri = Uri.tryParse(job.sourceUrl.trim());
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return null;
+    }
+    return ShareCaptureRequest(
+      payload: payload,
+      url: uri,
+      sharedTitle: job.payloadTitle,
+      sharedText: payload.text ?? job.sourceUrl,
+    );
+  }
+
+  Locale _localeFromJob(QuickClipRecoveryJob job) {
+    final raw = job.localeLanguageCode.trim();
+    if (raw.isEmpty) return const Locale('en');
+    final languageCode = raw.split(RegExp(r'[-_]')).first.trim();
+    if (languageCode.isEmpty) return const Locale('en');
+    return Locale(languageCode);
+  }
+
+  static bool _reserveMemoUid(String memoUid) {
+    final normalized = memoUid.trim();
+    if (normalized.isEmpty) return false;
+    return _inFlightMemoUids.add(normalized);
+  }
+
+  static void _releaseMemoUid(String memoUid) {
+    final normalized = memoUid.trim();
+    if (normalized.isEmpty) return;
+    _inFlightMemoUids.remove(normalized);
+  }
+}
+
+enum _QuickClipRecoveryPlaceholderState { safe, userEdited, missing }

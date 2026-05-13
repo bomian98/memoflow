@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/application/sync/sync_request.dart';
 import 'package:memos_flutter_app/data/api/memos_api.dart';
 import 'package:memos_flutter_app/data/db/app_database.dart';
+import 'package:memos_flutter_app/data/models/quick_clip_recovery_job.dart';
 import 'package:memos_flutter_app/data/models/user_setting.dart';
 import 'package:memos_flutter_app/features/share/share_capture_engine.dart';
 import 'package:memos_flutter_app/features/share/share_clip_models.dart';
@@ -81,6 +82,7 @@ void main() {
         expect(memos, hasLength(1));
         expect(memos.single['content'] as String, contains('Example article'));
         expect(await db.countOutboxPending(), 1);
+        expect(await db.listRecoverableQuickClipRecoveryJobs(), isEmpty);
       },
     );
 
@@ -194,9 +196,26 @@ void main() {
           contains('Clipping...'),
         );
         expect(await db.countOutboxPending(), 1);
+        final memoUid = placeholderMemos.single['uid'] as String;
+        final jobs = await db.listRecoverableQuickClipRecoveryJobs();
+        expect(jobs, hasLength(1));
+        expect(jobs.single.memoUid, memoUid);
+        expect(jobs.single.status, QuickClipRecoveryJobStatus.pending);
 
         engine.complete();
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await _waitFor(() async {
+          final updatedMemos = await db.listMemos(limit: 10);
+          return updatedMemos.isNotEmpty &&
+              (updatedMemos.single['content'] as String).contains(
+                'Captured Title',
+              );
+        });
+        await _waitFor(() async {
+          final completedJob = await db.getQuickClipRecoveryJobByMemoUid(
+            memoUid,
+          );
+          return completedJob?.status == QuickClipRecoveryJobStatus.completed;
+        });
 
         final updatedMemos = await db.listMemos(limit: 10);
         expect(updatedMemos, hasLength(1));
@@ -204,8 +223,219 @@ void main() {
           updatedMemos.single['content'] as String,
           contains('Captured Title'),
         );
+        final completedJob = await db.getQuickClipRecoveryJobByMemoUid(memoUid);
+        expect(completedJob?.status, QuickClipRecoveryJobStatus.completed);
       },
     );
+
+    test(
+      'full quick clip completes recovery job after fallback save',
+      () async {
+        final testDb = await _createDatabase('share_quick_clip_fallback_job');
+        final db = testDb.database;
+        addTearDown(() async {
+          await db.close();
+          await deleteTestDatabase(testDb.dbName);
+        });
+
+        final engine = _CompleterShareCaptureEngine(
+          ShareCaptureResult.failure(
+            finalUrl: Uri.parse('https://example.com/articles/fallback'),
+            failure: ShareCaptureFailure.parserEmpty,
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [databaseProvider.overrideWith((_) => db)],
+        );
+        addTearDown(container.dispose);
+
+        final service = ShareQuickClipService(
+          ref: _FakeWidgetRef(container),
+          bootstrapAdapter: _FakeAppBootstrapAdapter(
+            userSetting: const UserGeneralSetting(memoVisibility: 'PUBLIC'),
+            requestSyncHandler: (ref, request) async {},
+          ),
+          engine: engine,
+        );
+
+        await service.start(
+          payload: const SharePayload(
+            type: SharePayloadType.text,
+            text: 'https://example.com/articles/fallback',
+            title: 'Fallback article',
+          ),
+          submission: const ShareQuickClipSubmission(
+            tags: <String>['#fallback'],
+            textOnly: false,
+            titleAndLinkOnly: false,
+          ),
+          locale: const Locale('en'),
+        );
+
+        final placeholderMemos = await db.listMemos(limit: 10);
+        final memoUid = placeholderMemos.single['uid'] as String;
+        engine.complete();
+        await _waitFor(() async {
+          final memos = await db.listMemos(limit: 10);
+          return memos.isNotEmpty &&
+              (memos.single['content'] as String).contains('Link saved');
+        });
+        await _waitFor(() async {
+          final job = await db.getQuickClipRecoveryJobByMemoUid(memoUid);
+          return job?.status == QuickClipRecoveryJobStatus.completed;
+        });
+
+        final memo = (await db.listMemos(limit: 10)).single;
+        final content = memo['content'] as String;
+        expect(content, contains('https://example.com/articles/fallback'));
+        expect(content, contains('#fallback'));
+        final job = await db.getQuickClipRecoveryJobByMemoUid(memoUid);
+        expect(job?.status, QuickClipRecoveryJobStatus.completed);
+      },
+    );
+
+    test('recovery retries seeded placeholder and completes job', () async {
+      final testDb = await _createDatabase('share_quick_clip_recovery_retry');
+      final db = testDb.database;
+      addTearDown(() async {
+        await db.close();
+        await deleteTestDatabase(testDb.dbName);
+      });
+
+      await _seedRecoveryJob(
+        db,
+        memoUid: 'memo-recovery-success',
+        sourceUrl: 'https://example.com/articles/recover',
+        title: 'Recover article',
+        tags: const <String>['#clip'],
+      );
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWith((_) => db)],
+      );
+      addTearDown(container.dispose);
+
+      final recovery = ShareQuickClipRecoveryService(
+        ref: _FakeWidgetRef(container),
+        bootstrapAdapter: _FakeAppBootstrapAdapter(
+          userSetting: const UserGeneralSetting(memoVisibility: 'PUBLIC'),
+          requestSyncHandler: (ref, request) async {},
+        ),
+        engine: _ImmediateShareCaptureEngine(
+          ShareCaptureResult.success(
+            finalUrl: Uri.parse('https://example.com/articles/recover'),
+            articleTitle: 'Recovered Title',
+            textContent: 'Recovered body',
+            pageKind: SharePageKind.article,
+          ),
+        ),
+      );
+
+      await recovery.recoverPending(trigger: 'test');
+      await _waitFor(() async {
+        final memo = await db.getMemoByUid('memo-recovery-success');
+        return (memo?['content'] as String? ?? '').contains('Recovered Title');
+      });
+
+      final memo = await db.getMemoByUid('memo-recovery-success');
+      expect(memo?['content'], contains('Recovered body'));
+      final job = await db.getQuickClipRecoveryJobByMemoUid(
+        'memo-recovery-success',
+      );
+      expect(job?.status, QuickClipRecoveryJobStatus.completed);
+      expect(job?.attemptCount, 1);
+    });
+
+    test('recovery saves fallback when retry fails', () async {
+      final testDb = await _createDatabase(
+        'share_quick_clip_recovery_fallback',
+      );
+      final db = testDb.database;
+      addTearDown(() async {
+        await db.close();
+        await deleteTestDatabase(testDb.dbName);
+      });
+
+      await _seedRecoveryJob(
+        db,
+        memoUid: 'memo-recovery-fallback',
+        sourceUrl: 'https://example.com/articles/fail',
+        title: 'Fail article',
+        tags: const <String>['#saved'],
+      );
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWith((_) => db)],
+      );
+      addTearDown(container.dispose);
+
+      final recovery = ShareQuickClipRecoveryService(
+        ref: _FakeWidgetRef(container),
+        bootstrapAdapter: _FakeAppBootstrapAdapter(
+          userSetting: const UserGeneralSetting(memoVisibility: 'PUBLIC'),
+          requestSyncHandler: (ref, request) async {},
+        ),
+        engine: _ImmediateShareCaptureEngine(
+          ShareCaptureResult.failure(
+            finalUrl: Uri.parse('https://example.com/articles/fail'),
+            failure: ShareCaptureFailure.parserEmpty,
+          ),
+        ),
+      );
+
+      await recovery.recoverPending(trigger: 'test');
+      await _waitFor(() async {
+        final memo = await db.getMemoByUid('memo-recovery-fallback');
+        return (memo?['content'] as String? ?? '').contains('Link saved');
+      });
+
+      final memo = await db.getMemoByUid('memo-recovery-fallback');
+      final content = memo?['content'] as String? ?? '';
+      expect(content, contains('https://example.com/articles/fail'));
+      expect(content, contains('#saved'));
+      final job = await db.getQuickClipRecoveryJobByMemoUid(
+        'memo-recovery-fallback',
+      );
+      expect(job?.status, QuickClipRecoveryJobStatus.completed);
+    });
+
+    test('recovery does not overwrite user-edited placeholder', () async {
+      final testDb = await _createDatabase('share_quick_clip_recovery_edited');
+      final db = testDb.database;
+      addTearDown(() async {
+        await db.close();
+        await deleteTestDatabase(testDb.dbName);
+      });
+
+      await _seedRecoveryJob(
+        db,
+        memoUid: 'memo-recovery-edited',
+        sourceUrl: 'https://example.com/articles/edited',
+        title: 'Edited article',
+        tags: const <String>['#clip'],
+        memoContentOverride: 'User edited this placeholder',
+      );
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWith((_) => db)],
+      );
+      addTearDown(container.dispose);
+
+      final recovery = ShareQuickClipRecoveryService(
+        ref: _FakeWidgetRef(container),
+        bootstrapAdapter: _FakeAppBootstrapAdapter(
+          userSetting: const UserGeneralSetting(memoVisibility: 'PUBLIC'),
+          requestSyncHandler: (ref, request) async {},
+        ),
+        engine: _ThrowingShareCaptureEngine(),
+      );
+
+      await recovery.recoverPending(trigger: 'test');
+
+      final memo = await db.getMemoByUid('memo-recovery-edited');
+      expect(memo?['content'], 'User edited this placeholder');
+      final job = await db.getQuickClipRecoveryJobByMemoUid(
+        'memo-recovery-edited',
+      );
+      expect(job?.status, QuickClipRecoveryJobStatus.abandoned);
+    });
 
     test(
       'full Xiaohongshu video quick clip appends video attachment',
@@ -534,6 +764,61 @@ Future<_TestDatabase> _createDatabase(String prefix) async {
   return _TestDatabase(dbName: dbName, database: db);
 }
 
+Future<void> _seedRecoveryJob(
+  AppDatabase db, {
+  required String memoUid,
+  required String sourceUrl,
+  required String title,
+  required List<String> tags,
+  String? memoContentOverride,
+}) async {
+  final payload = SharePayload(
+    type: SharePayloadType.text,
+    text: sourceUrl,
+    title: title,
+  );
+  final request = buildShareCaptureRequest(payload)!;
+  final placeholderLookupContent = buildQuickClipPlaceholderContent(
+    request: request,
+    tags: tags,
+    locale: const Locale('en'),
+  );
+  final placeholderMarker = buildQuickClipHiddenMarker(memoUid);
+  final placeholderContent =
+      memoContentOverride ??
+      appendQuickClipHiddenMarker(placeholderLookupContent, placeholderMarker);
+  const nowSec = 1770000000;
+
+  await db.upsertMemo(
+    uid: memoUid,
+    content: placeholderContent,
+    visibility: 'PUBLIC',
+    pinned: false,
+    state: 'NORMAL',
+    createTimeSec: nowSec,
+    updateTimeSec: nowSec,
+    tags: tags,
+    attachments: const <Map<String, dynamic>>[],
+    location: null,
+    syncState: 1,
+  );
+  await db.upsertQuickClipRecoveryJob(
+    QuickClipRecoveryJob.pending(
+      memoUid: memoUid,
+      sourceUrl: sourceUrl,
+      payloadType: payload.type.name,
+      payloadText: payload.text ?? '',
+      payloadTitle: payload.title,
+      textOnly: false,
+      titleAndLinkOnly: false,
+      tags: tags,
+      localeLanguageCode: 'en',
+      placeholderMarker: placeholderMarker,
+      placeholderLookupContent: placeholderLookupContent,
+    ),
+  );
+}
+
 class _TestDatabase {
   const _TestDatabase({required this.dbName, required this.database});
 
@@ -562,6 +847,32 @@ class _CompleterShareCaptureEngine implements ShareCaptureEngine {
     await _completer.future;
     onStageChanged?.call(ShareCaptureStage.buildingPreview);
     return result;
+  }
+}
+
+class _ImmediateShareCaptureEngine implements ShareCaptureEngine {
+  const _ImmediateShareCaptureEngine(this.result);
+
+  final ShareCaptureResult result;
+
+  @override
+  Future<ShareCaptureResult> capture(
+    ShareCaptureRequest request, {
+    void Function(ShareCaptureStage stage)? onStageChanged,
+  }) async {
+    onStageChanged?.call(ShareCaptureStage.loadingPage);
+    onStageChanged?.call(ShareCaptureStage.buildingPreview);
+    return result;
+  }
+}
+
+class _ThrowingShareCaptureEngine implements ShareCaptureEngine {
+  @override
+  Future<ShareCaptureResult> capture(
+    ShareCaptureRequest request, {
+    void Function(ShareCaptureStage stage)? onStageChanged,
+  }) {
+    throw StateError('capture should not run');
   }
 }
 
