@@ -33,7 +33,9 @@ import '../image_preview/image_preview_launcher.dart';
 import '../image_preview/image_preview_open_request.dart';
 import '../share/share_inline_image_content.dart';
 import '../collections/add_to_collection_sheet.dart';
+import '../reminders/memo_reminder_editor_screen.dart';
 import 'attachment_gallery_screen.dart';
+import 'memo_card_action.dart';
 import 'memo_editor_screen.dart';
 import 'memo_detail_view.dart';
 import 'memo_image_grid.dart';
@@ -50,9 +52,14 @@ import 'memo_versions_screen.dart';
 import 'memos_list_screen.dart';
 import 'memo_video_grid.dart';
 import 'widgets/memo_clip_card_header.dart';
+import 'widgets/memo_detail_action_menu.dart';
 import 'widgets/memo_engagement_surface.dart';
 import 'widgets/memo_reader_content.dart';
 import '../../i18n/strings.g.dart';
+
+const Key memoDetailActionMenuRegionKey = ValueKey<String>(
+  'memo-detail-action-menu-region',
+);
 
 String memoDetailMarkdownCacheKey(
   LocalMemo memo, {
@@ -472,6 +479,36 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     await _reload();
   }
 
+  Future<void> _copyMemoContent() async {
+    final memo = _memo;
+    if (memo == null) return;
+    await Clipboard.setData(ClipboardData(text: memo.content));
+    if (!mounted) return;
+    showTopToast(
+      context,
+      context.t.strings.legacy.msg_memo_copied,
+      duration: const Duration(milliseconds: 1200),
+    );
+  }
+
+  Future<void> _openMemoReminder() async {
+    if (widget.readOnly || _isArchivedMemo()) return;
+    final memo = _memo;
+    if (memo == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MemoReminderEditorScreen(memo: memo),
+      ),
+    );
+  }
+
+  Future<void> _openAddToCollection() async {
+    if (widget.readOnly || _isArchivedMemo()) return;
+    final memo = _memo;
+    if (memo == null) return;
+    await showAddMemoToCollectionSheet(context: context, ref: ref, memo: memo);
+  }
+
   Future<void> _toggleArchived() async {
     if (widget.readOnly) return;
     final memo = _memo;
@@ -507,6 +544,53 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     } else {
       context.safePop();
     }
+  }
+
+  Future<void> _handleDetailAction(MemoCardAction action) async {
+    switch (action) {
+      case MemoCardAction.copy:
+        await _copyMemoContent();
+        return;
+      case MemoCardAction.togglePinned:
+        await _togglePinned();
+        return;
+      case MemoCardAction.edit:
+        await _edit();
+        return;
+      case MemoCardAction.adjustTime:
+        await _adjustMemoTime();
+        return;
+      case MemoCardAction.history:
+        await _openVersionHistory();
+        return;
+      case MemoCardAction.reminder:
+        await _openMemoReminder();
+        return;
+      case MemoCardAction.addToCollection:
+        await _openAddToCollection();
+        return;
+      case MemoCardAction.archive:
+      case MemoCardAction.restore:
+        await _toggleArchived();
+        return;
+      case MemoCardAction.delete:
+        await _delete();
+        return;
+    }
+  }
+
+  Future<void> _showDetailActionMenu(LongPressStartDetails details) async {
+    if (widget.readOnly) return;
+    final memo = _memo;
+    if (memo == null) return;
+    final action = await showMemoDetailActionPopover(
+      context: context,
+      memo: memo,
+      readOnly: widget.readOnly,
+      globalPosition: details.globalPosition,
+    );
+    if (!mounted || action == null) return;
+    await _handleDetailAction(action);
   }
 
   Future<void> _edit() async {
@@ -929,6 +1013,12 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
       scrollController: _scrollController,
       showSupplementarySections: _routeSettled,
       shouldShowEngagement: shouldShowEngagement,
+      onLongPressStart: widget.readOnly
+          ? null
+          : (details) {
+              maybeHaptic();
+              unawaited(_showDetailActionMenu(details));
+            },
       audioHandle: MemoDocumentAudioHandle(
         isPlayingForUrl: (url) => _player.playing && _currentAudioUrl == url,
         playerStateStream: _player.playerStateStream,
@@ -983,13 +1073,7 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
                   tooltip: context.t.strings.collections.addToCollection,
                   onPressed: () {
                     maybeHaptic();
-                    unawaited(
-                      showAddMemoToCollectionSheet(
-                        context: context,
-                        ref: ref,
-                        memo: memo,
-                      ),
-                    );
+                    unawaited(_openAddToCollection());
                   },
                   icon: const Icon(Icons.library_add_rounded),
                 ),
@@ -1035,6 +1119,7 @@ class MemoDocumentBody extends StatelessWidget {
     required this.shouldShowEngagement,
     required this.resolvedData,
     this.audioHandle,
+    this.onLongPressStart,
   });
 
   final ScrollController scrollController;
@@ -1043,6 +1128,7 @@ class MemoDocumentBody extends StatelessWidget {
   final bool shouldShowEngagement;
   final MemoDocumentResolvedData resolvedData;
   final MemoDocumentAudioHandle? audioHandle;
+  final GestureLongPressStartCallback? onLongPressStart;
 
   @override
   Widget build(BuildContext context) {
@@ -1070,7 +1156,7 @@ class MemoDocumentBody extends StatelessWidget {
       return thumbnail ? appendThumbnailParam(url) : url;
     }
 
-    return ListView(
+    final body = ListView(
       controller: scrollController,
       padding: const EdgeInsets.all(16),
       children: [
@@ -1157,6 +1243,13 @@ class MemoDocumentBody extends StatelessWidget {
           ),
         ],
       ],
+    );
+    if (onLongPressStart == null) return body;
+    return GestureDetector(
+      key: memoDetailActionMenuRegionKey,
+      behavior: HitTestBehavior.translucent,
+      onLongPressStart: onLongPressStart,
+      child: body,
     );
   }
 }

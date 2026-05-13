@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/core/pointer_double_tap_listener.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
+import 'package:memos_flutter_app/core/top_toast.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
 import 'package:memos_flutter_app/data/models/attachment.dart';
 import 'package:memos_flutter_app/data/models/content_fingerprint.dart';
@@ -18,10 +20,14 @@ import 'package:memos_flutter_app/data/models/memo.dart';
 import 'package:memos_flutter_app/data/models/memo_relation.dart';
 import 'package:memos_flutter_app/data/models/reaction.dart';
 import 'package:memos_flutter_app/features/memos/memo_detail_screen.dart';
+import 'package:memos_flutter_app/features/memos/memo_card_action.dart';
 import 'package:memos_flutter_app/features/memos/memo_hero_flight.dart';
 import 'package:memos_flutter_app/features/memos/memo_inline_image_syntax.dart';
 import 'package:memos_flutter_app/features/memos/memo_markdown.dart';
+import 'package:memos_flutter_app/features/memos/memo_time_adjustment_sheet.dart';
+import 'package:memos_flutter_app/features/memos/widgets/memo_card_action_menu.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memo_engagement_surface.dart';
+import 'package:memos_flutter_app/features/memos/widgets/memo_reader_content.dart';
 import 'package:memos_flutter_app/features/share/share_inline_image_content.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memo_engagement_provider.dart';
@@ -448,6 +454,161 @@ void main() {
     expect(listener.onDoubleTap, isNull);
   });
 
+  testWidgets(
+    'detail long press on blank body opens viewport-safe action popover',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(360, 480));
+      final memo = _buildMemo(content: 'short memo');
+
+      await tester.pumpWidget(_buildTestApp(memo: memo));
+      await tester.tap(find.byKey(const ValueKey('open-detail')));
+      await tester.pumpAndSettle();
+
+      final regionRect = tester.getRect(
+        find.byKey(memoDetailActionMenuRegionKey),
+      );
+      await tester.longPressAt(regionRect.bottomRight - const Offset(20, 20));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(memoCardActionPopoverKey), findsOneWidget);
+      final popoverRect = tester.getRect(find.byKey(memoCardActionPopoverKey));
+      expect(popoverRect.left, greaterThanOrEqualTo(0));
+      expect(popoverRect.top, greaterThanOrEqualTo(0));
+      expect(popoverRect.right, lessThanOrEqualTo(360));
+      expect(popoverRect.bottom, lessThanOrEqualTo(480));
+    },
+  );
+
+  testWidgets('detail long press menu copy action closes and copies content', (
+    tester,
+  ) async {
+    addTearDown(dismissTopToast);
+    final clipboardStore = <String, String?>{};
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          final data = Map<String, dynamic>.from(call.arguments as Map);
+          clipboardStore['text'] = data['text'] as String?;
+          return null;
+        }
+        if (call.method == 'Clipboard.getData') {
+          return <String, dynamic>{'text': clipboardStore['text']};
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    const content = 'copy from detail action menu';
+    final memo = _buildMemo(content: content);
+
+    await tester.pumpWidget(_buildTestApp(memo: memo));
+    await tester.tap(find.byKey(const ValueKey('open-detail')));
+    await tester.pumpAndSettle();
+
+    await _openDetailLongPressMenu(tester);
+    await tester.tap(find.byKey(memoCardActionItemKey(MemoCardAction.copy)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    final clipboard = await Clipboard.getData('text/plain');
+    expect(clipboard?.text, content);
+    expect(find.byKey(memoCardActionPopoverKey), findsNothing);
+    dismissTopToast();
+    await tester.pump();
+  });
+
+  testWidgets(
+    'archived detail long press menu exposes archived action subset',
+    (tester) async {
+      final memo = _buildMemo(state: 'ARCHIVED');
+
+      await tester.pumpWidget(_buildTestApp(memo: memo));
+      await tester.tap(find.byKey(const ValueKey('open-detail')));
+      await tester.pumpAndSettle();
+
+      await _openDetailLongPressMenu(tester);
+
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.copy)),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.history)),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.restore)),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.delete)),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.edit)),
+        findsNothing,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.reminder)),
+        findsNothing,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.togglePinned)),
+        findsNothing,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.addToCollection)),
+        findsNothing,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.archive)),
+        findsNothing,
+      );
+      expect(
+        find.byKey(memoCardActionItemKey(MemoCardAction.adjustTime)),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets('read-only detail long press does not expose action popover', (
+    tester,
+  ) async {
+    final memo = _buildMemo();
+
+    await tester.pumpWidget(_buildTestApp(memo: memo, readOnly: true));
+    await tester.tap(find.byKey(const ValueKey('open-detail')));
+    await tester.pumpAndSettle();
+
+    await tester.longPressAt(const Offset(400, 500));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(memoCardActionPopoverKey), findsNothing);
+  });
+
+  testWidgets('detail time tap still opens adjustment sheet instead of menu', (
+    tester,
+  ) async {
+    final memo = _buildMemo();
+
+    await tester.pumpWidget(_buildTestApp(memo: memo));
+    await tester.tap(find.byKey(const ValueKey('open-detail')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(memoReaderTimeAdjustTriggerKey));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(memoTimeAdjustmentSheetKey), findsOneWidget);
+    expect(find.byKey(memoCardActionPopoverKey), findsNothing);
+  });
+
   testWidgets('detail route keeps a stable hero tag based on memo identity', (
     tester,
   ) async {
@@ -496,6 +657,7 @@ void main() {
 
 Widget _buildTestApp({
   required LocalMemo memo,
+  bool readOnly = false,
   bool showEngagement = false,
   MemoEngagementClient? engagementClient,
 }) {
@@ -523,7 +685,11 @@ Widget _buildTestApp({
         locale: AppLocale.en.flutterLocale,
         supportedLocales: AppLocaleUtils.supportedLocales,
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: _DetailRouteLauncher(memo: memo, showEngagement: showEngagement),
+        home: _DetailRouteLauncher(
+          memo: memo,
+          readOnly: readOnly,
+          showEngagement: showEngagement,
+        ),
       ),
     ),
   );
@@ -561,10 +727,12 @@ Widget _buildPrimaryContentTestApp({
 class _DetailRouteLauncher extends StatelessWidget {
   const _DetailRouteLauncher({
     required this.memo,
+    required this.readOnly,
     required this.showEngagement,
   });
 
   final LocalMemo memo;
+  final bool readOnly;
   final bool showEngagement;
 
   @override
@@ -588,6 +756,7 @@ class _DetailRouteLauncher extends StatelessWidget {
                     pageBuilder: (context, animation, secondaryAnimation) =>
                         MemoDetailScreen(
                           initialMemo: memo,
+                          readOnly: readOnly,
                           showEngagement: showEngagement,
                         ),
                     transitionsBuilder:
@@ -607,6 +776,12 @@ class _DetailRouteLauncher extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _openDetailLongPressMenu(WidgetTester tester) async {
+  final regionRect = tester.getRect(find.byKey(memoDetailActionMenuRegionKey));
+  await tester.longPressAt(regionRect.bottomCenter - const Offset(0, 24));
+  await tester.pumpAndSettle();
 }
 
 LocalMemo _buildMemo({

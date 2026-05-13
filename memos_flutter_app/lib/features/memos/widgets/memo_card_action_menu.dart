@@ -24,7 +24,7 @@ const Key memoCardActionDangerSectionKey = ValueKey<String>(
 Key memoCardActionItemKey(MemoCardAction action) =>
     ValueKey<String>('memo-card-action-${action.name}');
 
-const double _memoCardActionMenuScale = 0.5;
+const double _memoCardActionMenuScale = 0.56;
 
 double _scaled(num value) => value * _memoCardActionMenuScale;
 
@@ -213,6 +213,25 @@ Future<MemoCardAction?> showMemoCardActionPopover({
   Offset? globalPosition,
   bool includeCopy = true,
 }) {
+  return showMemoActionPopover(
+    context: context,
+    actions: buildMemoCardActionDescriptors(
+      context: context,
+      memo: memo,
+      includeCopy: includeCopy,
+    ),
+    anchorContext: anchorContext,
+    globalPosition: globalPosition,
+  );
+}
+
+Future<MemoCardAction?> showMemoActionPopover({
+  required BuildContext context,
+  required List<MemoCardActionDescriptor> actions,
+  BuildContext? anchorContext,
+  Offset? globalPosition,
+}) {
+  if (actions.isEmpty) return Future<MemoCardAction?>.value(null);
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
   if (overlay == null || !overlay.hasSize) {
     return Future<MemoCardAction?>.value(null);
@@ -221,11 +240,6 @@ Future<MemoCardAction?> showMemoCardActionPopover({
     overlay: overlay,
     anchorContext: anchorContext,
     globalPosition: globalPosition,
-  );
-  final actions = buildMemoCardActionDescriptors(
-    context: context,
-    memo: memo,
-    includeCopy: includeCopy,
   );
   final motionEnabled = AppMotion.isEnabled(context);
   return showGeneralDialog<MemoCardAction>(
