@@ -226,6 +226,68 @@ void main() {
       expect(result.imageAttachmentUrls.last, contains('example-b.webp'));
     });
 
+    test(
+      'xiaohongshu parser keeps image note as article when recommendations are videos',
+      () {
+        final parser = XiaohongshuSharePageParser();
+        final snapshot = SharePageSnapshot(
+          requestUrl: Uri.parse(
+            'https://www.xiaohongshu.com/discovery/item/note-456',
+          ),
+          finalUrl: Uri.parse(
+            'https://www.xiaohongshu.com/discovery/item/note-456',
+          ),
+          host: 'www.xiaohongshu.com',
+          bridgeData: const {
+            'contentHtml':
+                '<div class="author-desc-content"><p>Target note body.</p><img src="http://sns-webpic-qc.xhscdn.com/body.jpg"></div>',
+            'textContent': 'Target note body.',
+            'windowStates': {
+              '__INITIAL_STATE__': {
+                'note': {
+                  'id': 'note-456',
+                  'title': 'XHS Image Note',
+                  'desc': 'Target note body.',
+                  'noteType': 'normal',
+                  'imageList': [
+                    {
+                      'urlDefault':
+                          'http://sns-webpic-qc.xhscdn.com/example-a.jpg',
+                    },
+                  ],
+                },
+                'relatedNotes': [
+                  {
+                    'id': 'unrelated-video',
+                    'type': 'video',
+                    'title': 'Recommended Video',
+                    'masterUrl':
+                        'https://sns-video-bd.xhscdn.com/recommended.mp4',
+                  },
+                ],
+              },
+            },
+          },
+        );
+
+        final result = parser.parse(snapshot);
+
+        expect(result.pageKind, SharePageKind.article);
+        expect(result.videoCandidates, isEmpty);
+        expect(result.title, 'XHS Image Note');
+        expect(result.textContent, 'Target note body.');
+        expect(result.contentHtml, contains('Target note body.'));
+        expect(
+          result.contentHtml,
+          contains('https://sns-webpic-qc.xhscdn.com/body.jpg'),
+        );
+        expect(result.imageAttachmentUrls, [
+          'https://sns-webpic-qc.xhscdn.com/example-a.jpg',
+          'https://sns-webpic-qc.xhscdn.com/body.jpg',
+        ]);
+      },
+    );
+
     test('xiaohongshu deep link parser extracts video preload info', () {
       final result = parseXiaohongshuDeepLinkCapture(
         _xiaohongshuDeepLinkFixture(),

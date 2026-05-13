@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/data/models/memo_clip_card_metadata.dart';
+import 'package:memos_flutter_app/features/share/parsers/share_page_parser.dart';
+import 'package:memos_flutter_app/features/share/parsers/xiaohongshu_share_page_parser.dart';
 import 'package:memos_flutter_app/features/share/share_capture_formatter.dart';
 import 'package:memos_flutter_app/features/share/share_clip_models.dart';
 import 'package:memos_flutter_app/features/share/share_handler.dart';
@@ -114,6 +116,63 @@ void main() {
         ),
       );
       expect(text, isNot(contains('xhsdiscover://')));
+    });
+
+    test('xiaohongshu image note parser result preserves article body', () {
+      const payload = SharePayload(
+        type: SharePayloadType.text,
+        text: 'https://xhslink.com/o/example',
+        title: 'Shared XHS note',
+      );
+      final parser = XiaohongshuSharePageParser();
+      final parsed = parser.parse(
+        SharePageSnapshot(
+          requestUrl: Uri.parse('https://xhslink.com/o/example'),
+          finalUrl: Uri.parse(
+            'https://www.xiaohongshu.com/discovery/item/note-456',
+          ),
+          host: 'www.xiaohongshu.com',
+          bridgeData: const {
+            'contentHtml':
+                '<div class="author-desc-content"><p>First body paragraph.</p><p>Second body paragraph.</p></div>',
+            'textContent': 'First body paragraph. Second body paragraph.',
+            'windowStates': {
+              '__INITIAL_STATE__': {
+                'note': {
+                  'id': 'note-456',
+                  'title': 'XHS Image Note',
+                  'noteType': 'normal',
+                },
+                'relatedNotes': [
+                  {
+                    'type': 'video',
+                    'masterUrl':
+                        'https://sns-video-bd.xhscdn.com/recommended.mp4',
+                  },
+                ],
+              },
+            },
+          },
+        ),
+      );
+      final result = ShareCaptureResult.success(
+        finalUrl: Uri.parse(
+          'https://www.xiaohongshu.com/discovery/item/note-456',
+        ),
+        articleTitle: parsed.title,
+        contentHtml: parsed.contentHtml,
+        textContent: parsed.textContent,
+        pageKind: parsed.pageKind,
+        siteParserTag: parsed.parserTag,
+      );
+
+      final text = buildShareCaptureMemoText(result: result, payload: payload);
+
+      expect(parsed.pageKind, SharePageKind.article);
+      expect(text, startsWith('# XHS Image Note'));
+      expect(text, contains('First body paragraph.'));
+      expect(text, contains('Second body paragraph.'));
+      expect(text, isNot(contains('[XHS Image Note](')));
     });
 
     test('falls back to text paragraphs when html content is absent', () {
