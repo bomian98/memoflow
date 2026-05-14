@@ -61,6 +61,7 @@ import 'memo_compose_surface.dart';
 import 'memo_video_grid.dart';
 import 'tag_autocomplete.dart';
 import 'widgets/attachment_processing_overlay.dart';
+import 'widgets/memo_compose_fullscreen_surface.dart';
 import '../location_picker/show_location_picker.dart';
 import '../../i18n/strings.g.dart';
 import 'android_memo_keyboard_resume_controller.dart';
@@ -109,6 +110,8 @@ enum _TodoShortcutAction { checkbox, codeBlock }
 
 enum _EditorCloseDecision { continueEditing, discard, addToDraftBox }
 
+enum _MemoEditorPagePresentationMode { normal, fullscreen }
+
 class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   late final MemoComposerController _composer;
   late final MemoEditorDraftRepository _draftRepository;
@@ -128,6 +131,27 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
       _composer.pendingAttachments;
   final _attachmentsToDelete = <Attachment>[];
   static const String _newDraftMemoUid = '__memo_editor_new__';
+  static const _pageFullscreenExpandButtonKey = ValueKey<String>(
+    'memo-editor-page-fullscreen-button',
+  );
+  static const _pageFullscreenCollapseButtonKey = ValueKey<String>(
+    'memo-editor-fullscreen-collapse-button',
+  );
+  static const _pageFullscreenCloseButtonKey = ValueKey<String>(
+    'memo-editor-fullscreen-close-button',
+  );
+  static const _pageFullscreenTopToolbarKey = ValueKey<String>(
+    'memo-editor-fullscreen-top-toolbar-row',
+  );
+  static const _pageFullscreenBottomToolbarKey = ValueKey<String>(
+    'memo-editor-fullscreen-bottom-toolbar-row',
+  );
+  static const _pageFullscreenSaveButtonKey = ValueKey<String>(
+    'memo-editor-fullscreen-save-button',
+  );
+  static const _pageFullscreenTextFieldKey = ValueKey<String>(
+    'memo-editor-fullscreen-text-field',
+  );
 
   final _imagePicker = ImagePicker();
   final _templateRenderer = MemoTemplateRenderer();
@@ -146,6 +170,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   late bool _pinned;
   var _saving = false;
   bool _allowRoutePop = false;
+  var _pagePresentationMode = _MemoEditorPagePresentationMode.normal;
   MemoLocation? _location;
   MemoLocation? _initialLocation;
   final _locating = false;
@@ -153,6 +178,13 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
 
   bool get _isDesktopModalPresentation =>
       widget.presentation == MemoEditorPresentation.desktopModal;
+
+  bool get _isPagePresentation =>
+      widget.presentation == MemoEditorPresentation.page;
+
+  bool get _isPageFullscreenCompose =>
+      _isPagePresentation &&
+      _pagePresentationMode == _MemoEditorPagePresentationMode.fullscreen;
 
   bool get _isDesktopFullscreenPresentation =>
       widget.presentation == MemoEditorPresentation.desktopFullscreen;
@@ -239,6 +271,45 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     return (mediaQuery?.viewInsets.bottom ?? 0) > 0;
   }
 
+  void _requestEditorFocusAfterLayout({
+    required _MemoEditorPagePresentationMode expectedMode,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (!_isPagePresentation) return;
+      if (_pagePresentationMode != expectedMode) return;
+      _editorFocusNode.requestFocus();
+    });
+  }
+
+  void _enterPageFullscreenCompose() {
+    if (_saving || !_isPagePresentation || _isPageFullscreenCompose) return;
+    if (_editorFocusNode.hasFocus) {
+      _editorFocusNode.unfocus();
+      FocusManager.instance.applyFocusChangesIfNeeded();
+    }
+    setState(() {
+      _pagePresentationMode = _MemoEditorPagePresentationMode.fullscreen;
+    });
+    _requestEditorFocusAfterLayout(
+      expectedMode: _MemoEditorPagePresentationMode.fullscreen,
+    );
+  }
+
+  void _collapsePageFullscreenCompose() {
+    if (_saving || !_isPageFullscreenCompose) return;
+    if (_editorFocusNode.hasFocus) {
+      _editorFocusNode.unfocus();
+      FocusManager.instance.applyFocusChangesIfNeeded();
+    }
+    setState(() {
+      _pagePresentationMode = _MemoEditorPagePresentationMode.normal;
+    });
+    _requestEditorFocusAfterLayout(
+      expectedMode: _MemoEditorPagePresentationMode.normal,
+    );
+  }
+
   void _handleContentChanged() {
     if (!mounted) return;
     _syncTagAutocompleteState();
@@ -296,6 +367,10 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     final altPressed = isAltModifierPressed(pressed);
     final key = event.logicalKey;
     if (event is KeyDownEvent && key == LogicalKeyboardKey.escape) {
+      if (_isPageFullscreenCompose) {
+        _collapsePageFullscreenCompose();
+        return KeyEventResult.handled;
+      }
       if (_isDesktopFullscreenPresentation) {
         widget.onToggleFullscreen?.call();
         return KeyEventResult.handled;
@@ -1422,14 +1497,9 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     return true;
   }
 
-  Widget _buildComposeToolbar({
-    required BuildContext context,
-    required bool isDark,
+  List<MemoComposeToolbarActionSpec> _buildComposeToolbarActions({
     required MemoToolbarPreferences preferences,
     required List<MemoTemplate> availableTemplates,
-    required String visibilityLabel,
-    required IconData visibilityIcon,
-    required Color visibilityColor,
   }) {
     final actions = <MemoComposeToolbarActionSpec>[
       MemoComposeToolbarActionSpec.builtin(
@@ -1591,6 +1661,23 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
         ),
       ),
     ];
+
+    return actions;
+  }
+
+  Widget _buildComposeToolbar({
+    required BuildContext context,
+    required bool isDark,
+    required MemoToolbarPreferences preferences,
+    required List<MemoTemplate> availableTemplates,
+    required String visibilityLabel,
+    required IconData visibilityIcon,
+    required Color visibilityColor,
+  }) {
+    final actions = _buildComposeToolbarActions(
+      preferences: preferences,
+      availableTemplates: availableTemplates,
+    );
 
     return MemoComposeToolbar(
       isDark: isDark,
@@ -2763,6 +2850,285 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     }
   }
 
+  List<Widget> _buildFullscreenMetadataChildren({
+    required BuildContext context,
+    required bool isDark,
+    required Color chipBg,
+    required Color chipText,
+    required Color chipDelete,
+    required Uri? baseUrl,
+    required String? authHeader,
+    required bool rebaseAbsoluteFileUrlForV024,
+    required bool attachAuthForSameOriginAbsolute,
+    required bool showTagAutocompleteGuide,
+    required String tagAutocompleteGuideMessage,
+  }) {
+    final children = <Widget>[
+      _buildAttachmentPreview(
+        isDark,
+        baseUrl,
+        authHeader,
+        rebaseAbsoluteFileUrlForV024,
+        attachAuthForSameOriginAbsolute,
+      ),
+      if (showTagAutocompleteGuide) ...[
+        SceneMicroGuideBanner(
+          message: tagAutocompleteGuideMessage,
+          onDismiss: () =>
+              _markSceneGuideSeen(SceneMicroGuideId.memoEditorTagAutocomplete),
+        ),
+        const SizedBox(height: 12),
+      ],
+      if (_linkedMemos.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: _linkedMemos
+                .map(
+                  (memo) => InputChip(
+                    label: Text(
+                      memo.label,
+                      style: TextStyle(fontSize: 12, color: chipText),
+                    ),
+                    backgroundColor: chipBg,
+                    deleteIconColor: chipDelete,
+                    onDeleted: _saving
+                        ? null
+                        : () => _removeLinkedMemo(memo.name),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ),
+      if (_locating)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                context.t.strings.legacy.msg_locating,
+                style: TextStyle(fontSize: 12, color: chipText),
+              ),
+            ],
+          ),
+        ),
+      if (_location != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: InputChip(
+              avatar: Icon(Icons.place_outlined, size: 16, color: chipText),
+              label: Text(
+                _location!.displayText(fractionDigits: 6),
+                style: TextStyle(fontSize: 12, color: chipText),
+              ),
+              backgroundColor: chipBg,
+              deleteIconColor: chipDelete,
+              onPressed: _saving ? null : _requestLocation,
+              onDeleted: _saving ? null : _clearLocation,
+            ),
+          ),
+        ),
+    ];
+    return children;
+  }
+
+  Widget _buildFullscreenEditorTextField({
+    required bool isDark,
+    required TextStyle editorTextStyle,
+    required String editorHintText,
+    required ActiveTagQuery? activeTagQuery,
+    required List<TagStat> tagSuggestions,
+    required TagColorLookup tagColorLookup,
+    required int highlightedTagSuggestionIndex,
+    required FocusOnKeyEventCallback onEditorKeyEvent,
+    required ValueChanged<int> onTagHighlight,
+    required void Function(ActiveTagQuery query, TagStat tag) onTagSelect,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: KeyedSubtree(
+            key: _editorFieldKey,
+            child: Focus(
+              canRequestFocus: false,
+              onKeyEvent: onEditorKeyEvent,
+              child: TextField(
+                key: _pageFullscreenTextFieldKey,
+                controller: _contentController,
+                focusNode: _editorFocusNode,
+                autofocus: widget.autoFocus,
+                enabled: !_saving,
+                inputFormatters: const [SmartEnterTextInputFormatter()],
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
+                expands: true,
+                style: editorTextStyle,
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: editorHintText,
+                  hintStyle: TextStyle(
+                    color: isDark
+                        ? const Color(0xFF666666)
+                        : Colors.grey.shade500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (_editorFocusNode.hasFocus &&
+            activeTagQuery != null &&
+            tagSuggestions.isNotEmpty)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: TagAutocompleteOverlay(
+                editorKey: _editorFieldKey,
+                focusNode: _editorFocusNode,
+                value: _contentController.value,
+                textStyle: editorTextStyle,
+                tags: tagSuggestions,
+                tagColors: tagColorLookup,
+                highlightedIndex: highlightedTagSuggestionIndex,
+                onHighlight: onTagHighlight,
+                onSelect: (tag) => onTagSelect(activeTagQuery, tag),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFullscreenEditorSaveButton() {
+    final buttonEnabled = !_saving;
+    final buttonColor = buttonEnabled
+        ? MemoFlowPalette.primary
+        : Theme.of(context).colorScheme.outline;
+    return Tooltip(
+      message: context.t.strings.legacy.msg_save,
+      child: InkResponse(
+        key: _pageFullscreenSaveButtonKey,
+        onTap: buttonEnabled ? _save : null,
+        radius: 17,
+        child: SizedBox(
+          width: 30,
+          height: 30,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (_saving)
+                SizedBox.square(
+                  dimension: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: MemoFlowPalette.primary,
+                  ),
+                )
+              else
+                Icon(Icons.check_rounded, size: 18, color: buttonColor),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFullscreenEditorCompose({
+    required bool isDark,
+    required Color background,
+    required Color sheetColor,
+    required Color chipBg,
+    required Color chipText,
+    required Color chipDelete,
+    required String visibilityLabel,
+    required IconData visibilityIcon,
+    required Color visibilityColor,
+    required List<TagStat> tagSuggestions,
+    required int highlightedTagSuggestionIndex,
+    required TagColorLookup tagColorLookup,
+    required ActiveTagQuery? activeTagQuery,
+    required TextStyle editorTextStyle,
+    required MemoToolbarPreferences toolbarPreferences,
+    required List<MemoTemplate> availableTemplates,
+    required String editorHintText,
+    required Uri? baseUrl,
+    required String? authHeader,
+    required bool rebaseAbsoluteFileUrlForV024,
+    required bool attachAuthForSameOriginAbsolute,
+    required bool showTagAutocompleteGuide,
+    required String tagAutocompleteGuideMessage,
+  }) {
+    final toolbarActions = _buildComposeToolbarActions(
+      preferences: toolbarPreferences,
+      availableTemplates: availableTemplates,
+    );
+
+    return Scaffold(
+      backgroundColor: background,
+      body: MemoComposeFullscreenSurface(
+        isDark: isDark,
+        sheetColor: sheetColor,
+        toolbarPreferences: toolbarPreferences,
+        toolbarActions: toolbarActions,
+        metadataChildren: _buildFullscreenMetadataChildren(
+          context: context,
+          isDark: isDark,
+          chipBg: chipBg,
+          chipText: chipText,
+          chipDelete: chipDelete,
+          baseUrl: baseUrl,
+          authHeader: authHeader,
+          rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+          attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+          showTagAutocompleteGuide: showTagAutocompleteGuide,
+          tagAutocompleteGuideMessage: tagAutocompleteGuideMessage,
+        ),
+        editor: _buildFullscreenEditorTextField(
+          isDark: isDark,
+          editorTextStyle: editorTextStyle,
+          editorHintText: editorHintText,
+          activeTagQuery: activeTagQuery,
+          tagSuggestions: tagSuggestions,
+          tagColorLookup: tagColorLookup,
+          highlightedTagSuggestionIndex: highlightedTagSuggestionIndex,
+          onEditorKeyEvent: _handleTagAutocompleteKeyEvent,
+          onTagHighlight: (index) {
+            if (_tagAutocompleteIndex == index) return;
+            setState(() {
+              _composer.setTagAutocompleteIndex(index);
+            });
+          },
+          onTagSelect: (query, tag) => _applyTagSuggestion(query, tag),
+        ),
+        primaryAction: _buildFullscreenEditorSaveButton(),
+        expandCollapseKey: _pageFullscreenCollapseButtonKey,
+        closeKey: _pageFullscreenCloseButtonKey,
+        topToolbarKey: _pageFullscreenTopToolbarKey,
+        bottomToolbarKey: _pageFullscreenBottomToolbarKey,
+        visibilityButtonKey: _visibilityMenuKey,
+        visibilityLabel: visibilityLabel,
+        visibilityIcon: visibilityIcon,
+        visibilityColor: visibilityColor,
+        busy: _saving,
+        onCollapse: _collapsePageFullscreenCompose,
+        onClose: () => unawaited(_requestCloseEditor()),
+        onVisibilityPressed: () => unawaited(_openVisibilityMenuFromKey()),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _keyboardResumeController.updateKeyboardVisibility();
@@ -2851,18 +3217,50 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     final titleText = existing == null
         ? context.t.strings.legacy.msg_memo_2
         : context.t.strings.legacy.msg_edit_memo;
-    final saveAction = IconButton(
-      tooltip: context.t.strings.legacy.msg_save,
-      onPressed: _saving ? null : _save,
-      icon: _saving
-          ? SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: MemoFlowPalette.primary,
-              ),
-            )
-          : Icon(Icons.check_rounded, color: MemoFlowPalette.primary),
+    final editorHintText =
+        context.t.strings.legacy.msg_write_something_supports_tag_tasks_x;
+
+    if (_isPageFullscreenCompose) {
+      final fullscreenEditor = _buildFullscreenEditorCompose(
+        isDark: isDark,
+        background: background,
+        sheetColor: cardColor,
+        chipBg: chipBg,
+        chipText: chipText,
+        chipDelete: chipDelete,
+        visibilityLabel: visibilityLabel,
+        visibilityIcon: visibilityIcon,
+        visibilityColor: visibilityColor,
+        tagSuggestions: tagSuggestions,
+        highlightedTagSuggestionIndex: highlightedTagSuggestionIndex,
+        tagColorLookup: tagColorLookup,
+        activeTagQuery: activeTagQuery,
+        editorTextStyle: editorTextStyle,
+        toolbarPreferences: toolbarPreferences,
+        availableTemplates: availableTemplates,
+        editorHintText: editorHintText,
+        baseUrl: baseUrl,
+        authHeader: authHeader,
+        rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+        attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+        showTagAutocompleteGuide: showTagAutocompleteGuide,
+        tagAutocompleteGuideMessage: tagAutocompleteGuideMessage,
+      );
+      return PopScope(
+        canPop: _allowRoutePop,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          unawaited(_requestCloseEditor());
+        },
+        child: fullscreenEditor,
+      );
+    }
+
+    final pageFullscreenAction = IconButton(
+      key: _pageFullscreenExpandButtonKey,
+      tooltip: context.t.strings.legacy.msg_maximize,
+      onPressed: _saving ? null : _enterPageFullscreenCompose,
+      icon: Icon(Icons.fullscreen_rounded, color: MemoFlowPalette.primary),
     );
     final composeContent = Column(
       children: [
@@ -2911,11 +3309,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
                               expands: true,
                               style: editorTextStyle,
                               decoration: InputDecoration(
-                                hintText: context
-                                    .t
-                                    .strings
-                                    .legacy
-                                    .msg_write_something_supports_tag_tasks_x,
+                                hintText: editorHintText,
                                 hintStyle: TextStyle(color: hintColor),
                                 border: InputBorder.none,
                               ),
@@ -3033,41 +3427,45 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
-                onTap: _saving ? null : _save,
-                child: AnimatedScale(
-                  duration: const Duration(milliseconds: 120),
-                  scale: _saving ? 0.98 : 1.0,
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: MemoFlowPalette.primary,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: MemoFlowPalette.primary.withValues(
-                            alpha: isDark ? 0.3 : 0.4,
-                          ),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: _saving
-                          ? const SizedBox.square(
-                              dimension: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.check_rounded,
-                              color: Colors.white,
-                              size: 24,
+              Tooltip(
+                message: context.t.strings.legacy.msg_save,
+                child: GestureDetector(
+                  key: const ValueKey<String>('memo-editor-bottom-save-button'),
+                  onTap: _saving ? null : _save,
+                  child: AnimatedScale(
+                    duration: const Duration(milliseconds: 120),
+                    scale: _saving ? 0.98 : 1.0,
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: MemoFlowPalette.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: MemoFlowPalette.primary.withValues(
+                              alpha: isDark ? 0.3 : 0.4,
                             ),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: _saving
+                            ? const SizedBox.square(
+                                dimension: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                      ),
                     ),
                   ),
                 ),
@@ -3097,7 +3495,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                saveAction,
                 IconButton(
                   tooltip: context.t.strings.legacy.msg_close,
                   onPressed: _saving
@@ -3128,7 +3525,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                saveAction,
                 IconButton(
                   key: const ValueKey<String>('memo-editor-fullscreen-toggle'),
                   tooltip: _isDesktopFullscreenPresentation
@@ -3222,7 +3618,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Text(titleText),
-        actions: [saveAction],
+        actions: [pageFullscreenAction],
       ),
       body: wrappedComposeSurface,
     );

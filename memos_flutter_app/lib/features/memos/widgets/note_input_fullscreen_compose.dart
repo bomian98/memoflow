@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../core/markdown_editing.dart';
@@ -11,6 +9,7 @@ import '../../../state/tags/tag_color_lookup.dart';
 import '../../memos/compose_toolbar_shared.dart';
 import '../../memos/tag_autocomplete.dart';
 import '../../../i18n/strings.g.dart';
+import 'memo_compose_fullscreen_surface.dart';
 
 class NoteInputFullscreenCompose extends StatelessWidget {
   const NoteInputFullscreenCompose({
@@ -108,402 +107,70 @@ class NoteInputFullscreenCompose extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final borderColor = isDark
-        ? MemoFlowPalette.borderDark
-        : MemoFlowPalette.borderLight;
-
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: isDark ? 4 : 2,
-          sigmaY: isDark ? 4 : 2,
+    return MemoComposeFullscreenSurface(
+      isDark: isDark,
+      sheetColor: sheetColor,
+      toolbarPreferences: toolbarPreferences,
+      toolbarActions: toolbarActions,
+      metadataChildren: [
+        attachmentPreview,
+        NoteInputLinkedMemoChips(
+          linkedMemos: linkedMemos,
+          chipBg: chipBg,
+          chipText: chipText,
+          chipDelete: chipDelete,
+          busy: busy,
+          onRemove: onRemoveLinkedMemo,
         ),
-        child: ColoredBox(
-          color: background.withValues(alpha: 0.96),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.viewInsetsOf(context).bottom,
-              ),
-              child: Container(
-                color: sheetColor,
-                child: Column(
-                  children: [
-                    _FullscreenHeader(
-                      isDark: isDark,
-                      sheetColor: sheetColor,
-                      collapseKey: expandCollapseKey,
-                      closeKey: closeKey,
-                      busy: busy,
-                      onCollapse: onCollapse,
-                      onClose: onClose,
-                    ),
-                    Divider(height: 1, color: borderColor),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            attachmentPreview,
-                            NoteInputLinkedMemoChips(
-                              linkedMemos: linkedMemos,
-                              chipBg: chipBg,
-                              chipText: chipText,
-                              chipDelete: chipDelete,
-                              busy: busy,
-                              onRemove: onRemoveLinkedMemo,
-                            ),
-                            NoteInputLocationState(
-                              location: location,
-                              locating: locating,
-                              chipBg: chipBg,
-                              chipText: chipText,
-                              chipDelete: chipDelete,
-                              busy: busy,
-                              onRequestLocation: onRequestLocation,
-                              onClearLocation: onClearLocation,
-                            ),
-                            Expanded(
-                              child: _FullscreenEditor(
-                                controller: controller,
-                                editorFocusNode: editorFocusNode,
-                                editorFieldKey: editorFieldKey,
-                                autoFocus: autoFocus,
-                                editorTextStyle: editorTextStyle,
-                                editorHintText: editorHintText,
-                                isDark: isDark,
-                                activeTagQuery: activeTagQuery,
-                                tagSuggestions: tagSuggestions,
-                                tagColorLookup: tagColorLookup,
-                                highlightedTagSuggestionIndex:
-                                    highlightedTagSuggestionIndex,
-                                onTagHighlight: onTagHighlight,
-                                onTagSelect: onTagSelect,
-                                onEditorKeyEvent: onEditorKeyEvent,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Divider(height: 1, color: borderColor),
-                    _FullscreenBottomToolbar(
-                      isDark: isDark,
-                      sheetColor: sheetColor,
-                      preferences: toolbarPreferences,
-                      actions: toolbarActions,
-                      topRowKey: topToolbarKey,
-                      bottomRowKey: bottomToolbarKey,
-                      visibilityLabel: visibilityLabel,
-                      visibilityIcon: visibilityIcon,
-                      visibilityColor: visibilityColor,
-                      visibilityButtonKey: visibilityButtonKey,
-                      sendButtonKey: sendButtonKey,
-                      busy: busy,
-                      deferredProgress: deferredProgress,
-                      hasPendingDeferredShareVideoTasks:
-                          hasPendingDeferredShareVideoTasks,
-                      hasAttachmentsForSend: hasAttachmentsForSend,
-                      controller: controller,
-                      onVisibilityPressed: onVisibilityPressed,
-                      onSubmitOrVoice: onSubmitOrVoice,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        NoteInputLocationState(
+          location: location,
+          locating: locating,
+          chipBg: chipBg,
+          chipText: chipText,
+          chipDelete: chipDelete,
+          busy: busy,
+          onRequestLocation: onRequestLocation,
+          onClearLocation: onClearLocation,
         ),
+      ],
+      editor: _FullscreenEditor(
+        controller: controller,
+        editorFocusNode: editorFocusNode,
+        editorFieldKey: editorFieldKey,
+        autoFocus: autoFocus,
+        editorTextStyle: editorTextStyle,
+        editorHintText: editorHintText,
+        isDark: isDark,
+        activeTagQuery: activeTagQuery,
+        tagSuggestions: tagSuggestions,
+        tagColorLookup: tagColorLookup,
+        highlightedTagSuggestionIndex: highlightedTagSuggestionIndex,
+        onTagHighlight: onTagHighlight,
+        onTagSelect: onTagSelect,
+        onEditorKeyEvent: onEditorKeyEvent,
       ),
-    );
-  }
-}
-
-class _FullscreenHeader extends StatelessWidget {
-  const _FullscreenHeader({
-    required this.isDark,
-    required this.sheetColor,
-    required this.collapseKey,
-    required this.closeKey,
-    required this.busy,
-    required this.onCollapse,
-    required this.onClose,
-  });
-
-  final bool isDark;
-  final Color sheetColor;
-  final Key collapseKey;
-  final Key closeKey;
-  final bool busy;
-  final VoidCallback onCollapse;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 46,
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
-      color: sheetColor,
-      child: Row(
-        children: [
-          IconButton(
-            key: closeKey,
-            tooltip: context.t.strings.legacy.msg_close,
-            onPressed: busy ? null : onClose,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-            splashRadius: 16,
-            icon: Icon(
-              Icons.close_rounded,
-              size: 20,
-              color: isDark ? Colors.white70 : Colors.black54,
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            key: collapseKey,
-            tooltip: context.t.strings.legacy.msg_restore_window,
-            onPressed: busy ? null : onCollapse,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-            splashRadius: 16,
-            icon: Icon(
-              Icons.fullscreen_exit_rounded,
-              size: 20,
-              color: isDark ? Colors.white70 : Colors.black54,
-            ),
-          ),
-        ],
+      primaryAction: NoteInputFullscreenSendButton(
+        key: sendButtonKey,
+        isDark: isDark,
+        busy: busy,
+        deferredProgress: deferredProgress,
+        hasPendingDeferredShareVideoTasks: hasPendingDeferredShareVideoTasks,
+        hasAttachmentsForSend: hasAttachmentsForSend,
+        controller: controller,
+        onPressed: onSubmitOrVoice,
       ),
-    );
-  }
-}
-
-class _FullscreenBottomToolbar extends StatelessWidget {
-  const _FullscreenBottomToolbar({
-    required this.isDark,
-    required this.sheetColor,
-    required this.preferences,
-    required this.actions,
-    required this.topRowKey,
-    required this.bottomRowKey,
-    required this.visibilityLabel,
-    required this.visibilityIcon,
-    required this.visibilityColor,
-    required this.visibilityButtonKey,
-    required this.sendButtonKey,
-    required this.busy,
-    required this.deferredProgress,
-    required this.hasPendingDeferredShareVideoTasks,
-    required this.hasAttachmentsForSend,
-    required this.controller,
-    required this.onVisibilityPressed,
-    required this.onSubmitOrVoice,
-  });
-
-  final bool isDark;
-  final Color sheetColor;
-  final MemoToolbarPreferences preferences;
-  final List<MemoComposeToolbarActionSpec> actions;
-  final Key topRowKey;
-  final Key bottomRowKey;
-  final String visibilityLabel;
-  final IconData visibilityIcon;
-  final Color visibilityColor;
-  final GlobalKey visibilityButtonKey;
-  final Key sendButtonKey;
-  final bool busy;
-  final double? deferredProgress;
-  final bool hasPendingDeferredShareVideoTasks;
-  final bool hasAttachmentsForSend;
-  final TextEditingController controller;
-  final VoidCallback onVisibilityPressed;
-  final VoidCallback onSubmitOrVoice;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasTopActions = _hasVisibleToolbarActionsForRow(
-      preferences: preferences,
-      actions: actions,
-      row: MemoToolbarRow.top,
-    );
-    final hasBottomActions = _hasVisibleToolbarActionsForRow(
-      preferences: preferences,
-      actions: actions,
-      row: MemoToolbarRow.bottom,
-    );
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-      color: sheetColor,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (hasTopActions)
-                  NoteInputFullscreenToolbarStrip(
-                    isDark: isDark,
-                    preferences: preferences,
-                    actions: actions,
-                    row: MemoToolbarRow.top,
-                    rowKey: topRowKey,
-                  ),
-                if (hasTopActions && hasBottomActions)
-                  const SizedBox(height: 2),
-                if (hasBottomActions)
-                  NoteInputFullscreenToolbarStrip(
-                    isDark: isDark,
-                    preferences: preferences,
-                    actions: actions,
-                    row: MemoToolbarRow.bottom,
-                    rowKey: bottomRowKey,
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              NoteInputFullscreenVisibilityButton(
-                isDark: isDark,
-                visibilityLabel: visibilityLabel,
-                visibilityIcon: visibilityIcon,
-                visibilityColor: visibilityColor,
-                visibilityButtonKey: visibilityButtonKey,
-                busy: busy,
-                onPressed: onVisibilityPressed,
-              ),
-              const SizedBox(height: 2),
-              NoteInputFullscreenSendButton(
-                key: sendButtonKey,
-                isDark: isDark,
-                busy: busy,
-                deferredProgress: deferredProgress,
-                hasPendingDeferredShareVideoTasks:
-                    hasPendingDeferredShareVideoTasks,
-                hasAttachmentsForSend: hasAttachmentsForSend,
-                controller: controller,
-                onPressed: onSubmitOrVoice,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class NoteInputFullscreenToolbarStrip extends StatelessWidget {
-  const NoteInputFullscreenToolbarStrip({
-    super.key,
-    required this.isDark,
-    required this.preferences,
-    required this.actions,
-    required this.row,
-    required this.rowKey,
-  });
-
-  final bool isDark;
-  final MemoToolbarPreferences preferences;
-  final List<MemoComposeToolbarActionSpec> actions;
-  final MemoToolbarRow row;
-  final Key rowKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final rowActions = _visibleToolbarActionsForRow(
-      preferences: preferences,
-      actions: actions,
-      row: row,
-    );
-    if (rowActions.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final iconColor = isDark ? Colors.white70 : Colors.black54;
-    final disabledColor = iconColor.withValues(alpha: 0.45);
-
-    Widget buildActionButton(MemoComposeToolbarActionSpec action) {
-      final tooltip =
-          action.label ?? action.id.resolveLabel(context, preferences);
-      final actionIcon = action.icon ?? action.id.resolveIcon(preferences);
-      return IconButton(
-        key: action.buttonKey,
-        tooltip: tooltip,
-        onPressed: action.enabled ? action.onPressed : null,
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(width: 30, height: 30),
-        splashRadius: 16,
-        icon: Icon(
-          actionIcon,
-          size: 18,
-          color: action.enabled ? iconColor : disabledColor,
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        key: rowKey,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < rowActions.length; i++) ...[
-            buildActionButton(rowActions[i]),
-            if (i != rowActions.length - 1) const SizedBox(width: 2),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class NoteInputFullscreenVisibilityButton extends StatelessWidget {
-  const NoteInputFullscreenVisibilityButton({
-    super.key,
-    required this.isDark,
-    required this.visibilityLabel,
-    required this.visibilityIcon,
-    required this.visibilityColor,
-    required this.visibilityButtonKey,
-    required this.busy,
-    required this.onPressed,
-  });
-
-  final bool isDark;
-  final String visibilityLabel;
-  final IconData visibilityIcon;
-  final Color visibilityColor;
-  final GlobalKey visibilityButtonKey;
-  final bool busy;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: context.t.strings.legacy.msg_visibility_2(
-        visibilityLabel: visibilityLabel,
-      ),
-      child: InkResponse(
-        key: visibilityButtonKey,
-        onTap: busy ? null : onPressed,
-        radius: 17,
-        child: SizedBox(
-          width: 30,
-          height: 30,
-          child: Icon(visibilityIcon, size: 16, color: visibilityColor),
-        ),
-      ),
+      expandCollapseKey: expandCollapseKey,
+      closeKey: closeKey,
+      topToolbarKey: topToolbarKey,
+      bottomToolbarKey: bottomToolbarKey,
+      visibilityButtonKey: visibilityButtonKey,
+      visibilityLabel: visibilityLabel,
+      visibilityIcon: visibilityIcon,
+      visibilityColor: visibilityColor,
+      busy: busy,
+      onCollapse: onCollapse,
+      onClose: onClose,
+      onVisibilityPressed: onVisibilityPressed,
     );
   }
 }
@@ -791,35 +458,4 @@ class _FullscreenEditor extends StatelessWidget {
       ],
     );
   }
-}
-
-bool _hasVisibleToolbarActionsForRow({
-  required MemoToolbarPreferences preferences,
-  required List<MemoComposeToolbarActionSpec> actions,
-  required MemoToolbarRow row,
-}) {
-  return _visibleToolbarActionsForRow(
-    preferences: preferences,
-    actions: actions,
-    row: row,
-  ).isNotEmpty;
-}
-
-List<MemoComposeToolbarActionSpec> _visibleToolbarActionsForRow({
-  required MemoToolbarPreferences preferences,
-  required List<MemoComposeToolbarActionSpec> actions,
-  required MemoToolbarRow row,
-}) {
-  final actionMap = <MemoToolbarItemId, MemoComposeToolbarActionSpec>{
-    for (final action in actions) action.id: action,
-  };
-  final supportedItems = actions
-      .where((action) => action.supported)
-      .map((action) => action.id)
-      .toSet();
-  return preferences
-      .visibleItemIdsForRow(row, supportedItems: supportedItems)
-      .map((id) => actionMap[id])
-      .whereType<MemoComposeToolbarActionSpec>()
-      .toList(growable: false);
 }
