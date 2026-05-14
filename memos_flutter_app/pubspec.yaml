@@ -54,6 +54,7 @@ dependencies:
   flutter_markdown: ^0.7.7+1
   flutter_svg: ^2.0.10
   html: ^0.15.0
+  xml: ^6.6.1
   markdown: ^7.3.0
   flutter_math_fork: ^0.7.2
   flutter_colorpicker: ^1.1.0
@@ -109,6 +110,7 @@ dependencies:
   wechat_assets_picker: 10.1.1
   bonsoir: ^6.0.2
   pretty_qr_code: ^3.6.0
+  charset: ^2.0.1
 
 dev_dependencies:
   flutter_test:

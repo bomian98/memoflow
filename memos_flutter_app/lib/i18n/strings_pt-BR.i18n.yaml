@@ -1813,6 +1813,7 @@ collections:
     comingSoon: Em breve
     manageCollectionItems: Gerenciar itens de coleção
     currentMemoActions: Ações atuais do memorando
+    currentItemActions: Ações do item atual
     pageAnimationTooltip: Animação de página
     pageAnimationNone: Sem animação
     pageAnimationSlide: Slide
@@ -1954,6 +1955,41 @@ collections:
     styleCardNameLabel: Nome do estilo
     styleCardBuiltIn: Predefinição
     styleCardCustom: Personalizado
+  rss:
+    collectionType: RSS
+    collectionSummary: Coleção RSS
+    createDescription: Feeds RSS
+    draftHelp: Adicione um ou mais feeds RSS ou Atom antes de salvar.
+    addFeed: Adicionar feed RSS
+    addFeedToDraft: Adicionar feed
+    addAnotherFeed: Adicionar outro feed
+    feedRequired: Adicione pelo menos um feed RSS ou Atom antes de salvar.
+    feedAlreadyAdded: Este feed já está na coleção.
+    addedFeeds: $count feeds
+    articlesCount: $count artigos
+    manageFeeds: Gerenciar feeds
+    removeFeed: Remover feed
+    refreshFeeds: Atualizar feeds RSS
+    inputLabel: URL do feed ou site
+    inputEmpty: Informe a URL do feed ou site.
+    invalidInput: Informe uma URL válida de feed ou site.
+    noFeedDiscovered: Nenhum feed RSS ou Atom compatível foi encontrado.
+    previewFailed: Não foi possível visualizar este feed.
+    subscribeFailed: Não foi possível assinar este feed.
+    preview: Prévia
+    subscribe: Assinar
+    subscribedTo: "Assinado: $title"
+    articleActions: Ações do artigo RSS
+    markUnread: Marcar como não lido
+    markRead: Marcar como lido
+    openOriginal: Abrir original
+    saveAsMemo: Salvar como memo
+    savedAsMemo: Salvo como memo
+    refreshing: Atualizando feeds RSS...
+    noFeeds: Nenhum feed RSS nesta coleção
+    noArticles: Nenhum artigo RSS ainda
+    noArticlesDescription: Atualize os feeds ou gerencie fontes para carregar artigos.
+    refreshComplete: "Atualização RSS concluída: $success atualizados, $failure falharam"
   createCollectionTooltip: Criar coleção
   reorderShelf: Reordenar estante
   reorderShelfDescription: Arraste para ajustar a ordem mostrada em sua estante. As coleções fixadas ainda ficam acima das demais.

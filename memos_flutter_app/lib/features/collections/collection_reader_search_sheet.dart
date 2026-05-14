@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../data/models/local_memo.dart';
 import '../../i18n/strings.g.dart';
 import 'collection_reader_panel.dart';
 import 'collection_reader_utils.dart';
@@ -17,7 +16,7 @@ class CollectionReaderSearchSheet extends StatefulWidget {
     required this.onSelect,
   });
 
-  final List<LocalMemo> items;
+  final List<dynamic> items;
   final CollectionReaderSearchSelect onSelect;
 
   @override

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../data/models/attachment.dart';
 import '../../data/models/collection_reader.dart';
+import '../../data/models/collection_readable_item.dart';
 import '../../data/models/local_memo.dart';
 import '../memos/memo_image_src_normalizer.dart';
 import 'collection_reader_page_models.dart';
@@ -43,7 +44,7 @@ class CollectionReaderPageEngine {
   }
 
   CollectionReaderPagedBook buildBook({
-    required List<LocalMemo> items,
+    required List<dynamic> items,
     required Size viewportSize,
     required CollectionReaderPreferences preferences,
     String collectionTitle = '',
@@ -60,14 +61,15 @@ class CollectionReaderPageEngine {
           );
     var globalPageIndex = 0;
     for (var index = 0; index < items.length; index += 1) {
+      final item = _asReadableItem(items[index]);
       final shouldCache =
           expandedRetainMemoIndexes == null ||
           expandedRetainMemoIndexes.contains(index);
       if (shouldCache) {
-        retainedMemoUids.add(items[index].uid);
+        retainedMemoUids.add(item.uid);
       }
       final chapter = _layoutChapter(
-        memo: items[index],
+        memo: item,
         memoIndex: index,
         viewportSize: viewportSize,
         preferences: preferences,
@@ -91,7 +93,7 @@ class CollectionReaderPageEngine {
   }
 
   CollectionReaderPageMap buildPageMap({
-    required List<LocalMemo> items,
+    required List<dynamic> items,
     required Size viewportSize,
     required CollectionReaderPreferences preferences,
     String collectionTitle = '',
@@ -107,14 +109,15 @@ class CollectionReaderPageEngine {
           );
     var globalPageStartIndex = 0;
     for (var index = 0; index < items.length; index += 1) {
+      final item = _asReadableItem(items[index]);
       final shouldCache =
           expandedRetainMemoIndexes == null ||
           expandedRetainMemoIndexes.contains(index);
       if (shouldCache) {
-        retainedMemoUids.add(items[index].uid);
+        retainedMemoUids.add(item.uid);
       }
       final pageCount = _resolveChapterPageCount(
-        memo: items[index],
+        memo: item,
         memoIndex: index,
         viewportSize: viewportSize,
         preferences: preferences,
@@ -123,7 +126,7 @@ class CollectionReaderPageEngine {
       );
       chapters.add(
         ReaderChapterPageMetrics(
-          memoUid: items[index].uid,
+          memoUid: item.uid,
           memoIndex: index,
           pageCount: pageCount,
           globalPageStartIndex: globalPageStartIndex,
@@ -143,14 +146,14 @@ class CollectionReaderPageEngine {
   }
 
   ReaderChapterLayout layoutChapter({
-    required LocalMemo memo,
+    required Object memo,
     required int memoIndex,
     required Size viewportSize,
     required CollectionReaderPreferences preferences,
     String collectionTitle = '',
   }) {
     return _layoutChapter(
-      memo: memo,
+      memo: _asReadableItem(memo),
       memoIndex: memoIndex,
       viewportSize: viewportSize,
       preferences: preferences,
@@ -160,7 +163,7 @@ class CollectionReaderPageEngine {
   }
 
   ReaderChapterLayout _layoutChapter({
-    required LocalMemo memo,
+    required CollectionReadableItem memo,
     required int memoIndex,
     required Size viewportSize,
     required CollectionReaderPreferences preferences,
@@ -296,7 +299,7 @@ class CollectionReaderPageEngine {
   }
 
   ReaderChapterDocument _buildChapterDocument(
-    LocalMemo memo,
+    CollectionReadableItem memo,
     int memoIndex, {
     required String collectionTitle,
   }) {
@@ -377,6 +380,7 @@ class CollectionReaderPageEngine {
                 attachments: matchedAttachment == null
                     ? const <Attachment>[]
                     : <Attachment>[matchedAttachment],
+                sourceUrl: contentBlock.sourceUrl,
               ),
             );
           case CollectionReaderContentBlockKind.video:
@@ -403,6 +407,7 @@ class CollectionReaderPageEngine {
                 attachments: matchedAttachment == null
                     ? const <Attachment>[]
                     : <Attachment>[matchedAttachment],
+                sourceUrl: contentBlock.sourceUrl,
               ),
             );
         }
@@ -491,7 +496,8 @@ class CollectionReaderPageEngine {
             subtitle: titleSubtitle,
             mode: preferences.titleMode,
           );
-    final headerTip = preferences.tipLayout.headerMode ==
+    final headerTip =
+        preferences.tipLayout.headerMode ==
             CollectionReaderTipDisplayMode.hidden
         ? null
         : ReaderTipRenderData(
@@ -500,7 +506,8 @@ class CollectionReaderPageEngine {
             centerSlot: preferences.tipLayout.headerCenter,
             rightSlot: preferences.tipLayout.headerRight,
           );
-    final footerTip = preferences.tipLayout.footerMode ==
+    final footerTip =
+        preferences.tipLayout.footerMode ==
             CollectionReaderTipDisplayMode.hidden
         ? null
         : ReaderTipRenderData(
@@ -510,7 +517,8 @@ class CollectionReaderPageEngine {
             rightSlot: preferences.tipLayout.footerRight,
           );
     final reservedInsets = ReaderPageReservedInsets(
-      top: preferences.tipLayout.headerMode ==
+      top:
+          preferences.tipLayout.headerMode ==
               CollectionReaderTipDisplayMode.reserved
           ? _estimateTipReservedHeight(
               padding: preferences.headerPadding,
@@ -518,7 +526,8 @@ class CollectionReaderPageEngine {
               showDivider: preferences.showHeaderLine,
             )
           : 0,
-      bottom: preferences.tipLayout.footerMode ==
+      bottom:
+          preferences.tipLayout.footerMode ==
               CollectionReaderTipDisplayMode.reserved
           ? _estimateTipReservedHeight(
               padding: preferences.footerPadding,
@@ -527,7 +536,8 @@ class CollectionReaderPageEngine {
             )
           : 0,
     );
-    final inlineHeaderHeight = preferences.tipLayout.headerMode ==
+    final inlineHeaderHeight =
+        preferences.tipLayout.headerMode ==
             CollectionReaderTipDisplayMode.inline
         ? _estimateTipReservedHeight(
             padding: preferences.headerPadding,
@@ -535,7 +545,8 @@ class CollectionReaderPageEngine {
             showDivider: preferences.showHeaderLine,
           )
         : 0;
-    final inlineFooterHeight = preferences.tipLayout.footerMode ==
+    final inlineFooterHeight =
+        preferences.tipLayout.footerMode ==
             CollectionReaderTipDisplayMode.inline
         ? _estimateTipReservedHeight(
             padding: preferences.footerPadding,
@@ -861,11 +872,13 @@ class CollectionReaderPageEngine {
               id: block.id,
               text: block.text,
               attachments: block.attachments,
+              sourceUrl: block.sourceUrl,
               height: mediaHeight,
             ),
           );
         case ReaderBlockKind.spacer:
-          final height = math.min(block.heightHint ?? 12, regularBodyHeight)
+          final height = math
+              .min(block.heightHint ?? 12, regularBodyHeight)
               .toDouble();
           if (height > remainingHeight && currentBlocks.isNotEmpty) {
             pushPage();
@@ -915,7 +928,7 @@ class CollectionReaderPageEngine {
   }
 
   String _buildCacheKey({
-    required LocalMemo memo,
+    required CollectionReadableItem memo,
     required Size viewportSize,
     required CollectionReaderPreferences preferences,
     required String collectionTitle,
@@ -989,7 +1002,7 @@ class CollectionReaderPageEngine {
   }
 
   int _resolveChapterPageCount({
-    required LocalMemo memo,
+    required CollectionReadableItem memo,
     required int memoIndex,
     required Size viewportSize,
     required CollectionReaderPreferences preferences,
@@ -1015,6 +1028,16 @@ class CollectionReaderPageEngine {
       cacheResult: cacheResult,
     );
     return layout.pages.length;
+  }
+
+  CollectionReadableItem _asReadableItem(Object item) {
+    if (item is CollectionReadableItem) {
+      return item;
+    }
+    if (item is LocalMemo) {
+      return MemoCollectionReadableItem(item);
+    }
+    throw ArgumentError.value(item, 'item', 'Unsupported reader item type');
   }
 
   int _measureFittingTextCount(
@@ -1074,7 +1097,10 @@ class CollectionReaderPageEngine {
   ) {
     return switch (role) {
       ReaderTextRole.body => preferences.paragraphSpacing,
-      ReaderTextRole.listItem => math.max(4, preferences.paragraphSpacing * 0.75),
+      ReaderTextRole.listItem => math.max(
+        4,
+        preferences.paragraphSpacing * 0.75,
+      ),
       ReaderTextRole.heading => 10 + preferences.paragraphSpacing * 0.4,
       ReaderTextRole.quote => 10 + preferences.paragraphSpacing * 0.35,
       ReaderTextRole.code => 10,
@@ -1107,9 +1133,7 @@ class CollectionReaderPageEngine {
     return '${'　' * preferences.paragraphIndentChars}$text';
   }
 
-  FontWeight _resolveReaderFontWeight(
-    CollectionReaderFontWeightMode mode,
-  ) {
+  FontWeight _resolveReaderFontWeight(CollectionReaderFontWeightMode mode) {
     return switch (mode) {
       CollectionReaderFontWeightMode.normal => FontWeight.w400,
       CollectionReaderFontWeightMode.medium => FontWeight.w500,
@@ -1117,9 +1141,7 @@ class CollectionReaderPageEngine {
     };
   }
 
-  FontWeight _resolveHeadingFontWeight(
-    CollectionReaderFontWeightMode mode,
-  ) {
+  FontWeight _resolveHeadingFontWeight(CollectionReaderFontWeightMode mode) {
     return switch (mode) {
       CollectionReaderFontWeightMode.normal => FontWeight.w700,
       CollectionReaderFontWeightMode.medium => FontWeight.w700,

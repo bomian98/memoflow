@@ -1,8 +1,10 @@
 import '../../core/tag_colors.dart';
 import '../../core/tags.dart';
 import '../../data/models/attachment.dart';
+import '../../data/models/collection_readable_item.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/memo_collection.dart';
+import '../../data/models/rss_article.dart';
 
 typedef CanonicalTagPathResolver = String Function(String path);
 typedef TagColorHexResolver = String? Function(String path);
@@ -66,7 +68,55 @@ List<LocalMemo> resolveCollectionItems(
         manualMemoUids,
         collection.view.sortMode,
       );
+    case MemoCollectionType.rss:
+      return const <LocalMemo>[];
   }
+}
+
+List<CollectionReadableItem> composeCollectionReadableItems({
+  required MemoCollection collection,
+  required List<LocalMemo> memoItems,
+  required List<RssArticleWithFeed> rssItems,
+}) {
+  if (collection.type == MemoCollectionType.rss) {
+    final rssOnly = rssItems
+        .map(
+          (item) =>
+              RssCollectionReadableItem(article: item.article, feed: item.feed),
+        )
+        .toList(growable: true);
+    sortCollectionReadableItems(rssOnly, collection.view.sortMode);
+    return rssOnly;
+  }
+  final readableItems = <CollectionReadableItem>[
+    ...memoItems.map(MemoCollectionReadableItem.new),
+  ];
+  sortCollectionReadableItems(readableItems, collection.view.sortMode);
+  return readableItems;
+}
+
+void sortCollectionReadableItems(
+  List<CollectionReadableItem> items,
+  CollectionSortMode sortMode,
+) {
+  if (sortMode == CollectionSortMode.manualOrder) {
+    return;
+  }
+  items.sort((a, b) {
+    final result = switch (sortMode) {
+      CollectionSortMode.displayTimeDesc => b.effectiveDisplayTime.compareTo(
+        a.effectiveDisplayTime,
+      ),
+      CollectionSortMode.displayTimeAsc => a.effectiveDisplayTime.compareTo(
+        b.effectiveDisplayTime,
+      ),
+      CollectionSortMode.updateTimeDesc => b.updateTime.compareTo(a.updateTime),
+      CollectionSortMode.updateTimeAsc => a.updateTime.compareTo(b.updateTime),
+      CollectionSortMode.manualOrder => 0,
+    };
+    if (result != 0) return result;
+    return a.uid.compareTo(b.uid);
+  });
 }
 
 void sortCollectionItems(List<LocalMemo> items, CollectionSortMode sortMode) {
@@ -164,6 +214,38 @@ MemoCollectionPreview buildCollectionPreview(
   );
 }
 
+MemoCollectionPreview buildRssCollectionPreview(
+  MemoCollection collection,
+  List<RssArticleWithFeed> items, {
+  TagColorHexResolver? resolveTagColorHexByPath,
+}) {
+  final latestUpdateTime = items.isEmpty
+      ? null
+      : items
+            .map((item) => item.article.updatedTime)
+            .reduce(
+              (value, element) => value.isAfter(element) ? value : element,
+            );
+  final imageItemCount = items
+      .where((item) => item.article.leadImageUrl.trim().isNotEmpty)
+      .length;
+  final effectiveAccentColorHex =
+      normalizeTagColorHex(collection.accentColorHex) ??
+      _resolveFallbackAccentColorHex(
+        collection,
+        resolveTagColorHexByPath: resolveTagColorHexByPath,
+      );
+  return MemoCollectionPreview(
+    itemCount: items.length,
+    imageItemCount: imageItemCount,
+    latestUpdateTime: latestUpdateTime,
+    sampleItems: const <LocalMemo>[],
+    coverAttachment: null,
+    effectiveAccentColorHex: effectiveAccentColorHex,
+    ruleSummary: buildCollectionRuleSummary(collection),
+  );
+}
+
 Attachment? resolveCollectionCoverAttachment(
   MemoCollection collection,
   List<LocalMemo> items,
@@ -200,6 +282,9 @@ Attachment? resolveCollectionCoverAttachment(
 String buildCollectionRuleSummary(MemoCollection collection) {
   if (collection.type == MemoCollectionType.manual) {
     return 'Manual collection';
+  }
+  if (collection.type == MemoCollectionType.rss) {
+    return 'RSS collection';
   }
   final rules = collection.rules;
   final segments = <String>[];

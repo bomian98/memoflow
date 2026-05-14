@@ -1833,6 +1833,7 @@ collections:
     comingSoon: 곧 출시 예정
     manageCollectionItems: 컬렉션 아이템 관리
     currentMemoActions: 현재 메모 작업
+    currentItemActions: 현재 항목 작업
     pageAnimationTooltip: 페이지 애니메이션
     pageAnimationNone: 애니메이션 없음
     pageAnimationSlide: 슬라이드
@@ -1974,6 +1975,41 @@ collections:
     styleCardNameLabel: 스타일 이름
     styleCardBuiltIn: 프리셋
     styleCardCustom: 관습
+  rss:
+    collectionType: RSS
+    collectionSummary: RSS 컬렉션
+    createDescription: RSS 피드
+    draftHelp: 저장하기 전에 RSS 또는 Atom 피드를 하나 이상 추가하세요.
+    addFeed: RSS 피드 추가
+    addFeedToDraft: 피드 추가
+    addAnotherFeed: 다른 피드 추가
+    feedRequired: 저장하기 전에 RSS 또는 Atom 피드를 하나 이상 추가하세요.
+    feedAlreadyAdded: 이 피드는 이미 컬렉션에 있습니다.
+    addedFeeds: $count개 피드
+    articlesCount: $count개 글
+    manageFeeds: 피드 관리
+    removeFeed: 피드 제거
+    refreshFeeds: RSS 피드 새로고침
+    inputLabel: 피드 또는 사이트 URL
+    inputEmpty: 피드 또는 사이트 URL을 입력하세요.
+    invalidInput: 유효한 피드 또는 사이트 URL을 입력하세요.
+    noFeedDiscovered: 지원되는 RSS 또는 Atom 피드를 찾을 수 없습니다.
+    previewFailed: 이 피드를 미리 볼 수 없습니다.
+    subscribeFailed: 이 피드를 구독할 수 없습니다.
+    preview: 미리보기
+    subscribe: 구독
+    subscribedTo: "$title 구독됨"
+    articleActions: RSS 글 작업
+    markUnread: 읽지 않음으로 표시
+    markRead: 읽음으로 표시
+    openOriginal: 원문 열기
+    saveAsMemo: 메모로 저장
+    savedAsMemo: 메모로 저장됨
+    refreshing: RSS 피드를 새로고침하는 중...
+    noFeeds: 이 컬렉션에 RSS 피드가 없습니다
+    noArticles: 아직 RSS 글이 없습니다
+    noArticlesDescription: 피드를 새로고침하거나 소스를 관리해 글을 불러오세요.
+    refreshComplete: "RSS 새로고침 완료: $success개 업데이트, $failure개 실패"
   createCollectionTooltip: 컬렉션 만들기
   reorderShelf: 선반 재정렬
   reorderShelfDescription: 선반에 표시된 순서를 드래그하여 조정하세요. 고정된 컬렉션은 여전히 ​​나머지 컬렉션보다 위에 있습니다.

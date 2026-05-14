@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import '../../core/tags.dart';
 
-enum MemoCollectionType { smart, manual }
+enum MemoCollectionType { smart, manual, rss }
 
 enum CollectionTagMatchMode { any, all }
 
@@ -344,6 +344,7 @@ class MemoCollection {
   });
 
   static const String defaultIconKey = 'auto_stories';
+  static const String rssIconKey = 'rss_feed';
 
   static MemoCollection createSmart({
     required String id,
@@ -421,6 +422,44 @@ class MemoCollection {
     );
   }
 
+  static MemoCollection createRss({
+    required String id,
+    required String title,
+    String description = '',
+    String iconKey = rssIconKey,
+    String? accentColorHex,
+    CollectionCoverSpec cover = const CollectionCoverSpec(
+      mode: CollectionCoverMode.icon,
+      iconKey: rssIconKey,
+    ),
+    CollectionViewPreferences view = CollectionViewPreferences.defaults,
+    bool pinned = false,
+    bool archived = false,
+    bool hideWhenEmpty = false,
+    int sortOrder = 0,
+    DateTime? createdTime,
+    DateTime? updatedTime,
+  }) {
+    final now = DateTime.now();
+    return MemoCollection(
+      id: id,
+      title: title,
+      description: description,
+      type: MemoCollectionType.rss,
+      iconKey: iconKey,
+      accentColorHex: accentColorHex,
+      rules: CollectionRuleSet.defaults,
+      cover: cover,
+      view: view,
+      pinned: pinned,
+      archived: archived,
+      hideWhenEmpty: hideWhenEmpty,
+      sortOrder: sortOrder,
+      createdTime: createdTime ?? now,
+      updatedTime: updatedTime ?? now,
+    );
+  }
+
   final String id;
   final String title;
   final String description;
@@ -439,6 +478,7 @@ class MemoCollection {
 
   bool get isSmart => type == MemoCollectionType.smart;
   bool get isManual => type == MemoCollectionType.manual;
+  bool get isRss => type == MemoCollectionType.rss;
 
   MemoCollection copyWith({
     String? id,

@@ -32,7 +32,7 @@ import 'collection_editor_screen.dart';
 import 'collection_reader_tokens.dart';
 import 'collection_ui.dart';
 
-enum _CollectionsFilter { all, smart, manual, archived }
+enum _CollectionsFilter { all, smart, manual, rss, archived }
 
 class CollectionsScreen extends ConsumerStatefulWidget {
   const CollectionsScreen({super.key, this.embeddedNavigationHost});
@@ -667,6 +667,8 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
             _CollectionsFilter.manual =>
               !collection.archived &&
                   collection.type == MemoCollectionType.manual,
+            _CollectionsFilter.rss =>
+              !collection.archived && collection.type == MemoCollectionType.rss,
             _CollectionsFilter.archived => collection.archived,
           };
           if (!includeByFilter) {
@@ -698,6 +700,8 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
       _CollectionsFilter.all => context.t.strings.legacy.msg_all_2,
       _CollectionsFilter.smart => context.t.strings.collections.smart,
       _CollectionsFilter.manual => context.t.strings.collections.manual,
+      _CollectionsFilter.rss =>
+        context.t.strings.collections.rss.collectionType,
       _CollectionsFilter.archived => context.t.strings.collections.archived,
     };
   }
@@ -797,14 +801,23 @@ class _CollectionsReorderSheetState extends State<_CollectionsReorderSheet> {
                   final preview = item.preview;
                   final chips = <Widget>[
                     _CollectionMetaChip(
-                      icon: collection.type == MemoCollectionType.smart
-                          ? Icons.auto_awesome_rounded
-                          : Icons.drag_indicator_rounded,
+                      icon: switch (collection.type) {
+                        MemoCollectionType.smart => Icons.auto_awesome_rounded,
+                        MemoCollectionType.manual =>
+                          Icons.drag_indicator_rounded,
+                        MemoCollectionType.rss => Icons.rss_feed_rounded,
+                      },
                       label: collectionTypeLabel(context, collection.type),
                     ),
                     _CollectionMetaChip(
-                      icon: Icons.note_alt_outlined,
-                      label: collections.memosCount(count: preview.itemCount),
+                      icon: collection.type == MemoCollectionType.rss
+                          ? Icons.article_outlined
+                          : Icons.note_alt_outlined,
+                      label: collection.type == MemoCollectionType.rss
+                          ? collections.rss.articlesCount(
+                              count: preview.itemCount,
+                            )
+                          : collections.memosCount(count: preview.itemCount),
                     ),
                     if (collection.pinned)
                       _CollectionMetaChip(
@@ -935,11 +948,15 @@ class _CollectionCard extends StatelessWidget {
     final textMuted = isDark ? Colors.white70 : Colors.black54;
     final summary = buildLocalizedCollectionRuleSummary(context, collection);
     final updatedText = preview.latestUpdateTime == null
-        ? collections.noMemoMatchedYet
+        ? collection.type == MemoCollectionType.rss
+              ? collections.rss.noArticles
+              : collections.noMemoMatchedYet
         : collections.updatedAt(
             date: DateFormat.yMMMd().add_Hm().format(preview.latestUpdateTime!),
           );
-    final memosLabel = collections.memosCount(count: preview.itemCount);
+    final memosLabel = collection.type == MemoCollectionType.rss
+        ? collections.rss.articlesCount(count: preview.itemCount)
+        : collections.memosCount(count: preview.itemCount);
     final stateLabel = <String>[
       collectionTypeLabel(context, collection.type),
       if (collection.pinned) collections.pinned,
@@ -1109,15 +1126,21 @@ class _CollectionCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         _InlineMetaRow(
-                          icon: collection.type == MemoCollectionType.smart
-                              ? Icons.auto_awesome_rounded
-                              : Icons.collections_bookmark_rounded,
+                          icon: switch (collection.type) {
+                            MemoCollectionType.smart =>
+                              Icons.auto_awesome_rounded,
+                            MemoCollectionType.manual =>
+                              Icons.collections_bookmark_rounded,
+                            MemoCollectionType.rss => Icons.rss_feed_rounded,
+                          },
                           text: stateLabel,
                           color: textMuted,
                         ),
                         const SizedBox(height: 4),
                         _InlineMetaRow(
-                          icon: Icons.notes_rounded,
+                          icon: collection.type == MemoCollectionType.rss
+                              ? Icons.article_outlined
+                              : Icons.notes_rounded,
                           text: memosLabel,
                           color: textMuted,
                         ),

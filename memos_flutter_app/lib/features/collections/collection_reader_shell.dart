@@ -6,14 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:screen_brightness/screen_brightness.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../data/models/collection_reader.dart';
+import '../../data/models/collection_readable_item.dart';
 import '../../data/models/device_preferences.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/memo_collection.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/collections/collection_reader_progress_provider.dart';
+import '../../state/collections/collection_rss_providers.dart';
 import '../../state/collections/collections_provider.dart';
 import '../../state/memos/memos_list_providers.dart';
 import '../../state/settings/device_preferences_provider.dart';
@@ -36,6 +39,7 @@ import 'collection_reader_tip_sheet.dart';
 import 'collection_reader_utils.dart';
 import 'collection_reader_vertical_view.dart';
 import 'collection_reader_more_settings_sheet.dart';
+import 'collection_rss_subscription_sheet.dart';
 import 'manual_collection_manage_screen.dart';
 import 'reader_background_resolver.dart';
 import 'reader_platform_capabilities.dart';
@@ -60,7 +64,7 @@ class CollectionReaderShell extends ConsumerStatefulWidget {
 
   final String collectionId;
   final String collectionTitle;
-  final List<LocalMemo> items;
+  final List<CollectionReadableItem> items;
 
   @override
   ConsumerState<CollectionReaderShell> createState() =>
@@ -119,8 +123,9 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
   void initState() {
     super.initState();
     _progressRepository = ref.read(collectionReaderProgressRepositoryProvider);
-    _lastKnownPreferences =
-        ref.read(devicePreferencesProvider).collectionReaderPreferences;
+    _lastKnownPreferences = ref
+        .read(devicePreferencesProvider)
+        .collectionReaderPreferences;
     WidgetsBinding.instance.addObserver(this);
     _verticalController.addListener(_handleVerticalScroll);
     unawaited(_loadProgress());
@@ -264,6 +269,14 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
         _highlightMatchCharOffset = null;
       }
     });
+    _markRssItemReadIfNeeded(widget.items[safeIndex]);
+  }
+
+  void _markRssItemReadIfNeeded(CollectionReadableItem item) {
+    if (item.kind != CollectionReadableItemKind.rssArticle || item.isRead) {
+      return;
+    }
+    unawaited(ref.read(collectionRssActionsProvider).markRead(item, true));
   }
 
   void _scheduleProgressSave() {
@@ -297,7 +310,9 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
       return null;
     }
     final effectivePreferences = preferences ?? _lastKnownPreferences;
-    final safeIndex = _resolveCurrentMemoIndex(preferences: effectivePreferences);
+    final safeIndex = _resolveCurrentMemoIndex(
+      preferences: effectivePreferences,
+    );
     final currentMemo = widget.items[safeIndex];
     return CollectionReaderProgress(
       collectionId: widget.collectionId,
@@ -591,8 +606,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
   }
 
   void _setSystemUiOverlayStyle(SystemUiOverlayStyle style) {
-    final override =
-        CollectionReaderShell.debugSetSystemUiOverlayStyleOverride;
+    final override = CollectionReaderShell.debugSetSystemUiOverlayStyleOverride;
     if (override != null) {
       override(style);
       return;
@@ -1179,8 +1193,9 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
       return;
     }
     _autoPaging = false;
-    final keepAwake =
-        (preferences ?? _lastKnownPreferences).displayConfig.keepScreenAwakeInReader;
+    final keepAwake = (preferences ?? _lastKnownPreferences)
+        .displayConfig
+        .keepScreenAwakeInReader;
     if (keepAwake) {
       _appliedKeepAwake = true;
     } else {
@@ -1198,7 +1213,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
   Future<void> _handleMoreAction(
     CollectionReaderMoreAction action,
     MemoCollection? collection,
-    LocalMemo? currentMemo,
+    CollectionReadableItem? currentItem,
   ) async {
     _hideMenusForEvent(CollectionReaderMenuEvent.closeSheet);
     switch (action) {
@@ -1238,12 +1253,33 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
         );
         return;
       case CollectionReaderMoreAction.currentMemoActions:
-        if (currentMemo == null) {
+        if (currentItem == null) {
           return;
         }
-        await _showCurrentMemoActions(currentMemo);
+        await _showCurrentItemActions(currentItem);
+        return;
+      case CollectionReaderMoreAction.addRssSource:
+        if (collection?.isRss != true) {
+          return;
+        }
+        await _showRssSubscriptionSheet();
+        return;
+      case CollectionReaderMoreAction.refreshRssSources:
+        if (collection?.isRss != true) {
+          return;
+        }
+        await _refreshRssSources();
         return;
     }
+  }
+
+  Future<void> _showCurrentItemActions(CollectionReadableItem item) async {
+    final memo = item.localMemo;
+    if (memo != null) {
+      await _showCurrentMemoActions(memo);
+      return;
+    }
+    await _showCurrentRssActions(item);
   }
 
   Future<void> _showCurrentMemoActions(LocalMemo memo) async {
@@ -1351,6 +1387,163 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
             .updateMemo(memo, pinned: !memo.pinned);
         return;
     }
+  }
+
+  Future<void> _showCurrentRssActions(CollectionReadableItem item) async {
+    final rssStrings = context.t.strings.collections.rss;
+    final action = await showModalBottomSheet<_CurrentRssAction>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        final saved = item.savedMemoUid?.trim().isNotEmpty == true;
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  rssStrings.articleActions,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  buildCollectionReaderTocTitle(item, _currentMemoIndex),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    item.isRead
+                        ? Icons.mark_email_unread_outlined
+                        : Icons.done_all_rounded,
+                  ),
+                  title: Text(
+                    item.isRead ? rssStrings.markUnread : rssStrings.markRead,
+                  ),
+                  onTap: () =>
+                      Navigator.of(context).pop(_CurrentRssAction.toggleRead),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.open_in_new_rounded),
+                  title: Text(rssStrings.openOriginal),
+                  enabled: item.originalUrl?.trim().isNotEmpty == true,
+                  onTap: () =>
+                      Navigator.of(context).pop(_CurrentRssAction.openOriginal),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.copy_rounded),
+                  title: Text(context.t.strings.legacy.msg_copy),
+                  onTap: () =>
+                      Navigator.of(context).pop(_CurrentRssAction.copy),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    saved
+                        ? Icons.bookmark_added_rounded
+                        : Icons.bookmark_add_outlined,
+                  ),
+                  title: Text(
+                    saved ? rssStrings.savedAsMemo : rssStrings.saveAsMemo,
+                  ),
+                  onTap: () =>
+                      Navigator.of(context).pop(_CurrentRssAction.saveAsMemo),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (!mounted || action == null) {
+      return;
+    }
+    final actions = ref.read(collectionRssActionsProvider);
+    switch (action) {
+      case _CurrentRssAction.toggleRead:
+        await actions.markRead(item, !item.isRead);
+        return;
+      case _CurrentRssAction.openOriginal:
+        final url = item.originalUrl?.trim();
+        if (url == null || url.isEmpty) return;
+        final uri = Uri.tryParse(url);
+        if (uri == null) return;
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return;
+      case _CurrentRssAction.copy:
+        await Clipboard.setData(ClipboardData(text: item.content));
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(context.t.strings.legacy.msg_copied_clipboard),
+            ),
+          );
+        return;
+      case _CurrentRssAction.saveAsMemo:
+        await _saveRssItemAsMemo(item);
+        return;
+    }
+  }
+
+  Future<void> _saveRssItemAsMemo(CollectionReadableItem item) async {
+    final memoUid = await ref
+        .read(collectionRssActionsProvider)
+        .saveAsMemo(item);
+    if (!mounted || memoUid == null) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(context.t.strings.collections.rss.savedAsMemo)),
+      );
+  }
+
+  Future<void> _showRssSubscriptionSheet() async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) =>
+          CollectionRssSubscriptionSheet(collectionId: widget.collectionId),
+    );
+  }
+
+  Future<void> _refreshRssSources() async {
+    final rssStrings = context.t.strings.collections.rss;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(rssStrings.refreshing)));
+    final summary = await ref
+        .read(rssFeedFetchServiceProvider)
+        .refreshCollection(widget.collectionId);
+    if (!mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            summary.successCount == 0 && summary.failureCount == 0
+                ? rssStrings.noFeeds
+                : rssStrings.refreshComplete(
+                    success: summary.successCount,
+                    failure: summary.failureCount,
+                  ),
+          ),
+        ),
+      );
   }
 
   Set<int> _resolveRetainedPagedChapterIndexes({
@@ -1657,9 +1850,16 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
         final safeCurrentMemoIndex = _currentMemoIndex
             .clamp(0, math.max(0, widget.items.length - 1))
             .toInt();
-        final currentMemo = widget.items.isEmpty
+        final currentItem = widget.items.isEmpty
             ? null
             : widget.items[safeCurrentMemoIndex];
+        if (currentItem != null &&
+            currentItem.kind == CollectionReadableItemKind.rssArticle &&
+            !currentItem.isRead) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _markRssItemReadIfNeeded(currentItem);
+          });
+        }
         final currentChapter = !pagedModeReady || widget.items.isEmpty
             ? null
             : _pageEngine.layoutChapter(
@@ -1743,20 +1943,20 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
           preferences: preferences,
         );
         final currentSubtitle = () {
-          if (currentMemo == null) {
+          if (currentItem == null) {
             return '';
           }
           return buildCollectionReaderTocTitle(
-            currentMemo,
+            currentItem,
             safeCurrentMemoIndex,
           );
         }();
         final headerData = CollectionReaderHeaderData(
           collectionTitle: widget.collectionTitle,
           currentItemTitle: currentSubtitle,
-          currentItemMeta: currentMemo == null
+          currentItemMeta: currentItem == null
               ? ''
-              : buildCollectionReaderTocSubtitle(currentMemo),
+              : buildCollectionReaderTocSubtitle(currentItem),
           positionLabel: widget.items.isEmpty
               ? ''
               : '${safeCurrentMemoIndex + 1} / ${widget.items.length}',
@@ -1846,6 +2046,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                               preferences.displayConfig.allowTextSelection,
                           previewImageOnTap:
                               preferences.displayConfig.previewImageOnTap,
+                          onSaveRssItemAsMemo: _saveRssItemAsMemo,
                           onCenterTap: _toggleOverlay,
                           onChapterMeasured: (index, height) {
                             _memoHeights[index] = height;
@@ -1925,6 +2126,12 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                 sliderValue: sliderValue,
                 sliderMax: sliderMax,
                 autoPaging: _autoPaging,
+                showManageCollectionItems: currentCollection?.isManual == true,
+                showRssSourceActions: currentCollection?.isRss == true,
+                showRssSaveShortcut:
+                    currentItem?.kind == CollectionReadableItemKind.rssArticle,
+                currentRssSaved:
+                    currentItem?.savedMemoUid?.trim().isNotEmpty == true,
                 canPrevChapter: safeCurrentMemoIndex > 0,
                 canNextChapter: safeCurrentMemoIndex < widget.items.length - 1,
                 showBrightnessControl:
@@ -1942,8 +2149,11 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                   Navigator.of(context).maybePop();
                 },
                 onSearch: () => _showSearchSheet(preferences),
+                onSaveCurrentRssAsMemo: currentItem == null
+                    ? null
+                    : () => _saveRssItemAsMemo(currentItem),
                 onMoreSelected: (action) =>
-                    _handleMoreAction(action, currentCollection, currentMemo),
+                    _handleMoreAction(action, currentCollection, currentItem),
                 onProgressTap: _showTocSheet,
                 onToggleThemePreset: () {
                   final targetPreset =
@@ -2017,6 +2227,8 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
 }
 
 enum _CurrentMemoAction { open, copy, addToCollection, togglePin }
+
+enum _CurrentRssAction { toggleRead, openOriginal, copy, saveAsMemo }
 
 FontWeight _resolveReaderFontWeight(CollectionReaderFontWeightMode mode) {
   return switch (mode) {

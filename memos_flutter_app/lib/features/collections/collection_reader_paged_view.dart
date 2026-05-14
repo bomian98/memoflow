@@ -1115,6 +1115,7 @@ class _ReaderPageSurface extends StatelessWidget {
       ),
       ReaderBlockKind.image => _ReaderMediaCard(
         attachment: block.attachments.isEmpty ? null : block.attachments.first,
+        sourceUrl: block.sourceUrl,
         title: block.text,
         isVideo: false,
         height: block.height ?? 180,
@@ -1122,6 +1123,7 @@ class _ReaderPageSurface extends StatelessWidget {
       ),
       ReaderBlockKind.video => _ReaderMediaCard(
         attachment: block.attachments.isEmpty ? null : block.attachments.first,
+        sourceUrl: block.sourceUrl,
         title: block.text,
         isVideo: true,
         height: block.height ?? 160,
@@ -1281,6 +1283,7 @@ FontWeight _readerHeadingWeight(CollectionReaderFontWeightMode mode) {
 class _ReaderMediaCard extends ConsumerWidget {
   const _ReaderMediaCard({
     required this.attachment,
+    required this.sourceUrl,
     required this.title,
     required this.isVideo,
     required this.height,
@@ -1288,6 +1291,7 @@ class _ReaderMediaCard extends ConsumerWidget {
   });
 
   final Attachment? attachment;
+  final String? sourceUrl;
   final String? title;
   final bool isVideo;
   final double height;
@@ -1384,11 +1388,7 @@ class _ReaderMediaCard extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 32,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1512,6 +1512,51 @@ class _ReaderMediaCard extends ConsumerWidget {
       return fallbackContent();
     }
 
+    Widget remoteSourceImage(String url) {
+      Widget placeholder() {
+        return Container(
+          color: Colors.transparent,
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.image_outlined,
+            size: 28,
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+          ),
+        );
+      }
+
+      final isSvg = shouldUseSvgRenderer(url: url, mimeType: 'image/*');
+      if (isSvg) {
+        return SvgPicture.network(
+          url,
+          fit: BoxFit.cover,
+          placeholderBuilder: (context) => placeholder(),
+          errorBuilder: (context, error, stackTrace) {
+            logImageLoadError(
+              scope: 'collection_reader_paged_rss_svg',
+              source: url,
+              error: error,
+              stackTrace: stackTrace,
+            );
+            return fallbackContent();
+          },
+        );
+      }
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        placeholder: (context, _) => placeholder(),
+        errorWidget: (context, _, error) {
+          logImageLoadError(
+            scope: 'collection_reader_paged_rss_image',
+            source: url,
+            error: error,
+          );
+          return fallbackContent();
+        },
+      );
+    }
+
     Widget previewContent() {
       if (isVideo && videoEntry != null) {
         return Stack(
@@ -1544,6 +1589,10 @@ class _ReaderMediaCard extends ConsumerWidget {
       }
       if (!isVideo && imageEntry != null) {
         return imageThumbnail(imageEntry);
+      }
+      final remoteUrl = sourceUrl?.trim() ?? '';
+      if (!isVideo && remoteUrl.isNotEmpty) {
+        return remoteSourceImage(remoteUrl);
       }
       return fallbackContent();
     }

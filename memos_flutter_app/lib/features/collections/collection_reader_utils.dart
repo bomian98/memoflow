@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:markdown/markdown.dart' as markdown;
 
 import '../../data/models/collection_reader.dart';
+import '../../data/models/collection_readable_item.dart';
 import '../../data/models/local_memo.dart';
 import '../memos/memo_image_src_normalizer.dart';
 import '../memos/memo_markdown_preprocessor.dart';
@@ -95,19 +96,26 @@ class CollectionReaderParsedContent {
   final List<CollectionReaderContentBlock> blocks;
 }
 
-String buildCollectionReaderTocTitle(LocalMemo memo, int memoIndex) {
+String buildCollectionReaderTocTitle(Object item, int memoIndex) {
+  final readable = _ReaderContentItem.from(item);
   return _buildCollectionReaderTocTitleFromParts(
-    content: memo.content,
-    effectiveDisplayTime: memo.effectiveDisplayTime,
+    title: readable.title,
+    content: readable.content,
+    effectiveDisplayTime: readable.effectiveDisplayTime,
     memoIndex: memoIndex,
   );
 }
 
 String _buildCollectionReaderTocTitleFromParts({
+  String title = '',
   required String content,
   required DateTime effectiveDisplayTime,
   required int memoIndex,
 }) {
+  final explicitTitle = title.trim();
+  if (explicitTitle.isNotEmpty) {
+    return _truncateByRunes(explicitTitle, 48);
+  }
   final lines = content
       .split('\n')
       .map((line) => line.trim())
@@ -122,29 +130,34 @@ String _buildCollectionReaderTocTitleFromParts({
   return 'Memo ${memoIndex + 1}';
 }
 
-String buildCollectionReaderTocSubtitle(LocalMemo memo) {
-  final displayTime = memo.effectiveDisplayTime.millisecondsSinceEpoch > 0
-      ? memo.effectiveDisplayTime
-      : memo.updateTime;
-  return DateFormat('yyyy-MM-dd HH:mm').format(displayTime);
+String buildCollectionReaderTocSubtitle(Object item) {
+  final readable = _ReaderContentItem.from(item);
+  final displayTime = readable.effectiveDisplayTime.millisecondsSinceEpoch > 0
+      ? readable.effectiveDisplayTime
+      : readable.updateTime;
+  final timeText = DateFormat('yyyy-MM-dd HH:mm').format(displayTime);
+  final subtitle = readable.subtitle.trim();
+  return subtitle.isEmpty ? timeText : '$subtitle · $timeText';
 }
 
 List<CollectionReaderTocEntry> buildCollectionReaderTocEntries(
-  List<LocalMemo> items,
+  List<dynamic> items,
 ) {
   return List<CollectionReaderTocEntry>.generate(items.length, (index) {
-    final memo = items[index];
+    final item = _ReaderContentItem.from(items[index]);
     return CollectionReaderTocEntry(
-      memoUid: memo.uid,
+      memoUid: item.uid,
       memoIndex: index,
-      title: buildCollectionReaderTocTitle(memo, index),
-      subtitle: buildCollectionReaderTocSubtitle(memo),
+      title: buildCollectionReaderTocTitle(items[index], index),
+      subtitle: buildCollectionReaderTocSubtitle(items[index]),
     );
   }, growable: false);
 }
 
-String extractCollectionReaderContentText(LocalMemo memo) {
-  return parseCollectionReaderContent(memo.content).text;
+String extractCollectionReaderContentText(Object item) {
+  return parseCollectionReaderContent(
+    _ReaderContentItem.from(item).content,
+  ).text;
 }
 
 CollectionReaderParsedContent parseCollectionReaderContent(String sourceRaw) {
@@ -243,6 +256,9 @@ dom.DocumentFragment? _parseCollectionReaderFragment(String sourceRaw) {
     final document = html_parser.parse(source);
     return html_parser.parseFragment(document.body?.innerHtml ?? source);
   }
+  if (_looksLikeHtmlFragment(source)) {
+    return html_parser.parseFragment(source);
+  }
   final sanitized = sanitizeMemoMarkdown(sourceRaw).trim();
   if (sanitized.isEmpty) {
     return null;
@@ -254,6 +270,13 @@ dom.DocumentFragment? _parseCollectionReaderFragment(String sourceRaw) {
     encodeHtml: false,
   );
   return html_parser.parseFragment(html);
+}
+
+bool _looksLikeHtmlFragment(String source) {
+  return RegExp(
+    r'<(?:article|section|div|p|br|h[1-6]|ul|ol|li|blockquote|pre|code|table|img|figure|video|source|a)(?:\s|>|/)',
+    caseSensitive: false,
+  ).hasMatch(source.trimLeft());
 }
 
 void _collectCollectionReaderContentBlocks(
@@ -725,17 +748,18 @@ String _normalizeCollectionReaderTextBlock(
 }
 
 List<CollectionReaderSearchResult> buildCollectionReaderSearchResults({
-  required List<LocalMemo> items,
+  required List<dynamic> items,
   required String query,
 }) {
   return _buildCollectionReaderSearchResultsFromRawItems(
     items: List<_ReaderSearchMemo>.generate(items.length, (index) {
-      final memo = items[index];
+      final memo = _ReaderContentItem.from(items[index]);
       return _ReaderSearchMemo(
         uid: memo.uid,
         content: memo.content,
         effectiveDisplayTime: memo.effectiveDisplayTime,
         updateTime: memo.updateTime,
+        title: memo.title,
       );
     }, growable: false),
     query: query,
@@ -744,16 +768,17 @@ List<CollectionReaderSearchResult> buildCollectionReaderSearchResults({
 
 Future<List<CollectionReaderSearchResult>>
 buildCollectionReaderSearchResultsAsync({
-  required List<LocalMemo> items,
+  required List<dynamic> items,
   required String query,
 }) {
   final payload = <String, Object?>{
     'query': query,
     'items': List<Map<String, Object?>>.generate(items.length, (index) {
-      final memo = items[index];
+      final memo = _ReaderContentItem.from(items[index]);
       return <String, Object?>{
         'uid': memo.uid,
         'content': memo.content,
+        'title': memo.title,
         'effectiveDisplayTime':
             memo.effectiveDisplayTime.millisecondsSinceEpoch,
         'updateTime': memo.updateTime.millisecondsSinceEpoch,
@@ -774,6 +799,7 @@ _buildCollectionReaderSearchResultsFromPayload(Map<String, Object?> payload) {
     return _ReaderSearchMemo(
       uid: (item['uid'] as String? ?? '').trim(),
       content: (item['content'] as String? ?? ''),
+      title: (item['title'] as String? ?? '').trim(),
       effectiveDisplayTime: DateTime.fromMillisecondsSinceEpoch(
         _readSearchInt(item['effectiveDisplayTime']),
       ),
@@ -812,6 +838,7 @@ _buildCollectionReaderSearchResultsFromRawItems({
         memoUid: memo.uid,
         memoIndex: index,
         title: _buildCollectionReaderTocTitleFromParts(
+          title: memo.title,
           content: memo.content,
           effectiveDisplayTime: memo.effectiveDisplayTime,
           memoIndex: index,
@@ -826,7 +853,7 @@ _buildCollectionReaderSearchResultsFromRawItems({
 }
 
 int resolveCollectionReaderRestoreIndex({
-  required List<LocalMemo> items,
+  required List<dynamic> items,
   CollectionReaderProgress? progress,
 }) {
   if (items.isEmpty) {
@@ -835,7 +862,7 @@ int resolveCollectionReaderRestoreIndex({
   final targetUid = progress?.currentMemoUid?.trim();
   if (targetUid != null && targetUid.isNotEmpty) {
     for (var index = 0; index < items.length; index += 1) {
-      if (items[index].uid == targetUid) {
+      if (_ReaderContentItem.from(items[index]).uid == targetUid) {
         return index;
       }
     }
@@ -849,7 +876,7 @@ int resolveCollectionReaderRestoreIndex({
 
 CollectionReaderProgress normalizeCollectionReaderProgress({
   required String collectionId,
-  required List<LocalMemo> items,
+  required List<dynamic> items,
   required CollectionReaderPreferences fallbackPreferences,
   CollectionReaderProgress? progress,
 }) {
@@ -857,7 +884,9 @@ CollectionReaderProgress normalizeCollectionReaderProgress({
     items: items,
     progress: progress,
   );
-  final normalizedMemoUid = items.isEmpty ? null : items[normalizedIndex].uid;
+  final normalizedMemoUid = items.isEmpty
+      ? null
+      : _ReaderContentItem.from(items[normalizedIndex]).uid;
   final source = progress;
   return CollectionReaderProgress(
     collectionId: collectionId,
@@ -901,14 +930,60 @@ class _ReaderSearchMemo {
   const _ReaderSearchMemo({
     required this.uid,
     required this.content,
+    required this.title,
     required this.effectiveDisplayTime,
     required this.updateTime,
   });
 
   final String uid;
   final String content;
+  final String title;
   final DateTime effectiveDisplayTime;
   final DateTime updateTime;
+}
+
+class _ReaderContentItem {
+  const _ReaderContentItem({
+    required this.uid,
+    required this.title,
+    required this.subtitle,
+    required this.content,
+    required this.effectiveDisplayTime,
+    required this.updateTime,
+  });
+
+  final String uid;
+  final String title;
+  final String subtitle;
+  final String content;
+  final DateTime effectiveDisplayTime;
+  final DateTime updateTime;
+
+  factory _ReaderContentItem.from(Object item) {
+    if (item is CollectionReadableItem) {
+      return _ReaderContentItem(
+        uid: item.uid,
+        title: item.kind == CollectionReadableItemKind.rssArticle
+            ? item.title
+            : '',
+        subtitle: item.subtitle,
+        content: item.content,
+        effectiveDisplayTime: item.effectiveDisplayTime,
+        updateTime: item.updateTime,
+      );
+    }
+    if (item is LocalMemo) {
+      return _ReaderContentItem(
+        uid: item.uid,
+        title: '',
+        subtitle: '',
+        content: item.content,
+        effectiveDisplayTime: item.effectiveDisplayTime,
+        updateTime: item.updateTime,
+      );
+    }
+    throw ArgumentError.value(item, 'item', 'Unsupported reader item type');
+  }
 }
 
 int _readSearchInt(Object? raw) {

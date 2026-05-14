@@ -1,11 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
-import '../../data/models/local_memo.dart';
+import '../../data/models/collection_readable_item.dart';
+import '../../i18n/strings.g.dart';
 import 'collection_reader_animation_delegate.dart';
 import 'collection_reader_no_anim_delegate.dart';
+import 'collection_reader_utils.dart';
 import '../memos/widgets/memo_reader_content.dart';
 
 class CollectionReaderVerticalView extends StatelessWidget {
@@ -22,6 +23,7 @@ class CollectionReaderVerticalView extends StatelessWidget {
     required this.metaTextStyle,
     required this.allowTextSelection,
     required this.previewImageOnTap,
+    required this.onSaveRssItemAsMemo,
     required this.onCenterTap,
     required this.onChapterMeasured,
     required this.onUserScrollStart,
@@ -29,7 +31,7 @@ class CollectionReaderVerticalView extends StatelessWidget {
 
   final GlobalKey viewportKey;
   final ScrollController scrollController;
-  final List<LocalMemo> items;
+  final List<CollectionReadableItem> items;
   final Map<int, GlobalKey> itemKeys;
   final String? highlightQuery;
   final String? highlightMemoUid;
@@ -38,6 +40,7 @@ class CollectionReaderVerticalView extends StatelessWidget {
   final TextStyle metaTextStyle;
   final bool allowTextSelection;
   final bool previewImageOnTap;
+  final ValueChanged<CollectionReadableItem> onSaveRssItemAsMemo;
   final VoidCallback onCenterTap;
   final void Function(int index, double height) onChapterMeasured;
   final VoidCallback onUserScrollStart;
@@ -103,17 +106,16 @@ class CollectionReaderVerticalView extends StatelessWidget {
                                 context,
                               ).dividerColor.withValues(alpha: 0.18),
                             ),
-                          MemoReaderContent(
-                            memo: memo,
+                          _ReadableItemContent(
+                            item: memo,
                             highlightQuery: highlightMemoUid == memo.uid
                                 ? highlightQuery
                                 : null,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
                             contentTextStyle: contentTextStyle,
                             metaTextStyle: metaTextStyle,
-                            selectable: allowTextSelection,
+                            allowTextSelection: allowTextSelection,
                             previewImageOnTap: previewImageOnTap,
-                            mediaMaxHeightFactor: 0.32,
+                            onSaveRssItemAsMemo: onSaveRssItemAsMemo,
                           ),
                           const SizedBox(height: 16),
                         ],
@@ -127,6 +129,89 @@ class CollectionReaderVerticalView extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _ReadableItemContent extends StatelessWidget {
+  const _ReadableItemContent({
+    required this.item,
+    required this.highlightQuery,
+    required this.contentTextStyle,
+    required this.metaTextStyle,
+    required this.allowTextSelection,
+    required this.previewImageOnTap,
+    required this.onSaveRssItemAsMemo,
+  });
+
+  final CollectionReadableItem item;
+  final String? highlightQuery;
+  final TextStyle contentTextStyle;
+  final TextStyle metaTextStyle;
+  final bool allowTextSelection;
+  final bool previewImageOnTap;
+  final ValueChanged<CollectionReadableItem> onSaveRssItemAsMemo;
+
+  @override
+  Widget build(BuildContext context) {
+    final memo = item.localMemo;
+    if (memo != null) {
+      return MemoReaderContent(
+        memo: memo,
+        highlightQuery: highlightQuery,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        contentTextStyle: contentTextStyle,
+        metaTextStyle: metaTextStyle,
+        selectable: allowTextSelection,
+        previewImageOnTap: previewImageOnTap,
+        mediaMaxHeightFactor: 0.32,
+      );
+    }
+
+    final body = HtmlWidget(
+      item.content,
+      textStyle: contentTextStyle,
+      renderMode: RenderMode.column,
+    );
+    final saved = item.savedMemoUid?.trim().isNotEmpty == true;
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(buildCollectionReaderTocSubtitle(item), style: metaTextStyle),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: saved ? null : () => onSaveRssItemAsMemo(item),
+              icon: Icon(
+                saved
+                    ? Icons.bookmark_added_rounded
+                    : Icons.bookmark_add_outlined,
+              ),
+              label: Text(
+                saved
+                    ? context.t.strings.collections.rss.savedAsMemo
+                    : context.t.strings.collections.rss.saveAsMemo,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          body,
+          if (item.savedMemoUid?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 10),
+            Text(
+              context.t.strings.collections.rss.savedAsMemo,
+              style: metaTextStyle,
+            ),
+          ],
+        ],
+      ),
+    );
+    if (!allowTextSelection) {
+      return content;
+    }
+    return SelectionArea(child: content);
   }
 }
 
@@ -162,7 +247,7 @@ class _MeasuredChapterState extends State<_MeasuredChapter> {
         return;
       }
       _lastSize = size;
-      unawaited(Future<void>(() => widget.onMeasured(size.height)));
+      widget.onMeasured(size.height);
     });
     return widget.child;
   }

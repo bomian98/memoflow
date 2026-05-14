@@ -738,10 +738,10 @@ CREATE TABLE IF NOT EXISTS collection_read_progress (
         await appDb.close();
       });
 
-    final upgradedDb = await appDb.db;
-    final columns = await upgradedDb.rawQuery(
-      'PRAGMA table_info("collection_read_progress");',
-    );
+      final upgradedDb = await appDb.db;
+      final columns = await upgradedDb.rawQuery(
+        'PRAGMA table_info("collection_read_progress");',
+      );
 
       expect(columns.any((row) => row['name'] == 'collection_id'), isTrue);
       expect(columns.any((row) => row['name'] == 'reader_mode'), isTrue);
@@ -760,4 +760,100 @@ CREATE TABLE IF NOT EXISTS collection_read_progress (
       expect(columns.any((row) => row['name'] == 'updated_time'), isTrue);
     },
   );
+
+  test('upgrade to v30 creates RSS tables and indexes', () async {
+    final dbName = uniqueDbName('app_database_v29_rss_tables');
+
+    addTearDown(() async {
+      await AppDatabase.deleteDatabaseFile(dbName: dbName);
+    });
+
+    final dbDir = await resolveDatabasesDirectoryPath();
+    final path = p.join(dbDir, dbName);
+
+    final legacyDb = await openDatabase(
+      path,
+      version: 29,
+      onCreate: (db, version) async {
+        await db.execute('''
+CREATE TABLE IF NOT EXISTS memos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  uid TEXT NOT NULL UNIQUE,
+  content TEXT NOT NULL,
+  visibility TEXT NOT NULL,
+  pinned INTEGER NOT NULL DEFAULT 0,
+  state TEXT NOT NULL DEFAULT 'NORMAL',
+  create_time INTEGER NOT NULL,
+  display_time INTEGER,
+  update_time INTEGER NOT NULL,
+  tags TEXT NOT NULL DEFAULT '',
+  attachments_json TEXT NOT NULL DEFAULT '[]',
+  location_placeholder TEXT,
+  location_lat REAL,
+  location_lng REAL,
+  relation_count INTEGER NOT NULL DEFAULT 0,
+  sync_state INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT
+);
+''');
+        await db.execute('''
+CREATE TABLE IF NOT EXISTS memo_collections (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  type TEXT NOT NULL,
+  icon_key TEXT NOT NULL DEFAULT '',
+  accent_color_hex TEXT,
+  rules_json TEXT NOT NULL DEFAULT '{}',
+  cover_json TEXT NOT NULL DEFAULT '{}',
+  view_json TEXT NOT NULL DEFAULT '{}',
+  pinned INTEGER NOT NULL DEFAULT 0,
+  archived INTEGER NOT NULL DEFAULT 0,
+  hide_when_empty INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_time INTEGER NOT NULL,
+  updated_time INTEGER NOT NULL
+);
+''');
+      },
+    );
+    await legacyDb.close();
+
+    final appDb = AppDatabase(dbName: dbName);
+    addTearDown(() async {
+      await appDb.close();
+    });
+
+    final upgradedDb = await appDb.db;
+    final feedColumns = await upgradedDb.rawQuery(
+      'PRAGMA table_info("rss_feeds");',
+    );
+    final articleColumns = await upgradedDb.rawQuery(
+      'PRAGMA table_info("rss_articles");',
+    );
+    final sourceColumns = await upgradedDb.rawQuery(
+      'PRAGMA table_info("collection_rss_sources");',
+    );
+    final articleIndexes = await upgradedDb.rawQuery(
+      'PRAGMA index_list("rss_articles");',
+    );
+
+    expect(feedColumns.any((row) => row['name'] == 'feed_url'), isTrue);
+    expect(feedColumns.any((row) => row['name'] == 'last_error'), isTrue);
+    expect(articleColumns.any((row) => row['name'] == 'read_state'), isTrue);
+    expect(
+      articleColumns.any((row) => row['name'] == 'saved_memo_uid'),
+      isTrue,
+    );
+    expect(sourceColumns.any((row) => row['name'] == 'collection_id'), isTrue);
+    expect(sourceColumns.any((row) => row['name'] == 'feed_id'), isTrue);
+    expect(
+      articleIndexes.any((row) => row['name'] == 'idx_rss_articles_feed_guid'),
+      isTrue,
+    );
+    expect(
+      articleIndexes.any((row) => row['name'] == 'idx_rss_articles_feed_link'),
+      isTrue,
+    );
+  });
 }

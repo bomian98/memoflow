@@ -322,6 +322,8 @@ class CollectionsRepository {
     if (source.type == MemoCollectionType.manual) {
       final memoUids = await readManualItemUids(source.id);
       await addManualItems(copy.id, memoUids);
+    } else if (source.type == MemoCollectionType.rss) {
+      await _copyRssSources(sourceCollectionId: source.id, copyId: copy.id);
     }
     LogManager.instance.info(
       'Collection duplicated',
@@ -382,6 +384,38 @@ class CollectionsRepository {
     if (notify) {
       _db.notifyDataChanged();
     }
+  }
+
+  Future<void> _copyRssSources({
+    required String sourceCollectionId,
+    required String copyId,
+  }) async {
+    final normalizedSourceId = sourceCollectionId.trim();
+    final normalizedCopyId = copyId.trim();
+    if (normalizedSourceId.isEmpty || normalizedCopyId.isEmpty) return;
+    final sqlite = await _db.db;
+    final rows = await sqlite.query(
+      'collection_rss_sources',
+      where: 'collection_id = ?',
+      whereArgs: <Object?>[normalizedSourceId],
+      orderBy: 'sort_order ASC, created_time ASC',
+    );
+    if (rows.isEmpty) return;
+    final now = _nowSec();
+    await AppDatabaseWriteDao.runTransaction<void>(sqlite, (txn) async {
+      for (var index = 0; index < rows.length; index++) {
+        final feedId = (rows[index]['feed_id'] as String?)?.trim() ?? '';
+        if (feedId.isEmpty) continue;
+        await txn.insert('collection_rss_sources', <String, Object?>{
+          'collection_id': normalizedCopyId,
+          'feed_id': feedId,
+          'sort_order': index,
+          'created_time': now,
+          'updated_time': now,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    });
+    _db.notifyDataChanged();
   }
 
   Future<int> _nextSortOrder(Database sqlite) async {

@@ -21,6 +21,7 @@ import 'memo_search_db_persistence.dart';
 import 'memo_write_db_persistence.dart';
 import 'outbox_db_persistence.dart';
 import 'quick_clip_recovery_db_persistence.dart';
+import 'rss_db_persistence.dart';
 import 'stats_cache_db_persistence.dart';
 import 'tag_db_persistence.dart';
 import '../models/memo_clip_card_metadata.dart';
@@ -43,7 +44,7 @@ class AppDatabase {
   final DesktopDbWriteGateway? _writeGateway;
   late final AppDatabaseWriteDao _writeDao = AppDatabaseWriteDao(db: this);
   static const Object _displayTimeUnspecified = Object();
-  static const _dbVersion = 29;
+  static const _dbVersion = 30;
   static const int outboxStatePending = 0;
   static const int outboxStateRunning = 1;
   static const int outboxStateRetry = 2;
@@ -107,6 +108,7 @@ class AppDatabase {
           await ComposeDraftDbPersistence.ensureTable(db);
 
           await CollectionDbPersistence.ensureTables(db);
+          await RssDbPersistence.ensureTables(db);
           await AiDbPersistence.ensureTables(db);
 
           await _ensureStatsPersistenceTables(db, rebuild: true);
@@ -207,10 +209,14 @@ class AppDatabase {
           if (oldVersion < 29) {
             await QuickClipRecoveryDbPersistence.ensureTable(db);
           }
+          if (oldVersion < 30) {
+            await RssDbPersistence.ensureTables(db);
+          }
         },
         onOpen: (db) async {
           await MemoAuxiliaryDbPersistence.ensureMemoClipCardsTable(db);
           await QuickClipRecoveryDbPersistence.ensureTable(db);
+          await RssDbPersistence.ensureTables(db);
           await _ensureStatsPersistenceTables(db);
           await MemoSearchDbPersistence.ensureFts(db);
           await MemoSearchDbPersistence.ensureIndex(db);

@@ -12,12 +12,17 @@ import '../../core/uid.dart';
 import '../../data/models/attachment.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/memo_collection.dart';
+import '../../data/models/rss_feed.dart';
+import '../../data/models/rss_feed_preview.dart';
 import '../../data/repositories/collections_repository.dart';
+import '../../data/repositories/rss_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../state/collections/collection_rss_providers.dart';
 import '../../state/collections/collection_resolver.dart';
 import '../../state/collections/collections_provider.dart';
 import '../../state/memos/memos_providers.dart';
 import '../../state/tags/tag_color_lookup.dart';
+import 'collection_rss_subscription_sheet.dart';
 import 'collection_ui.dart';
 
 class CollectionEditorScreen extends ConsumerStatefulWidget {
@@ -43,8 +48,10 @@ class _CollectionEditorScreenState
     extends ConsumerState<CollectionEditorScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _rssUrlController = TextEditingController();
   final Set<String> _selectedTags = <String>{};
   final List<String> _manualMemoUids = <String>[];
+  final List<RssFeedPreview> _draftRssPreviews = <RssFeedPreview>[];
   late MemoCollectionType _type;
   late CollectionTagMatchMode _tagMatchMode;
   late bool _includeDescendants;
@@ -63,6 +70,9 @@ class _CollectionEditorScreenState
   late bool _showStats;
   late bool _hideWhenEmpty;
   bool _hasExplicitManualMemoSelection = false;
+  bool _rssBusy = false;
+  String? _rssError;
+  RssFeedPreview? _rssPreview;
   double _bottomBarHeight = 120;
   late final MemoCollection _initialSnapshotCollection;
   List<String>? _initialManualMemoUids;
@@ -103,7 +113,11 @@ class _CollectionEditorScreenState
     _attachmentRule =
         collection?.rules.attachmentRule ?? CollectionAttachmentRule.any;
     _pinnedOnly = collection?.rules.pinnedOnly ?? false;
-    _iconKey = collection?.iconKey ?? MemoCollection.defaultIconKey;
+    _iconKey =
+        collection?.iconKey ??
+        (_type == MemoCollectionType.rss
+            ? MemoCollection.rssIconKey
+            : MemoCollection.defaultIconKey);
     _accentColorHex = collection?.accentColorHex;
     if (collection == null &&
         _accentColorHex == null &&
@@ -112,7 +126,11 @@ class _CollectionEditorScreenState
           .read(tagColorLookupProvider)
           .resolveEffectiveHexByPath(initialSelectedTags.first);
     }
-    _coverMode = collection?.cover.mode ?? CollectionCoverMode.auto;
+    _coverMode =
+        collection?.cover.mode ??
+        (_type == MemoCollectionType.rss
+            ? CollectionCoverMode.icon
+            : CollectionCoverMode.auto);
     _coverMemoUid = collection?.cover.memoUid;
     _coverAttachmentUid = collection?.cover.attachmentUid;
     _layoutMode = collection?.view.defaultLayout ?? CollectionLayoutMode.shelf;
@@ -153,6 +171,7 @@ class _CollectionEditorScreenState
     _manualBaselineSubscription?.close();
     _titleController.dispose();
     _descriptionController.dispose();
+    _rssUrlController.dispose();
     super.dispose();
   }
 
@@ -208,6 +227,7 @@ class _CollectionEditorScreenState
   Future<void> _save({
     required List<LocalMemo> existingManualItems,
     required List<String> persistedManualMemoUids,
+    required List<CollectionRssSourceWithFeed> persistedRssSources,
   }) async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
@@ -224,6 +244,13 @@ class _CollectionEditorScreenState
     if (_type == MemoCollectionType.manual && manualMemoUids.isEmpty) {
       final shouldContinue = await _confirmEmptyManualSave();
       if (!shouldContinue) return;
+    }
+    if (!mounted) return;
+    if (_type == MemoCollectionType.rss &&
+        persistedRssSources.isEmpty &&
+        _draftRssPreviews.isEmpty) {
+      _showMessage(context.t.strings.collections.rss.feedRequired);
+      return;
     }
     final repository = ref.read(collectionsRepositoryProvider);
     final draft = _draftCollection;
@@ -245,6 +272,15 @@ class _CollectionEditorScreenState
         await repository.removeManualItem(draft.id, removedMemoUids);
       }
     }
+    if (draft.type == MemoCollectionType.rss && _draftRssPreviews.isNotEmpty) {
+      final rssRepository = ref.read(rssRepositoryProvider);
+      for (final preview in _draftRssPreviews) {
+        await rssRepository.subscribeCollectionToPreview(
+          collectionId: draft.id,
+          preview: preview,
+        );
+      }
+    }
     if (!mounted) return;
     Navigator.of(context).pop(draft);
   }
@@ -255,6 +291,14 @@ class _CollectionEditorScreenState
       if (value == MemoCollectionType.manual &&
           _sortMode != CollectionSortMode.manualOrder) {
         _sortMode = CollectionSortMode.manualOrder;
+      } else if (value == MemoCollectionType.rss) {
+        if (_sortMode == CollectionSortMode.manualOrder) {
+          _sortMode = CollectionSortMode.displayTimeDesc;
+        }
+        _iconKey = MemoCollection.rssIconKey;
+        if (_coverMode == CollectionCoverMode.auto) {
+          _coverMode = CollectionCoverMode.icon;
+        }
       } else if (value == MemoCollectionType.smart &&
           _sortMode == CollectionSortMode.manualOrder) {
         _sortMode = CollectionSortMode.displayTimeDesc;
@@ -274,6 +318,111 @@ class _CollectionEditorScreenState
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _loadRssPreview() async {
+    final url = _rssUrlController.text.trim();
+    if (url.isEmpty) {
+      setState(() => _rssError = context.t.strings.collections.rss.inputEmpty);
+      return;
+    }
+    setState(() {
+      _rssBusy = true;
+      _rssError = null;
+      _rssPreview = null;
+    });
+    try {
+      final preview = await ref
+          .read(rssFeedFetchServiceProvider)
+          .previewUrl(url);
+      if (!mounted) return;
+      setState(() => _rssPreview = preview);
+    } catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _rssError = localizedRssError(context, error, previewing: true),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _rssBusy = false);
+      }
+    }
+  }
+
+  Future<void> _addRssPreviewToDraft(
+    List<CollectionRssSourceWithFeed> persistedRssSources,
+  ) async {
+    var preview = _rssPreview;
+    if (preview == null) {
+      await _loadRssPreview();
+      preview = _rssPreview;
+      if (preview == null) return;
+    }
+    if (_containsRssFeedPreview(preview, persistedRssSources)) {
+      setState(
+        () => _rssError = context.t.strings.collections.rss.feedAlreadyAdded,
+      );
+      return;
+    }
+    _updateState(() {
+      _draftRssPreviews.add(preview!);
+      _rssPreview = null;
+      _rssError = null;
+      _rssUrlController.clear();
+      if (_titleController.text.trim().isEmpty) {
+        _titleController.text = preview.displayTitle;
+      }
+      _iconKey = MemoCollection.rssIconKey;
+      if (_coverMode == CollectionCoverMode.auto) {
+        _coverMode = CollectionCoverMode.icon;
+      }
+    });
+  }
+
+  bool _containsRssFeedPreview(
+    RssFeedPreview preview,
+    List<CollectionRssSourceWithFeed> persistedRssSources,
+  ) {
+    final feedUrl = preview.feedUrl.trim();
+    if (feedUrl.isEmpty) return false;
+    final draftFeedUrls = _draftRssPreviews.map((item) => item.feedUrl.trim());
+    final persistedFeedUrls = persistedRssSources.map(
+      (item) => item.feed.feedUrl.trim(),
+    );
+    return draftFeedUrls.contains(feedUrl) ||
+        persistedFeedUrls.contains(feedUrl);
+  }
+
+  void _removeDraftRssPreview(RssFeedPreview preview) {
+    _updateState(() {
+      _draftRssPreviews.removeWhere(
+        (item) => item.feedUrl.trim() == preview.feedUrl.trim(),
+      );
+    });
+  }
+
+  Future<void> _removePersistedRssSource(
+    CollectionRssSourceWithFeed source,
+  ) async {
+    setState(() {
+      _rssBusy = true;
+      _rssError = null;
+    });
+    try {
+      await ref
+          .read(rssRepositoryProvider)
+          .detachFeedFromCollection(
+            collectionId: source.source.collectionId,
+            feedId: source.feed.id,
+          );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _rssError = '$error');
+    } finally {
+      if (mounted) {
+        setState(() => _rssBusy = false);
+      }
+    }
   }
 
   Future<void> _pickTags(List<TagStat> tags) async {
@@ -362,6 +511,13 @@ class _CollectionEditorScreenState
             persistedManualMemoUids,
           )
         : const <LocalMemo>[];
+    final persistedRssSourcesAsync =
+        widget.initialCollection?.type == MemoCollectionType.rss
+        ? ref.watch(collectionRssSourcesProvider(widget.initialCollection!.id))
+        : const AsyncValue.data(<CollectionRssSourceWithFeed>[]);
+    final persistedRssSources =
+        persistedRssSourcesAsync.valueOrNull ??
+        const <CollectionRssSourceWithFeed>[];
     final previewItems = _buildPreviewItems(
       memos: memosAsync.valueOrNull ?? const <LocalMemo>[],
       tagLookup: tagLookup,
@@ -416,6 +572,7 @@ class _CollectionEditorScreenState
           preview: preview,
           existingManualItems: existingManualItems,
           persistedManualMemoUids: persistedManualMemoUids,
+          persistedRssSources: persistedRssSources,
         ),
         body: ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -459,11 +616,17 @@ class _CollectionEditorScreenState
                           colors: colors,
                           tagsAsync: tagsAsync,
                         )
-                      : _buildManualSourceSection(
+                      : _type == MemoCollectionType.manual
+                      ? _buildManualSourceSection(
                           context,
                           colors: colors,
                           persistedManualMemoUids: persistedManualMemoUids,
                           previewItems: previewItems,
+                        )
+                      : _buildRssSourceSection(
+                          context,
+                          colors: colors,
+                          persistedRssSourcesAsync: persistedRssSourcesAsync,
                         ),
                 ),
               ),
@@ -491,8 +654,9 @@ class _CollectionEditorScreenState
     required MemoCollectionPreview preview,
     required List<LocalMemo> existingManualItems,
     required List<String> persistedManualMemoUids,
+    required List<CollectionRssSourceWithFeed> persistedRssSources,
   }) {
-    final canSave = _canSave(existingManualItems);
+    final canSave = _canSave(existingManualItems, persistedRssSources);
     return SafeArea(
       top: false,
       child: MeasureSize(
@@ -518,7 +682,12 @@ class _CollectionEditorScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _footerSummary(context, preview, persistedManualMemoUids),
+                      _footerSummary(
+                        context,
+                        preview,
+                        persistedManualMemoUids,
+                        persistedRssSources,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -530,6 +699,8 @@ class _CollectionEditorScreenState
                     Text(
                       _type == MemoCollectionType.smart
                           ? _smartRuleSummary(context)
+                          : _type == MemoCollectionType.rss
+                          ? context.t.strings.collections.rss.draftHelp
                           : context.tr(
                               zh: '从这里直接添加 memo，创建后不用再跳去别处维护。',
                               en: 'Add memos here first, then finish creating in one go.',
@@ -549,6 +720,7 @@ class _CollectionEditorScreenState
                     ? () => _save(
                         existingManualItems: existingManualItems,
                         persistedManualMemoUids: persistedManualMemoUids,
+                        persistedRssSources: persistedRssSources,
                       )
                     : null,
                 style: FilledButton.styleFrom(
@@ -568,7 +740,13 @@ class _CollectionEditorScreenState
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
-                child: Text(_submitLabel(context, persistedManualMemoUids)),
+                child: Text(
+                  _submitLabel(
+                    context,
+                    persistedManualMemoUids,
+                    persistedRssSources,
+                  ),
+                ),
               ),
             ],
           ),
@@ -615,6 +793,18 @@ class _CollectionEditorScreenState
                 selected: _type == MemoCollectionType.manual,
                 colors: colors,
                 onTap: () => _setType(MemoCollectionType.manual),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _CollectionTypeCard(
+                label: collectionTypeLabel(context, MemoCollectionType.rss),
+                description:
+                    context.t.strings.collections.rss.createDescription,
+                icon: Icons.rss_feed_rounded,
+                selected: _type == MemoCollectionType.rss,
+                colors: colors,
+                onTap: () => _setType(MemoCollectionType.rss),
               ),
             ),
           ],
@@ -1010,6 +1200,172 @@ class _CollectionEditorScreenState
                 ) ...[
                   _PreviewMemoRow(memo: previewItems[index]),
                   if (index < previewItems.take(2).length - 1)
+                    Divider(height: 18, color: colors.divider),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildRssSourceSection(
+    BuildContext context, {
+    required _CollectionEditorColors colors,
+    required AsyncValue<List<CollectionRssSourceWithFeed>>
+    persistedRssSourcesAsync,
+  }) {
+    final rssStrings = context.t.strings.collections.rss;
+    final persistedRssSources =
+        persistedRssSourcesAsync.valueOrNull ??
+        const <CollectionRssSourceWithFeed>[];
+    final feedCount = persistedRssSources.length + _draftRssPreviews.length;
+    final currentPreview = _rssPreview;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(
+          title: rssStrings.manageFeeds,
+          mutedColor: colors.textMuted,
+          trailing: Text(
+            rssStrings.addedFeeds(count: feedCount),
+            style: TextStyle(fontSize: 12, color: colors.textMuted),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          rssStrings.draftHelp,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: colors.textMuted),
+        ),
+        const SizedBox(height: 12),
+        _EditorFieldShell(
+          label: rssStrings.inputLabel,
+          colors: colors,
+          child: TextField(
+            controller: _rssUrlController,
+            enabled: !_rssBusy,
+            keyboardType: TextInputType.url,
+            textInputAction: TextInputAction.done,
+            onChanged: (_) => _markChanged(),
+            onSubmitted: (_) => _loadRssPreview(),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              isCollapsed: true,
+              prefixIcon: const Icon(Icons.rss_feed_rounded),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 32,
+                minHeight: 24,
+              ),
+              hintText: rssStrings.inputLabel,
+            ),
+          ),
+        ),
+        if (_rssError?.trim().isNotEmpty == true) ...[
+          const SizedBox(height: 8),
+          Text(
+            _rssError!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _rssBusy ? null : _loadRssPreview,
+                icon: const Icon(Icons.search_rounded),
+                label: Text(rssStrings.preview),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton.tonalIcon(
+                onPressed: _rssBusy
+                    ? null
+                    : () => _addRssPreviewToDraft(persistedRssSources),
+                icon: const Icon(Icons.add_rounded),
+                label: Text(
+                  feedCount == 0
+                      ? rssStrings.addFeedToDraft
+                      : rssStrings.addAnotherFeed,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (_rssBusy) ...[
+          const SizedBox(height: 12),
+          const LinearProgressIndicator(),
+        ],
+        if (currentPreview != null) ...[
+          const SizedBox(height: 12),
+          RssFeedPreviewCard(preview: currentPreview),
+        ],
+        const SizedBox(height: 12),
+        if (persistedRssSourcesAsync.isLoading &&
+            !persistedRssSourcesAsync.hasValue)
+          CollectionLoadingView(
+            label: context.t.strings.collections.loadingCollections,
+            centered: false,
+            compact: true,
+          )
+        else if (persistedRssSourcesAsync.hasError)
+          CollectionErrorView(
+            title: rssStrings.manageFeeds,
+            message: '${persistedRssSourcesAsync.error}',
+            centered: false,
+            compact: true,
+          )
+        else if (feedCount == 0)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              color: colors.fieldBackground,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              rssStrings.feedRequired,
+              style: TextStyle(color: colors.textMuted),
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.selectedBackground,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                for (final source in persistedRssSources) ...[
+                  _RssSourceRow(
+                    title: source.feed.displayTitle,
+                    subtitle: source.feed.feedUrl,
+                    articleCount: null,
+                    pending: false,
+                    onRemove: _rssBusy
+                        ? null
+                        : () => _removePersistedRssSource(source),
+                  ),
+                  if (source != persistedRssSources.last ||
+                      _draftRssPreviews.isNotEmpty)
+                    Divider(height: 18, color: colors.divider),
+                ],
+                for (final preview in _draftRssPreviews) ...[
+                  _RssSourceRow(
+                    title: preview.displayTitle,
+                    subtitle: preview.feedUrl,
+                    articleCount: preview.articles.length,
+                    pending: true,
+                    onRemove: () => _removeDraftRssPreview(preview),
+                  ),
+                  if (preview != _draftRssPreviews.last)
                     Divider(height: 18, color: colors.divider),
                 ],
               ],
@@ -1424,11 +1780,17 @@ class _CollectionEditorScreenState
     return _normalizeMemoUids(source);
   }
 
-  bool _canSave(List<LocalMemo> existingManualItems) {
+  bool _canSave(
+    List<LocalMemo> existingManualItems,
+    List<CollectionRssSourceWithFeed> persistedRssSources,
+  ) {
     final hasTitle = _titleController.text.trim().isNotEmpty;
     if (!hasTitle) return false;
     if (_type == MemoCollectionType.smart) {
       return _draftRules.hasAnyConstraint;
+    }
+    if (_type == MemoCollectionType.rss) {
+      return persistedRssSources.isNotEmpty || _draftRssPreviews.isNotEmpty;
     }
     return true;
   }
@@ -1436,6 +1798,7 @@ class _CollectionEditorScreenState
   String _submitLabel(
     BuildContext context,
     List<String> persistedManualMemoUids,
+    List<CollectionRssSourceWithFeed> persistedRssSources,
   ) {
     if (_isEditing) {
       return context.tr(zh: '保存修改', en: 'Save changes');
@@ -1451,6 +1814,12 @@ class _CollectionEditorScreenState
             : 'Create and add $manualCount memos',
       );
     }
+    if (_type == MemoCollectionType.rss) {
+      final feedCount = persistedRssSources.length + _draftRssPreviews.length;
+      if (feedCount > 0) {
+        return context.t.strings.collections.rss.addedFeeds(count: feedCount);
+      }
+    }
     return context.t.strings.collections.createCollection;
   }
 
@@ -1458,12 +1827,18 @@ class _CollectionEditorScreenState
     BuildContext context,
     MemoCollectionPreview preview,
     List<String> persistedManualMemoUids,
+    List<CollectionRssSourceWithFeed> persistedRssSources,
   ) {
     if (_type == MemoCollectionType.manual) {
       final count = _effectiveManualMemoUidsFromPersisted(
         persistedManualMemoUids,
       ).length;
       return context.tr(zh: '已选 $count 条', en: '$count selected');
+    }
+    if (_type == MemoCollectionType.rss) {
+      return context.t.strings.collections.rss.addedFeeds(
+        count: persistedRssSources.length + _draftRssPreviews.length,
+      );
     }
     return context.tr(
       zh: '已命中 ${preview.itemCount} 条',
@@ -1597,6 +1972,11 @@ class _CollectionEditorScreenState
   }
 
   bool _hasUnsavedChanges({required List<String> persistedManualMemoUids}) {
+    if (_draftRssPreviews.isNotEmpty ||
+        _rssPreview != null ||
+        _rssUrlController.text.trim().isNotEmpty) {
+      return true;
+    }
     final currentSnapshot = _CollectionEditorPersistedSnapshot.fromCollection(
       collection: _draftCollection,
       manualMemoUids: _effectiveManualMemoUidsFromPersisted(
@@ -2036,6 +2416,65 @@ class _PreviewMemoRow extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RssSourceRow extends StatelessWidget {
+  const _RssSourceRow({
+    required this.title,
+    required this.subtitle,
+    required this.articleCount,
+    required this.pending,
+    required this.onRemove,
+  });
+
+  final String title;
+  final String subtitle;
+  final int? articleCount;
+  final bool pending;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final rssStrings = context.t.strings.collections.rss;
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    final count = articleCount;
+    final effectiveTitle = title.trim().isEmpty ? subtitle : title;
+    return Row(
+      children: [
+        const Icon(Icons.rss_feed_rounded, size: 20),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                effectiveTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                [
+                  subtitle,
+                  if (count != null) rssStrings.articlesCount(count: count),
+                  if (pending) rssStrings.addFeedToDraft,
+                ].where((item) => item.trim().isNotEmpty).join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: muted),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: rssStrings.removeFeed,
+          onPressed: onRemove,
+          icon: const Icon(Icons.close_rounded),
         ),
       ],
     );

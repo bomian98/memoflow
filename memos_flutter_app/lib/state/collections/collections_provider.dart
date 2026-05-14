@@ -1,10 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/collection_readable_item.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/memo_collection.dart';
+import '../../data/models/rss_article.dart';
 import '../../data/repositories/collections_repository.dart';
 import '../system/database_provider.dart';
 import '../tags/tag_color_lookup.dart';
+import 'collection_rss_providers.dart';
 import 'collection_resolver.dart';
 
 class ManualCollectionMembershipItem {
@@ -85,28 +88,32 @@ final collectionByIdProvider =
 final collectionResolvedItemsProvider =
     Provider.family<AsyncValue<List<LocalMemo>>, String>((ref, collectionId) {
       final collectionAsync = ref.watch(collectionByIdProvider(collectionId));
-      final memosAsync = ref.watch(collectionCandidateMemosProvider);
-      final collection = collectionAsync.valueOrNull;
-      final manualUidsAsync = collection?.type == MemoCollectionType.manual
-          ? ref.watch(collectionManualItemUidsProvider(collectionId))
-          : const AsyncValue.data(<String>[]);
-
-      if (collectionAsync.isLoading ||
-          memosAsync.isLoading ||
-          manualUidsAsync.isLoading) {
-        if (!collectionAsync.hasValue || !memosAsync.hasValue) {
-          return const AsyncValue.loading();
-        }
-        if (collection?.type == MemoCollectionType.manual &&
-            !manualUidsAsync.hasValue) {
-          return const AsyncValue.loading();
-        }
+      if (collectionAsync.isLoading && !collectionAsync.hasValue) {
+        return const AsyncValue.loading();
       }
       if (collectionAsync.hasError) {
         return AsyncValue.error(
           collectionAsync.error!,
           collectionAsync.stackTrace ?? StackTrace.current,
         );
+      }
+      final collection = collectionAsync.valueOrNull;
+      if (collection == null || collection.type == MemoCollectionType.rss) {
+        return const AsyncValue.data(<LocalMemo>[]);
+      }
+
+      final memosAsync = ref.watch(collectionCandidateMemosProvider);
+      final manualUidsAsync = collection.type == MemoCollectionType.manual
+          ? ref.watch(collectionManualItemUidsProvider(collectionId))
+          : const AsyncValue.data(<String>[]);
+      if (memosAsync.isLoading || manualUidsAsync.isLoading) {
+        if (!memosAsync.hasValue) {
+          return const AsyncValue.loading();
+        }
+        if (collection.type == MemoCollectionType.manual &&
+            !manualUidsAsync.hasValue) {
+          return const AsyncValue.loading();
+        }
       }
       if (memosAsync.hasError) {
         return AsyncValue.error(
@@ -119,9 +126,6 @@ final collectionResolvedItemsProvider =
           manualUidsAsync.error!,
           manualUidsAsync.stackTrace ?? StackTrace.current,
         );
-      }
-      if (collection == null) {
-        return const AsyncValue.data(<LocalMemo>[]);
       }
       final memos = memosAsync.valueOrNull ?? const <LocalMemo>[];
       final tagLookup = ref.watch(tagColorLookupProvider);
@@ -142,24 +146,13 @@ final collectionPreviewProvider =
       collectionId,
     ) {
       final collectionAsync = ref.watch(collectionByIdProvider(collectionId));
-      final itemsAsync = ref.watch(
-        collectionResolvedItemsProvider(collectionId),
-      );
-      if (collectionAsync.isLoading || itemsAsync.isLoading) {
-        if (!collectionAsync.hasValue || !itemsAsync.hasValue) {
-          return const AsyncValue.loading();
-        }
+      if (collectionAsync.isLoading && !collectionAsync.hasValue) {
+        return const AsyncValue.loading();
       }
       if (collectionAsync.hasError) {
         return AsyncValue.error(
           collectionAsync.error!,
           collectionAsync.stackTrace ?? StackTrace.current,
-        );
-      }
-      if (itemsAsync.hasError) {
-        return AsyncValue.error(
-          itemsAsync.error!,
-          itemsAsync.stackTrace ?? StackTrace.current,
         );
       }
       final collection = collectionAsync.valueOrNull;
@@ -171,8 +164,42 @@ final collectionPreviewProvider =
           ),
         );
       }
-      final items = itemsAsync.valueOrNull ?? const <LocalMemo>[];
       final tagLookup = ref.watch(tagColorLookupProvider);
+      if (collection.type == MemoCollectionType.rss) {
+        final rssItemsAsync = ref.watch(
+          collectionRssArticlesProvider(collectionId),
+        );
+        if (rssItemsAsync.isLoading && !rssItemsAsync.hasValue) {
+          return const AsyncValue.loading();
+        }
+        if (rssItemsAsync.hasError) {
+          return AsyncValue.error(
+            rssItemsAsync.error!,
+            rssItemsAsync.stackTrace ?? StackTrace.current,
+          );
+        }
+        return AsyncValue.data(
+          buildRssCollectionPreview(
+            collection,
+            rssItemsAsync.valueOrNull ?? const <RssArticleWithFeed>[],
+            resolveTagColorHexByPath: tagLookup.resolveEffectiveHexByPath,
+          ),
+        );
+      }
+
+      final itemsAsync = ref.watch(
+        collectionResolvedItemsProvider(collectionId),
+      );
+      if (itemsAsync.isLoading && !itemsAsync.hasValue) {
+        return const AsyncValue.loading();
+      }
+      if (itemsAsync.hasError) {
+        return AsyncValue.error(
+          itemsAsync.error!,
+          itemsAsync.stackTrace ?? StackTrace.current,
+        );
+      }
+      final items = itemsAsync.valueOrNull ?? const <LocalMemo>[];
       return AsyncValue.data(
         buildCollectionPreview(
           collection,
@@ -182,20 +209,91 @@ final collectionPreviewProvider =
       );
     });
 
+final collectionResolvedReadableItemsProvider =
+    Provider.family<AsyncValue<List<CollectionReadableItem>>, String>((
+      ref,
+      collectionId,
+    ) {
+      final collectionAsync = ref.watch(collectionByIdProvider(collectionId));
+      if (collectionAsync.isLoading && !collectionAsync.hasValue) {
+        return const AsyncValue.loading();
+      }
+      if (collectionAsync.hasError) {
+        return AsyncValue.error(
+          collectionAsync.error!,
+          collectionAsync.stackTrace ?? StackTrace.current,
+        );
+      }
+      final collection = collectionAsync.valueOrNull;
+      if (collection == null) {
+        return const AsyncValue.data(<CollectionReadableItem>[]);
+      }
+      if (collection.type == MemoCollectionType.rss) {
+        final rssItemsAsync = ref.watch(
+          collectionRssArticlesProvider(collectionId),
+        );
+        if (rssItemsAsync.isLoading && !rssItemsAsync.hasValue) {
+          return const AsyncValue.loading();
+        }
+        if (rssItemsAsync.hasError) {
+          return AsyncValue.error(
+            rssItemsAsync.error!,
+            rssItemsAsync.stackTrace ?? StackTrace.current,
+          );
+        }
+        return AsyncValue.data(
+          composeCollectionReadableItems(
+            collection: collection,
+            memoItems: const <LocalMemo>[],
+            rssItems: rssItemsAsync.valueOrNull ?? const <RssArticleWithFeed>[],
+          ),
+        );
+      }
+
+      final memoItemsAsync = ref.watch(
+        collectionResolvedItemsProvider(collectionId),
+      );
+      if (memoItemsAsync.isLoading && !memoItemsAsync.hasValue) {
+        return const AsyncValue.loading();
+      }
+      if (memoItemsAsync.hasError) {
+        return AsyncValue.error(
+          memoItemsAsync.error!,
+          memoItemsAsync.stackTrace ?? StackTrace.current,
+        );
+      }
+      return AsyncValue.data(
+        composeCollectionReadableItems(
+          collection: collection,
+          memoItems: memoItemsAsync.valueOrNull ?? const <LocalMemo>[],
+          rssItems: const <RssArticleWithFeed>[],
+        ),
+      );
+    });
+
 final collectionsDashboardProvider =
     Provider<AsyncValue<List<MemoCollectionDashboardItem>>>((ref) {
       final collectionsAsync = ref.watch(collectionsProvider);
-      final memosAsync = ref.watch(collectionCandidateMemosProvider);
-      if (collectionsAsync.isLoading || memosAsync.isLoading) {
-        if (!collectionsAsync.hasValue || !memosAsync.hasValue) {
-          return const AsyncValue.loading();
-        }
+      if (collectionsAsync.isLoading && !collectionsAsync.hasValue) {
+        return const AsyncValue.loading();
       }
       if (collectionsAsync.hasError) {
         return AsyncValue.error(
           collectionsAsync.error!,
           collectionsAsync.stackTrace ?? StackTrace.current,
         );
+      }
+
+      final collections =
+          collectionsAsync.valueOrNull ?? const <MemoCollection>[];
+      final needsMemoItems = collections.any(
+        (collection) => collection.type != MemoCollectionType.rss,
+      );
+      final memosAsync = needsMemoItems
+          ? ref.watch(collectionCandidateMemosProvider)
+          : const AsyncValue.data(<LocalMemo>[]);
+      if (memosAsync.isLoading && !memosAsync.hasValue) {
+        return const AsyncValue.loading();
       }
       if (memosAsync.hasError) {
         return AsyncValue.error(
@@ -204,8 +302,6 @@ final collectionsDashboardProvider =
         );
       }
 
-      final collections =
-          collectionsAsync.valueOrNull ?? const <MemoCollection>[];
       final memos = memosAsync.valueOrNull ?? const <LocalMemo>[];
       final tagLookup = ref.watch(tagColorLookupProvider);
       final dashboard = <MemoCollectionDashboardItem>[];
@@ -213,7 +309,13 @@ final collectionsDashboardProvider =
         final manualUidsAsync = collection.type == MemoCollectionType.manual
             ? ref.watch(collectionManualItemUidsProvider(collection.id))
             : const AsyncValue.data(<String>[]);
+        final rssItemsAsync = collection.type == MemoCollectionType.rss
+            ? ref.watch(collectionRssArticlesProvider(collection.id))
+            : const AsyncValue.data(<RssArticleWithFeed>[]);
         if (manualUidsAsync.isLoading && !manualUidsAsync.hasValue) {
+          return const AsyncValue.loading();
+        }
+        if (rssItemsAsync.isLoading && !rssItemsAsync.hasValue) {
           return const AsyncValue.loading();
         }
         if (manualUidsAsync.hasError) {
@@ -222,18 +324,32 @@ final collectionsDashboardProvider =
             manualUidsAsync.stackTrace ?? StackTrace.current,
           );
         }
+        if (rssItemsAsync.hasError) {
+          return AsyncValue.error(
+            rssItemsAsync.error!,
+            rssItemsAsync.stackTrace ?? StackTrace.current,
+          );
+        }
         final manualMemoUids = manualUidsAsync.valueOrNull ?? const <String>[];
-        final items = resolveCollectionItems(
-          collection,
-          memos,
-          manualMemoUids: manualMemoUids,
-          resolveCanonicalTagPath: tagLookup.resolveCanonicalPath,
-        );
-        final preview = buildCollectionPreview(
-          collection,
-          items,
-          resolveTagColorHexByPath: tagLookup.resolveEffectiveHexByPath,
-        );
+        final items = collection.type == MemoCollectionType.rss
+            ? const <LocalMemo>[]
+            : resolveCollectionItems(
+                collection,
+                memos,
+                manualMemoUids: manualMemoUids,
+                resolveCanonicalTagPath: tagLookup.resolveCanonicalPath,
+              );
+        final preview = collection.type == MemoCollectionType.rss
+            ? buildRssCollectionPreview(
+                collection,
+                rssItemsAsync.valueOrNull ?? const <RssArticleWithFeed>[],
+                resolveTagColorHexByPath: tagLookup.resolveEffectiveHexByPath,
+              )
+            : buildCollectionPreview(
+                collection,
+                items,
+                resolveTagColorHexByPath: tagLookup.resolveEffectiveHexByPath,
+              );
         dashboard.add(
           MemoCollectionDashboardItem(
             collection: collection,

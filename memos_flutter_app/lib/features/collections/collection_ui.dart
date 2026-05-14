@@ -6,6 +6,7 @@ import '../../i18n/strings.g.dart';
 
 const List<String> kCollectionIconKeys = <String>[
   MemoCollection.defaultIconKey,
+  MemoCollection.rssIconKey,
   'bookmark',
   'book',
   'favorite',
@@ -17,6 +18,7 @@ const List<String> kCollectionIconKeys = <String>[
 
 const Map<String, IconData> kCollectionIcons = <String, IconData>{
   MemoCollection.defaultIconKey: Icons.auto_stories_rounded,
+  MemoCollection.rssIconKey: Icons.rss_feed_rounded,
   'bookmark': Icons.bookmark_rounded,
   'book': Icons.menu_book_rounded,
   'favorite': Icons.favorite_rounded,
@@ -57,6 +59,7 @@ String collectionTypeLabel(BuildContext context, MemoCollectionType type) {
   return switch (type) {
     MemoCollectionType.smart => context.t.strings.collections.smart,
     MemoCollectionType.manual => context.t.strings.collections.manual,
+    MemoCollectionType.rss => context.t.strings.collections.rss.collectionType,
   };
 }
 
@@ -127,6 +130,9 @@ String buildLocalizedCollectionRuleSummary(
 ) {
   if (collection.type == MemoCollectionType.manual) {
     return context.t.strings.collections.manualCollectionSummary;
+  }
+  if (collection.type == MemoCollectionType.rss) {
+    return context.t.strings.collections.rss.collectionSummary;
   }
   final rules = collection.rules;
   final segments = <String>[];

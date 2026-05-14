@@ -1,6 +1,6 @@
 import '../../data/models/attachment.dart';
 import '../../data/models/collection_reader.dart';
-import '../../data/models/local_memo.dart';
+import '../../data/models/collection_readable_item.dart';
 
 enum ReaderBlockKind {
   metaHeader,
@@ -21,6 +21,7 @@ class ReaderBlock {
     this.text,
     this.textRole = ReaderTextRole.body,
     this.attachments = const <Attachment>[],
+    this.sourceUrl,
     this.locationLabel,
     this.heightHint,
     this.charStart,
@@ -32,6 +33,7 @@ class ReaderBlock {
   final String? text;
   final ReaderTextRole textRole;
   final List<Attachment> attachments;
+  final String? sourceUrl;
   final String? locationLabel;
   final double? heightHint;
   final int? charStart;
@@ -46,7 +48,7 @@ class ReaderChapterDocument {
     required this.contentText,
   });
 
-  final LocalMemo memo;
+  final CollectionReadableItem memo;
   final int memoIndex;
   final List<ReaderBlock> blocks;
   final String contentText;
@@ -59,6 +61,7 @@ class ReaderPageBlock {
     this.text,
     this.textRole = ReaderTextRole.body,
     this.attachments = const <Attachment>[],
+    this.sourceUrl,
     this.locationLabel,
     this.charStart,
     this.charEnd,
@@ -70,6 +73,7 @@ class ReaderPageBlock {
   final String? text;
   final ReaderTextRole textRole;
   final List<Attachment> attachments;
+  final String? sourceUrl;
   final String? locationLabel;
   final int? charStart;
   final int? charEnd;
@@ -77,10 +81,7 @@ class ReaderPageBlock {
 }
 
 class ReaderPageReservedInsets {
-  const ReaderPageReservedInsets({
-    required this.top,
-    required this.bottom,
-  });
+  const ReaderPageReservedInsets({required this.top, required this.bottom});
 
   static const zero = ReaderPageReservedInsets(top: 0, bottom: 0);
 
@@ -155,7 +156,7 @@ class ReaderChapterLayout {
     required this.pages,
   });
 
-  final LocalMemo memo;
+  final CollectionReadableItem memo;
   final int memoIndex;
   final String cacheKey;
   final ReaderChapterDocument document;

@@ -26,6 +26,8 @@ enum CollectionReaderMoreAction {
   editCollection,
   manageCollectionItems,
   currentMemoActions,
+  addRssSource,
+  refreshRssSources,
 }
 
 class CollectionReaderOverlay extends StatelessWidget {
@@ -40,6 +42,10 @@ class CollectionReaderOverlay extends StatelessWidget {
     required this.sliderValue,
     required this.sliderMax,
     required this.autoPaging,
+    required this.showManageCollectionItems,
+    required this.showRssSourceActions,
+    required this.showRssSaveShortcut,
+    required this.currentRssSaved,
     required this.canPrevChapter,
     required this.canNextChapter,
     required this.showBrightnessControl,
@@ -52,6 +58,7 @@ class CollectionReaderOverlay extends StatelessWidget {
     required this.hostBrightness,
     required this.onBack,
     required this.onSearch,
+    required this.onSaveCurrentRssAsMemo,
     required this.onMoreSelected,
     required this.onProgressTap,
     required this.onToggleThemePreset,
@@ -79,6 +86,10 @@ class CollectionReaderOverlay extends StatelessWidget {
   final double sliderValue;
   final double sliderMax;
   final bool autoPaging;
+  final bool showManageCollectionItems;
+  final bool showRssSourceActions;
+  final bool showRssSaveShortcut;
+  final bool currentRssSaved;
   final bool canPrevChapter;
   final bool canNextChapter;
   final bool showBrightnessControl;
@@ -91,6 +102,7 @@ class CollectionReaderOverlay extends StatelessWidget {
   final Brightness hostBrightness;
   final VoidCallback onBack;
   final VoidCallback onSearch;
+  final VoidCallback? onSaveCurrentRssAsMemo;
   final ValueChanged<CollectionReaderMoreAction> onMoreSelected;
   final VoidCallback onProgressTap;
   final VoidCallback onToggleThemePreset;
@@ -150,6 +162,8 @@ class CollectionReaderOverlay extends StatelessWidget {
                 mutedForegroundColor: mutedForeground,
                 accentColor: accentColor,
                 headerData: headerData,
+                showManageCollectionItems: showManageCollectionItems,
+                showRssSourceActions: showRssSourceActions,
                 onBack: () {
                   onOverlayInteraction();
                   onBack();
@@ -223,6 +237,23 @@ class CollectionReaderOverlay extends StatelessWidget {
                             onSearch();
                           },
                         ),
+                        if (showRssSaveShortcut)
+                          _OverlayFloatingButton(
+                            icon: currentRssSaved
+                                ? Icons.bookmark_added_rounded
+                                : Icons.bookmark_add_outlined,
+                            tooltip: currentRssSaved
+                                ? context.t.strings.collections.rss.savedAsMemo
+                                : context.t.strings.collections.rss.saveAsMemo,
+                            backgroundColor: fabBackground,
+                            foregroundColor: pageForegroundColor,
+                            accentColor: accentColor,
+                            selected: currentRssSaved,
+                            onTap: () {
+                              onOverlayInteraction();
+                              onSaveCurrentRssAsMemo?.call();
+                            },
+                          ),
                         _OverlayFloatingButton(
                           icon: autoPaging
                               ? Icons.pause_circle_filled_rounded
@@ -384,6 +415,8 @@ class _OverlayTopBar extends StatelessWidget {
     required this.mutedForegroundColor,
     required this.accentColor,
     required this.headerData,
+    required this.showManageCollectionItems,
+    required this.showRssSourceActions,
     required this.onBack,
     required this.onProgressTap,
     required this.onMoreSelected,
@@ -394,6 +427,8 @@ class _OverlayTopBar extends StatelessWidget {
   final Color mutedForegroundColor;
   final Color accentColor;
   final CollectionReaderHeaderData headerData;
+  final bool showManageCollectionItems;
+  final bool showRssSourceActions;
   final VoidCallback onBack;
   final VoidCallback onProgressTap;
   final ValueChanged<CollectionReaderMoreAction> onMoreSelected;
@@ -490,14 +525,27 @@ class _OverlayTopBar extends StatelessWidget {
                   value: CollectionReaderMoreAction.editCollection,
                   child: Text(collectionsStrings.editCollection),
                 ),
-                PopupMenuItem(
-                  value: CollectionReaderMoreAction.manageCollectionItems,
-                  child: Text(collectionsStrings.reader.manageCollectionItems),
-                ),
+                if (showManageCollectionItems)
+                  PopupMenuItem(
+                    value: CollectionReaderMoreAction.manageCollectionItems,
+                    child: Text(
+                      collectionsStrings.reader.manageCollectionItems,
+                    ),
+                  ),
                 PopupMenuItem(
                   value: CollectionReaderMoreAction.currentMemoActions,
-                  child: Text(collectionsStrings.reader.currentMemoActions),
+                  child: Text(collectionsStrings.reader.currentItemActions),
                 ),
+                if (showRssSourceActions)
+                  PopupMenuItem(
+                    value: CollectionReaderMoreAction.addRssSource,
+                    child: Text(collectionsStrings.rss.addFeed),
+                  ),
+                if (showRssSourceActions)
+                  PopupMenuItem(
+                    value: CollectionReaderMoreAction.refreshRssSources,
+                    child: Text(collectionsStrings.rss.refreshFeeds),
+                  ),
               ],
               icon: Icon(
                 Icons.more_horiz_rounded,
