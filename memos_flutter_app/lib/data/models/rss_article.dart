@@ -2,6 +2,8 @@ import 'rss_feed.dart';
 
 enum RssArticleReadState { unread, read }
 
+enum RssArticleFullContentStatus { idle, fetching, fetched, failed, skipped }
+
 RssArticleReadState rssArticleReadStateFromValue(String? value) {
   return switch ((value ?? '').trim().toLowerCase()) {
     'read' => RssArticleReadState.read,
@@ -13,6 +15,28 @@ String rssArticleReadStateValue(RssArticleReadState value) {
   return switch (value) {
     RssArticleReadState.unread => 'unread',
     RssArticleReadState.read => 'read',
+  };
+}
+
+RssArticleFullContentStatus rssArticleFullContentStatusFromValue(
+  String? value,
+) {
+  return switch ((value ?? '').trim().toLowerCase()) {
+    'fetching' => RssArticleFullContentStatus.fetching,
+    'fetched' => RssArticleFullContentStatus.fetched,
+    'failed' => RssArticleFullContentStatus.failed,
+    'skipped' => RssArticleFullContentStatus.skipped,
+    _ => RssArticleFullContentStatus.idle,
+  };
+}
+
+String rssArticleFullContentStatusValue(RssArticleFullContentStatus value) {
+  return switch (value) {
+    RssArticleFullContentStatus.idle => 'idle',
+    RssArticleFullContentStatus.fetching => 'fetching',
+    RssArticleFullContentStatus.fetched => 'fetched',
+    RssArticleFullContentStatus.failed => 'failed',
+    RssArticleFullContentStatus.skipped => 'skipped',
   };
 }
 
@@ -33,6 +57,10 @@ class RssArticle {
     required this.savedMemoUid,
     required this.createdTime,
     required this.updatedTime,
+    this.fullContentHtml = '',
+    this.fullContentStatus = RssArticleFullContentStatus.idle,
+    this.fullContentFetchedTime,
+    this.fullContentError,
   });
 
   final String id;
@@ -50,6 +78,10 @@ class RssArticle {
   final String? savedMemoUid;
   final DateTime createdTime;
   final DateTime updatedTime;
+  final String fullContentHtml;
+  final RssArticleFullContentStatus fullContentStatus;
+  final DateTime? fullContentFetchedTime;
+  final String? fullContentError;
 
   bool get isRead => readState == RssArticleReadState.read;
 
@@ -62,6 +94,8 @@ class RssArticle {
   }
 
   String get readableHtml {
+    final fetched = fullContentHtml.trim();
+    if (fetched.isNotEmpty) return fetched;
     final full = contentHtml.trim();
     if (full.isNotEmpty) return full;
     return summaryHtml.trim();
@@ -86,6 +120,14 @@ class RssArticle {
       savedMemoUid: _readNullableString(row['saved_memo_uid']),
       createdTime: _readTime(row['created_time']),
       updatedTime: _readTime(row['updated_time']),
+      fullContentHtml: _readString(row['full_content_html']),
+      fullContentStatus: rssArticleFullContentStatusFromValue(
+        row['full_content_status'] as String?,
+      ),
+      fullContentFetchedTime: _readOptionalTime(
+        row['full_content_fetched_time'],
+      ),
+      fullContentError: _readNullableString(row['full_content_error']),
     );
   }
 
@@ -105,6 +147,10 @@ class RssArticle {
     Object? savedMemoUid = _unset,
     DateTime? createdTime,
     DateTime? updatedTime,
+    String? fullContentHtml,
+    RssArticleFullContentStatus? fullContentStatus,
+    Object? fullContentFetchedTime = _unset,
+    Object? fullContentError = _unset,
   }) {
     return RssArticle(
       id: id ?? this.id,
@@ -126,6 +172,14 @@ class RssArticle {
           : savedMemoUid as String?,
       createdTime: createdTime ?? this.createdTime,
       updatedTime: updatedTime ?? this.updatedTime,
+      fullContentHtml: fullContentHtml ?? this.fullContentHtml,
+      fullContentStatus: fullContentStatus ?? this.fullContentStatus,
+      fullContentFetchedTime: identical(fullContentFetchedTime, _unset)
+          ? this.fullContentFetchedTime
+          : fullContentFetchedTime as DateTime?,
+      fullContentError: identical(fullContentError, _unset)
+          ? this.fullContentError
+          : fullContentError as String?,
     );
   }
 }

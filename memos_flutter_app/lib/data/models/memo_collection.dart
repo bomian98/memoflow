@@ -26,6 +26,92 @@ enum CollectionSortMode {
   manualOrder,
 }
 
+enum CollectionReadingExperience { articleFlow, continuousReader }
+
+enum CollectionArticleFlowDensity { compact, comfortable }
+
+CollectionReadingExperience resolveDefaultCollectionReadingExperience(
+  MemoCollectionType type,
+) {
+  return switch (type) {
+    MemoCollectionType.rss => CollectionReadingExperience.articleFlow,
+    MemoCollectionType.smart ||
+    MemoCollectionType.manual => CollectionReadingExperience.continuousReader,
+  };
+}
+
+CollectionReadingExperience resolveCollectionReadingExperience(
+  MemoCollection collection,
+) {
+  return collection.view.readingExperience ??
+      resolveDefaultCollectionReadingExperience(collection.type);
+}
+
+class CollectionArticleFlowDisplaySettings {
+  const CollectionArticleFlowDisplaySettings({
+    required this.showExcerpt,
+    required this.showThumbnail,
+    required this.showFeedIcon,
+    required this.density,
+    required this.autoHideToolbar,
+  });
+
+  static const defaults = CollectionArticleFlowDisplaySettings(
+    showExcerpt: true,
+    showThumbnail: true,
+    showFeedIcon: true,
+    density: CollectionArticleFlowDensity.comfortable,
+    autoHideToolbar: true,
+  );
+
+  final bool showExcerpt;
+  final bool showThumbnail;
+  final bool showFeedIcon;
+  final CollectionArticleFlowDensity density;
+  final bool autoHideToolbar;
+
+  CollectionArticleFlowDisplaySettings copyWith({
+    bool? showExcerpt,
+    bool? showThumbnail,
+    bool? showFeedIcon,
+    CollectionArticleFlowDensity? density,
+    bool? autoHideToolbar,
+  }) {
+    return CollectionArticleFlowDisplaySettings(
+      showExcerpt: showExcerpt ?? this.showExcerpt,
+      showThumbnail: showThumbnail ?? this.showThumbnail,
+      showFeedIcon: showFeedIcon ?? this.showFeedIcon,
+      density: density ?? this.density,
+      autoHideToolbar: autoHideToolbar ?? this.autoHideToolbar,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'showExcerpt': showExcerpt,
+    'showThumbnail': showThumbnail,
+    'showFeedIcon': showFeedIcon,
+    'density': density.name,
+    'autoHideToolbar': autoHideToolbar,
+  };
+
+  factory CollectionArticleFlowDisplaySettings.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return CollectionArticleFlowDisplaySettings(
+      showExcerpt: (json['showExcerpt'] as bool?) ?? defaults.showExcerpt,
+      showThumbnail: (json['showThumbnail'] as bool?) ?? defaults.showThumbnail,
+      showFeedIcon: (json['showFeedIcon'] as bool?) ?? defaults.showFeedIcon,
+      density: _readEnum(
+        json['density'],
+        CollectionArticleFlowDensity.values,
+        defaults.density,
+      ),
+      autoHideToolbar:
+          (json['autoHideToolbar'] as bool?) ?? defaults.autoHideToolbar,
+    );
+  }
+}
+
 class CollectionDateRule {
   const CollectionDateRule({
     required this.type,
@@ -267,6 +353,8 @@ class CollectionViewPreferences {
     required this.sectionMode,
     required this.sortMode,
     required this.showStats,
+    required this.readingExperience,
+    required this.articleFlowDisplay,
   });
 
   static const CollectionViewPreferences defaults = CollectionViewPreferences(
@@ -274,24 +362,34 @@ class CollectionViewPreferences {
     sectionMode: CollectionSectionMode.none,
     sortMode: CollectionSortMode.displayTimeDesc,
     showStats: true,
+    readingExperience: null,
+    articleFlowDisplay: CollectionArticleFlowDisplaySettings.defaults,
   );
 
   final CollectionLayoutMode defaultLayout;
   final CollectionSectionMode sectionMode;
   final CollectionSortMode sortMode;
   final bool showStats;
+  final CollectionReadingExperience? readingExperience;
+  final CollectionArticleFlowDisplaySettings articleFlowDisplay;
 
   CollectionViewPreferences copyWith({
     CollectionLayoutMode? defaultLayout,
     CollectionSectionMode? sectionMode,
     CollectionSortMode? sortMode,
     bool? showStats,
+    Object? readingExperience = _unset,
+    CollectionArticleFlowDisplaySettings? articleFlowDisplay,
   }) {
     return CollectionViewPreferences(
       defaultLayout: defaultLayout ?? this.defaultLayout,
       sectionMode: sectionMode ?? this.sectionMode,
       sortMode: sortMode ?? this.sortMode,
       showStats: showStats ?? this.showStats,
+      readingExperience: identical(readingExperience, _unset)
+          ? this.readingExperience
+          : readingExperience as CollectionReadingExperience?,
+      articleFlowDisplay: articleFlowDisplay ?? this.articleFlowDisplay,
     );
   }
 
@@ -300,9 +398,12 @@ class CollectionViewPreferences {
     'sectionMode': sectionMode.name,
     'sortMode': sortMode.name,
     'showStats': showStats,
+    'readingExperience': readingExperience?.name,
+    'articleFlowDisplay': articleFlowDisplay.toJson(),
   };
 
   factory CollectionViewPreferences.fromJson(Map<String, dynamic> json) {
+    final articleFlowDisplayRaw = json['articleFlowDisplay'];
     return CollectionViewPreferences(
       defaultLayout: _readEnum(
         json['defaultLayout'],
@@ -320,6 +421,17 @@ class CollectionViewPreferences {
         defaults.sortMode,
       ),
       showStats: (json['showStats'] as bool?) ?? defaults.showStats,
+      readingExperience: _readNullableEnum(
+        json['readingExperience'],
+        CollectionReadingExperience.values,
+      ),
+      articleFlowDisplay: articleFlowDisplayRaw is Map<String, dynamic>
+          ? CollectionArticleFlowDisplaySettings.fromJson(articleFlowDisplayRaw)
+          : articleFlowDisplayRaw is Map
+          ? CollectionArticleFlowDisplaySettings.fromJson(
+              articleFlowDisplayRaw.cast<String, dynamic>(),
+            )
+          : defaults.articleFlowDisplay,
     );
   }
 }
@@ -394,6 +506,8 @@ class MemoCollection {
       sectionMode: CollectionSectionMode.none,
       sortMode: CollectionSortMode.manualOrder,
       showStats: true,
+      readingExperience: null,
+      articleFlowDisplay: CollectionArticleFlowDisplaySettings.defaults,
     ),
     bool pinned = false,
     bool archived = false,
@@ -630,6 +744,19 @@ T _readEnum<T>(Object? raw, List<T> values, T fallback) {
     }
   }
   return fallback;
+}
+
+T? _readNullableEnum<T>(Object? raw, List<T> values) {
+  if (raw is String) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    for (final value in values) {
+      if ('$value'.split('.').last == trimmed) {
+        return value;
+      }
+    }
+  }
+  return null;
 }
 
 String? _readNullableString(Object? raw) {

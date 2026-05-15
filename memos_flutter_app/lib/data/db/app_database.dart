@@ -44,7 +44,7 @@ class AppDatabase {
   final DesktopDbWriteGateway? _writeGateway;
   late final AppDatabaseWriteDao _writeDao = AppDatabaseWriteDao(db: this);
   static const Object _displayTimeUnspecified = Object();
-  static const _dbVersion = 30;
+  static const _dbVersion = 32;
   static const int outboxStatePending = 0;
   static const int outboxStateRunning = 1;
   static const int outboxStateRetry = 2;
@@ -212,10 +212,17 @@ class AppDatabase {
           if (oldVersion < 30) {
             await RssDbPersistence.ensureTables(db);
           }
+          if (oldVersion < 31) {
+            await RssDbPersistence.ensureTables(db);
+          }
+          if (oldVersion < 32) {
+            await CollectionDbPersistence.ensureArticleFlowProgressTable(db);
+          }
         },
         onOpen: (db) async {
           await MemoAuxiliaryDbPersistence.ensureMemoClipCardsTable(db);
           await QuickClipRecoveryDbPersistence.ensureTable(db);
+          await CollectionDbPersistence.ensureArticleFlowProgressTable(db);
           await RssDbPersistence.ensureTables(db);
           await _ensureStatsPersistenceTables(db);
           await MemoSearchDbPersistence.ensureFts(db);
@@ -830,6 +837,20 @@ class AppDatabase {
       case 'deleteCollectionReaderProgress':
         await _runLocalWrite(
           () => deleteCollectionReaderProgress(
+            _requiredString(payload, 'collectionId'),
+          ),
+        );
+        return null;
+      case 'upsertCollectionArticleFlowProgressRow':
+        await _runLocalWrite(
+          () => upsertCollectionArticleFlowProgressRow(
+            _readObjectMapPayload(payload, 'row'),
+          ),
+        );
+        return null;
+      case 'deleteCollectionArticleFlowProgress':
+        await _runLocalWrite(
+          () => deleteCollectionArticleFlowProgress(
             _requiredString(payload, 'collectionId'),
           ),
         );
@@ -2662,6 +2683,45 @@ class AppDatabase {
       return;
     }
     await _writeDao.deleteCollectionReaderProgress(normalizedCollectionId);
+  }
+
+  Future<Map<String, dynamic>?> getCollectionArticleFlowProgressRow(
+    String collectionId,
+  ) async {
+    final db = await this.db;
+    return CollectionDbPersistence.getArticleFlowProgressRow(db, collectionId);
+  }
+
+  Future<void> upsertCollectionArticleFlowProgressRow(
+    Map<String, Object?> row,
+  ) async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      await _dispatchWriteCommand<void>(
+        operation: 'upsertCollectionArticleFlowProgressRow',
+        payload: <String, dynamic>{'row': row},
+        decode: (_) {},
+        notifyChangedAfterRemote: false,
+      );
+      return;
+    }
+    await _writeDao.upsertCollectionArticleFlowProgressRow(row);
+  }
+
+  Future<void> deleteCollectionArticleFlowProgress(String collectionId) async {
+    final normalizedCollectionId = collectionId.trim();
+    if (normalizedCollectionId.isEmpty) {
+      return;
+    }
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      await _dispatchWriteCommand<void>(
+        operation: 'deleteCollectionArticleFlowProgress',
+        payload: <String, dynamic>{'collectionId': normalizedCollectionId},
+        decode: (_) {},
+        notifyChangedAfterRemote: false,
+      );
+      return;
+    }
+    await _writeDao.deleteCollectionArticleFlowProgress(normalizedCollectionId);
   }
 
   Future<List<String>> listTagStrings({String? state}) async {

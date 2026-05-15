@@ -696,6 +696,21 @@ class AppDatabaseWriteDao {
     await CollectionDbPersistence.deleteReaderProgress(sqlite, collectionId);
   }
 
+  Future<void> upsertCollectionArticleFlowProgressRow(
+    Map<String, Object?> row,
+  ) async {
+    final sqlite = await _db.db;
+    await CollectionDbPersistence.upsertArticleFlowProgressRow(sqlite, row);
+  }
+
+  Future<void> deleteCollectionArticleFlowProgress(String collectionId) async {
+    final sqlite = await _db.db;
+    await CollectionDbPersistence.deleteArticleFlowProgress(
+      sqlite,
+      collectionId,
+    );
+  }
+
   Future<int> insertRecycleBinItem({
     required String itemType,
     required String memoUid,

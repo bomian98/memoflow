@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/rss/rss_feed_fetch_service.dart';
+import '../../application/rss/rss_full_content_service.dart';
 import '../../core/uid.dart';
 import '../../data/models/collection_readable_item.dart';
 import '../../data/models/memo_clip_card_metadata.dart';
@@ -11,7 +12,14 @@ import '../memos/memo_mutation_service.dart';
 import '../system/database_provider.dart';
 
 final rssFeedFetchServiceProvider = Provider<RssFeedFetchService>((ref) {
-  return RssFeedFetchService(repository: ref.watch(rssRepositoryProvider));
+  return RssFeedFetchService(
+    repository: ref.watch(rssRepositoryProvider),
+    fullContentService: ref.watch(rssFullContentServiceProvider),
+  );
+});
+
+final rssFullContentServiceProvider = Provider<RssFullContentService>((ref) {
+  return RssFullContentService(repository: ref.watch(rssRepositoryProvider));
 });
 
 final collectionRssSourcesProvider =
@@ -52,6 +60,7 @@ final collectionRssActionsProvider = Provider<CollectionRssActions>((ref) {
   return CollectionRssActions(
     repository: ref.watch(rssRepositoryProvider),
     memoMutations: ref.watch(memoMutationServiceProvider),
+    fullContentService: ref.watch(rssFullContentServiceProvider),
   );
 });
 
@@ -59,11 +68,14 @@ class CollectionRssActions {
   CollectionRssActions({
     required RssRepository repository,
     required MemoMutationService memoMutations,
+    RssFullContentService? fullContentService,
   }) : _repository = repository,
-       _memoMutations = memoMutations;
+       _memoMutations = memoMutations,
+       _fullContentService = fullContentService;
 
   final RssRepository _repository;
   final MemoMutationService _memoMutations;
+  final RssFullContentService? _fullContentService;
 
   Future<void> markRead(CollectionReadableItem item, bool read) {
     final article = item.rssArticle;
@@ -126,6 +138,17 @@ class CollectionRssActions {
       memoUid: uid,
     );
     return uid;
+  }
+
+  Future<RssFullContentFetchResult?> fetchFullContent(
+    CollectionReadableItem item,
+  ) {
+    final article = item.rssArticle;
+    final service = _fullContentService;
+    if (article == null || service == null) {
+      return Future<RssFullContentFetchResult?>.value();
+    }
+    return service.fetchArticle(article.id);
   }
 
   String _buildSavedMemoContent({

@@ -97,6 +97,36 @@ class CollectionsRepository {
     );
   }
 
+  Future<void> updateViewPreferences(
+    String id,
+    CollectionViewPreferences Function(CollectionViewPreferences current)
+    update,
+  ) async {
+    final collection = await readById(id);
+    if (collection == null) return;
+    await upsert(collection.copyWith(view: update(collection.view)));
+  }
+
+  Future<void> setReadingExperience(
+    String id,
+    CollectionReadingExperience experience,
+  ) {
+    return updateViewPreferences(
+      id,
+      (current) => current.copyWith(readingExperience: experience),
+    );
+  }
+
+  Future<void> setArticleFlowDisplaySettings(
+    String id,
+    CollectionArticleFlowDisplaySettings display,
+  ) {
+    return updateViewPreferences(
+      id,
+      (current) => current.copyWith(articleFlowDisplay: display),
+    );
+  }
+
   Future<void> archive(String id, bool archived) async {
     await _updateFlags(id, <String, Object?>{
       'archived': archived ? 1 : 0,

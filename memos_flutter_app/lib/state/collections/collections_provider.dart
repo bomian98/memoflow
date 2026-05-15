@@ -50,6 +50,35 @@ final collectionsProvider = StreamProvider<List<MemoCollection>>((ref) async* {
   }
 });
 
+final collectionViewPreferenceActionsProvider =
+    Provider<CollectionViewPreferenceActions>((ref) {
+      return CollectionViewPreferenceActions(
+        repository: ref.watch(collectionsRepositoryProvider),
+      );
+    });
+
+class CollectionViewPreferenceActions {
+  const CollectionViewPreferenceActions({
+    required CollectionsRepository repository,
+  }) : _repository = repository;
+
+  final CollectionsRepository _repository;
+
+  Future<void> setReadingExperience(
+    String collectionId,
+    CollectionReadingExperience experience,
+  ) {
+    return _repository.setReadingExperience(collectionId, experience);
+  }
+
+  Future<void> setArticleFlowDisplaySettings(
+    String collectionId,
+    CollectionArticleFlowDisplaySettings display,
+  ) {
+    return _repository.setArticleFlowDisplaySettings(collectionId, display);
+  }
+}
+
 final collectionManualItemUidsProvider =
     StreamProvider.family<List<String>, String>((ref, collectionId) async* {
       final db = ref.watch(databaseProvider);

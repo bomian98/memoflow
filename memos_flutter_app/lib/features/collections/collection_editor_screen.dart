@@ -68,6 +68,8 @@ class _CollectionEditorScreenState
   late CollectionSectionMode _sectionMode;
   late CollectionSortMode _sortMode;
   late bool _showStats;
+  CollectionReadingExperience? _readingExperienceOverride;
+  late CollectionArticleFlowDisplaySettings _articleFlowDisplay;
   late bool _hideWhenEmpty;
   bool _hasExplicitManualMemoSelection = false;
   bool _rssBusy = false;
@@ -141,6 +143,10 @@ class _CollectionEditorScreenState
             ? CollectionSortMode.manualOrder
             : CollectionSortMode.displayTimeDesc);
     _showStats = collection?.view.showStats ?? true;
+    _readingExperienceOverride = collection?.view.readingExperience;
+    _articleFlowDisplay =
+        collection?.view.articleFlowDisplay ??
+        CollectionArticleFlowDisplaySettings.defaults;
     _hideWhenEmpty = collection?.hideWhenEmpty ?? false;
     if (!_isEditing && _type == MemoCollectionType.manual) {
       _initialManualMemoUids = _normalizeMemoUids(widget.initialManualMemoUids);
@@ -193,6 +199,8 @@ class _CollectionEditorScreenState
       sectionMode: _sectionMode,
       sortMode: _sortMode,
       showStats: _showStats,
+      readingExperience: _readingExperienceOverride,
+      articleFlowDisplay: _articleFlowDisplay,
     );
     return MemoCollection(
       id: initial?.id ?? generateUid(length: 16),
@@ -415,6 +423,28 @@ class _CollectionEditorScreenState
             collectionId: source.source.collectionId,
             feedId: source.feed.id,
           );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _rssError = '$error');
+    } finally {
+      if (mounted) {
+        setState(() => _rssBusy = false);
+      }
+    }
+  }
+
+  Future<void> _setPersistedRssFullContentEnabled(
+    CollectionRssSourceWithFeed source,
+    bool enabled,
+  ) async {
+    setState(() {
+      _rssBusy = true;
+      _rssError = null;
+    });
+    try {
+      await ref
+          .read(rssRepositoryProvider)
+          .setFeedFullContentEnabled(feedId: source.feed.id, enabled: enabled);
     } catch (error) {
       if (!mounted) return;
       setState(() => _rssError = '$error');
@@ -1349,6 +1379,13 @@ class _CollectionEditorScreenState
                     subtitle: source.feed.feedUrl,
                     articleCount: null,
                     pending: false,
+                    fullContentEnabled: source.feed.fullContentEnabled,
+                    onFullContentEnabledChanged: _rssBusy
+                        ? null
+                        : (enabled) => _setPersistedRssFullContentEnabled(
+                            source,
+                            enabled,
+                          ),
                     onRemove: _rssBusy
                         ? null
                         : () => _removePersistedRssSource(source),
@@ -1363,6 +1400,8 @@ class _CollectionEditorScreenState
                     subtitle: preview.feedUrl,
                     articleCount: preview.articles.length,
                     pending: true,
+                    fullContentEnabled: null,
+                    onFullContentEnabledChanged: null,
                     onRemove: () => _removeDraftRssPreview(preview),
                   ),
                   if (preview != _draftRssPreviews.last)
@@ -1669,6 +1708,85 @@ class _CollectionEditorScreenState
                 if (value == null) return;
                 _updateState(() => _sortMode = value);
               },
+            ),
+            const SizedBox(height: 4),
+            _EnumSegment<CollectionReadingExperience>(
+              title: collections.articleFlow.readingExperience,
+              values: const [
+                CollectionReadingExperience.articleFlow,
+                CollectionReadingExperience.continuousReader,
+              ],
+              current:
+                  _readingExperienceOverride ??
+                  resolveDefaultCollectionReadingExperience(_type),
+              labelBuilder: (value) => switch (value) {
+                CollectionReadingExperience.articleFlow =>
+                  collections.articleFlow.articleFlowExperience,
+                CollectionReadingExperience.continuousReader =>
+                  collections.articleFlow.continuousReaderExperience,
+              },
+              onChanged: (value) =>
+                  _updateState(() => _readingExperienceOverride = value),
+            ),
+            const SizedBox(height: 12),
+            _EnumSegment<CollectionArticleFlowDensity>(
+              title: collections.articleFlow.density,
+              values: const [
+                CollectionArticleFlowDensity.compact,
+                CollectionArticleFlowDensity.comfortable,
+              ],
+              current: _articleFlowDisplay.density,
+              labelBuilder: (value) => switch (value) {
+                CollectionArticleFlowDensity.compact =>
+                  collections.articleFlow.densityCompact,
+                CollectionArticleFlowDensity.comfortable =>
+                  collections.articleFlow.densityComfortable,
+              },
+              onChanged: (value) => _updateState(
+                () => _articleFlowDisplay = _articleFlowDisplay.copyWith(
+                  density: value,
+                ),
+              ),
+            ),
+            SwitchListTile.adaptive(
+              value: _articleFlowDisplay.showExcerpt,
+              contentPadding: EdgeInsets.zero,
+              title: Text(collections.articleFlow.showExcerpt),
+              onChanged: (value) => _updateState(
+                () => _articleFlowDisplay = _articleFlowDisplay.copyWith(
+                  showExcerpt: value,
+                ),
+              ),
+            ),
+            SwitchListTile.adaptive(
+              value: _articleFlowDisplay.showThumbnail,
+              contentPadding: EdgeInsets.zero,
+              title: Text(collections.articleFlow.showThumbnail),
+              onChanged: (value) => _updateState(
+                () => _articleFlowDisplay = _articleFlowDisplay.copyWith(
+                  showThumbnail: value,
+                ),
+              ),
+            ),
+            SwitchListTile.adaptive(
+              value: _articleFlowDisplay.showFeedIcon,
+              contentPadding: EdgeInsets.zero,
+              title: Text(collections.articleFlow.showFeedIcon),
+              onChanged: (value) => _updateState(
+                () => _articleFlowDisplay = _articleFlowDisplay.copyWith(
+                  showFeedIcon: value,
+                ),
+              ),
+            ),
+            SwitchListTile.adaptive(
+              value: _articleFlowDisplay.autoHideToolbar,
+              contentPadding: EdgeInsets.zero,
+              title: Text(collections.articleFlow.autoHideToolbar),
+              onChanged: (value) => _updateState(
+                () => _articleFlowDisplay = _articleFlowDisplay.copyWith(
+                  autoHideToolbar: value,
+                ),
+              ),
             ),
             const SizedBox(height: 4),
             SwitchListTile.adaptive(
@@ -2428,6 +2546,8 @@ class _RssSourceRow extends StatelessWidget {
     required this.subtitle,
     required this.articleCount,
     required this.pending,
+    required this.fullContentEnabled,
+    required this.onFullContentEnabledChanged,
     required this.onRemove,
   });
 
@@ -2435,6 +2555,8 @@ class _RssSourceRow extends StatelessWidget {
   final String subtitle;
   final int? articleCount;
   final bool pending;
+  final bool? fullContentEnabled;
+  final ValueChanged<bool>? onFullContentEnabledChanged;
   final VoidCallback? onRemove;
 
   @override
@@ -2444,6 +2566,7 @@ class _RssSourceRow extends StatelessWidget {
     final count = articleCount;
     final effectiveTitle = title.trim().isEmpty ? subtitle : title;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Icon(Icons.rss_feed_rounded, size: 20),
         const SizedBox(width: 10),
@@ -2468,6 +2591,18 @@ class _RssSourceRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 12, color: muted),
               ),
+              if (fullContentEnabled != null) ...[
+                const SizedBox(height: 6),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  title: Text(rssStrings.fullContentEnabled),
+                  subtitle: Text(rssStrings.fullContentEnabledDescription),
+                  value: fullContentEnabled!,
+                  onChanged: onFullContentEnabledChanged,
+                ),
+              ],
             ],
           ),
         ),

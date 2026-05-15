@@ -14,6 +14,7 @@ import '../../data/models/collection_readable_item.dart';
 import '../../data/models/device_preferences.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/memo_collection.dart';
+import '../../data/models/rss_article.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/collections/collection_reader_progress_provider.dart';
 import '../../state/collections/collection_rss_providers.dart';
@@ -1396,6 +1397,14 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
       showDragHandle: true,
       builder: (context) {
         final saved = item.savedMemoUid?.trim().isNotEmpty == true;
+        final fullContentStatus = item.rssArticle?.fullContentStatus;
+        final fetchingFullContent =
+            fullContentStatus == RssArticleFullContentStatus.fetching;
+        final retryFullContent =
+            fullContentStatus == RssArticleFullContentStatus.failed ||
+            fullContentStatus == RssArticleFullContentStatus.skipped;
+        final canFetchFullContent =
+            !fetchingFullContent && item.originalUrl?.trim().isNotEmpty == true;
         return SafeArea(
           top: false,
           child: Padding(
@@ -1448,6 +1457,29 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: fetchingFullContent
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.download_for_offline_outlined),
+                  title: Text(
+                    fetchingFullContent
+                        ? rssStrings.fetchingFullContent
+                        : retryFullContent
+                        ? rssStrings.retryFullContent
+                        : rssStrings.fetchFullContent,
+                  ),
+                  enabled: canFetchFullContent,
+                  onTap: canFetchFullContent
+                      ? () => Navigator.of(
+                          context,
+                        ).pop(_CurrentRssAction.fetchFullContent)
+                      : null,
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
                   leading: Icon(
                     saved
                         ? Icons.bookmark_added_rounded
@@ -1491,6 +1523,9 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
             ),
           );
         return;
+      case _CurrentRssAction.fetchFullContent:
+        await _fetchRssItemFullContent(item);
+        return;
       case _CurrentRssAction.saveAsMemo:
         await _saveRssItemAsMemo(item);
         return;
@@ -1506,6 +1541,31 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(content: Text(context.t.strings.collections.rss.savedAsMemo)),
+      );
+  }
+
+  Future<void> _fetchRssItemFullContent(CollectionReadableItem item) async {
+    final rssStrings = context.t.strings.collections.rss;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(rssStrings.fetchingFullContent)));
+    final result = await ref
+        .read(collectionRssActionsProvider)
+        .fetchFullContent(item);
+    if (!mounted || result == null) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            result.succeeded
+                ? rssStrings.fullContentFetched
+                : result.status == RssArticleFullContentStatus.skipped
+                ? rssStrings.fullContentSkipped
+                : rssStrings.fullContentFailed,
+          ),
+        ),
       );
   }
 
@@ -2047,6 +2107,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                           previewImageOnTap:
                               preferences.displayConfig.previewImageOnTap,
                           onSaveRssItemAsMemo: _saveRssItemAsMemo,
+                          onFetchRssItemFullContent: _fetchRssItemFullContent,
                           onCenterTap: _toggleOverlay,
                           onChapterMeasured: (index, height) {
                             _memoHeights[index] = height;
@@ -2228,7 +2289,13 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
 
 enum _CurrentMemoAction { open, copy, addToCollection, togglePin }
 
-enum _CurrentRssAction { toggleRead, openOriginal, copy, saveAsMemo }
+enum _CurrentRssAction {
+  toggleRead,
+  openOriginal,
+  copy,
+  fetchFullContent,
+  saveAsMemo,
+}
 
 FontWeight _resolveReaderFontWeight(CollectionReaderFontWeightMode mode) {
   return switch (mode) {

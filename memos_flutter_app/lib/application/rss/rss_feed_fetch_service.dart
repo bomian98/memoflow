@@ -1,13 +1,12 @@
-import 'dart:convert';
-
-import 'package:charset/charset.dart';
-import 'package:dio/dio.dart';
-
 import '../../data/models/rss_feed.dart';
 import '../../data/models/rss_feed_preview.dart';
 import '../../data/repositories/rss_repository.dart';
+import 'rss_full_content_service.dart';
 import 'rss_feed_discovery.dart';
 import 'rss_feed_parser.dart';
+import 'rss_http.dart';
+
+export 'rss_http.dart' show RssHttpFetcher, RssHttpResponse;
 
 enum RssFeedDiscoveryFailure { emptyInput, invalidUrl, noFeedDiscovered }
 
@@ -31,51 +30,24 @@ class RssCollectionRefreshSummary {
   final int failureCount;
 }
 
-class RssHttpResponse {
-  const RssHttpResponse({
-    required this.body,
-    required this.statusCode,
-    this.headers = const <String, String>{},
-  });
-
-  factory RssHttpResponse.fromBytes({
-    required List<int> bodyBytes,
-    required int statusCode,
-    Map<String, String> headers = const <String, String>{},
-  }) {
-    final normalizedHeaders = _normalizeHeaderMap(headers);
-    return RssHttpResponse(
-      body: _decodeHttpBody(bodyBytes, normalizedHeaders),
-      statusCode: statusCode,
-      headers: normalizedHeaders,
-    );
-  }
-
-  final String body;
-  final int statusCode;
-  final Map<String, String> headers;
-
-  String header(String name) => headers[name.toLowerCase()] ?? '';
-}
-
-typedef RssHttpFetcher =
-    Future<RssHttpResponse> Function(Uri uri, {Map<String, String>? headers});
-
 class RssFeedFetchService {
   RssFeedFetchService({
     required RssRepository repository,
     RssFeedParser parser = const RssFeedParser(),
     RssFeedDiscovery discovery = const RssFeedDiscovery(),
     RssHttpFetcher? fetcher,
+    RssFullContentService? fullContentService,
   }) : _repository = repository,
        _parser = parser,
        _discovery = discovery,
-       _fetcher = fetcher ?? _defaultFetch;
+       _fetcher = fetcher ?? defaultRssHttpFetch,
+       _fullContentService = fullContentService;
 
   final RssRepository _repository;
   final RssFeedParser _parser;
   final RssFeedDiscovery _discovery;
   final RssHttpFetcher _fetcher;
+  final RssFullContentService? _fullContentService;
 
   Future<RssFeedPreview> previewUrl(String inputUrl) async {
     final requestUri = _normalizeInputUrl(inputUrl);
@@ -135,6 +107,7 @@ class RssFeedFetchService {
           preview: preview,
           fetchedAt: DateTime.now(),
         );
+        await _maybeRefreshFullContent(feed);
         return preview;
       }
       final preview = _parser
@@ -146,6 +119,7 @@ class RssFeedFetchService {
             lastModified: response.header('last-modified'),
           );
       await _repository.upsertFeedFromPreview(preview);
+      await _maybeRefreshFullContent(feed);
       return preview;
     } catch (error) {
       await _repository.recordFeedFailure(
@@ -174,6 +148,15 @@ class RssFeedFetchService {
       successCount: success,
       failureCount: failure,
     );
+  }
+
+  Future<void> _maybeRefreshFullContent(RssFeed feed) async {
+    if (_fullContentService == null || !feed.fullContentEnabled) return;
+    try {
+      await _fullContentService.fetchEligibleArticlesForFeed(feed.id);
+    } catch (_) {
+      // Full-content fetching is best-effort and must not fail feed refresh.
+    }
   }
 
   RssFeedPreview? _tryParsePreview(
@@ -218,91 +201,4 @@ class RssFeedFetchService {
     }
     return parsed;
   }
-
-  static Future<RssHttpResponse> _defaultFetch(
-    Uri uri, {
-    Map<String, String>? headers,
-  }) async {
-    final dio = Dio(
-      BaseOptions(
-        followRedirects: true,
-        responseType: ResponseType.bytes,
-        validateStatus: (_) => true,
-      ),
-    );
-    final response = await dio.getUri<List<int>>(
-      uri,
-      options: Options(headers: headers),
-    );
-    final normalizedHeaders = <String, String>{};
-    for (final entry in response.headers.map.entries) {
-      if (entry.value.isEmpty) continue;
-      normalizedHeaders[entry.key.toLowerCase()] = entry.value.first;
-    }
-    return RssHttpResponse.fromBytes(
-      bodyBytes: response.data ?? const <int>[],
-      statusCode: response.statusCode ?? 0,
-      headers: normalizedHeaders,
-    );
-  }
-}
-
-Map<String, String> _normalizeHeaderMap(Map<String, String> headers) {
-  return <String, String>{
-    for (final entry in headers.entries) entry.key.toLowerCase(): entry.value,
-  };
-}
-
-String _decodeHttpBody(List<int> bytes, Map<String, String> headers) {
-  if (bytes.isEmpty) return '';
-
-  final bomEncoding = Charset.detect(
-    bytes,
-    orders: const <Encoding>[],
-    utf8BOM: true,
-  );
-  if (bomEncoding != null) {
-    return bomEncoding.decode(bytes);
-  }
-
-  final declaredName =
-      _charsetFromContentType(headers['content-type'] ?? '') ??
-      _charsetFromXmlDeclaration(bytes);
-  final declaredEncoding = declaredName == null
-      ? null
-      : Charset.getByName(declaredName);
-  if (declaredEncoding != null) {
-    return declaredEncoding.decode(bytes);
-  }
-
-  try {
-    return utf8.decode(bytes);
-  } on FormatException {
-    final detected = Charset.detect(bytes);
-    if (detected != null) {
-      return detected.decode(bytes);
-    }
-    return utf8.decode(bytes, allowMalformed: true);
-  }
-}
-
-String? _charsetFromContentType(String value) {
-  final match = RegExp(
-    r'charset\s*=\s*"?([^";\s]+)',
-    caseSensitive: false,
-  ).firstMatch(value);
-  return match?.group(1)?.trim();
-}
-
-String? _charsetFromXmlDeclaration(List<int> bytes) {
-  final prefixLength = bytes.length < 512 ? bytes.length : 512;
-  final prefix = latin1.decode(bytes.take(prefixLength).toList());
-  final match = RegExp(
-    r'<\?xml[^>]*encoding\s*=\s*["'
-    ']([^"'
-    ']+)["'
-    ']',
-    caseSensitive: false,
-  ).firstMatch(prefix);
-  return match?.group(1)?.trim();
 }

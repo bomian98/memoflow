@@ -2005,6 +2005,14 @@ collections:
     openOriginal: 원문 열기
     saveAsMemo: 메모로 저장
     savedAsMemo: 메모로 저장됨
+    fetchFullContent: 전체 글 가져오기
+    retryFullContent: 전체 글 다시 가져오기
+    fetchingFullContent: 전체 글을 가져오는 중...
+    fullContentFetched: 전체 글을 가져왔습니다
+    fullContentFailed: 전체 글 가져오기에 실패했습니다
+    fullContentSkipped: 전체 글을 사용할 수 없습니다
+    fullContentEnabled: 전체 글 가져오기
+    fullContentEnabledDescription: 피드를 새로고침할 때 읽기 쉬운 글 페이지를 가져옵니다.
     refreshing: RSS 피드를 새로고침하는 중...
     noFeeds: 이 컬렉션에 RSS 피드가 없습니다
     noArticles: 아직 RSS 글이 없습니다

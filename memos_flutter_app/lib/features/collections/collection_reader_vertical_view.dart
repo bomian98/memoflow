@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
 import '../../data/models/collection_readable_item.dart';
+import '../../data/models/rss_article.dart';
 import '../../i18n/strings.g.dart';
 import 'collection_reader_animation_delegate.dart';
 import 'collection_reader_no_anim_delegate.dart';
@@ -24,6 +25,7 @@ class CollectionReaderVerticalView extends StatelessWidget {
     required this.allowTextSelection,
     required this.previewImageOnTap,
     required this.onSaveRssItemAsMemo,
+    required this.onFetchRssItemFullContent,
     required this.onCenterTap,
     required this.onChapterMeasured,
     required this.onUserScrollStart,
@@ -41,6 +43,7 @@ class CollectionReaderVerticalView extends StatelessWidget {
   final bool allowTextSelection;
   final bool previewImageOnTap;
   final ValueChanged<CollectionReadableItem> onSaveRssItemAsMemo;
+  final Future<void> Function(CollectionReadableItem) onFetchRssItemFullContent;
   final VoidCallback onCenterTap;
   final void Function(int index, double height) onChapterMeasured;
   final VoidCallback onUserScrollStart;
@@ -116,6 +119,8 @@ class CollectionReaderVerticalView extends StatelessWidget {
                             allowTextSelection: allowTextSelection,
                             previewImageOnTap: previewImageOnTap,
                             onSaveRssItemAsMemo: onSaveRssItemAsMemo,
+                            onFetchRssItemFullContent:
+                                onFetchRssItemFullContent,
                           ),
                           const SizedBox(height: 16),
                         ],
@@ -141,6 +146,7 @@ class _ReadableItemContent extends StatelessWidget {
     required this.allowTextSelection,
     required this.previewImageOnTap,
     required this.onSaveRssItemAsMemo,
+    required this.onFetchRssItemFullContent,
   });
 
   final CollectionReadableItem item;
@@ -150,6 +156,7 @@ class _ReadableItemContent extends StatelessWidget {
   final bool allowTextSelection;
   final bool previewImageOnTap;
   final ValueChanged<CollectionReadableItem> onSaveRssItemAsMemo;
+  final Future<void> Function(CollectionReadableItem) onFetchRssItemFullContent;
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +180,19 @@ class _ReadableItemContent extends StatelessWidget {
       renderMode: RenderMode.column,
     );
     final saved = item.savedMemoUid?.trim().isNotEmpty == true;
+    final article = item.rssArticle;
+    final fullContentStatus = article?.fullContentStatus;
+    final fetchingFullContent =
+        fullContentStatus == RssArticleFullContentStatus.fetching;
+    final fullContentFailed =
+        fullContentStatus == RssArticleFullContentStatus.failed;
+    final fullContentSkipped =
+        fullContentStatus == RssArticleFullContentStatus.skipped;
+    final canFetchFullContent =
+        !fetchingFullContent && item.originalUrl?.trim().isNotEmpty == true;
+    final fullContentLabel = fullContentFailed || fullContentSkipped
+        ? context.t.strings.collections.rss.retryFullContent
+        : context.t.strings.collections.rss.fetchFullContent;
     final content = Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -196,6 +216,38 @@ class _ReadableItemContent extends StatelessWidget {
               ),
             ),
           ),
+          if (article != null) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: canFetchFullContent
+                    ? () => onFetchRssItemFullContent(item)
+                    : null,
+                icon: fetchingFullContent
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.download_for_offline_outlined),
+                label: Text(
+                  fetchingFullContent
+                      ? context.t.strings.collections.rss.fetchingFullContent
+                      : fullContentLabel,
+                ),
+              ),
+            ),
+            if (fullContentFailed || fullContentSkipped) ...[
+              const SizedBox(height: 6),
+              Text(
+                fullContentFailed
+                    ? context.t.strings.collections.rss.fullContentFailed
+                    : context.t.strings.collections.rss.fullContentSkipped,
+                style: metaTextStyle,
+              ),
+            ],
+          ],
           const SizedBox(height: 10),
           body,
           if (item.savedMemoUid?.trim().isNotEmpty == true) ...[

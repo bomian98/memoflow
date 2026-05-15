@@ -1985,6 +1985,14 @@ collections:
     openOriginal: Abrir original
     saveAsMemo: Salvar como memo
     savedAsMemo: Salvo como memo
+    fetchFullContent: Buscar artigo completo
+    retryFullContent: Tentar buscar artigo completo novamente
+    fetchingFullContent: Buscando artigo completo...
+    fullContentFetched: Artigo completo buscado
+    fullContentFailed: Falha ao buscar artigo completo
+    fullContentSkipped: Artigo completo indisponível
+    fullContentEnabled: Buscar artigos completos
+    fullContentEnabledDescription: Tenta buscar páginas legíveis dos artigos durante a atualização do feed.
     refreshing: Atualizando feeds RSS...
     noFeeds: Nenhum feed RSS nesta coleção
     noArticles: Nenhum artigo RSS ainda

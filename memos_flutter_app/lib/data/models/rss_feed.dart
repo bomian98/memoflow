@@ -15,6 +15,7 @@ class RssFeed {
     required this.lastError,
     required this.createdTime,
     required this.updatedTime,
+    this.fullContentEnabled = false,
   });
 
   final String id;
@@ -30,6 +31,7 @@ class RssFeed {
   final String? lastError;
   final DateTime createdTime;
   final DateTime updatedTime;
+  final bool fullContentEnabled;
 
   String get displayTitle {
     final trimmedTitle = title.trim();
@@ -65,6 +67,7 @@ class RssFeed {
       lastError: _readNullableString(row['last_error']),
       createdTime: _readTime(row['created_time']),
       updatedTime: _readTime(row['updated_time']),
+      fullContentEnabled: _readBool(row['full_content_enabled']),
     );
   }
 
@@ -82,6 +85,7 @@ class RssFeed {
     Object? lastError = _unset,
     DateTime? createdTime,
     DateTime? updatedTime,
+    bool? fullContentEnabled,
   }) {
     return RssFeed(
       id: id ?? this.id,
@@ -103,6 +107,7 @@ class RssFeed {
           : lastError as String?,
       createdTime: createdTime ?? this.createdTime,
       updatedTime: updatedTime ?? this.updatedTime,
+      fullContentEnabled: fullContentEnabled ?? this.fullContentEnabled,
     );
   }
 }
@@ -157,6 +162,16 @@ int _readInt(Object? raw) {
   if (raw is num) return raw.toInt();
   if (raw is String) return int.tryParse(raw.trim()) ?? 0;
   return 0;
+}
+
+bool _readBool(Object? raw) {
+  if (raw is bool) return raw;
+  if (raw is num) return raw != 0;
+  if (raw is String) {
+    final normalized = raw.trim().toLowerCase();
+    return normalized == 'true' || normalized == '1' || normalized == 'yes';
+  }
+  return false;
 }
 
 DateTime _readTime(Object? raw) {

@@ -46,6 +46,45 @@ class RssRepository {
     return RssArticle.fromDb(rows.first);
   }
 
+  Future<List<RssArticle>> listFeedArticles(String feedId, {int? limit}) async {
+    final normalizedFeedId = feedId.trim();
+    if (normalizedFeedId.isEmpty) return const <RssArticle>[];
+    final sqlite = await _db.db;
+    final rows = await sqlite.query(
+      'rss_articles',
+      where: 'feed_id = ?',
+      whereArgs: <Object?>[normalizedFeedId],
+      orderBy:
+          'COALESCE(published_time, fetched_time) DESC, fetched_time DESC, id ASC',
+      limit: limit,
+    );
+    return rows.map(RssArticle.fromDb).toList(growable: false);
+  }
+
+  Future<List<RssArticle>> listFullContentEligibleArticlesForFeed(
+    String feedId, {
+    int limit = 10,
+  }) async {
+    final normalizedFeedId = feedId.trim();
+    if (normalizedFeedId.isEmpty || limit <= 0) return const <RssArticle>[];
+    final sqlite = await _db.db;
+    final rows = await sqlite.query(
+      'rss_articles',
+      where:
+          'feed_id = ? AND link <> ? AND full_content_html = ? AND full_content_status = ?',
+      whereArgs: <Object?>[
+        normalizedFeedId,
+        '',
+        '',
+        rssArticleFullContentStatusValue(RssArticleFullContentStatus.idle),
+      ],
+      orderBy:
+          'COALESCE(published_time, fetched_time) DESC, fetched_time DESC, id ASC',
+      limit: limit,
+    );
+    return rows.map(RssArticle.fromDb).toList(growable: false);
+  }
+
   Future<RssFeed> upsertFeedFromPreview(RssFeedPreview preview) async {
     final sqlite = await _db.db;
     final feed = await AppDatabaseWriteDao.runTransaction<RssFeed>(sqlite, (
@@ -292,6 +331,76 @@ class RssRepository {
     _db.notifyDataChanged();
   }
 
+  Future<void> setFeedFullContentEnabled({
+    required String feedId,
+    required bool enabled,
+  }) async {
+    final normalizedFeedId = feedId.trim();
+    if (normalizedFeedId.isEmpty) return;
+    final now = DateTime.now();
+    final sqlite = await _db.db;
+    await sqlite.update(
+      'rss_feeds',
+      <String, Object?>{
+        'full_content_enabled': enabled ? 1 : 0,
+        'updated_time': _toSec(now),
+      },
+      where: 'id = ?',
+      whereArgs: <Object?>[normalizedFeedId],
+    );
+    _db.notifyDataChanged();
+  }
+
+  Future<void> markArticleFullContentFetching({
+    required String articleId,
+    DateTime? now,
+  }) async {
+    await _updateArticleFullContentState(
+      articleId: articleId,
+      status: RssArticleFullContentStatus.fetching,
+      fullContentHtml: null,
+      fetchedTime: null,
+      error: null,
+      now: now,
+    );
+  }
+
+  Future<void> recordArticleFullContentFetched({
+    required String articleId,
+    required String fullContentHtml,
+    DateTime? fetchedAt,
+  }) async {
+    final normalizedHtml = fullContentHtml.trim();
+    await _updateArticleFullContentState(
+      articleId: articleId,
+      status: normalizedHtml.isEmpty
+          ? RssArticleFullContentStatus.failed
+          : RssArticleFullContentStatus.fetched,
+      fullContentHtml: normalizedHtml,
+      fetchedTime: fetchedAt ?? DateTime.now(),
+      error: normalizedHtml.isEmpty ? 'Full content extraction failed' : null,
+      now: fetchedAt,
+    );
+  }
+
+  Future<void> recordArticleFullContentFailure({
+    required String articleId,
+    required String error,
+    bool skipped = false,
+    DateTime? failedAt,
+  }) async {
+    await _updateArticleFullContentState(
+      articleId: articleId,
+      status: skipped
+          ? RssArticleFullContentStatus.skipped
+          : RssArticleFullContentStatus.failed,
+      fullContentHtml: null,
+      fetchedTime: failedAt ?? DateTime.now(),
+      error: error.trim().isEmpty ? 'Full content fetch failed' : error,
+      now: failedAt,
+    );
+  }
+
   Future<RssFeed> _upsertFeedFromPreview(
     DatabaseExecutor executor,
     RssFeedPreview preview, {
@@ -315,6 +424,7 @@ class RssRepository {
       lastFetchTime: effectiveNow,
       lastSuccessTime: effectiveNow,
       lastError: null,
+      fullContentEnabled: existing?.fullContentEnabled ?? false,
       createdTime: existing?.createdTime ?? effectiveNow,
       updatedTime: effectiveNow,
     );
@@ -364,6 +474,11 @@ class RssRepository {
         savedMemoUid: existing?.savedMemoUid,
         createdTime: existing?.createdTime ?? effectiveNow,
         updatedTime: effectiveNow,
+        fullContentHtml: existing?.fullContentHtml ?? '',
+        fullContentStatus:
+            existing?.fullContentStatus ?? RssArticleFullContentStatus.idle,
+        fullContentFetchedTime: existing?.fullContentFetchedTime,
+        fullContentError: existing?.fullContentError,
       );
       final row = _articleToRow(article);
       if (existing == null) {
@@ -494,6 +609,7 @@ class RssRepository {
       'last_fetch_time': _toOptionalSec(feed.lastFetchTime),
       'last_success_time': _toOptionalSec(feed.lastSuccessTime),
       'last_error': feed.lastError?.trim(),
+      'full_content_enabled': feed.fullContentEnabled ? 1 : 0,
       'created_time': _toSec(feed.createdTime),
       'updated_time': _toSec(feed.updatedTime),
     };
@@ -514,9 +630,47 @@ class RssRepository {
       'fetched_time': _toSec(article.fetchedTime),
       'read_state': rssArticleReadStateValue(article.readState),
       'saved_memo_uid': article.savedMemoUid?.trim(),
+      'full_content_html': article.fullContentHtml.trim(),
+      'full_content_status': rssArticleFullContentStatusValue(
+        article.fullContentStatus,
+      ),
+      'full_content_fetched_time': _toOptionalSec(
+        article.fullContentFetchedTime,
+      ),
+      'full_content_error': article.fullContentError?.trim(),
       'created_time': _toSec(article.createdTime),
       'updated_time': _toSec(article.updatedTime),
     };
+  }
+
+  Future<void> _updateArticleFullContentState({
+    required String articleId,
+    required RssArticleFullContentStatus status,
+    required String? fullContentHtml,
+    required DateTime? fetchedTime,
+    required String? error,
+    DateTime? now,
+  }) async {
+    final normalizedArticleId = articleId.trim();
+    if (normalizedArticleId.isEmpty) return;
+    final effectiveNow = now ?? DateTime.now();
+    final values = <String, Object?>{
+      'full_content_status': rssArticleFullContentStatusValue(status),
+      'full_content_fetched_time': _toOptionalSec(fetchedTime),
+      'full_content_error': error?.trim(),
+      'updated_time': _toSec(effectiveNow),
+    };
+    if (fullContentHtml != null) {
+      values['full_content_html'] = fullContentHtml.trim();
+    }
+    final sqlite = await _db.db;
+    await sqlite.update(
+      'rss_articles',
+      values,
+      where: 'id = ?',
+      whereArgs: <Object?>[normalizedArticleId],
+    );
+    _db.notifyDataChanged();
   }
 
   int _toSec(DateTime value) => value.toUtc().millisecondsSinceEpoch ~/ 1000;

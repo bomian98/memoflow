@@ -6,6 +6,7 @@ final class CollectionDbPersistence {
   static Future<void> ensureTables(Database db) async {
     await ensureCollectionTables(db);
     await ensureReaderProgressTable(db);
+    await ensureArticleFlowProgressTable(db);
   }
 
   static Future<void> ensureCollectionTables(Database db) async {
@@ -67,6 +68,23 @@ CREATE TABLE IF NOT EXISTS collection_read_progress (
 ''');
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_collection_read_progress_updated ON collection_read_progress(updated_time DESC);',
+    );
+  }
+
+  static Future<void> ensureArticleFlowProgressTable(Database db) async {
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS collection_article_flow_progress (
+  collection_id TEXT NOT NULL PRIMARY KEY,
+  status_filter TEXT NOT NULL DEFAULT 'all',
+  feed_id TEXT,
+  date_bucket TEXT,
+  current_item_uid TEXT,
+  list_scroll_offset REAL NOT NULL DEFAULT 0,
+  updated_time INTEGER NOT NULL
+);
+''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_collection_article_flow_progress_updated ON collection_article_flow_progress(updated_time DESC);',
     );
   }
 
@@ -132,6 +150,52 @@ CREATE TABLE IF NOT EXISTS collection_read_progress (
     }
     await executor.delete(
       'collection_read_progress',
+      where: 'collection_id = ?',
+      whereArgs: <Object?>[normalizedCollectionId],
+    );
+  }
+
+  static Future<Map<String, dynamic>?> getArticleFlowProgressRow(
+    DatabaseExecutor executor,
+    String collectionId,
+  ) async {
+    final normalizedCollectionId = collectionId.trim();
+    if (normalizedCollectionId.isEmpty) {
+      return null;
+    }
+    final rows = await executor.query(
+      'collection_article_flow_progress',
+      where: 'collection_id = ?',
+      whereArgs: <Object?>[normalizedCollectionId],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    return rows.first;
+  }
+
+  static Future<void> upsertArticleFlowProgressRow(
+    DatabaseExecutor executor,
+    Map<String, Object?> row,
+  ) async {
+    await executor.insert(
+      'collection_article_flow_progress',
+      row,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  static Future<void> deleteArticleFlowProgress(
+    DatabaseExecutor executor,
+    String collectionId,
+  ) async {
+    final normalizedCollectionId = collectionId.trim();
+    if (normalizedCollectionId.isEmpty) {
+      return;
+    }
+    await executor.delete(
+      'collection_article_flow_progress',
       where: 'collection_id = ?',
       whereArgs: <Object?>[normalizedCollectionId],
     );

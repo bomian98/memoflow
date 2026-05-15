@@ -4,9 +4,9 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 7
-/// Strings: 14162 (2023 per locale)
+/// Strings: 14326 (2046 per locale)
 ///
-/// Built on 2026-05-14 at 12:01 UTC
+/// Built on 2026-05-15 at 10:05 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -2313,6 +2313,8 @@ class _StringsStringsCollectionsEn {
       _StringsStringsCollectionsReaderEn._(_root);
   late final _StringsStringsCollectionsRssEn rss =
       _StringsStringsCollectionsRssEn._(_root);
+  late final _StringsStringsCollectionsArticleFlowEn articleFlow =
+      _StringsStringsCollectionsArticleFlowEn._(_root);
   String get createCollectionTooltip => 'Create collection';
   String get reorderShelf => 'Reorder shelf';
   String get reorderShelfDescription =>
@@ -3123,6 +3125,15 @@ class _StringsStringsCollectionsRssEn {
   String get openOriginal => 'Open original';
   String get saveAsMemo => 'Save as memo';
   String get savedAsMemo => 'Saved as memo';
+  String get fetchFullContent => 'Fetch full article';
+  String get retryFullContent => 'Retry full article';
+  String get fetchingFullContent => 'Fetching full article...';
+  String get fullContentFetched => 'Full article fetched';
+  String get fullContentFailed => 'Full article fetch failed';
+  String get fullContentSkipped => 'Full article is not available';
+  String get fullContentEnabled => 'Fetch full articles';
+  String get fullContentEnabledDescription =>
+      'Try to fetch readable article pages during feed refresh.';
   String get refreshing => 'Refreshing RSS feeds...';
   String get noFeeds => 'No RSS feeds in this collection';
   String get noArticles => 'No RSS articles yet';
@@ -3130,6 +3141,43 @@ class _StringsStringsCollectionsRssEn {
       'Refresh feeds or manage sources to load articles.';
   String refreshComplete({required Object success, required Object failure}) =>
       'RSS refresh complete: ${success} updated, ${failure} failed';
+}
+
+// Path: strings.collections.articleFlow
+class _StringsStringsCollectionsArticleFlowEn {
+  _StringsStringsCollectionsArticleFlowEn._(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get title => 'Article flow';
+  String get listActions => 'List actions';
+  String get filterAll => 'All';
+  String get filterUnread => 'Unread';
+  String get filterRead => 'Read';
+  String get filterSaved => 'Saved';
+  String get feedAll => 'All feeds';
+  String get dateAll => 'All dates';
+  String get noItems => 'No articles match the current filters.';
+  String get noSelected => 'Select an article';
+  String get share => 'Share';
+  String get nextArticle => 'Next article';
+  String get markAboveRead => 'Mark above as read';
+  String get markBelowRead => 'Mark below as read';
+  String get readingExperience => 'Reading experience';
+  String get switchExperience => 'Switch reading experience';
+  String get articleFlowExperience => 'Article flow';
+  String get continuousReaderExperience => 'Continuous reader';
+  String get displaySettings => 'Article flow display';
+  String get showExcerpt => 'Show excerpts';
+  String get showThumbnail => 'Show thumbnails';
+  String get showFeedIcon => 'Show feed icons';
+  String get density => 'List density';
+  String get densityCompact => 'Compact';
+  String get densityComfortable => 'Comfortable';
+  String get autoHideToolbar => 'Auto-hide article toolbar';
+  String get fullContentFallback =>
+      'Showing feed content. Retry full article or open the original page.';
 }
 
 // Path: strings.settings.preferences.editorToolbar
@@ -6966,6 +7014,9 @@ class _StringsStringsCollectionsDe extends _StringsStringsCollectionsEn {
   late final _StringsStringsCollectionsRssDe rss =
       _StringsStringsCollectionsRssDe._(_root);
   @override
+  late final _StringsStringsCollectionsArticleFlowDe articleFlow =
+      _StringsStringsCollectionsArticleFlowDe._(_root);
+  @override
   String get createCollectionTooltip => 'Create collection';
   @override
   String get reorderShelf => 'Reorder shelf';
@@ -8318,6 +8369,24 @@ class _StringsStringsCollectionsRssDe extends _StringsStringsCollectionsRssEn {
   @override
   String get savedAsMemo => 'Als Memo gespeichert';
   @override
+  String get fetchFullContent => 'Vollständigen Artikel abrufen';
+  @override
+  String get retryFullContent => 'Vollständigen Artikel erneut abrufen';
+  @override
+  String get fetchingFullContent => 'Vollständiger Artikel wird abgerufen...';
+  @override
+  String get fullContentFetched => 'Vollständiger Artikel abgerufen';
+  @override
+  String get fullContentFailed =>
+      'Abrufen des vollständigen Artikels fehlgeschlagen';
+  @override
+  String get fullContentSkipped => 'Vollständiger Artikel ist nicht verfügbar';
+  @override
+  String get fullContentEnabled => 'Vollständige Artikel abrufen';
+  @override
+  String get fullContentEnabledDescription =>
+      'Versucht, lesbare Artikelseiten beim Aktualisieren des Feeds abzurufen.';
+  @override
   String get refreshing => 'RSS-Feeds werden aktualisiert...';
   @override
   String get noFeeds => 'Keine RSS-Feeds in dieser Sammlung';
@@ -8329,6 +8398,74 @@ class _StringsStringsCollectionsRssDe extends _StringsStringsCollectionsRssEn {
   @override
   String refreshComplete({required Object success, required Object failure}) =>
       'RSS-Aktualisierung abgeschlossen: ${success} aktualisiert, ${failure} fehlgeschlagen';
+}
+
+// Path: strings.collections.articleFlow
+class _StringsStringsCollectionsArticleFlowDe
+    extends _StringsStringsCollectionsArticleFlowEn {
+  _StringsStringsCollectionsArticleFlowDe._(_StringsDe root)
+    : this._root = root,
+      super._(root);
+
+  @override
+  final _StringsDe _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Artikelfluss';
+  @override
+  String get listActions => 'Listenaktionen';
+  @override
+  String get filterAll => 'Alle';
+  @override
+  String get filterUnread => 'Ungelesen';
+  @override
+  String get filterRead => 'Gelesen';
+  @override
+  String get filterSaved => 'Gespeichert';
+  @override
+  String get feedAll => 'Alle Feeds';
+  @override
+  String get dateAll => 'Alle Daten';
+  @override
+  String get noItems => 'Keine Artikel passen zu den aktuellen Filtern.';
+  @override
+  String get noSelected => 'Artikel auswaehlen';
+  @override
+  String get share => 'Teilen';
+  @override
+  String get nextArticle => 'Naechster Artikel';
+  @override
+  String get markAboveRead => 'Obere als gelesen markieren';
+  @override
+  String get markBelowRead => 'Untere als gelesen markieren';
+  @override
+  String get readingExperience => 'Leseansicht';
+  @override
+  String get switchExperience => 'Leseansicht wechseln';
+  @override
+  String get articleFlowExperience => 'Artikelfluss';
+  @override
+  String get continuousReaderExperience => 'Fortlaufender Reader';
+  @override
+  String get displaySettings => 'Artikelfluss-Anzeige';
+  @override
+  String get showExcerpt => 'Auszuege anzeigen';
+  @override
+  String get showThumbnail => 'Vorschaubilder anzeigen';
+  @override
+  String get showFeedIcon => 'Feed-Symbole anzeigen';
+  @override
+  String get density => 'Listendichte';
+  @override
+  String get densityCompact => 'Kompakt';
+  @override
+  String get densityComfortable => 'Komfortabel';
+  @override
+  String get autoHideToolbar => 'Artikel-Werkzeugleiste automatisch ausblenden';
+  @override
+  String get fullContentFallback =>
+      'Feed-Inhalt wird angezeigt. Volltext erneut abrufen oder Originalseite oeffnen.';
 }
 
 // Path: strings.settings.preferences.editorToolbar
@@ -13433,6 +13570,22 @@ class _StringsStringsCollectionsRssJa extends _StringsStringsCollectionsRssEn {
   String get saveAsMemo => 'メモとして保存';
   @override
   String get savedAsMemo => 'メモとして保存済み';
+  @override
+  String get fetchFullContent => '全文を取得';
+  @override
+  String get retryFullContent => '全文の取得を再試行';
+  @override
+  String get fetchingFullContent => '全文を取得しています...';
+  @override
+  String get fullContentFetched => '全文を取得しました';
+  @override
+  String get fullContentFailed => '全文の取得に失敗しました';
+  @override
+  String get fullContentSkipped => '全文は利用できません';
+  @override
+  String get fullContentEnabled => '全文を取得';
+  @override
+  String get fullContentEnabledDescription => 'フィード更新時に読みやすい記事ページの取得を試みます。';
   @override
   String get refreshing => 'RSSフィードを更新しています...';
   @override
@@ -18767,6 +18920,22 @@ class _StringsStringsCollectionsRssKo extends _StringsStringsCollectionsRssEn {
   String get saveAsMemo => '메모로 저장';
   @override
   String get savedAsMemo => '메모로 저장됨';
+  @override
+  String get fetchFullContent => '전체 글 가져오기';
+  @override
+  String get retryFullContent => '전체 글 다시 가져오기';
+  @override
+  String get fetchingFullContent => '전체 글을 가져오는 중...';
+  @override
+  String get fullContentFetched => '전체 글을 가져왔습니다';
+  @override
+  String get fullContentFailed => '전체 글 가져오기에 실패했습니다';
+  @override
+  String get fullContentSkipped => '전체 글을 사용할 수 없습니다';
+  @override
+  String get fullContentEnabled => '전체 글 가져오기';
+  @override
+  String get fullContentEnabledDescription => '피드를 새로고침할 때 읽기 쉬운 글 페이지를 가져옵니다.';
   @override
   String get refreshing => 'RSS 피드를 새로고침하는 중...';
   @override
@@ -24355,6 +24524,23 @@ class _StringsStringsCollectionsRssPtBr
   @override
   String get savedAsMemo => 'Salvo como memo';
   @override
+  String get fetchFullContent => 'Buscar artigo completo';
+  @override
+  String get retryFullContent => 'Tentar buscar artigo completo novamente';
+  @override
+  String get fetchingFullContent => 'Buscando artigo completo...';
+  @override
+  String get fullContentFetched => 'Artigo completo buscado';
+  @override
+  String get fullContentFailed => 'Falha ao buscar artigo completo';
+  @override
+  String get fullContentSkipped => 'Artigo completo indisponível';
+  @override
+  String get fullContentEnabled => 'Buscar artigos completos';
+  @override
+  String get fullContentEnabledDescription =>
+      'Tenta buscar páginas legíveis dos artigos durante a atualização do feed.';
+  @override
   String get refreshing => 'Atualizando feeds RSS...';
   @override
   String get noFeeds => 'Nenhum feed RSS nesta coleção';
@@ -28272,6 +28458,9 @@ class _StringsStringsCollectionsZhHans extends _StringsStringsCollectionsEn {
   late final _StringsStringsCollectionsRssZhHans rss =
       _StringsStringsCollectionsRssZhHans._(_root);
   @override
+  late final _StringsStringsCollectionsArticleFlowZhHans articleFlow =
+      _StringsStringsCollectionsArticleFlowZhHans._(_root);
+  @override
   String get createCollectionTooltip => '创建合集';
   @override
   String get reorderShelf => '调整书架顺序';
@@ -29635,6 +29824,22 @@ class _StringsStringsCollectionsRssZhHans
   @override
   String get savedAsMemo => '已保存为 memo';
   @override
+  String get fetchFullContent => '获取全文';
+  @override
+  String get retryFullContent => '重新获取全文';
+  @override
+  String get fetchingFullContent => '正在获取全文...';
+  @override
+  String get fullContentFetched => '已获取全文';
+  @override
+  String get fullContentFailed => '全文获取失败';
+  @override
+  String get fullContentSkipped => '全文不可用';
+  @override
+  String get fullContentEnabled => '获取全文';
+  @override
+  String get fullContentEnabledDescription => '刷新源时尝试获取可读的文章页面。';
+  @override
   String get refreshing => '正在刷新 RSS 源...';
   @override
   String get noFeeds => '这个合集还没有 RSS 源';
@@ -29645,6 +29850,73 @@ class _StringsStringsCollectionsRssZhHans
   @override
   String refreshComplete({required Object success, required Object failure}) =>
       'RSS 刷新完成：${success} 个已更新，${failure} 个失败';
+}
+
+// Path: strings.collections.articleFlow
+class _StringsStringsCollectionsArticleFlowZhHans
+    extends _StringsStringsCollectionsArticleFlowEn {
+  _StringsStringsCollectionsArticleFlowZhHans._(_StringsZhHans root)
+    : this._root = root,
+      super._(root);
+
+  @override
+  final _StringsZhHans _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => '文章流';
+  @override
+  String get listActions => '列表操作';
+  @override
+  String get filterAll => '全部';
+  @override
+  String get filterUnread => '未读';
+  @override
+  String get filterRead => '已读';
+  @override
+  String get filterSaved => '已保存';
+  @override
+  String get feedAll => '全部来源';
+  @override
+  String get dateAll => '全部日期';
+  @override
+  String get noItems => '当前筛选没有文章。';
+  @override
+  String get noSelected => '选择一篇文章';
+  @override
+  String get share => '分享';
+  @override
+  String get nextArticle => '下一篇';
+  @override
+  String get markAboveRead => '标记上方为已读';
+  @override
+  String get markBelowRead => '标记下方为已读';
+  @override
+  String get readingExperience => '阅读方式';
+  @override
+  String get switchExperience => '切换阅读方式';
+  @override
+  String get articleFlowExperience => '文章流';
+  @override
+  String get continuousReaderExperience => '连续阅读器';
+  @override
+  String get displaySettings => '文章流显示';
+  @override
+  String get showExcerpt => '显示摘要';
+  @override
+  String get showThumbnail => '显示缩略图';
+  @override
+  String get showFeedIcon => '显示来源图标';
+  @override
+  String get density => '列表密度';
+  @override
+  String get densityCompact => '紧凑';
+  @override
+  String get densityComfortable => '舒适';
+  @override
+  String get autoHideToolbar => '自动隐藏文章工具栏';
+  @override
+  String get fullContentFallback => '正在显示来源内容。可重试全文或打开原文。';
 }
 
 // Path: strings.settings.preferences.editorToolbar
@@ -33468,6 +33740,9 @@ class _StringsStringsCollectionsZhHantTw extends _StringsStringsCollectionsEn {
   late final _StringsStringsCollectionsRssZhHantTw rss =
       _StringsStringsCollectionsRssZhHantTw._(_root);
   @override
+  late final _StringsStringsCollectionsArticleFlowZhHantTw articleFlow =
+      _StringsStringsCollectionsArticleFlowZhHantTw._(_root);
+  @override
   String get createCollectionTooltip => '建立合集';
   @override
   String get reorderShelf => '調整書架順序';
@@ -34787,6 +35062,22 @@ class _StringsStringsCollectionsRssZhHantTw
   @override
   String get savedAsMemo => '已儲存為 memo';
   @override
+  String get fetchFullContent => '取得全文';
+  @override
+  String get retryFullContent => '重新取得全文';
+  @override
+  String get fetchingFullContent => '正在取得全文...';
+  @override
+  String get fullContentFetched => '已取得全文';
+  @override
+  String get fullContentFailed => '全文取得失敗';
+  @override
+  String get fullContentSkipped => '全文無法使用';
+  @override
+  String get fullContentEnabled => '取得全文';
+  @override
+  String get fullContentEnabledDescription => '重新整理來源時嘗試取得可讀的文章頁面。';
+  @override
   String get refreshing => '正在重新整理 RSS 來源...';
   @override
   String get noFeeds => '這個合集還沒有 RSS 來源';
@@ -34797,6 +35088,73 @@ class _StringsStringsCollectionsRssZhHantTw
   @override
   String refreshComplete({required Object success, required Object failure}) =>
       'RSS 重新整理完成：${success} 個已更新，${failure} 個失敗';
+}
+
+// Path: strings.collections.articleFlow
+class _StringsStringsCollectionsArticleFlowZhHantTw
+    extends _StringsStringsCollectionsArticleFlowEn {
+  _StringsStringsCollectionsArticleFlowZhHantTw._(_StringsZhHantTw root)
+    : this._root = root,
+      super._(root);
+
+  @override
+  final _StringsZhHantTw _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => '文章流';
+  @override
+  String get listActions => '列表操作';
+  @override
+  String get filterAll => '全部';
+  @override
+  String get filterUnread => '未讀';
+  @override
+  String get filterRead => '已讀';
+  @override
+  String get filterSaved => '已儲存';
+  @override
+  String get feedAll => '全部來源';
+  @override
+  String get dateAll => '全部日期';
+  @override
+  String get noItems => '目前篩選沒有文章。';
+  @override
+  String get noSelected => '選擇一篇文章';
+  @override
+  String get share => '分享';
+  @override
+  String get nextArticle => '下一篇';
+  @override
+  String get markAboveRead => '標記上方為已讀';
+  @override
+  String get markBelowRead => '標記下方為已讀';
+  @override
+  String get readingExperience => '閱讀方式';
+  @override
+  String get switchExperience => '切換閱讀方式';
+  @override
+  String get articleFlowExperience => '文章流';
+  @override
+  String get continuousReaderExperience => '連續閱讀器';
+  @override
+  String get displaySettings => '文章流顯示';
+  @override
+  String get showExcerpt => '顯示摘要';
+  @override
+  String get showThumbnail => '顯示縮圖';
+  @override
+  String get showFeedIcon => '顯示來源圖示';
+  @override
+  String get density => '列表密度';
+  @override
+  String get densityCompact => '緊湊';
+  @override
+  String get densityComfortable => '舒適';
+  @override
+  String get autoHideToolbar => '自動隱藏文章工具列';
+  @override
+  String get fullContentFallback => '正在顯示來源內容。可重試全文或開啟原文。';
 }
 
 // Path: strings.settings.preferences.editorToolbar
@@ -39096,6 +39454,22 @@ extension on Translations {
         return 'Save as memo';
       case 'strings.collections.rss.savedAsMemo':
         return 'Saved as memo';
+      case 'strings.collections.rss.fetchFullContent':
+        return 'Fetch full article';
+      case 'strings.collections.rss.retryFullContent':
+        return 'Retry full article';
+      case 'strings.collections.rss.fetchingFullContent':
+        return 'Fetching full article...';
+      case 'strings.collections.rss.fullContentFetched':
+        return 'Full article fetched';
+      case 'strings.collections.rss.fullContentFailed':
+        return 'Full article fetch failed';
+      case 'strings.collections.rss.fullContentSkipped':
+        return 'Full article is not available';
+      case 'strings.collections.rss.fullContentEnabled':
+        return 'Fetch full articles';
+      case 'strings.collections.rss.fullContentEnabledDescription':
+        return 'Try to fetch readable article pages during feed refresh.';
       case 'strings.collections.rss.refreshing':
         return 'Refreshing RSS feeds...';
       case 'strings.collections.rss.noFeeds':
@@ -39107,6 +39481,60 @@ extension on Translations {
       case 'strings.collections.rss.refreshComplete':
         return ({required Object success, required Object failure}) =>
             'RSS refresh complete: ${success} updated, ${failure} failed';
+      case 'strings.collections.articleFlow.title':
+        return 'Article flow';
+      case 'strings.collections.articleFlow.listActions':
+        return 'List actions';
+      case 'strings.collections.articleFlow.filterAll':
+        return 'All';
+      case 'strings.collections.articleFlow.filterUnread':
+        return 'Unread';
+      case 'strings.collections.articleFlow.filterRead':
+        return 'Read';
+      case 'strings.collections.articleFlow.filterSaved':
+        return 'Saved';
+      case 'strings.collections.articleFlow.feedAll':
+        return 'All feeds';
+      case 'strings.collections.articleFlow.dateAll':
+        return 'All dates';
+      case 'strings.collections.articleFlow.noItems':
+        return 'No articles match the current filters.';
+      case 'strings.collections.articleFlow.noSelected':
+        return 'Select an article';
+      case 'strings.collections.articleFlow.share':
+        return 'Share';
+      case 'strings.collections.articleFlow.nextArticle':
+        return 'Next article';
+      case 'strings.collections.articleFlow.markAboveRead':
+        return 'Mark above as read';
+      case 'strings.collections.articleFlow.markBelowRead':
+        return 'Mark below as read';
+      case 'strings.collections.articleFlow.readingExperience':
+        return 'Reading experience';
+      case 'strings.collections.articleFlow.switchExperience':
+        return 'Switch reading experience';
+      case 'strings.collections.articleFlow.articleFlowExperience':
+        return 'Article flow';
+      case 'strings.collections.articleFlow.continuousReaderExperience':
+        return 'Continuous reader';
+      case 'strings.collections.articleFlow.displaySettings':
+        return 'Article flow display';
+      case 'strings.collections.articleFlow.showExcerpt':
+        return 'Show excerpts';
+      case 'strings.collections.articleFlow.showThumbnail':
+        return 'Show thumbnails';
+      case 'strings.collections.articleFlow.showFeedIcon':
+        return 'Show feed icons';
+      case 'strings.collections.articleFlow.density':
+        return 'List density';
+      case 'strings.collections.articleFlow.densityCompact':
+        return 'Compact';
+      case 'strings.collections.articleFlow.densityComfortable':
+        return 'Comfortable';
+      case 'strings.collections.articleFlow.autoHideToolbar':
+        return 'Auto-hide article toolbar';
+      case 'strings.collections.articleFlow.fullContentFallback':
+        return 'Showing feed content. Retry full article or open the original page.';
       case 'strings.collections.createCollectionTooltip':
         return 'Create collection';
       case 'strings.collections.reorderShelf':
@@ -43119,6 +43547,22 @@ extension on _StringsDe {
         return 'Als Memo speichern';
       case 'strings.collections.rss.savedAsMemo':
         return 'Als Memo gespeichert';
+      case 'strings.collections.rss.fetchFullContent':
+        return 'Vollständigen Artikel abrufen';
+      case 'strings.collections.rss.retryFullContent':
+        return 'Vollständigen Artikel erneut abrufen';
+      case 'strings.collections.rss.fetchingFullContent':
+        return 'Vollständiger Artikel wird abgerufen...';
+      case 'strings.collections.rss.fullContentFetched':
+        return 'Vollständiger Artikel abgerufen';
+      case 'strings.collections.rss.fullContentFailed':
+        return 'Abrufen des vollständigen Artikels fehlgeschlagen';
+      case 'strings.collections.rss.fullContentSkipped':
+        return 'Vollständiger Artikel ist nicht verfügbar';
+      case 'strings.collections.rss.fullContentEnabled':
+        return 'Vollständige Artikel abrufen';
+      case 'strings.collections.rss.fullContentEnabledDescription':
+        return 'Versucht, lesbare Artikelseiten beim Aktualisieren des Feeds abzurufen.';
       case 'strings.collections.rss.refreshing':
         return 'RSS-Feeds werden aktualisiert...';
       case 'strings.collections.rss.noFeeds':
@@ -43130,6 +43574,60 @@ extension on _StringsDe {
       case 'strings.collections.rss.refreshComplete':
         return ({required Object success, required Object failure}) =>
             'RSS-Aktualisierung abgeschlossen: ${success} aktualisiert, ${failure} fehlgeschlagen';
+      case 'strings.collections.articleFlow.title':
+        return 'Artikelfluss';
+      case 'strings.collections.articleFlow.listActions':
+        return 'Listenaktionen';
+      case 'strings.collections.articleFlow.filterAll':
+        return 'Alle';
+      case 'strings.collections.articleFlow.filterUnread':
+        return 'Ungelesen';
+      case 'strings.collections.articleFlow.filterRead':
+        return 'Gelesen';
+      case 'strings.collections.articleFlow.filterSaved':
+        return 'Gespeichert';
+      case 'strings.collections.articleFlow.feedAll':
+        return 'Alle Feeds';
+      case 'strings.collections.articleFlow.dateAll':
+        return 'Alle Daten';
+      case 'strings.collections.articleFlow.noItems':
+        return 'Keine Artikel passen zu den aktuellen Filtern.';
+      case 'strings.collections.articleFlow.noSelected':
+        return 'Artikel auswaehlen';
+      case 'strings.collections.articleFlow.share':
+        return 'Teilen';
+      case 'strings.collections.articleFlow.nextArticle':
+        return 'Naechster Artikel';
+      case 'strings.collections.articleFlow.markAboveRead':
+        return 'Obere als gelesen markieren';
+      case 'strings.collections.articleFlow.markBelowRead':
+        return 'Untere als gelesen markieren';
+      case 'strings.collections.articleFlow.readingExperience':
+        return 'Leseansicht';
+      case 'strings.collections.articleFlow.switchExperience':
+        return 'Leseansicht wechseln';
+      case 'strings.collections.articleFlow.articleFlowExperience':
+        return 'Artikelfluss';
+      case 'strings.collections.articleFlow.continuousReaderExperience':
+        return 'Fortlaufender Reader';
+      case 'strings.collections.articleFlow.displaySettings':
+        return 'Artikelfluss-Anzeige';
+      case 'strings.collections.articleFlow.showExcerpt':
+        return 'Auszuege anzeigen';
+      case 'strings.collections.articleFlow.showThumbnail':
+        return 'Vorschaubilder anzeigen';
+      case 'strings.collections.articleFlow.showFeedIcon':
+        return 'Feed-Symbole anzeigen';
+      case 'strings.collections.articleFlow.density':
+        return 'Listendichte';
+      case 'strings.collections.articleFlow.densityCompact':
+        return 'Kompakt';
+      case 'strings.collections.articleFlow.densityComfortable':
+        return 'Komfortabel';
+      case 'strings.collections.articleFlow.autoHideToolbar':
+        return 'Artikel-Werkzeugleiste automatisch ausblenden';
+      case 'strings.collections.articleFlow.fullContentFallback':
+        return 'Feed-Inhalt wird angezeigt. Volltext erneut abrufen oder Originalseite oeffnen.';
       case 'strings.collections.createCollectionTooltip':
         return 'Create collection';
       case 'strings.collections.reorderShelf':
@@ -47106,6 +47604,22 @@ extension on _StringsJa {
         return 'メモとして保存';
       case 'strings.collections.rss.savedAsMemo':
         return 'メモとして保存済み';
+      case 'strings.collections.rss.fetchFullContent':
+        return '全文を取得';
+      case 'strings.collections.rss.retryFullContent':
+        return '全文の取得を再試行';
+      case 'strings.collections.rss.fetchingFullContent':
+        return '全文を取得しています...';
+      case 'strings.collections.rss.fullContentFetched':
+        return '全文を取得しました';
+      case 'strings.collections.rss.fullContentFailed':
+        return '全文の取得に失敗しました';
+      case 'strings.collections.rss.fullContentSkipped':
+        return '全文は利用できません';
+      case 'strings.collections.rss.fullContentEnabled':
+        return '全文を取得';
+      case 'strings.collections.rss.fullContentEnabledDescription':
+        return 'フィード更新時に読みやすい記事ページの取得を試みます。';
       case 'strings.collections.rss.refreshing':
         return 'RSSフィードを更新しています...';
       case 'strings.collections.rss.noFeeds':
@@ -51312,6 +51826,22 @@ extension on _StringsKo {
         return '메모로 저장';
       case 'strings.collections.rss.savedAsMemo':
         return '메모로 저장됨';
+      case 'strings.collections.rss.fetchFullContent':
+        return '전체 글 가져오기';
+      case 'strings.collections.rss.retryFullContent':
+        return '전체 글 다시 가져오기';
+      case 'strings.collections.rss.fetchingFullContent':
+        return '전체 글을 가져오는 중...';
+      case 'strings.collections.rss.fullContentFetched':
+        return '전체 글을 가져왔습니다';
+      case 'strings.collections.rss.fullContentFailed':
+        return '전체 글 가져오기에 실패했습니다';
+      case 'strings.collections.rss.fullContentSkipped':
+        return '전체 글을 사용할 수 없습니다';
+      case 'strings.collections.rss.fullContentEnabled':
+        return '전체 글 가져오기';
+      case 'strings.collections.rss.fullContentEnabledDescription':
+        return '피드를 새로고침할 때 읽기 쉬운 글 페이지를 가져옵니다.';
       case 'strings.collections.rss.refreshing':
         return 'RSS 피드를 새로고침하는 중...';
       case 'strings.collections.rss.noFeeds':
@@ -55542,6 +56072,22 @@ extension on _StringsPtBr {
         return 'Salvar como memo';
       case 'strings.collections.rss.savedAsMemo':
         return 'Salvo como memo';
+      case 'strings.collections.rss.fetchFullContent':
+        return 'Buscar artigo completo';
+      case 'strings.collections.rss.retryFullContent':
+        return 'Tentar buscar artigo completo novamente';
+      case 'strings.collections.rss.fetchingFullContent':
+        return 'Buscando artigo completo...';
+      case 'strings.collections.rss.fullContentFetched':
+        return 'Artigo completo buscado';
+      case 'strings.collections.rss.fullContentFailed':
+        return 'Falha ao buscar artigo completo';
+      case 'strings.collections.rss.fullContentSkipped':
+        return 'Artigo completo indisponível';
+      case 'strings.collections.rss.fullContentEnabled':
+        return 'Buscar artigos completos';
+      case 'strings.collections.rss.fullContentEnabledDescription':
+        return 'Tenta buscar páginas legíveis dos artigos durante a atualização do feed.';
       case 'strings.collections.rss.refreshing':
         return 'Atualizando feeds RSS...';
       case 'strings.collections.rss.noFeeds':
@@ -59744,6 +60290,22 @@ extension on _StringsZhHans {
         return '保存为 memo';
       case 'strings.collections.rss.savedAsMemo':
         return '已保存为 memo';
+      case 'strings.collections.rss.fetchFullContent':
+        return '获取全文';
+      case 'strings.collections.rss.retryFullContent':
+        return '重新获取全文';
+      case 'strings.collections.rss.fetchingFullContent':
+        return '正在获取全文...';
+      case 'strings.collections.rss.fullContentFetched':
+        return '已获取全文';
+      case 'strings.collections.rss.fullContentFailed':
+        return '全文获取失败';
+      case 'strings.collections.rss.fullContentSkipped':
+        return '全文不可用';
+      case 'strings.collections.rss.fullContentEnabled':
+        return '获取全文';
+      case 'strings.collections.rss.fullContentEnabledDescription':
+        return '刷新源时尝试获取可读的文章页面。';
       case 'strings.collections.rss.refreshing':
         return '正在刷新 RSS 源...';
       case 'strings.collections.rss.noFeeds':
@@ -59755,6 +60317,60 @@ extension on _StringsZhHans {
       case 'strings.collections.rss.refreshComplete':
         return ({required Object success, required Object failure}) =>
             'RSS 刷新完成：${success} 个已更新，${failure} 个失败';
+      case 'strings.collections.articleFlow.title':
+        return '文章流';
+      case 'strings.collections.articleFlow.listActions':
+        return '列表操作';
+      case 'strings.collections.articleFlow.filterAll':
+        return '全部';
+      case 'strings.collections.articleFlow.filterUnread':
+        return '未读';
+      case 'strings.collections.articleFlow.filterRead':
+        return '已读';
+      case 'strings.collections.articleFlow.filterSaved':
+        return '已保存';
+      case 'strings.collections.articleFlow.feedAll':
+        return '全部来源';
+      case 'strings.collections.articleFlow.dateAll':
+        return '全部日期';
+      case 'strings.collections.articleFlow.noItems':
+        return '当前筛选没有文章。';
+      case 'strings.collections.articleFlow.noSelected':
+        return '选择一篇文章';
+      case 'strings.collections.articleFlow.share':
+        return '分享';
+      case 'strings.collections.articleFlow.nextArticle':
+        return '下一篇';
+      case 'strings.collections.articleFlow.markAboveRead':
+        return '标记上方为已读';
+      case 'strings.collections.articleFlow.markBelowRead':
+        return '标记下方为已读';
+      case 'strings.collections.articleFlow.readingExperience':
+        return '阅读方式';
+      case 'strings.collections.articleFlow.switchExperience':
+        return '切换阅读方式';
+      case 'strings.collections.articleFlow.articleFlowExperience':
+        return '文章流';
+      case 'strings.collections.articleFlow.continuousReaderExperience':
+        return '连续阅读器';
+      case 'strings.collections.articleFlow.displaySettings':
+        return '文章流显示';
+      case 'strings.collections.articleFlow.showExcerpt':
+        return '显示摘要';
+      case 'strings.collections.articleFlow.showThumbnail':
+        return '显示缩略图';
+      case 'strings.collections.articleFlow.showFeedIcon':
+        return '显示来源图标';
+      case 'strings.collections.articleFlow.density':
+        return '列表密度';
+      case 'strings.collections.articleFlow.densityCompact':
+        return '紧凑';
+      case 'strings.collections.articleFlow.densityComfortable':
+        return '舒适';
+      case 'strings.collections.articleFlow.autoHideToolbar':
+        return '自动隐藏文章工具栏';
+      case 'strings.collections.articleFlow.fullContentFallback':
+        return '正在显示来源内容。可重试全文或打开原文。';
       case 'strings.collections.createCollectionTooltip':
         return '创建合集';
       case 'strings.collections.reorderShelf':
@@ -63853,6 +64469,22 @@ extension on _StringsZhHantTw {
         return '儲存為 memo';
       case 'strings.collections.rss.savedAsMemo':
         return '已儲存為 memo';
+      case 'strings.collections.rss.fetchFullContent':
+        return '取得全文';
+      case 'strings.collections.rss.retryFullContent':
+        return '重新取得全文';
+      case 'strings.collections.rss.fetchingFullContent':
+        return '正在取得全文...';
+      case 'strings.collections.rss.fullContentFetched':
+        return '已取得全文';
+      case 'strings.collections.rss.fullContentFailed':
+        return '全文取得失敗';
+      case 'strings.collections.rss.fullContentSkipped':
+        return '全文無法使用';
+      case 'strings.collections.rss.fullContentEnabled':
+        return '取得全文';
+      case 'strings.collections.rss.fullContentEnabledDescription':
+        return '重新整理來源時嘗試取得可讀的文章頁面。';
       case 'strings.collections.rss.refreshing':
         return '正在重新整理 RSS 來源...';
       case 'strings.collections.rss.noFeeds':
@@ -63864,6 +64496,60 @@ extension on _StringsZhHantTw {
       case 'strings.collections.rss.refreshComplete':
         return ({required Object success, required Object failure}) =>
             'RSS 重新整理完成：${success} 個已更新，${failure} 個失敗';
+      case 'strings.collections.articleFlow.title':
+        return '文章流';
+      case 'strings.collections.articleFlow.listActions':
+        return '列表操作';
+      case 'strings.collections.articleFlow.filterAll':
+        return '全部';
+      case 'strings.collections.articleFlow.filterUnread':
+        return '未讀';
+      case 'strings.collections.articleFlow.filterRead':
+        return '已讀';
+      case 'strings.collections.articleFlow.filterSaved':
+        return '已儲存';
+      case 'strings.collections.articleFlow.feedAll':
+        return '全部來源';
+      case 'strings.collections.articleFlow.dateAll':
+        return '全部日期';
+      case 'strings.collections.articleFlow.noItems':
+        return '目前篩選沒有文章。';
+      case 'strings.collections.articleFlow.noSelected':
+        return '選擇一篇文章';
+      case 'strings.collections.articleFlow.share':
+        return '分享';
+      case 'strings.collections.articleFlow.nextArticle':
+        return '下一篇';
+      case 'strings.collections.articleFlow.markAboveRead':
+        return '標記上方為已讀';
+      case 'strings.collections.articleFlow.markBelowRead':
+        return '標記下方為已讀';
+      case 'strings.collections.articleFlow.readingExperience':
+        return '閱讀方式';
+      case 'strings.collections.articleFlow.switchExperience':
+        return '切換閱讀方式';
+      case 'strings.collections.articleFlow.articleFlowExperience':
+        return '文章流';
+      case 'strings.collections.articleFlow.continuousReaderExperience':
+        return '連續閱讀器';
+      case 'strings.collections.articleFlow.displaySettings':
+        return '文章流顯示';
+      case 'strings.collections.articleFlow.showExcerpt':
+        return '顯示摘要';
+      case 'strings.collections.articleFlow.showThumbnail':
+        return '顯示縮圖';
+      case 'strings.collections.articleFlow.showFeedIcon':
+        return '顯示來源圖示';
+      case 'strings.collections.articleFlow.density':
+        return '列表密度';
+      case 'strings.collections.articleFlow.densityCompact':
+        return '緊湊';
+      case 'strings.collections.articleFlow.densityComfortable':
+        return '舒適';
+      case 'strings.collections.articleFlow.autoHideToolbar':
+        return '自動隱藏文章工具列';
+      case 'strings.collections.articleFlow.fullContentFallback':
+        return '正在顯示來源內容。可重試全文或開啟原文。';
       case 'strings.collections.createCollectionTooltip':
         return '建立合集';
       case 'strings.collections.reorderShelf':

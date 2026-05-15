@@ -1,14 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/memo_collection.dart';
+import '../../i18n/strings.g.dart';
+import '../../state/collections/collections_provider.dart';
+import 'collection_article_flow_screen.dart';
 import 'collection_reader_screen.dart';
 
-class CollectionDetailScreen extends StatelessWidget {
+class CollectionDetailScreen extends ConsumerWidget {
   const CollectionDetailScreen({super.key, required this.collectionId});
 
   final String collectionId;
 
   @override
-  Widget build(BuildContext context) {
-    return CollectionReaderScreen(collectionId: collectionId);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final collectionAsync = ref.watch(collectionByIdProvider(collectionId));
+    if (collectionAsync.isLoading && !collectionAsync.hasValue) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (collectionAsync.hasError) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(child: Text('${collectionAsync.error}')),
+      );
+    }
+    final collection = collectionAsync.valueOrNull;
+    if (collection == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: Text(context.t.strings.collections.collectionNotFound),
+        ),
+      );
+    }
+    final experience = resolveCollectionReadingExperience(collection);
+    return switch (experience) {
+      CollectionReadingExperience.articleFlow => CollectionArticleFlowScreen(
+        collectionId: collectionId,
+      ),
+      CollectionReadingExperience.continuousReader => CollectionReaderScreen(
+        collectionId: collectionId,
+      ),
+    };
   }
 }
