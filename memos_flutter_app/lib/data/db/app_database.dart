@@ -500,6 +500,9 @@ class AppDatabase {
       case 'rebuildMemoTagsFromContent':
         await _runLocalWrite(rebuildMemoTagsFromContent);
         return null;
+      case 'rebuildMemoSearchIndex':
+        await _runLocalWrite(rebuildMemoSearchIndex);
+        return null;
       case 'deleteMemoDeleteTombstone':
         await _runLocalWrite(
           () => deleteMemoDeleteTombstone(_requiredString(payload, 'memoUid')),
@@ -1647,6 +1650,34 @@ class AppDatabase {
       return;
     }
     await _writeDao.rebuildMemoTagsFromContent();
+  }
+
+  Future<void> rebuildMemoSearchIndex() async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      await _dispatchWriteCommand<void>(
+        operation: 'rebuildMemoSearchIndex',
+        payload: const <String, dynamic>{},
+        decode: (_) {},
+      );
+      return;
+    }
+    final db = await this.db;
+    await MemoSearchDbPersistence.ensureFts(db, rebuild: true);
+    await MemoSearchDbPersistence.ensureIndex(db, rebuild: true);
+    while (true) {
+      await MemoSearchDbPersistence.drainDirtyEntries(
+        db,
+        limit: _memoSearchDrainBatchSize,
+      );
+      final remaining = await db.query(
+        'memo_search_dirty',
+        columns: const ['memo_uid'],
+        limit: 1,
+      );
+      if (remaining.isEmpty) break;
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+    }
+    _notifyChanged();
   }
 
   Future<void> deleteMemoDeleteTombstone(String memoUid) async {

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/memoflow_palette.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import 'export_logs_screen.dart';
+import 'self_repair_screen.dart';
 import '../../i18n/strings.g.dart';
 
 class FeedbackScreen extends ConsumerWidget {
@@ -86,6 +87,21 @@ class FeedbackScreen extends ConsumerWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => const ExportLogsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _ActionRow(
+                    icon: Icons.build_circle_outlined,
+                    label: context.t.strings.legacy.msg_self_repair,
+                    subtitle: context.t.strings.legacy.msg_self_repair_subtitle,
+                    textMain: textMain,
+                    textMuted: textMuted,
+                    onTap: () {
+                      haptic();
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const SelfRepairScreen(),
                         ),
                       );
                     },

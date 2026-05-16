@@ -1008,6 +1008,25 @@ legacy:
   msg_view_debug_logs: Ver registros de depuração
   msg_location_permission_denied: Permissão de localização negada
   msg_self_repair_reset_heatmap: 'Auto-reparo: redefinir mapa de calor'
+  msg_self_repair: Auto-reparo
+  msg_self_repair_subtitle: Reparar tags, busca e estatisticas locais
+  msg_repair_abnormal_tags: Reparar tags anormais
+  msg_repair_abnormal_tags_subtitle: "Reconstruir tags das notas a partir do texto #tag atual."
+  msg_rebuild_search_index: Reconstruir indice de busca
+  msg_rebuild_search_index_subtitle: Reconstruir a busca local sem apagar notas.
+  msg_rebuild_stats_cache: Reconstruir cache de estatisticas
+  msg_rebuild_stats_cache_subtitle: Reconstruir mapa de calor, estatisticas de tags e contadores.
+  msg_self_repair_local_only_note: Estas acoes reparam apenas dados locais derivados. Elas nao apagam notas, contas, anexos, preferencias, backups WebDAV ou dados do servidor.
+  msg_confirm_repair_abnormal_tags: Reparar tags anormais?
+  msg_repair_abnormal_tags_confirm_message: "As tags das notas serao reconstruidas a partir do texto #tag atual no corpo da nota. Tags salvas que nao aparecem no corpo da nota podem ser removidas. O conteudo das notas nao sera apagado."
+  msg_confirm_rebuild_search_index: Reconstruir indice de busca?
+  msg_rebuild_search_index_confirm_message: Os dados locais de busca serao reconstruidos. Conteudo das notas, contas, anexos, preferencias e dados do servidor nao serao apagados.
+  msg_confirm_rebuild_stats_cache: Reconstruir cache de estatisticas?
+  msg_rebuild_stats_cache_confirm_message: Mapa de calor, estatisticas de tags e contadores serao reconstruidos a partir das notas locais. O conteudo das notas nao sera apagado.
+  msg_repair_abnormal_tags_success: Tags anormais reparadas
+  msg_rebuild_search_index_success: Indice de busca reconstruido
+  msg_rebuild_stats_cache_success: Cache de estatisticas reconstruido
+  msg_self_repair_failed: "Auto-reparo falhou: $e"
   msg_these_settings_changed_locally_remotely_choose: Essas configurações foram alteradas local e remotamente. Escolha qual versão manter.
   msg_not_authenticated_2: Não autenticado.
   msg_action_failed: 'Ação falhou: $e'
