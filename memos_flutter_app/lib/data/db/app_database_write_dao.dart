@@ -20,6 +20,7 @@ import 'memo_core_db_persistence.dart';
 import 'memo_lifecycle_db_persistence.dart';
 import 'memo_query_db_persistence.dart';
 import 'memo_search_db_persistence.dart';
+import 'memo_tag_reconciler.dart';
 import 'memo_write_db_persistence.dart';
 import 'outbox_db_persistence.dart';
 import 'quick_clip_recovery_db_persistence.dart';
@@ -441,6 +442,43 @@ class AppDatabaseWriteDao {
       memoUid,
     );
     _db.notifyDataChanged();
+  }
+
+  Future<void> rebuildMemoTagsFromContent() async {
+    final sqlite = await _db.db;
+    var lastId = 0;
+    var changed = false;
+    while (true) {
+      final rows = await MemoQueryDbPersistence.listMemoTagBackfillRows(
+        sqlite,
+        afterId: lastId,
+        limit: AppDatabase.maintenanceBatchSize,
+      );
+      if (rows.isEmpty) break;
+      lastId = _readInt(rows.last['id']) ?? lastId;
+      await sqlite.transaction((txn) async {
+        for (final row in rows) {
+          final uid = row['uid'];
+          if (uid is! String || uid.trim().isEmpty) continue;
+          final content = (row['content'] as String?) ?? '';
+          final reconciled = await MemoTagReconciler.reconcile(
+            txn,
+            extractTags(content),
+          );
+          await TagDbPersistence.updateMemoTagsMapping(
+            txn,
+            uid,
+            reconciled.tagIds,
+          );
+          await _db.updateMemoTagsText(txn, uid, reconciled.canonicalPaths);
+          changed = true;
+        }
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+    }
+    if (changed) {
+      _db.notifyDataChanged();
+    }
   }
 
   Future<void> deleteMemoDeleteTombstone(String memoUid) async {
@@ -1428,15 +1466,9 @@ class AppDatabaseWriteDao {
       preserveDisplayTime ? null : displayTimeSec,
     );
 
-    final normalizedTags = _normalizeMemoTags(tags);
-    final resolved = <String, int>{};
-    for (final raw in normalizedTags) {
-      final resolvedTag = await TagDbPersistence.resolvePath(executor, raw);
-      if (resolvedTag == null) continue;
-      resolved.putIfAbsent(resolvedTag.path, () => resolvedTag.id);
-    }
-    final canonicalTags = resolved.keys.toList(growable: false);
-    final tagsText = canonicalTags.join(' ');
+    final reconciled = await MemoTagReconciler.reconcile(executor, tags);
+    final canonicalTags = reconciled.canonicalPaths;
+    final tagsText = reconciled.tagsText;
 
     final before = await _db.loadMemoSnapshotPayload(executor, uid);
     final rowId = await MemoWriteDbPersistence.upsertMemoRow(
@@ -1479,7 +1511,7 @@ class AppDatabaseWriteDao {
     await TagDbPersistence.updateMemoTagsMapping(
       executor,
       uid,
-      resolved.values.toList(growable: false),
+      reconciled.tagIds,
     );
 
     final after = _db.createMemoSnapshotPayload(
@@ -1688,16 +1720,5 @@ class AppDatabaseWriteDao {
       _db.notifyDataChanged();
     }
     return deleted;
-  }
-
-  List<String> _normalizeMemoTags(List<String> tags) {
-    if (tags.isEmpty) return const [];
-    final normalized = <String>[];
-    for (final raw in tags) {
-      final value = normalizeTagPath(raw);
-      if (value.isEmpty) continue;
-      normalized.add(value);
-    }
-    return normalized;
   }
 }

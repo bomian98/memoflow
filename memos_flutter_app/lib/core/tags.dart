@@ -1,3 +1,5 @@
+import 'package:markdown/markdown.dart' as md;
+
 const int _maxTagLength = 100;
 final RegExp _tagRuneRe = RegExp(r'[\p{L}\p{N}\p{S}\p{M}]', unicode: true);
 final RegExp _tagInlinePattern = RegExp(
@@ -80,9 +82,10 @@ List<String> extractTags(String content) {
   final tags = <String>{};
   if (content.isEmpty) return const [];
 
-  for (final line in content.split('\n')) {
-    if (line.trim().isEmpty) continue;
-    _extractTagsFromLine(line, tags);
+  final document = md.Document(extensionSet: md.ExtensionSet.gitHubFlavored);
+  final nodes = document.parseLines(content.split('\n'));
+  for (final node in nodes) {
+    _extractTagsFromMarkdownNode(node, tags);
   }
 
   final list = tags.toList(growable: false);
@@ -90,10 +93,74 @@ List<String> extractTags(String content) {
   return list;
 }
 
-void _extractTagsFromLine(String line, Set<String> tags) {
-  for (final match in findInlineTagMatches(line)) {
-    if (match.tag.isEmpty) continue;
-    tags.add(match.tag);
+void _extractTagsFromMarkdownNode(md.Node node, Set<String> tags) {
+  _collectTagsFromMarkdownNode(node, tags, blocked: false);
+}
+
+void _collectTagsFromMarkdownNode(
+  md.Node node,
+  Set<String> tags, {
+  required bool blocked,
+}) {
+  if (node is md.Text) {
+    if (blocked) return;
+    final text = _decodeMarkdownTextEntities(node.text);
+    if (text.isEmpty) return;
+    for (final line in text.split('\n')) {
+      if (line.trim().isEmpty) continue;
+      for (final match in findInlineTagMatches(line)) {
+        if (match.tag.isEmpty) continue;
+        tags.add(match.tag);
+      }
+    }
+    return;
+  }
+
+  if (node is! md.Element) return;
+
+  final nextBlocked = blocked || _isProtectedMarkdownElement(node.tag);
+  if (nextBlocked && _skipDescendantsForTagExtraction(node.tag)) {
+    return;
+  }
+
+  final children = node.children;
+  if (children == null || children.isEmpty) return;
+  for (final child in children) {
+    _collectTagsFromMarkdownNode(child, tags, blocked: nextBlocked);
+  }
+}
+
+String _decodeMarkdownTextEntities(String text) {
+  if (!text.contains('&')) return text;
+  return text
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#39;', "'");
+}
+
+bool _skipDescendantsForTagExtraction(String tag) {
+  switch (tag) {
+    case 'code':
+    case 'pre':
+    case 'a':
+    case 'img':
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool _isProtectedMarkdownElement(String tag) {
+  switch (tag) {
+    case 'code':
+    case 'pre':
+    case 'a':
+    case 'img':
+      return true;
+    default:
+      return false;
   }
 }
 

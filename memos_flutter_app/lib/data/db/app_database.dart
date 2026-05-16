@@ -55,6 +55,7 @@ class AppDatabase {
       'pending_remote_delete';
   static const String memoDeleteTombstoneStateLocalOnly = 'local_only';
   static const int _maintenanceBatchSize = 300;
+  static const int maintenanceBatchSize = _maintenanceBatchSize;
   static const int _memoSearchDrainBatchSize = 64;
 
   Database? _db;
@@ -495,6 +496,9 @@ class AppDatabase {
           () =>
               deleteMemoInlineImageSources(_requiredString(payload, 'memoUid')),
         );
+        return null;
+      case 'rebuildMemoTagsFromContent':
+        await _runLocalWrite(rebuildMemoTagsFromContent);
         return null;
       case 'deleteMemoDeleteTombstone':
         await _runLocalWrite(
@@ -1631,6 +1635,18 @@ class AppDatabase {
       return;
     }
     await _writeDao.deleteMemoInlineImageSources(memoUid);
+  }
+
+  Future<void> rebuildMemoTagsFromContent() async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      await _dispatchWriteCommand<void>(
+        operation: 'rebuildMemoTagsFromContent',
+        payload: const <String, dynamic>{},
+        decode: (_) {},
+      );
+      return;
+    }
+    await _writeDao.rebuildMemoTagsFromContent();
   }
 
   Future<void> deleteMemoDeleteTombstone(String memoUid) async {

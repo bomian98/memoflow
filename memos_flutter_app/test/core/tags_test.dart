@@ -47,6 +47,62 @@ void main() {
     );
   });
 
+  test('extractTags ignores fenced code blocks while keeping real tags', () {
+    expect(
+      extractTags('''#real
+
+```c
+#include <stdio.h>
+#define DEBUG 1
+```
+
+after #done'''),
+      const <String>['done', 'real'],
+    );
+  });
+
+  test('extractTags ignores tilde fenced code blocks', () {
+    expect(
+      extractTags('''before #visible
+
+~~~dart
+final value = '#hidden';
+~~~
+
+after'''),
+      const <String>['visible'],
+    );
+  });
+
+  test('extractTags ignores inline code spans while keeping prose tags', () {
+    expect(
+      extractTags('Use `#include` and `#not-a-tag`, then file under #cpp'),
+      const <String>['cpp'],
+    );
+  });
+
+  test('extractTags keeps visible prose tags across markdown containers', () {
+    expect(
+      extractTags('''## Planning #heading-tag
+
+- item #list-tag
+> quoted #quote-tag
+
+| Topic | Tag |
+| - | - |
+| Work | #table-tag |
+
+plain #paragraph-tag'''),
+      const <String>[
+        'heading-tag',
+        'list-tag',
+        'paragraph-tag',
+        'quote-tag',
+        'table-tag',
+      ],
+    );
+  });
+
   test('extractTags scans middle content lines', () {
     expect(
       extractTags('first line #first\n\nmiddle line #middle-tag\nlast line'),
