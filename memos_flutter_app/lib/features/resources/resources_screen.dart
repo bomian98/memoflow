@@ -22,7 +22,7 @@ import '../../state/memos/memos_providers.dart';
 import '../../state/system/session_provider.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
-import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/desktop/desktop_shell_host.dart';
 import '../home/app_drawer_menu_button.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/attachment_video_screen.dart';
@@ -869,7 +869,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         _backToAllMemos(context);
       },
       child: isWindowsDesktop
-          ? WindowsDesktopPageShell(
+          ? DesktopShellHost(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               navigationBuilder: (viewMode, embedded) => AppDrawer(
                 selected: AppDrawerDestination.resources,

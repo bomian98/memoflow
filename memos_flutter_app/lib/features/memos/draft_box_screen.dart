@@ -9,7 +9,7 @@ import '../../state/memos/compose_draft_provider.dart';
 import '../../state/memos/note_draft_provider.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_menu_button.dart';
-import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_navigation_host.dart';
 import 'widgets/draft_box_memo_card.dart';
 
@@ -143,7 +143,7 @@ class DraftBoxScreen extends ConsumerWidget {
       final bg = isDark
           ? MemoFlowPalette.backgroundDark
           : MemoFlowPalette.backgroundLight;
-      return WindowsDesktopPageShell(
+      return DesktopShellHost(
         backgroundColor: bg,
         navigationBuilder: (viewMode, embedded) => AppDrawer(
           selected: effectiveSelected,

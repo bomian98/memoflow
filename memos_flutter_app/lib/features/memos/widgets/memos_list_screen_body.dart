@@ -14,7 +14,7 @@ import '../../../i18n/strings.g.dart';
 import '../../../state/memos/memos_providers.dart';
 import '../../home/app_drawer.dart';
 import '../../home/app_drawer_menu_button.dart';
-import '../../home/desktop/windows_desktop_page_shell.dart';
+import '../../home/desktop/desktop_shell_host.dart';
 import '../home_quick_actions.dart';
 import '../memos_list_floating_collapse_controller.dart';
 import '../memos_list_screen_view_state.dart';
@@ -1070,7 +1070,7 @@ class MemosListScreenBody extends StatelessWidget {
     }();
 
     if (isWindowsDesktop && desktopDrawerPanelBuilder != null) {
-      return WindowsDesktopPageShell(
+      return DesktopShellHost(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         navigationBuilder: desktopDrawerPanelBuilder!,
         leadingTitle: data.enableTitleMenu

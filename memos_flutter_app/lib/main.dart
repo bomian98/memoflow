@@ -16,6 +16,7 @@ import 'package:video_player_media_kit/video_player_media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
+import 'application/desktop/desktop_runtime_capabilities.dart';
 import 'application/desktop/desktop_tray_controller.dart';
 import 'application/desktop/single_instance_coordinator.dart';
 import 'core/app_channel.dart';
@@ -45,11 +46,7 @@ void _configureAndroidPhotoPicker() {
 
 void _initializeDesktopDatabaseFactory() {
   if (kIsWeb) return;
-  final isDesktopPlatform =
-      defaultTargetPlatform == TargetPlatform.windows ||
-      defaultTargetPlatform == TargetPlatform.linux ||
-      defaultTargetPlatform == TargetPlatform.macOS;
-  if (isDesktopPlatform) {
+  if (isDesktopRuntimePlatform) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
@@ -128,9 +125,7 @@ void main(List<String> args) {
       StartupTiming.bindFirstFrameTiming();
       final isMultiWindow =
           !kIsWeb && args.isNotEmpty && args.first == 'multi_window';
-      if (!kIsWeb &&
-          defaultTargetPlatform == TargetPlatform.windows &&
-          !isMultiWindow) {
+      if (supportsWindowsShellRuntime && !isMultiWindow) {
         final instance = await SingleInstanceCoordinator.ensureSingleInstance(
           enable: true,
         );
@@ -192,7 +187,7 @@ void main(List<String> args) {
           return;
         }
       }
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
+      if (supportsWindowsShellRuntime) {
         await windowManager.ensureInitialized();
         const options = WindowOptions(
           size: Size(1360, 860),
@@ -206,9 +201,7 @@ void main(List<String> args) {
           await windowManager.focus();
         });
       }
-      if (!kIsWeb &&
-          (defaultTargetPlatform == TargetPlatform.windows ||
-              defaultTargetPlatform == TargetPlatform.macOS)) {
+      if (supportsDesktopTrayRuntime) {
         await DesktopTrayController.instance.ensureInitialized();
       }
       _initializeDesktopDatabaseFactory();

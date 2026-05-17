@@ -23,7 +23,7 @@ import '../../state/system/notifications_provider.dart';
 import '../../state/system/session_provider.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
-import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memo_detail_screen.dart';
@@ -208,7 +208,7 @@ class NotificationsScreen extends ConsumerWidget {
         _backToHome(context);
       },
       child: isWindowsDesktop
-          ? WindowsDesktopPageShell(
+          ? DesktopShellHost(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               navigationBuilder: (viewMode, embedded) => AppDrawer(
                 selected: AppDrawerDestination.memos,

@@ -29,7 +29,7 @@ import '../../data/models/local_memo.dart';
 import '../../state/memos/memo_mutation_service.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
-import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/desktop/desktop_shell_host.dart';
 import '../home/app_drawer_menu_button.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memo_detail_screen.dart';
@@ -987,7 +987,7 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
         _backToAllMemos(context);
       },
       child: isWindowsDesktop
-          ? WindowsDesktopPageShell(
+          ? DesktopShellHost(
               backgroundColor: bg,
               navigationBuilder: (viewMode, embedded) => AppDrawer(
                 selected: AppDrawerDestination.aiSummary,

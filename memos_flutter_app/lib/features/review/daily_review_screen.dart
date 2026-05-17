@@ -35,7 +35,7 @@ import '../../state/tags/tag_color_lookup.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
 import '../home/app_drawer_menu_button.dart';
-import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memo_detail_screen.dart';
 import '../memos/memo_image_grid.dart';
@@ -1746,7 +1746,7 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
         _back();
       },
       child: isWindowsDesktop
-          ? WindowsDesktopPageShell(
+          ? DesktopShellHost(
               backgroundColor: bg,
               navigationBuilder: (viewMode, embedded) => AppDrawer(
                 selected: AppDrawerDestination.dailyReview,

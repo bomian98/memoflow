@@ -19,7 +19,7 @@ import '../../state/system/session_provider.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
 import '../home/app_drawer_menu_button.dart';
-import '../home/desktop/windows_desktop_page_shell.dart';
+import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memos_list_screen.dart';
@@ -539,7 +539,7 @@ class SettingsScreen extends ConsumerWidget
         _close(context);
       },
       child: isWindowsDesktop && showAppBar
-          ? WindowsDesktopPageShell(
+          ? DesktopShellHost(
               backgroundColor: bg,
               navigationBuilder: (viewMode, embedded) => AppDrawer(
                 selected: AppDrawerDestination.settings,
