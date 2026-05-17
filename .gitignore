@@ -55,6 +55,7 @@ update_config/
 .stfolder/
 _tmp/
 memos_flutter_app/dist/
+memos_flutter_app/tool/**/*_windows_x64_release/
 memos_flutter_app/tool/**/*.apk
 memos_flutter_app/tool/**/*.aab
 memos_flutter_app/tool/**/*.iss
