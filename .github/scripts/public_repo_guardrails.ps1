@@ -138,7 +138,11 @@ $strongTerms = @(
   'manageSubscription',
   'StoreKit',
   'SKProduct',
-  'Transaction.currentEntitlements'
+  'SKPaymentQueue',
+  'Transaction.currentEntitlements',
+  'Transaction.updates',
+  'AppTransaction',
+  'VerificationResult'
 )
 
 $weakPatterns = [ordered]@{
@@ -148,6 +152,8 @@ $weakPatterns = [ordered]@{
   productId   = '(?i)(?<![A-Za-z])productId(?![A-Za-z])'
   premium     = '(?i)(?<![A-Za-z])premium(?![A-Za-z])'
   unlock      = '(?i)(?<![A-Za-z])unlock(?![A-Za-z])'
+  buyout      = '(?i)(?<![A-Za-z])buyout(?![A-Za-z])'
+  familySharing = '(?i)(?<![A-Za-z])familySharing(?![A-Za-z])'
 }
 
 $restrictedCommercialPatterns = [ordered]@{
@@ -156,6 +162,9 @@ $restrictedCommercialPatterns = [ordered]@{
   receipt          = '(?i)(?<![A-Za-z])receipt(?![A-Za-z])'
   entitlement      = '(?i)(?<![A-Za-z])entitlement(?![A-Za-z])'
   paywall          = '(?i)(?<![A-Za-z])paywall(?![A-Za-z])'
+  buyout           = '(?i)(?<![A-Za-z])buyout(?![A-Za-z])'
+  familySharing    = '(?i)(?<![A-Za-z])familySharing(?![A-Za-z])'
+  appleReceipt     = '(?i)(?<![A-Za-z])appleReceipt(?![A-Za-z])'
   productId        = '(?i)(?<![A-Za-z])productId(?![A-Za-z])'
   restorePurchase  = '(?i)(?<![A-Za-z])restorePurchase(?![A-Za-z])'
   restorePurchases = '(?i)(?<![A-Za-z])restorePurchases(?![A-Za-z])'

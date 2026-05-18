@@ -1,27 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../access_boundary/app_capability.dart';
+import '../../access_boundary/app_capability_provider.dart';
 import '../../core/log_sanitizer.dart';
 import '../../core/memoflow_palette.dart';
 import '../../data/ai/ai_settings_models.dart';
 import '../../data/logs/log_manager.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/settings/ai_settings_provider.dart';
+import 'ai_custom_template_access.dart';
 import 'ai_insight_models.dart';
 import 'quick_prompt_editor_screen.dart';
 
 class AiInsightPromptEditorScreen extends ConsumerStatefulWidget {
   const AiInsightPromptEditorScreen({super.key, required this.insightId})
     : customTemplateMode = false,
-      templateId = null;
+      templateId = null,
+      readOnly = false;
 
-  const AiInsightPromptEditorScreen.custom({super.key, this.templateId})
-    : insightId = AiInsightId.customTemplate,
-      customTemplateMode = true;
+  const AiInsightPromptEditorScreen.custom({
+    super.key,
+    this.templateId,
+    this.readOnly = false,
+  }) : insightId = AiInsightId.customTemplate,
+       customTemplateMode = true;
 
   final AiInsightId insightId;
   final bool customTemplateMode;
   final String? templateId;
+  final bool readOnly;
 
   @override
   ConsumerState<AiInsightPromptEditorScreen> createState() =>
@@ -39,8 +47,23 @@ class _AiInsightPromptEditorScreenState
   var _selectedIconKey = QuickPromptIconCatalog.defaultKey;
 
   bool get _isCustomMode => widget.customTemplateMode;
+  bool get _isReadOnly => widget.readOnly || _isLockedCustomTemplate;
   bool get _isCreatingCustomTemplate =>
       _isCustomMode && (widget.templateId?.trim().isEmpty ?? true);
+
+  bool get _isLockedCustomTemplate {
+    if (!_isCustomMode || _isCreatingCustomTemplate) return false;
+    final settings = ref.read(aiSettingsProvider);
+    final access = AiCustomTemplateAccess(
+      canUseMultipleTemplates: ref.read(
+        appCapabilityEnabledProvider(AppCapability.aiCustomSummaryTemplates),
+      ),
+    );
+    return access.isTemplateLocked(
+      settings.customInsightTemplates,
+      widget.templateId ?? '',
+    );
+  }
 
   void _logEvent(String event, {Map<String, Object?> context = const {}}) {
     LogManager.instance.info(
@@ -50,6 +73,7 @@ class _AiInsightPromptEditorScreenState
   }
 
   bool get _canSave {
+    if (_isReadOnly || _isLockedCustomTemplate) return false;
     if (_isCustomMode) {
       return _titleController.text.trim().isNotEmpty &&
           _descriptionController.text.trim().isNotEmpty &&
@@ -145,7 +169,7 @@ class _AiInsightPromptEditorScreenState
   }
 
   Future<void> _save() async {
-    if (_saving || !_canSave) return;
+    if (_saving || !_canSave || _isLockedCustomTemplate) return;
     _logEvent(
       'save_start',
       context: <String, Object?>{
@@ -379,6 +403,7 @@ class _AiInsightPromptEditorScreenState
                 label: _titleLabel(),
                 hintText: _titleHint(),
                 controller: _titleController,
+                readOnly: _isReadOnly,
                 textMain: textMain,
                 textMuted: textMuted,
                 card: card,
@@ -389,6 +414,7 @@ class _AiInsightPromptEditorScreenState
                 label: _descriptionLabel(),
                 hintText: _descriptionHint(),
                 controller: _descriptionController,
+                readOnly: _isReadOnly,
                 minLines: 3,
                 maxLines: 4,
                 textMain: textMain,
@@ -427,9 +453,13 @@ class _AiInsightPromptEditorScreenState
                               icon: option.icon,
                               selected: option.key == _selectedIconKey,
                               borderColor: border,
-                              onTap: () {
-                                setState(() => _selectedIconKey = option.key);
-                              },
+                              onTap: _isReadOnly
+                                  ? null
+                                  : () {
+                                      setState(
+                                        () => _selectedIconKey = option.key,
+                                      );
+                                    },
                             ),
                           ),
                       ],
@@ -447,6 +477,7 @@ class _AiInsightPromptEditorScreenState
                     .promptSettings
                     .editorPlaceholder,
                 controller: _promptController,
+                readOnly: _isReadOnly,
                 minLines: 8,
                 maxLines: 12,
                 textMain: textMain,
@@ -454,42 +485,44 @@ class _AiInsightPromptEditorScreenState
                 card: card,
                 border: border,
               ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: AnimatedBuilder(
-                  animation: _editorInputsListenable,
-                  builder: (context, _) {
-                    return FilledButton(
-                      onPressed: _saving || !_canSave ? null : _save,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: MemoFlowPalette.primary,
-                        disabledBackgroundColor: MemoFlowPalette.primary
-                            .withValues(alpha: 0.35),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+              if (!_isReadOnly) ...[
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: AnimatedBuilder(
+                    animation: _editorInputsListenable,
+                    builder: (context, _) {
+                      return FilledButton(
+                        onPressed: _saving || !_canSave ? null : _save,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: MemoFlowPalette.primary,
+                          disabledBackgroundColor: MemoFlowPalette.primary
+                              .withValues(alpha: 0.35),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
-                      ),
-                      child: _saving
-                          ? const SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
+                        child: _saving
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                context.t.strings.common.save,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
                               ),
-                            )
-                          : Text(
-                              context.t.strings.common.save,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -644,6 +677,7 @@ class _EditorFieldCard extends StatelessWidget {
     required this.border,
     this.minLines = 1,
     this.maxLines = 1,
+    this.readOnly = false,
   });
 
   final String label;
@@ -655,6 +689,7 @@ class _EditorFieldCard extends StatelessWidget {
   final Color border;
   final int minLines;
   final int maxLines;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -681,6 +716,8 @@ class _EditorFieldCard extends StatelessWidget {
             controller: controller,
             minLines: minLines,
             maxLines: maxLines,
+            readOnly: readOnly,
+            enableInteractiveSelection: !readOnly,
             style: TextStyle(fontSize: 15, height: 1.5, color: textMain),
             decoration: InputDecoration(
               border: InputBorder.none,
@@ -706,7 +743,7 @@ class _InsightIconChoiceTile extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final Color borderColor;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

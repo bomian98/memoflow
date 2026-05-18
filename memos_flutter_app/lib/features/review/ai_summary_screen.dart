@@ -11,6 +11,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../access_boundary/app_capability.dart';
+import '../../access_boundary/app_capability_provider.dart';
 import '../../core/app_localization.dart';
 import '../../core/desktop_window_controls.dart';
 import '../../core/drawer_navigation.dart';
@@ -41,6 +43,7 @@ import '../../state/review/ai_analysis_provider.dart';
 import '../../state/system/database_provider.dart';
 import '../../state/sync/sync_coordinator_provider.dart';
 import '../../application/sync/sync_request.dart';
+import 'ai_custom_template_access.dart';
 import 'ai_insight_history_shared.dart';
 import 'ai_insight_models.dart';
 import 'ai_insight_history_screen.dart';
@@ -241,7 +244,18 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     await _runAnalysis(result);
   }
 
-  Future<void> _openCustomTemplateEditor({String? templateId}) async {
+  AiCustomTemplateAccess _customTemplateAccess() {
+    return AiCustomTemplateAccess(
+      canUseMultipleTemplates: ref.read(
+        appCapabilityEnabledProvider(AppCapability.aiCustomSummaryTemplates),
+      ),
+    );
+  }
+
+  Future<void> _openCustomTemplateEditor({
+    String? templateId,
+    bool readOnly = false,
+  }) async {
     final normalizedTemplateId = templateId?.trim() ?? '';
     _logEvent(
       'open_custom_template_editor',
@@ -252,8 +266,10 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     );
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) =>
-            AiInsightPromptEditorScreen.custom(templateId: templateId),
+        builder: (_) => AiInsightPromptEditorScreen.custom(
+          templateId: templateId,
+          readOnly: readOnly,
+        ),
       ),
     );
     if (!mounted) return;
@@ -267,26 +283,25 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     setState(() {});
   }
 
-  void _showCustomTemplateLimitToast() {
+  void _showCustomTemplateLimitToast({required int max}) {
     showTopToast(
       context,
-      context.t.strings.aiInsight.templates.maxTemplatesReached(
-        max: AiSettings.maxCustomInsightTemplateCount,
-      ),
+      context.t.strings.aiInsight.templates.maxTemplatesReached(max: max),
     );
   }
 
   Future<void> _openCreateCustomTemplateEditor() async {
     final settings = ref.read(aiSettingsProvider);
-    if (settings.customInsightTemplates.length >=
-        AiSettings.maxCustomInsightTemplateCount) {
+    final access = _customTemplateAccess();
+    if (!access.canCreateTemplate(settings.customInsightTemplates.length)) {
       _logEvent(
         'custom_template_limit_reached',
         context: <String, Object?>{
           'custom_template_count': settings.customInsightTemplates.length,
+          'active_template_limit': access.activeTemplateLimit,
         },
       );
-      _showCustomTemplateLimitToast();
+      _showCustomTemplateLimitToast(max: access.activeTemplateLimit);
       return;
     }
     await _openCustomTemplateEditor();
@@ -296,16 +311,30 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     AiCustomInsightTemplate customTemplate,
   ) async {
     if (_isLoading) return;
+    final settings = ref.read(aiSettingsProvider);
+    final access = _customTemplateAccess();
+    final locked = access.isTemplateLocked(
+      settings.customInsightTemplates,
+      customTemplate.templateId,
+    );
     _logEvent(
       'open_custom_template_settings',
       context: <String, Object?>{
         'template_id': customTemplate.templateId.trim(),
         'configured': customTemplate.isConfigured,
+        'locked': locked,
         'title_fingerprint': LogSanitizer.fingerprint(
           customTemplate.title.trim(),
         ),
       },
     );
+    if (locked) {
+      await _openCustomTemplateEditor(
+        templateId: customTemplate.templateId,
+        readOnly: true,
+      );
+      return;
+    }
     if (!customTemplate.isConfigured) {
       await _openCustomTemplateEditor(templateId: customTemplate.templateId);
       return;
@@ -738,8 +767,14 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     final customTemplates = settings.customInsightTemplates;
     final defaultTemplatesCollapsed = settings.defaultInsightTemplatesCollapsed;
     final templateStrings = context.t.strings.aiInsight.templates;
-    final canAddCustomTemplate =
-        customTemplates.length < AiSettings.maxCustomInsightTemplateCount;
+    final customTemplateAccess = AiCustomTemplateAccess(
+      canUseMultipleTemplates: ref.watch(
+        appCapabilityEnabledProvider(AppCapability.aiCustomSummaryTemplates),
+      ),
+    );
+    final canAddCustomTemplate = customTemplateAccess.canCreateTemplate(
+      customTemplates.length,
+    );
     final titleText = useDesktopSidePane
         ? context.t.strings.aiInsight.title
         : (isReport
@@ -851,8 +886,14 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     final customTemplates = settings.customInsightTemplates;
     final defaultTemplatesCollapsed = settings.defaultInsightTemplatesCollapsed;
     final templateStrings = context.t.strings.aiInsight.templates;
-    final canAddCustomTemplate =
-        customTemplates.length < AiSettings.maxCustomInsightTemplateCount;
+    final customTemplateAccess = AiCustomTemplateAccess(
+      canUseMultipleTemplates: ref.watch(
+        appCapabilityEnabledProvider(AppCapability.aiCustomSummaryTemplates),
+      ),
+    );
+    final canAddCustomTemplate = customTemplateAccess.canCreateTemplate(
+      customTemplates.length,
+    );
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -1050,6 +1091,11 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     final customTemplates = settings.customInsightTemplates;
     final defaultTemplatesCollapsed = settings.defaultInsightTemplatesCollapsed;
     final templateStrings = context.t.strings.aiInsight.templates;
+    final customTemplateAccess = AiCustomTemplateAccess(
+      canUseMultipleTemplates: ref.watch(
+        appCapabilityEnabledProvider(AppCapability.aiCustomSummaryTemplates),
+      ),
+    );
     final isNarrow = MediaQuery.sizeOf(context).width < 640;
     final crossAxisCount = isNarrow ? 2 : 3;
     final width = MediaQuery.sizeOf(context).width;
@@ -1099,15 +1145,23 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
         ),
         itemBuilder: (context, index) {
           final template = customTemplates[index];
+          final locked = customTemplateAccess.isTemplateLocked(
+            customTemplates,
+            template.templateId,
+          );
           return _AiCustomInsightCard(
             template: template,
+            locked: locked,
             cardColor: card,
             borderColor: border,
             textMain: textMain,
             textMuted: textMuted,
             onTap: () => _openCustomInsightSettings(template),
-            onEdit: () =>
-                _openCustomTemplateEditor(templateId: template.templateId),
+            onEdit: locked
+                ? null
+                : () => _openCustomTemplateEditor(
+                    templateId: template.templateId,
+                  ),
             onDelete: () => _deleteCustomTemplate(template),
           );
         },
@@ -1123,7 +1177,7 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
           border: Border.all(color: border),
         ),
         child: Text(
-          '${customTemplates.length}/${AiSettings.maxCustomInsightTemplateCount}',
+          '${customTemplates.length}/${customTemplateAccess.activeTemplateLimit}',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -2141,6 +2195,7 @@ class _AiInsightCard extends StatelessWidget {
 class _AiCustomInsightCard extends StatelessWidget {
   const _AiCustomInsightCard({
     required this.template,
+    required this.locked,
     required this.cardColor,
     required this.borderColor,
     required this.textMain,
@@ -2151,12 +2206,13 @@ class _AiCustomInsightCard extends StatelessWidget {
   });
 
   final AiCustomInsightTemplate template;
+  final bool locked;
   final Color cardColor;
   final Color borderColor;
   final Color textMain;
   final Color textMuted;
   final VoidCallback onTap;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
   final VoidCallback onDelete;
 
   @override
@@ -2174,6 +2230,7 @@ class _AiCustomInsightCard extends StatelessWidget {
         : template.description.trim();
     final accent = MemoFlowPalette.primary;
     final icon = QuickPromptIconCatalog.resolve(template.iconKey);
+    final effectiveAccent = locked ? textMuted : accent;
 
     return Material(
       color: Colors.transparent,
@@ -2204,10 +2261,10 @@ class _AiCustomInsightCard extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.16),
+                      color: effectiveAccent.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(icon, color: accent, size: 22),
+                    child: Icon(icon, color: effectiveAccent, size: 22),
                   ),
                   const Spacer(),
                   PopupMenuButton<String>(
@@ -2215,7 +2272,7 @@ class _AiCustomInsightCard extends StatelessWidget {
                     onSelected: (value) {
                       switch (value) {
                         case 'edit':
-                          onEdit();
+                          onEdit?.call();
                           break;
                         case 'delete':
                           onDelete();
@@ -2225,6 +2282,7 @@ class _AiCustomInsightCard extends StatelessWidget {
                     itemBuilder: (context) => <PopupMenuEntry<String>>[
                       PopupMenuItem<String>(
                         value: 'edit',
+                        enabled: onEdit != null,
                         child: Text(templateStrings.editAction),
                       ),
                       PopupMenuItem<String>(
@@ -2235,12 +2293,12 @@ class _AiCustomInsightCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.1),
+                        color: effectiveAccent.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.more_horiz_rounded,
-                        color: accent,
+                        color: effectiveAccent,
                         size: 18,
                       ),
                     ),
@@ -2275,7 +2333,9 @@ class _AiCustomInsightCard extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: Icon(
-                  Icons.chevron_right_rounded,
+                  locked
+                      ? Icons.lock_outline_rounded
+                      : Icons.chevron_right_rounded,
                   color: textMuted,
                   size: 22,
                 ),

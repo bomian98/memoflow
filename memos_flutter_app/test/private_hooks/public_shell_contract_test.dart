@@ -29,6 +29,39 @@ void main() {
     expect(appContent.contains('access_boundary/'), isFalse);
   });
 
+  test('public settings shell does not read commercial state', () {
+    final settingsContent = readRepoFile(
+      'memos_flutter_app/lib/features/settings/settings_screen.dart',
+    );
+
+    const forbiddenTerms = <String>[
+      'access_boundary/',
+      'AppCapability',
+      'AccessDecision',
+      'StoreKit',
+      'productId',
+      'receipt',
+      'buyout',
+      'familySharing',
+      'entitlement',
+      'paywall',
+    ];
+
+    final violations = <String>[
+      for (final term in forbiddenTerms)
+        if (settingsContent.contains(term)) term,
+    ];
+
+    expect(
+      violations,
+      isEmpty,
+      reason: violations.isEmpty
+          ? null
+          : 'settings_screen.dart must render private bundle contributions '
+                'without commercial branching: ${violations.join(', ')}',
+    );
+  });
+
   test('public active bundle remains a no-op implementation', () {
     final activeBundle = readRepoFile(
       'memos_flutter_app/lib/private_hooks/active_private_extension_bundle.dart',

@@ -10,6 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memos_flutter_app/core/storage_read.dart';
+import 'package:memos_flutter_app/access_boundary/app_capability.dart';
+import 'package:memos_flutter_app/access_boundary/app_capability_provider.dart';
 import 'package:memos_flutter_app/data/ai/ai_analysis_models.dart';
 import 'package:memos_flutter_app/data/ai/ai_analysis_repository.dart';
 import 'package:memos_flutter_app/data/db/app_database.dart';
@@ -792,6 +794,9 @@ Future<void> main() async {
           appPreferencesProvider.overrideWith(
             (ref) => _TestAppPreferencesController(ref, prefsRepository),
           ),
+          appCapabilityEnabledProvider(
+            AppCapability.aiCustomSummaryTemplates,
+          ).overrideWithValue(true),
         ],
       ),
     );
@@ -854,6 +859,9 @@ Future<void> main() async {
           appPreferencesProvider.overrideWith(
             (ref) => _TestAppPreferencesController(ref, prefsRepository),
           ),
+          appCapabilityEnabledProvider(
+            AppCapability.aiCustomSummaryTemplates,
+          ).overrideWithValue(true),
         ],
       ),
     );
@@ -870,6 +878,121 @@ Future<void> main() async {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('free capability allows only one custom template', (
+    tester,
+  ) async {
+    final dbName = uniqueDbName('ai_summary_free_custom_template_limit');
+    final db = AppDatabase(dbName: dbName);
+    final aiRepository = _MemoryAiSettingsRepository(
+      AiSettings.defaultsFor(AppLanguage.en).copyWith(
+        customInsightTemplates: const <AiCustomInsightTemplate>[
+          AiCustomInsightTemplate(
+            templateId: 'tpl_free',
+            title: 'Free Template',
+            description: 'The single free template.',
+            promptTemplate: 'Free prompt.',
+            iconKey: 'star',
+          ),
+        ],
+      ),
+    );
+    final prefsRepository = _MemoryAppPreferencesRepository(
+      AppPreferences.defaultsForLanguage(AppLanguage.en),
+    );
+
+    addTearDown(() async {
+      await db.close();
+      await deleteTestDatabase(dbName);
+    });
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        child: const AiSummaryScreen(),
+        overrides: [
+          appSessionProvider.overrideWith((ref) => _TestSessionController()),
+          databaseProvider.overrideWithValue(db),
+          aiSettingsProvider.overrideWith(
+            (ref) => _TestAiSettingsController(ref, aiRepository),
+          ),
+          appPreferencesProvider.overrideWith(
+            (ref) => _TestAppPreferencesController(ref, prefsRepository),
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final newTemplateButton = tester.widget<IconButton>(
+      find.byKey(const Key('aiSummaryAddCustomTemplateButton')),
+    );
+    expect(newTemplateButton.onPressed, isNull);
+    expect(find.text('1/1'), findsOneWidget);
+  });
+
+  testWidgets('expired capability locks extra custom templates', (
+    tester,
+  ) async {
+    final dbName = uniqueDbName('ai_summary_locked_custom_templates');
+    final db = AppDatabase(dbName: dbName);
+    final aiRepository = _MemoryAiSettingsRepository(
+      AiSettings.defaultsFor(AppLanguage.en).copyWith(
+        customInsightTemplates: const <AiCustomInsightTemplate>[
+          AiCustomInsightTemplate(
+            templateId: 'tpl_active',
+            title: 'Active Template',
+            description: 'Still inside the free allowance.',
+            promptTemplate: 'Active prompt.',
+            iconKey: 'star',
+          ),
+          AiCustomInsightTemplate(
+            templateId: 'tpl_locked',
+            title: 'Locked Template',
+            description: 'Outside the free allowance.',
+            promptTemplate: 'Locked prompt.',
+            iconKey: 'sparkle',
+          ),
+        ],
+      ),
+    );
+    final prefsRepository = _MemoryAppPreferencesRepository(
+      AppPreferences.defaultsForLanguage(AppLanguage.en),
+    );
+
+    addTearDown(() async {
+      await db.close();
+      await deleteTestDatabase(dbName);
+    });
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        child: const AiSummaryScreen(),
+        overrides: [
+          appSessionProvider.overrideWith((ref) => _TestSessionController()),
+          databaseProvider.overrideWithValue(db),
+          aiSettingsProvider.overrideWith(
+            (ref) => _TestAiSettingsController(ref, aiRepository),
+          ),
+          appPreferencesProvider.overrideWith(
+            (ref) => _TestAppPreferencesController(ref, prefsRepository),
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.text('Locked Template'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline_rounded), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Locked Template'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Locked Template'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Locked prompt.'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Save'), findsNothing);
   });
 
   testWidgets('history button opens saved insight history', (tester) async {
