@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/access_boundary/app_capability.dart';
+import 'package:memos_flutter_app/access_boundary/app_capability_provider.dart';
 import 'package:memos_flutter_app/private_hooks/private_extension_bundle_provider.dart';
 
 void main() {
@@ -36,5 +37,29 @@ void main() {
     expect(enabled, isFalse);
     expect(source, 'public-default');
     expect(entries, isEmpty);
+  });
+
+  testWidgets('public capability seam disables commercial capabilities', (
+    tester,
+  ) async {
+    final decisions = <AppCapability, bool>{};
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: Consumer(
+          builder: (context, ref, _) {
+            for (final capability in AppCapability.values) {
+              decisions[capability] = ref.watch(
+                appCapabilityEnabledProvider(capability),
+              );
+            }
+            return const MaterialApp(home: SizedBox.shrink());
+          },
+        ),
+      ),
+    );
+
+    expect(decisions, hasLength(AppCapability.values.length));
+    expect(decisions.values, everyElement(isFalse));
   });
 }
