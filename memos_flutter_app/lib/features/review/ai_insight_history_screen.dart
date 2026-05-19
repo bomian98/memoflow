@@ -1,14 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:window_manager/window_manager.dart';
 
-import '../../core/desktop_window_controls.dart';
 import '../../core/memoflow_palette.dart';
 import '../../data/ai/ai_analysis_models.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/review/ai_analysis_provider.dart';
 import 'ai_insight_history_shared.dart';
 import 'ai_insight_models.dart';
@@ -121,7 +120,6 @@ class _AiInsightHistoryScreenState
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final enableWindowsDragToMove = Platform.isWindows;
     final bg = theme.scaffoldBackgroundColor;
     final cardColor = isDark ? MemoFlowPalette.cardDark : Colors.white;
     final borderColor = isDark
@@ -130,30 +128,16 @@ class _AiInsightHistoryScreenState
     final textMain = colorScheme.onSurface;
     final textMuted = colorScheme.onSurfaceVariant;
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: bg,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        toolbarHeight: 46,
-        flexibleSpace: enableWindowsDragToMove
-            ? const DragToMoveArea(child: SizedBox.expand())
-            : null,
-        leading: IconButton(
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back_ios_new),
-        ),
-        title: IgnorePointer(
-          ignoring: enableWindowsDragToMove,
-          child: Text(
-            _historyTitle(),
-            style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
-          ),
-        ),
-        actions: [if (enableWindowsDragToMove) const DesktopWindowControls()],
+      leading: IconButton(
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        onPressed: () => Navigator.of(context).maybePop(),
+        icon: Icon(PlatformIcons.back),
+      ),
+      title: Text(
+        _historyTitle(),
+        style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
       ),
       body: FutureBuilder<List<AiSavedAnalysisHistoryEntry>>(
         future: _historyFuture,

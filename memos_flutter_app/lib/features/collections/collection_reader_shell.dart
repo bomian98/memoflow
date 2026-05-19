@@ -16,6 +16,8 @@ import '../../data/models/local_memo.dart';
 import '../../data/models/memo_collection.dart';
 import '../../data/models/rss_article.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
 import '../../state/collections/collection_reader_progress_provider.dart';
 import '../../state/collections/collection_rss_providers.dart';
 import '../../state/collections/collections_provider.dart';
@@ -762,7 +764,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
   Future<void> _showSearchSheet(CollectionReaderPreferences preferences) async {
     _stopAutoPage();
     _dispatchMenuEvent(CollectionReaderMenuEvent.openSearchSheet);
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -829,7 +831,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     _stopAutoPage();
     _dispatchMenuEvent(CollectionReaderMenuEvent.openTocSheet);
     final entries = buildCollectionReaderTocEntries(widget.items);
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -866,7 +868,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     _stopAutoPage();
     _dispatchMenuEvent(CollectionReaderMenuEvent.openSettingsSheet);
     final notifier = ref.read(devicePreferencesProvider.notifier);
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -946,7 +948,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     _stopAutoPage();
     _dispatchMenuEvent(CollectionReaderMenuEvent.openSettingsSheet);
     final notifier = ref.read(devicePreferencesProvider.notifier);
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -991,7 +993,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     _stopAutoPage();
     _dispatchMenuEvent(CollectionReaderMenuEvent.openSettingsSheet);
     final notifier = ref.read(devicePreferencesProvider.notifier);
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1037,7 +1039,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     _dispatchMenuEvent(CollectionReaderMenuEvent.openSettingsSheet);
     final notifier = ref.read(devicePreferencesProvider.notifier);
     final capabilities = ReaderPlatformCapabilities.current();
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1079,7 +1081,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     _stopAutoPage();
     _dispatchMenuEvent(CollectionReaderMenuEvent.openSettingsSheet);
     final notifier = ref.read(devicePreferencesProvider.notifier);
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1101,7 +1103,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
   ) async {
     _dispatchMenuEvent(CollectionReaderMenuEvent.openAutoPageSheet);
     final notifier = ref.read(devicePreferencesProvider.notifier);
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1223,7 +1225,8 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
           return;
         }
         await Navigator.of(context).push(
-          MaterialPageRoute<void>(
+          buildPlatformPageRoute<void>(
+            context: context,
             builder: (_) =>
                 CollectionEditorScreen(initialCollection: collection),
           ),
@@ -1235,7 +1238,8 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
         }
         if (collection?.isManual == true) {
           await Navigator.of(context).push(
-            MaterialPageRoute<void>(
+            buildPlatformPageRoute<void>(
+              context: context,
               builder: (_) => ManualCollectionManageScreen(
                 collectionId: widget.collectionId,
               ),
@@ -1247,7 +1251,8 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
           return;
         }
         await Navigator.of(context).push(
-          MaterialPageRoute<void>(
+          buildPlatformPageRoute<void>(
+            context: context,
             builder: (_) =>
                 CollectionEditorScreen(initialCollection: collection),
           ),
@@ -1286,7 +1291,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
   Future<void> _showCurrentMemoActions(LocalMemo memo) async {
     final collectionsStrings = context.t.strings.collections;
     final legacy = context.t.strings.legacy;
-    final action = await showModalBottomSheet<_CurrentMemoAction>(
+    final action = await showPlatformActionSheet<_CurrentMemoAction>(
       context: context,
       showDragHandle: true,
       builder: (context) {
@@ -1357,7 +1362,8 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     switch (action) {
       case _CurrentMemoAction.open:
         await Navigator.of(context).push(
-          MaterialPageRoute<void>(
+          buildPlatformPageRoute<void>(
+            context: context,
             builder: (_) => MemoDetailScreen(initialMemo: memo),
           ),
         );
@@ -1392,7 +1398,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
 
   Future<void> _showCurrentRssActions(CollectionReadableItem item) async {
     final rssStrings = context.t.strings.collections.rss;
-    final action = await showModalBottomSheet<_CurrentRssAction>(
+    final action = await showPlatformActionSheet<_CurrentRssAction>(
       context: context,
       showDragHandle: true,
       builder: (context) {
@@ -1571,7 +1577,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
 
   Future<void> _showRssSubscriptionSheet() async {
     if (!mounted) return;
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

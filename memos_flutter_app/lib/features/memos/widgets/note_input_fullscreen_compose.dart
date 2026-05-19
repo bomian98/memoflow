@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/markdown_editing.dart';
 import '../../../core/memoflow_palette.dart';
 import '../../../data/models/memo_location.dart';
+import '../../../platform/widgets/platform_controls.dart';
 import '../../../state/memos/memo_composer_state.dart';
 import '../../../state/memos/memos_providers.dart';
 import '../../../state/tags/tag_color_lookup.dart';
@@ -413,8 +414,10 @@ class _FullscreenEditor extends StatelessWidget {
             child: Focus(
               canRequestFocus: false,
               onKeyEvent: onEditorKeyEvent,
-              child: TextField(
-                key: const ValueKey<String>('note-input-fullscreen-text-field'),
+              child: PlatformTextField(
+                textFieldKey: const ValueKey<String>(
+                  'note-input-fullscreen-text-field',
+                ),
                 controller: controller,
                 focusNode: editorFocusNode,
                 autofocus: autoFocus,

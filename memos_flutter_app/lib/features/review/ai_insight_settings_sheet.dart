@@ -9,6 +9,7 @@ import '../../data/ai/ai_route_config.dart';
 import '../../data/ai/ai_settings_models.dart';
 import '../../data/logs/log_manager.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_route.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
 import '../settings/ai_settings_screen.dart';
@@ -215,7 +216,8 @@ class _AiInsightSettingsSheetState
       },
     );
     final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
+      buildPlatformPageRoute<bool>(
+        context: context,
         builder: (_) => _isCustomTemplateMode
             ? AiInsightPromptEditorScreen.custom(
                 templateId: _resolvedCustomTemplate?.templateId,
@@ -245,7 +247,10 @@ class _AiInsightSettingsSheetState
       },
     );
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => const AiSettingsScreen()),
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const AiSettingsScreen(),
+      ),
     );
     if (!mounted) return;
     LogManager.instance.info(

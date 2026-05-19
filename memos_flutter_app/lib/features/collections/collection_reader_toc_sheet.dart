@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_list_tile.dart';
 import 'collection_reader_utils.dart';
 import 'collection_reader_panel.dart';
 
@@ -38,7 +39,7 @@ class CollectionReaderTocSheet extends StatelessWidget {
           itemBuilder: (context, index) {
             final entry = entries[index];
             final selected = entry.memoIndex == currentIndex;
-            return ListTile(
+            return PlatformListTile(
               contentPadding: EdgeInsets.zero,
               leading: CircleAvatar(
                 radius: 16,

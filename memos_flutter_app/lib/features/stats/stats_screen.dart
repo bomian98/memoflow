@@ -13,13 +13,16 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:window_manager/window_manager.dart';
 
 import '../../core/app_localization.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/models/app_preferences.dart';
 import '../../data/models/local_memo.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_dialog.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../features/collections/add_to_collection_sheet.dart';
 import '../../features/reminders/memo_reminder_editor_screen.dart';
 import '../../state/memos/memos_list_providers.dart';
@@ -155,7 +158,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       return;
     }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const HomeEntryScreen()),
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const HomeEntryScreen(),
+      ),
       (route) => false,
     );
   }
@@ -176,7 +182,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   Future<void> _openSyncQueue() async {
     if (!mounted) return;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => SyncQueueScreen(
           embeddedNavigationHost: widget.embeddedNavigationHost,
         ),
@@ -186,41 +193,42 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
   Future<bool> _confirmDeleteMemo(LocalMemo memo) async {
     if (!mounted) return false;
-    return await showDialog<bool>(
+    return await showPlatformAlertDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text(context.t.strings.legacy.msg_delete_memo),
-            content: Text(
-              context
-                  .t
-                  .strings
-                  .legacy
-                  .msg_removed_locally_now_deleted_server_when,
+          title: context.t.strings.legacy.msg_delete_memo,
+          message: context
+              .t
+              .strings
+              .legacy
+              .msg_removed_locally_now_deleted_server_when,
+          actions: [
+            PlatformDialogAction<bool>(
+              value: false,
+              label: context.t.strings.legacy.msg_cancel_2,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(context.t.strings.legacy.msg_cancel_2),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(context.t.strings.legacy.msg_delete),
-              ),
-            ],
-          ),
+            PlatformDialogAction<bool>(
+              value: true,
+              label: context.t.strings.legacy.msg_delete,
+              isDestructive: true,
+            ),
+          ],
         ) ??
         false;
   }
 
   Future<void> _openMemoEditor(LocalMemo memo) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => MemoEditorScreen(existing: memo)),
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => MemoEditorScreen(existing: memo),
+      ),
     );
   }
 
   Future<void> _openMemoHistory(LocalMemo memo) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoVersionsScreen(memoUid: memo.uid),
       ),
     );
@@ -228,7 +236,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
   Future<void> _openMemoReminder(LocalMemo memo) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoReminderEditorScreen(memo: memo),
       ),
     );
@@ -265,7 +274,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
   void _openMemoDetail(LocalMemo memo) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoDetailScreen(initialMemo: memo),
       ),
     );
@@ -919,9 +929,6 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         ? MemoFlowPalette.textDark
         : MemoFlowPalette.textLight;
     final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final enableWindowsDragToMove =
-        Theme.of(context).platform == TargetPlatform.windows;
-
     final statsAsync = ref.watch(localStatsProvider);
 
     return PopScope(
@@ -930,30 +937,17 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         if (didPop) return;
         _handleBack();
       },
-      child: Scaffold(
+      child: PlatformPage(
         backgroundColor: bg,
-        appBar: AppBar(
-          flexibleSpace: enableWindowsDragToMove
-              ? const DragToMoveArea(child: SizedBox.expand())
-              : null,
-          title: IgnorePointer(
-            ignoring: enableWindowsDragToMove,
-            child: const Text('MemoFlow'),
-          ),
-          centerTitle: false,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading: widget.showBackButton,
-          leading: widget.showBackButton
-              ? IconButton(
-                  tooltip: context.t.strings.legacy.msg_back,
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: _handleBack,
-                )
-              : null,
-          actions: [
+        title: const Text('MemoFlow'),
+        leading: widget.showBackButton
+            ? IconButton(
+                tooltip: context.t.strings.legacy.msg_back,
+                icon: Icon(PlatformIcons.back),
+                onPressed: _handleBack,
+              )
+            : null,
+        actions: [
             TextButton(
               onPressed: () async {
                 final stats = statsAsync.valueOrNull;
@@ -976,7 +970,6 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               ),
             ),
           ],
-        ),
         body: statsAsync.when(
           data: (stats) {
             final months = _deriveMonths(stats.dailyCounts);

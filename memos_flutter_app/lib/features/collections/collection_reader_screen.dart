@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/collection_readable_item.dart';
 import '../../data/models/memo_collection.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/collections/collections_provider.dart';
 import 'collection_editor_screen.dart';
 import 'collection_reader_shell.dart';
@@ -22,17 +25,18 @@ class CollectionReaderScreen extends ConsumerWidget {
       collectionResolvedReadableItemsProvider(collectionId),
     );
     if (collectionAsync.isLoading || itemsAsync.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const PlatformPage(
+        title: null,
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
     if (collectionAsync.hasError) {
-      return Scaffold(
-        appBar: AppBar(),
+      return PlatformPage(
         body: Center(child: Text('${collectionAsync.error}')),
       );
     }
     if (itemsAsync.hasError) {
-      return Scaffold(
-        appBar: AppBar(),
+      return PlatformPage(
         body: Center(child: Text('${itemsAsync.error}')),
       );
     }
@@ -45,8 +49,8 @@ class CollectionReaderScreen extends ConsumerWidget {
           ? collectionsStrings.collection
           : collection.title;
       final isRssCollection = collection.type == MemoCollectionType.rss;
-      return Scaffold(
-        appBar: AppBar(title: Text(title)),
+      return PlatformPage(
+        title: Text(title),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -70,7 +74,7 @@ class CollectionReaderScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 if (isRssCollection)
                   FilledButton.icon(
-                    onPressed: () => showModalBottomSheet<void>(
+                    onPressed: () => showPlatformActionSheet<void>(
                       context: context,
                       isScrollControlled: true,
                       showDragHandle: true,
@@ -84,7 +88,8 @@ class CollectionReaderScreen extends ConsumerWidget {
                 else
                   FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
+                      buildPlatformPageRoute<void>(
+                        context: context,
                         builder: (_) => CollectionEditorScreen(
                           initialCollection: collection,
                         ),

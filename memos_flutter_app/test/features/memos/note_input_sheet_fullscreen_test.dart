@@ -27,6 +27,7 @@ import 'package:memos_flutter_app/data/repositories/memo_template_settings_repos
 import 'package:memos_flutter_app/features/memos/note_input_sheet.dart';
 import 'package:memos_flutter_app/features/share/share_clip_models.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
+import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/memos/compose_draft_provider.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/memos/note_input_controller.dart';
@@ -40,6 +41,7 @@ import 'package:memos_flutter_app/state/settings/user_settings_provider.dart';
 
 void main() {
   setUp(() => LocaleSettings.setLocale(AppLocale.en));
+  tearDown(() => debugPlatformTargetOverride = null);
 
   testWidgets('expands from embedded compact control and preserves text', (
     tester,
@@ -165,6 +167,41 @@ void main() {
 
     expect(tester.getTopLeft(_closeButton).dy, greaterThanOrEqualTo(36));
     expect(tester.getTopLeft(_collapseButton).dy, greaterThanOrEqualTo(36));
+
+    await _disposeHarness(tester);
+  });
+
+  testWidgets('show opens note input sheet on apple mobile target', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.iOS;
+
+    await tester.pumpWidget(
+      _buildHarness(
+        child: Builder(
+          builder: (context) {
+            return TextButton(
+              onPressed: () => unawaited(
+                NoteInputSheet.show(
+                  context,
+                  initialText: 'Apple compose',
+                  ignoreDraft: true,
+                  autoFocus: false,
+                ),
+              ),
+              child: const Text('Open compose'),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Open compose'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NoteInputSheet), findsOneWidget);
+    expect(find.text('Apple compose'), findsOneWidget);
 
     await _disposeHarness(tester);
   });

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_list_tile.dart';
 import 'collection_reader_panel.dart';
 import 'collection_reader_utils.dart';
 
@@ -97,7 +99,7 @@ class _CollectionReaderSearchSheetState
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: PlatformTextField(
                     controller: _controller,
                     focusNode: _focusNode,
                     textInputAction: TextInputAction.search,
@@ -158,7 +160,7 @@ class _CollectionReaderSearchSheetState
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final result = _results[index];
-                      return ListTile(
+                      return PlatformListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           '#${result.memoIndex + 1} · ${result.title}',

@@ -1,11 +1,14 @@
 import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/app_motion.dart';
 import '../../../core/memoflow_palette.dart';
 import '../../../data/models/local_memo.dart';
 import '../../../i18n/strings.g.dart';
+import '../../../platform/platform_target.dart';
+import '../../../platform/widgets/platform_action_sheet.dart';
 import '../memo_card_action.dart';
 
 const Key memoCardActionPopoverKey = ValueKey<String>(
@@ -232,6 +235,26 @@ Future<MemoCardAction?> showMemoActionPopover({
   Offset? globalPosition,
 }) {
   if (actions.isEmpty) return Future<MemoCardAction?>.value(null);
+  if (resolvePlatformTarget(context) == PlatformTarget.iPhone) {
+    return showPlatformActionSheet<MemoCardAction>(
+      context: context,
+      builder: (sheetContext) => CupertinoActionSheet(
+        actions: [
+          for (final descriptor in actions)
+            CupertinoActionSheetAction(
+              isDestructiveAction: descriptor.danger,
+              onPressed: () =>
+                  Navigator.of(sheetContext).pop(descriptor.action),
+              child: Text(descriptor.label),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(sheetContext).pop(),
+          child: Text(context.t.strings.legacy.msg_cancel_2),
+        ),
+      ),
+    );
+  }
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
   if (overlay == null || !overlay.hasSize) {
     return Future<MemoCardAction?>.value(null);

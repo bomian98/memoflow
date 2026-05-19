@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/memoflow_palette.dart';
 import '../../data/models/location_settings.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/settings/location_settings_provider.dart';
 import '../../i18n/strings.g.dart';
 
@@ -76,20 +79,13 @@ class _LocationSettingsScreenState
         ? Colors.white.withValues(alpha: 0.06)
         : Colors.black.withValues(alpha: 0.06);
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_location),
-        centerTitle: false,
+      title: Text(context.t.strings.legacy.msg_location),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
       body: Stack(
         children: [
@@ -331,7 +327,7 @@ class _ToggleCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Switch(value: value, onChanged: onChanged),
+              PlatformSwitch(value: value, onChanged: onChanged),
             ],
           ),
           if (description.trim().isNotEmpty)
@@ -450,7 +446,7 @@ class _InputRow extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          TextField(
+          PlatformTextField(
             controller: controller,
             onChanged: onChanged,
             style: TextStyle(fontWeight: FontWeight.w600, color: textMain),

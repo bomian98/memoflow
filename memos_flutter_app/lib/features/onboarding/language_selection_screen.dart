@@ -8,6 +8,7 @@ import '../../data/logs/log_manager.dart';
 import '../../data/local_library/local_library_paths.dart';
 import '../../data/models/app_preferences.dart';
 import '../../data/models/local_library.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../settings/local_mode_setup_screen.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/system/local_library_provider.dart';
@@ -322,7 +323,7 @@ class _LanguageSelectionScreenState
         ),
     ];
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
       body: Stack(
         children: [

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_header_controller.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_search_header.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
+import 'package:memos_flutter_app/platform/platform_icons.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +32,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.filter_alt_outlined));
+    await tester.tap(find.byIcon(PlatformIcons.filter));
     await tester.pump();
     expect(openAdvancedFiltersCount, 1);
   });

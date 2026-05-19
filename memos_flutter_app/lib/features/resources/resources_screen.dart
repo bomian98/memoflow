@@ -8,10 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:window_manager/window_manager.dart';
 
 import '../../core/drawer_navigation.dart';
-import '../../core/desktop_window_controls.dart';
 import '../../core/platform_layout.dart';
 import '../../core/top_toast.dart';
 import '../../core/url.dart';
@@ -30,6 +28,9 @@ import '../memos/memo_detail_screen.dart';
 import '../memos/memos_list_screen.dart';
 import '../memos/memo_video_grid.dart';
 import '../notifications/notifications_screen.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../i18n/strings.g.dart';
 
 class _AttachmentSection {
@@ -237,7 +238,8 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         return;
       }
       Navigator.of(context).push(
-        MaterialPageRoute<void>(
+        buildPlatformPageRoute<void>(
+          context: context,
           settings: const RouteSettings(name: 'resources/image-preview'),
           builder: (_) => _ImageViewerScreen(
             title: attachment.filename,
@@ -271,7 +273,8 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         return;
       }
       Navigator.of(context).push(
-        MaterialPageRoute<void>(
+        buildPlatformPageRoute<void>(
+          context: context,
           settings: const RouteSettings(name: 'resources/video-preview'),
           builder: (_) => AttachmentVideoScreen(
             title: entry.title,
@@ -300,10 +303,9 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         _showUnsupportedPreview(context);
         return;
       }
-      showModalBottomSheet<void>(
+      showPlatformActionSheet<void>(
         context: context,
         isScrollControlled: true,
-        backgroundColor: Colors.transparent,
         builder: (_) => _AudioPreviewSheet(
           title: attachment.filename,
           localFile: localFile,
@@ -331,7 +333,8 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
       return;
     }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => const MemosListScreen(
           title: 'MemoFlow',
           state: 'NORMAL',
@@ -459,7 +462,8 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     if (row == null || !context.mounted) return;
     final memo = LocalMemo.fromDb(row);
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         settings: const RouteSettings(name: 'resources/open-memo'),
         builder: (_) => MemoDetailScreen(initialMemo: memo),
       ),
@@ -797,7 +801,6 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isWindowsDesktop = platform == TargetPlatform.windows;
-    final enableWindowsDragToMove = isWindowsDesktop;
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final drawerPanel = AppDrawer(
@@ -899,44 +902,25 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 ),
               ),
             )
-          : Scaffold(
+      : PlatformPage(
               drawer: useDesktopSidePane ? null : drawerPanel,
               drawerEnableOpenDragGesture:
                   widget.presentation !=
                   HomeScreenPresentation.embeddedBottomNav,
-              appBar: AppBar(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                elevation: 0,
-                scrolledUnderElevation: 0,
-                surfaceTintColor: Colors.transparent,
-                automaticallyImplyLeading: false,
-                toolbarHeight: 46,
-                leading: useDesktopSidePane
-                    ? null
-                    : AppDrawerMenuButton(
-                        tooltip: context.t.strings.legacy.msg_toggle_sidebar,
-                        iconColor: colorScheme.onSurface,
-                        badgeBorderColor: Theme.of(
-                          context,
-                        ).scaffoldBackgroundColor,
-                      ),
-                flexibleSpace: enableWindowsDragToMove
-                    ? const DragToMoveArea(child: SizedBox.expand())
-                    : null,
-                title: IgnorePointer(
-                  ignoring: enableWindowsDragToMove,
-                  child: Text(
-                    context.t.strings.legacy.msg_attachments,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
+              title: Text(
+                context.t.strings.legacy.msg_attachments,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
                 ),
-                actions: [
-                  if (enableWindowsDragToMove) const DesktopWindowControls(),
-                ],
               ),
+              leading: useDesktopSidePane
+                  ? null
+                  : AppDrawerMenuButton(
+                      tooltip: context.t.strings.legacy.msg_toggle_sidebar,
+                      iconColor: colorScheme.onSurface,
+                      badgeBorderColor: Theme.of(context).scaffoldBackgroundColor,
+                    ),
               body: (() {
                 if (!useDesktopSidePane) {
                   return pageBody;
@@ -992,7 +976,6 @@ class _ImageViewerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final enableWindowsDragToMove = Platform.isWindows;
     final child = localFile != null
         ? Image.file(localFile!, fit: BoxFit.contain)
         : CachedNetworkImage(
@@ -1007,16 +990,8 @@ class _ImageViewerScreen extends StatelessWidget {
                 const Icon(Icons.broken_image),
           );
 
-    return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: enableWindowsDragToMove
-            ? const DragToMoveArea(child: SizedBox.expand())
-            : null,
-        title: IgnorePointer(
-          ignoring: enableWindowsDragToMove,
-          child: Text(title),
-        ),
-      ),
+    return PlatformPage(
+      title: Text(title),
       body: SafeArea(
         child: InteractiveViewer(child: Center(child: child)),
       ),

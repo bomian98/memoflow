@@ -8,8 +8,7 @@ export 'windows_desktop_workspace_shell.dart'
     show
         WindowsDesktopModalSurfaceMotionSpec,
         WindowsDesktopSecondaryPaneMotionSpec,
-        WindowsDesktopSecondaryPanePresentation,
-        kWindowsDesktopSecondaryPaneDefaultWidth;
+        WindowsDesktopSecondaryPanePresentation;
 
 import '../../../core/platform_layout.dart';
 import '../app_drawer.dart';

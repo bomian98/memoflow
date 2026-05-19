@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_localization.dart';
 import '../../core/memoflow_palette.dart';
 import '../../data/models/server_setting.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/settings/server_settings_provider.dart';
 
 class ServerSettingsScreen extends ConsumerStatefulWidget {
@@ -68,30 +71,23 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
         : MemoFlowPalette.textLight;
     final textMuted = textMain.withValues(alpha: isDark ? 0.58 : 0.62);
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(_serverSettingsLabel(context)),
-        centerTitle: false,
-        leading: IconButton(
-          tooltip: context.tr(zh: '\u8FD4\u56DE', en: 'Back'),
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        actions: [
-          IconButton(
-            tooltip: context.tr(zh: '\u5237\u65B0', en: 'Refresh'),
-            icon: const Icon(Icons.refresh),
-            onPressed: state.snapshot.isLoading
-                ? null
-                : () => ref.read(serverSettingsProvider.notifier).refresh(),
-          ),
-        ],
+      title: Text(_serverSettingsLabel(context)),
+      leading: IconButton(
+        tooltip: context.tr(zh: '\u8FD4\u56DE', en: 'Back'),
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
+      actions: [
+        IconButton(
+          tooltip: context.tr(zh: '\u5237\u65B0', en: 'Refresh'),
+          icon: const Icon(Icons.refresh),
+          onPressed: state.snapshot.isLoading
+              ? null
+              : () => ref.read(serverSettingsProvider.notifier).refresh(),
+        ),
+      ],
       body: state.snapshot.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _LoadError(
@@ -335,7 +331,7 @@ class _LimitSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          TextField(
+          PlatformTextField(
             controller: controller,
             focusNode: focusNode,
             enabled: editable,

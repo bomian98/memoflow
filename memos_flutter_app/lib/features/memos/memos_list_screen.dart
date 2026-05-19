@@ -36,6 +36,9 @@ import '../../data/models/device_preferences.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/shortcut.dart';
 import '../../data/repositories/scene_micro_guide_repository.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/platform_target.dart';
+import '../../platform/widgets/platform_dialog.dart';
 import '../../state/memos/memo_composer_controller.dart';
 import '../../state/memos/memo_composer_state.dart';
 import '../../state/memos/compose_draft_provider.dart';
@@ -316,6 +319,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       !kIsWeb &&
       defaultTargetPlatform == TargetPlatform.windows &&
       widget.enableDesktopResizableHomeInlineCompose;
+
+  bool get _isWindowsDesktopTarget =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
 
   DesktopHomeLayoutPreference get _desktopHomeLayoutPreference =>
       ref.read(devicePreferencesProvider).desktopHomeLayoutPreference;
@@ -796,7 +802,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
 
   void _openMemoDetailRoute(LocalMemo memo, {Object? heroTag}) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoDetailScreen(
           initialMemo: memo,
           heroTag: heroTag,
@@ -1216,7 +1223,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           return;
         }
         await Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(
+          buildPlatformPageRoute<void>(
+            context: context,
             builder: (_) => _buildHomeScreen(toastMessage: toastMessage),
           ),
         );
@@ -1693,7 +1701,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     };
 
     if (route == null) return;
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => route));
+    Navigator.of(context).push(
+      buildPlatformPageRoute<void>(context: context, builder: (_) => route),
+    );
   }
 
   void _markSceneGuideSeen(SceneMicroGuideId id) {
@@ -1755,7 +1765,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
 
   bool _isMobileNativePlatform() {
     if (kIsWeb) return false;
-    return defaultTargetPlatform == TargetPlatform.android;
+    final target = resolvePlatformTarget(context);
+    return defaultTargetPlatform == TargetPlatform.android ||
+        target == PlatformTarget.iPhone;
   }
 
   bool _isTouchPullLoadPlatform() => _isMobileNativePlatform();
@@ -2132,7 +2144,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   void _focusSearchFromShortcut() {
     _markSceneGuideSeen(SceneMicroGuideId.memoListSearchAndShortcuts);
     _headerController.focusSearchFromShortcut(
-      isWindowsDesktop: Platform.isWindows,
+      isWindowsDesktop: _isWindowsDesktopTarget,
       onOpenSearch: _openSearch,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2319,13 +2331,13 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   }
 
   void _openWindowsHeaderSearch() {
-    if (!Platform.isWindows || !widget.enableSearch) return;
+    if (!_isWindowsDesktopTarget || !widget.enableSearch) return;
     _markSceneGuideSeen(SceneMicroGuideId.memoListSearchAndShortcuts);
     _headerController.openWindowsHeaderSearch();
   }
 
   void _closeWindowsHeaderSearch({bool clearQuery = true}) {
-    if (!Platform.isWindows || !_windowsHeaderSearchExpanded) return;
+    if (!_isWindowsDesktopTarget || !_windowsHeaderSearchExpanded) return;
     _headerController.closeWindowsHeaderSearch(clearQuery: clearQuery);
   }
 
@@ -2414,35 +2426,24 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     final message = preflight.usesRemoteBackend
         ? legacy.msg_ai_search_index_confirm_remote_message
         : legacy.msg_ai_search_index_confirm_local_message;
-    return await showDialog<bool>(
+    return await showPlatformAlertDialog<bool>(
           context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(legacy.msg_ai_search_index_confirm_title),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(message),
-                const SizedBox(height: 12),
-                Text(
-                  legacy.msg_ai_search_index_confirm_token_estimate(
-                    count: preflight.estimatedTokenCount,
-                  ),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(legacy.msg_cancel_2),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(legacy.msg_ai_search_index_confirm_continue),
-              ),
-            ],
+          title: legacy.msg_ai_search_index_confirm_title,
+          message: message,
+          details: legacy.msg_ai_search_index_confirm_token_estimate(
+            count: preflight.estimatedTokenCount,
           ),
+          actions: [
+            PlatformDialogAction<bool>(
+              value: false,
+              label: legacy.msg_cancel_2,
+            ),
+            PlatformDialogAction<bool>(
+              value: true,
+              label: legacy.msg_ai_search_index_confirm_continue,
+              isDefault: true,
+            ),
+          ],
         ) ??
         false;
   }
@@ -2567,28 +2568,26 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   }
 
   Future<bool> _confirmDeleteMemo(LocalMemo memo) async {
-    return await showDialog<bool>(
+    return await showPlatformAlertDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text(context.t.strings.legacy.msg_delete_memo),
-            content: Text(
-              context
-                  .t
-                  .strings
-                  .legacy
-                  .msg_removed_locally_now_deleted_server_when,
+          title: context.t.strings.legacy.msg_delete_memo,
+          message: context
+              .t
+              .strings
+              .legacy
+              .msg_removed_locally_now_deleted_server_when,
+          actions: [
+            PlatformDialogAction<bool>(
+              value: false,
+              label: context.t.strings.legacy.msg_cancel_2,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(context.t.strings.legacy.msg_cancel_2),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(context.t.strings.legacy.msg_delete),
-              ),
-            ],
-          ),
+            PlatformDialogAction<bool>(
+              value: true,
+              label: context.t.strings.legacy.msg_delete,
+              isDefault: true,
+              isDestructive: true,
+            ),
+          ],
         ) ??
         false;
   }
@@ -2608,14 +2607,18 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       return;
     }
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => MemoEditorScreen(existing: memo)),
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => MemoEditorScreen(existing: memo),
+      ),
     );
     ref.invalidate(memoRelationsProvider(memo.uid));
   }
 
   Future<void> _openMemoHistory(LocalMemo memo) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoVersionsScreen(memoUid: memo.uid),
       ),
     );
@@ -2623,7 +2626,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
 
   Future<void> _openMemoReminder(LocalMemo memo) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoReminderEditorScreen(memo: memo),
       ),
     );
@@ -2687,7 +2691,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           }
           await WidgetsBinding.instance.endOfFrame;
           if (!mounted) return false;
-          return await showDialog<bool>(
+          return await showPlatformDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: Text(context.t.strings.legacy.msg_scan_local_library),
@@ -2714,7 +2718,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         },
         resolveConflict: (conflict) async {
           if (!mounted) return false;
-          return await showDialog<bool>(
+          return await showPlatformDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: Text(context.t.strings.legacy.msg_resolve_conflict),
@@ -2992,7 +2996,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       hidePrimaryComposeFab: widget.hidePrimaryComposeFab,
       searching: _searching,
       screenWidth: screenWidth,
-      isWindowsDesktop: Platform.isWindows,
+      isWindowsDesktop: _isWindowsDesktopTarget,
     );
     final resolvedTag = queryState.resolvedTag;
     final useShortcutFilter = queryState.useShortcutFilter;
@@ -3431,7 +3435,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       controller: _searchController,
       focusNode: _searchFocusNode,
       isDark: isDark,
-      autofocus: _searching && !Platform.isWindows,
+      autofocus: _searching && !_isWindowsDesktopTarget,
       hasAdvancedFilters: _hasAdvancedSearchFilters,
       onOpenAdvancedFilters: () => unawaited(_openAdvancedSearchSheet()),
       onSubmitted: (value) => _headerController.submitSearch(
@@ -3972,12 +3976,12 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
                 _memoActionDelegate.handleMemoAction(memo, MemoCardAction.edit),
               );
             },
-            onLongPressCopy: Platform.isWindows
+            onLongPressCopy: _isWindowsDesktopTarget
                 ? null
                 : () {
                     _markSceneGuideSeen(SceneMicroGuideId.memoListGestures);
                   },
-            onSecondaryTapDown: Platform.isWindows
+            onSecondaryTapDown: _isWindowsDesktopTarget
                 ? (details) => unawaited(
                     _showMemoContextMenu(
                       memo,

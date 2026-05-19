@@ -16,6 +16,8 @@ import '../../core/platform_layout.dart';
 import '../../core/windows_adaptive_surface.dart';
 import '../../core/top_toast.dart';
 import '../../data/repositories/scene_micro_guide_repository.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
 import '../../state/memos/memos_list_providers.dart';
 import '../../state/settings/app_lock_provider.dart';
 import '../../state/settings/device_preferences_provider.dart';
@@ -243,6 +245,10 @@ class MemosListRouteDelegate extends ChangeNotifier {
 
   BuildContext get _context => _contextResolver();
 
+  Route<T> _buildRoute<T>(WidgetBuilder builder) {
+    return buildPlatformPageRoute<T>(context: _context, builder: builder);
+  }
+
   void backToAllMemos() {
     final embeddedNavigationHost = _embeddedNavigationHost;
     if (embeddedNavigationHost != null) {
@@ -250,7 +256,7 @@ class MemosListRouteDelegate extends ChangeNotifier {
       return;
     }
     Navigator.of(_context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => _buildHomeScreen()),
+      _buildRoute<void>((_) => _buildHomeScreen()),
       (route) => false,
     );
   }
@@ -355,9 +361,12 @@ class MemosListRouteDelegate extends ChangeNotifier {
     if (_read(devicePreferencesProvider).hapticsEnabled) {
       HapticFeedback.selectionClick();
     }
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const SyncQueueScreen()));
+    Navigator.of(context).push(
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const SyncQueueScreen(),
+      ),
+    );
   }
 
   Future<void> openNoteInput() async {
@@ -507,9 +516,8 @@ class MemosListRouteDelegate extends ChangeNotifier {
       return;
     }
 
-    await showModalBottomSheet<void>(
+    await showPlatformActionSheet<void>(
       context: context,
-      showDragHandle: true,
       builder: buildAccountSwitcherContent,
     );
   }
@@ -517,7 +525,8 @@ class MemosListRouteDelegate extends ChangeNotifier {
   Future<void> createShortcutFromMenu() async {
     final context = _context;
     final result = await Navigator.of(context).push<ShortcutEditorResult>(
-      MaterialPageRoute<ShortcutEditorResult>(
+      buildPlatformPageRoute<ShortcutEditorResult>(
+        context: context,
         builder: (_) => const ShortcutEditorScreen(),
       ),
     );
@@ -736,9 +745,12 @@ class MemosListRouteDelegate extends ChangeNotifier {
       _showToast(context, '\u5df2\u542f\u7528\u5e94\u7528\u9501\u3002');
       return;
     }
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const PasswordLockScreen()));
+    Navigator.of(context).push(
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const PasswordLockScreen(),
+      ),
+    );
   }
 
   void openShortcutOverviewPage() {
@@ -746,8 +758,8 @@ class MemosListRouteDelegate extends ChangeNotifier {
       _read(devicePreferencesProvider).desktopShortcutBindings,
     );
     Navigator.of(_context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => DesktopShortcutsOverviewScreen(bindings: bindings),
+      _buildRoute<void>(
+        (_) => DesktopShortcutsOverviewScreen(bindings: bindings),
       ),
     );
   }
@@ -822,9 +834,12 @@ class MemosListRouteDelegate extends ChangeNotifier {
   }
 
   static Future<void> _defaultOpenSettingsFallback(BuildContext context) {
-    return Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
+    return Navigator.of(context).push(
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const SettingsScreen(),
+      ),
+    );
   }
 
   static Future<void> _defaultShowNoteInputSheet(

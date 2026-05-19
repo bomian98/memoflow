@@ -14,6 +14,9 @@ import '../../core/app_localization.dart';
 import '../../core/desktop_quick_input_channel.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/sync/sync_coordinator_provider.dart';
 import '../../application/sync/sync_request.dart';
 import '../../state/system/database_provider.dart';
@@ -119,7 +122,8 @@ class ImportSourceScreen extends StatelessWidget {
     if (!context.mounted || picked == null) return;
 
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => ImportRunScreen(
           filePath: picked.filePath,
           fileName: picked.fileName,
@@ -173,19 +177,13 @@ class ImportSourceScreen extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.06),
             ),
           ];
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_import),
+      title: Text(context.t.strings.legacy.msg_import),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
       body: Stack(
         children: [
@@ -451,7 +449,8 @@ class _ImportRunScreenState extends ConsumerState<ImportRunScreen> {
       if (!mounted) return;
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
+        buildPlatformPageRoute<void>(
+          context: context,
           builder: (resultContext) => ImportResultScreen(
             memoCount: result.memoCount,
             attachmentCount: result.attachmentCount,
@@ -476,7 +475,8 @@ class _ImportRunScreenState extends ConsumerState<ImportRunScreen> {
               Navigator.of(resultContext).popUntil((route) => route.isFirst);
             },
             onViewImported: () => Navigator.of(resultContext).push(
-              MaterialPageRoute<void>(
+              buildPlatformPageRoute<void>(
+                context: resultContext,
                 builder: (_) => const ImportedMemosScreen(),
               ),
             ),
@@ -583,20 +583,13 @@ class ImportProgressScreen extends StatelessWidget {
     final detail =
         progressDetail ?? context.t.strings.legacy.msg_processing_content;
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_import_file),
-        centerTitle: true,
+      title: Text(context.t.strings.legacy.msg_import_file),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
       body: Stack(
         children: [
@@ -762,20 +755,13 @@ class ImportResultScreen extends StatelessWidget {
       );
     }
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_import_result),
-        centerTitle: true,
+      title: Text(context.t.strings.legacy.msg_import_result),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
       body: Stack(
         children: [

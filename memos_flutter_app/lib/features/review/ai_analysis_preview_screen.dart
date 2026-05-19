@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/memoflow_palette.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_page.dart';
 import 'ai_insight_models.dart';
 
 class AiAnalysisPreviewScreen extends StatelessWidget {
@@ -68,15 +69,9 @@ class AiAnalysisPreviewScreen extends StatelessWidget {
       if (allowProtected) isZh ? '受保护' : 'Protected',
     ];
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: background,
-      appBar: AppBar(
-        backgroundColor: background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(isZh ? '检索预览' : 'Retrieval Preview'),
-      ),
+      title: Text(isZh ? '检索预览' : 'Retrieval Preview'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [

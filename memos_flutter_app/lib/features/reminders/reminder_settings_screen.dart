@@ -5,9 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../core/app_localization.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_dialog.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/system/reminder_scheduler.dart';
 import '../../state/settings/reminder_settings_provider.dart';
 import 'custom_notification_screen.dart';
@@ -137,30 +141,25 @@ class _ReminderSettingsScreenState
     if (!Platform.isAndroid) return true;
 
     final confirmed =
-        await showDialog<bool>(
+        await showPlatformAlertDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text(
-              context.t.strings.legacy.msg_enable_reminder_permissions_2,
+          title: context.t.strings.legacy.msg_enable_reminder_permissions_2,
+          message: context
+              .t
+              .strings
+              .legacy
+              .msg_notification_exact_alarm_permissions_required_send,
+          actions: [
+            PlatformDialogAction<bool>(
+              value: false,
+              label: context.t.strings.legacy.msg_cancel_2,
             ),
-            content: Text(
-              context
-                  .t
-                  .strings
-                  .legacy
-                  .msg_notification_exact_alarm_permissions_required_send,
+            PlatformDialogAction<bool>(
+              value: true,
+              label: context.t.strings.legacy.msg_grant,
+              isDefault: true,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => context.safePop(false),
-                child: Text(context.t.strings.legacy.msg_cancel_2),
-              ),
-              FilledButton(
-                onPressed: () => context.safePop(true),
-                child: Text(context.t.strings.legacy.msg_grant),
-              ),
-            ],
-          ),
+          ],
         ) ??
         false;
     if (!confirmed) return false;
@@ -176,30 +175,25 @@ class _ReminderSettingsScreenState
       exactAlarmGranted = await SystemSettingsLauncher.canScheduleExactAlarms();
       if (!exactAlarmGranted && mounted) {
         final go =
-            await showDialog<bool>(
+            await showPlatformAlertDialog<bool>(
               context: context,
-              builder: (context) => AlertDialog(
-                title: Text(
-                  context.t.strings.legacy.msg_exact_alarm_permission_required,
+              title: context.t.strings.legacy.msg_exact_alarm_permission_required,
+              message: context
+                  .t
+                  .strings
+                  .legacy
+                  .msg_exact_alarm_permission_off_reminders_may,
+              actions: [
+                PlatformDialogAction<bool>(
+                  value: false,
+                  label: context.t.strings.legacy.msg_cancel_2,
                 ),
-                content: Text(
-                  context
-                      .t
-                      .strings
-                      .legacy
-                      .msg_exact_alarm_permission_off_reminders_may,
+                PlatformDialogAction<bool>(
+                  value: true,
+                  label: context.t.strings.legacy.msg_open_2,
+                  isDefault: true,
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => context.safePop(false),
-                    child: Text(context.t.strings.legacy.msg_cancel_2),
-                  ),
-                  FilledButton(
-                    onPressed: () => context.safePop(true),
-                    child: Text(context.t.strings.legacy.msg_open_2),
-                  ),
-                ],
-              ),
+              ],
             ) ??
             false;
         if (go) {
@@ -235,7 +229,8 @@ class _ReminderSettingsScreenState
 
   Future<void> _openNotificationTemplate(ReminderSettings settings) async {
     final result = await Navigator.of(context).push<(String, String)>(
-      MaterialPageRoute<(String, String)>(
+      buildPlatformPageRoute<(String, String)>(
+        context: context,
         builder: (_) => CustomNotificationScreen(
           initialTitle: settings.notificationTitle,
           initialBody: settings.notificationBody,
@@ -317,20 +312,13 @@ class _ReminderSettingsScreenState
         ? Colors.white.withValues(alpha: 0.06)
         : Colors.black.withValues(alpha: 0.06);
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_reminder_settings),
-        centerTitle: false,
+      title: Text(context.t.strings.legacy.msg_reminder_settings),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
       body: Stack(
         children: [
@@ -612,7 +600,7 @@ class _ToggleCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Switch(value: value, onChanged: onChanged),
+              PlatformSwitch(value: value, onChanged: onChanged),
             ],
           ),
           if (description.trim().isNotEmpty)
@@ -735,7 +723,7 @@ class _SelectRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Icon(Icons.chevron_right, size: 18, color: textMuted),
+              Icon(PlatformIcons.chevronForward, size: 18, color: textMuted),
             ],
           ),
         ),
@@ -826,7 +814,7 @@ class _ToggleRow extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
             ),
           ),
-          Switch(value: value, onChanged: onChanged),
+          PlatformSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );

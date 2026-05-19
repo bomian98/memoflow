@@ -15,6 +15,12 @@ import '../../data/logs/log_manager.dart';
 import '../../data/models/memo_collection.dart';
 import '../../data/repositories/collections_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_dialog.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/collections/collection_resolver.dart';
 import '../../state/collections/collections_provider.dart';
 import '../../state/system/session_provider.dart';
@@ -121,14 +127,18 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
       return;
     }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const HomeEntryScreen()),
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const HomeEntryScreen(),
+      ),
       (route) => false,
     );
   }
 
   Future<void> _openEditor(BuildContext context, {MemoCollection? initial}) {
     return Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => CollectionEditorScreen(initialCollection: initial),
       ),
     );
@@ -163,7 +173,7 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
     if (items.length < 2) {
       return Future<void>.value();
     }
-    return showModalBottomSheet<void>(
+    return showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -232,24 +242,23 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
     BuildContext context,
     MemoCollection collection,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showPlatformAlertDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.t.strings.collections.deleteTitle),
-        content: Text(
-          context.t.strings.collections.deleteMessage(title: collection.title),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(context.t.strings.legacy.msg_cancel_2),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(context.t.strings.legacy.msg_delete),
-          ),
-        ],
+      title: context.t.strings.collections.deleteTitle,
+      message: context.t.strings.collections.deleteMessage(
+        title: collection.title,
       ),
+      actions: [
+        PlatformDialogAction<bool>(
+          value: false,
+          label: context.t.strings.legacy.msg_cancel_2,
+        ),
+        PlatformDialogAction<bool>(
+          value: true,
+          label: context.t.strings.legacy.msg_delete,
+          isDestructive: true,
+        ),
+      ],
     );
     if (confirmed == true) {
       await ref.read(collectionsRepositoryProvider).delete(collection.id);
@@ -349,7 +358,8 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                         account: currentAccount,
                         onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute<void>(
+                            buildPlatformPageRoute<void>(
+                              context: context,
                               builder: (_) => CollectionDetailScreen(
                                 collectionId: item.collection.id,
                               ),
@@ -425,7 +435,7 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                         key: const ValueKey<String>('search-field'),
                         height: 40,
                         alignment: Alignment.center,
-                        child: TextField(
+                        child: PlatformTextField(
                           controller: _searchController,
                           focusNode: _searchFocusNode,
                           onChanged: (_) => setState(() {}),
@@ -511,32 +521,27 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                 ),
                 body: body,
               )
-            : Scaffold(
+            : PlatformPage(
                 backgroundColor: bg,
                 drawer: useDesktopSidePane ? null : drawerPanel,
-                appBar: AppBar(
-                  backgroundColor: bg,
-                  elevation: 0,
-                  scrolledUnderElevation: 0,
-                  surfaceTintColor: Colors.transparent,
-                  leading: useDesktopSidePane
-                      ? null
-                      : AppDrawerMenuButton(
-                          tooltip: context.t.strings.legacy.msg_toggle_sidebar,
-                          iconColor:
-                              Theme.of(context).appBarTheme.iconTheme?.color ??
-                              IconTheme.of(context).color ??
-                              Theme.of(context).colorScheme.onSurface,
-                          badgeBorderColor: bg,
-                        ),
-                  title: AnimatedSwitcher(
+                leading: useDesktopSidePane
+                    ? null
+                    : AppDrawerMenuButton(
+                        tooltip: context.t.strings.legacy.msg_toggle_sidebar,
+                        iconColor:
+                            Theme.of(context).appBarTheme.iconTheme?.color ??
+                            IconTheme.of(context).color ??
+                            Theme.of(context).colorScheme.onSurface,
+                        badgeBorderColor: bg,
+                      ),
+                title: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 180),
                     child: _searchExpanded
                         ? Container(
                             key: const ValueKey<String>('search-field'),
                             height: 40,
                             alignment: Alignment.center,
-                            child: TextField(
+                            child: PlatformTextField(
                               controller: _searchController,
                               focusNode: _searchFocusNode,
                               onChanged: (_) => setState(() {}),
@@ -554,15 +559,15 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                             ),
                           )
                         : Text(context.t.strings.collections.title),
-                  ),
-                  actions: _searchExpanded
+                ),
+                actions: _searchExpanded
                       ? [
                           IconButton(
                             tooltip: _searchController.text.trim().isEmpty
                                 ? context.t.strings.legacy.msg_close_search
                                 : context.t.strings.legacy.msg_clear_2,
                             onPressed: _collapseSearch,
-                            icon: const Icon(Icons.close_rounded),
+                            icon: Icon(PlatformIcons.platformClose),
                           ),
                         ]
                       : [
@@ -621,7 +626,6 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                             icon: const Icon(Icons.add_rounded),
                           ),
                         ],
-                ),
                 body: useDesktopSidePane
                     ? Row(
                         children: [

@@ -32,6 +32,7 @@ import '../../state/review/ai_analysis_provider.dart';
 import '../../state/sync/sync_coordinator_provider.dart';
 import '../../state/system/local_library_provider.dart';
 import '../../state/tags/tag_color_lookup.dart';
+import '../../platform/platform_route.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
 import '../home/app_drawer_menu_button.dart';
@@ -171,7 +172,8 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
       return;
     }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => const MemosListScreen(
           title: 'MemoFlow',
           state: 'NORMAL',
@@ -677,7 +679,8 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
     }
     final descriptor = resolveAiInsightHistoryDescriptor(context, ref, entry);
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => AiSummaryScreen(
           initialHistorySelection: AiInsightHistorySelection(
             report: report,

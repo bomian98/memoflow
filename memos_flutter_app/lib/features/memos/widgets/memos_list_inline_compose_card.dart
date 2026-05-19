@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show File;
 
 import 'package:flutter/material.dart';
 
@@ -8,6 +8,8 @@ import '../../../core/markdown_editing.dart';
 import '../../../core/memoflow_palette.dart';
 import '../../../data/models/memo_location.dart';
 import '../../../data/models/memo_template_settings.dart';
+import '../../../platform/platform_target.dart';
+import '../../../platform/widgets/platform_controls.dart';
 import '../../image_preview/image_preview_item.dart';
 import '../../image_preview/widgets/image_preview_tile.dart';
 import '../../../state/memos/memo_composer_controller.dart';
@@ -131,8 +133,8 @@ class MemosListInlineComposeCard extends StatelessWidget {
     final chipText = isDark
         ? MemoFlowPalette.textDark
         : MemoFlowPalette.textLight;
-    final inlineComposeMinLines = Platform.isWindows ? 3 : 1;
-    final inlineComposeMaxLines = Platform.isWindows ? 8 : 5;
+    final inlineComposeMinLines = isWindowsPlatform() ? 3 : 1;
+    final inlineComposeMaxLines = isWindowsPlatform() ? 8 : 5;
     final usesControlledDesktopHeight =
         desktopEditorViewportHeight != null && desktopEditorViewportHeight! > 0;
 
@@ -305,8 +307,8 @@ class MemosListInlineComposeCard extends StatelessWidget {
                                       hasFocus: focusNode.hasFocus,
                                       requestFocus: focusNode.requestFocus,
                                     ),
-                                child: TextField(
-                                  key: const ValueKey<String>(
+                                child: PlatformTextField(
+                                  textFieldKey: const ValueKey<String>(
                                     'memos-inline-compose-text-field',
                                   ),
                                   controller: composer.textController,

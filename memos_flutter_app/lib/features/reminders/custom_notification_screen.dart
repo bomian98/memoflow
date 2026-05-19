@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../../core/memoflow_palette.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_page.dart';
 
 class CustomNotificationScreen extends StatefulWidget {
   const CustomNotificationScreen({
@@ -52,26 +55,20 @@ class _CustomNotificationScreenState extends State<CustomNotificationScreen> {
     final textMain = isDark ? MemoFlowPalette.textDark : MemoFlowPalette.textLight;
     final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_customize_notification),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: Text(context.t.strings.legacy.msg_done_2),
-          ),
-        ],
+      title: Text(context.t.strings.legacy.msg_customize_notification),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
+      actions: [
+        TextButton(
+          onPressed: _save,
+          child: Text(context.t.strings.legacy.msg_done_2),
+        ),
+      ],
       body: Stack(
         children: [
           if (isDark)
@@ -170,7 +167,7 @@ class _InputCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textMuted)),
-          TextField(
+          PlatformTextField(
             controller: controller,
             maxLength: 15,
             maxLengthEnforcement: MaxLengthEnforcement.enforced,

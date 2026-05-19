@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/app_localization.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/memo_reminder.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_dialog.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/system/database_provider.dart';
 import '../../state/system/reminder_mutation_service.dart';
 import '../../state/system/reminder_scheduler.dart';
@@ -141,24 +144,21 @@ class _MemoReminderEditorScreenState
 
   Future<void> _deleteReminder() async {
     final confirmed =
-        await showDialog<bool>(
+        await showPlatformAlertDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text(context.t.strings.legacy.msg_delete_reminder),
-            content: Text(
-              context.t.strings.legacy.msg_remove_all_reminder_times_memo,
+          title: context.t.strings.legacy.msg_delete_reminder,
+          message: context.t.strings.legacy.msg_remove_all_reminder_times_memo,
+          actions: [
+            PlatformDialogAction<bool>(
+              value: false,
+              label: context.t.strings.legacy.msg_cancel_2,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => context.safePop(false),
-                child: Text(context.t.strings.legacy.msg_cancel_2),
-              ),
-              FilledButton(
-                onPressed: () => context.safePop(true),
-                child: Text(context.t.strings.legacy.msg_delete),
-              ),
-            ],
-          ),
+            PlatformDialogAction<bool>(
+              value: true,
+              label: context.t.strings.legacy.msg_delete,
+              isDestructive: true,
+            ),
+          ],
         ) ??
         false;
     if (!confirmed) return;
@@ -186,26 +186,20 @@ class _MemoReminderEditorScreenState
         ? Colors.white.withValues(alpha: 0.06)
         : Colors.black.withValues(alpha: 0.06);
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_reminder_2),
-        actions: [
-          TextButton(
-            onPressed: _loading ? null : _save,
-            child: Text(context.t.strings.legacy.msg_save_2),
-          ),
-        ],
+      title: Text(context.t.strings.legacy.msg_reminder_2),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
+      actions: [
+        TextButton(
+          onPressed: _loading ? null : _save,
+          child: Text(context.t.strings.legacy.msg_save_2),
+        ),
+      ],
       body: Stack(
         children: [
           if (isDark)
@@ -232,7 +226,8 @@ class _MemoReminderEditorScreenState
                     textMain: textMain,
                     textMuted: textMuted,
                     onOpenSettings: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
+                      buildPlatformPageRoute<void>(
+                        context: context,
                         builder: (_) => const ReminderSettingsScreen(),
                       ),
                     ),

@@ -4,6 +4,8 @@ import '../../core/app_localization.dart';
 import '../../core/memoflow_palette.dart';
 import '../../data/repositories/ai_settings_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_page.dart';
 
 class QuickPromptEditorScreen extends StatefulWidget {
   const QuickPromptEditorScreen({super.key});
@@ -65,42 +67,34 @@ class _QuickPromptEditorScreenState extends State<QuickPromptEditorScreen> {
         ? MemoFlowPalette.audioSurfaceDark
         : MemoFlowPalette.audioSurfaceLight;
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        centerTitle: true,
-        leadingWidth: 72,
-        leading: TextButton(
-          onPressed: () => context.safePop(),
-          child: Text(
-            context.t.strings.legacy.msg_cancel_2,
-            style: TextStyle(
-              color: MemoFlowPalette.primary,
-              fontWeight: FontWeight.w600,
-            ),
+      leading: TextButton(
+        onPressed: () => context.safePop(),
+        child: Text(
+          context.t.strings.legacy.msg_cancel_2,
+          style: TextStyle(
+            color: MemoFlowPalette.primary,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        title: Text(
-          context.t.strings.legacy.msg_add_prompt,
-          style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _canSave ? _save : null,
-            child: Text(
-              context.t.strings.legacy.msg_save,
-              style: TextStyle(
-                color: _canSave ? MemoFlowPalette.primary : textMuted,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
       ),
+      title: Text(
+        context.t.strings.legacy.msg_add_prompt,
+        style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _canSave ? _save : null,
+          child: Text(
+            context.t.strings.legacy.msg_save,
+            style: TextStyle(
+              color: _canSave ? MemoFlowPalette.primary : textMuted,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         children: [
@@ -130,7 +124,7 @@ class _QuickPromptEditorScreenState extends State<QuickPromptEditorScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                TextField(
+                PlatformTextField(
                   controller: _titleController,
                   style: TextStyle(
                     fontSize: 14,
@@ -172,7 +166,7 @@ class _QuickPromptEditorScreenState extends State<QuickPromptEditorScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                TextField(
+                PlatformTextField(
                   controller: _contentController,
                   minLines: 4,
                   maxLines: 6,

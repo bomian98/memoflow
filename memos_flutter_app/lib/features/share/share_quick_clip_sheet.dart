@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/memoflow_palette.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
+import '../../platform/widgets/platform_controls.dart';
 import '../../state/memos/memo_composer_controller.dart';
 import '../../state/memos/memos_providers.dart';
 import '../../state/tags/tag_color_lookup.dart';
@@ -17,13 +19,9 @@ Future<ShareQuickClipSubmission?> showShareQuickClipSheet(
   bool initialTextOnly = false,
   bool initialTitleAndLinkOnly = false,
 }) {
-  return showModalBottomSheet<ShareQuickClipSubmission>(
+  return showPlatformActionSheet<ShareQuickClipSubmission>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: Theme.of(context).brightness == Brightness.dark
-        ? Colors.black.withValues(alpha: 0.4)
-        : Colors.black.withValues(alpha: 0.08),
     builder: (_) => _ShareQuickClipSheet(
       payload: payload,
       initialTagText: initialTagText ?? buildDefaultQuickClipTagText(payload),
@@ -224,7 +222,7 @@ class _ShareQuickClipSheetState extends ConsumerState<_ShareQuickClipSheet> {
                           child: Focus(
                             canRequestFocus: false,
                             onKeyEvent: _handleTagAutocompleteKeyEvent,
-                            child: TextField(
+                            child: PlatformTextField(
                               controller: _tagController,
                               focusNode: _tagFocusNode,
                               style: tagTextStyle,

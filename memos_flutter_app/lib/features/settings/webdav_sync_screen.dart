@@ -37,6 +37,11 @@ import '../../state/webdav/webdav_backup_provider.dart';
 import '../../state/webdav/webdav_log_provider.dart';
 import '../../state/webdav/webdav_settings_provider.dart';
 import '../../state/webdav/webdav_vault_provider.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_list_tile.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../i18n/strings.g.dart';
 part 'vault_security_status_screen.dart';
 
@@ -275,7 +280,8 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
 
   Future<void> _openConnectionSettings() async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => _WebDavConnectionScreen(
           serverUrlController: _serverUrlController,
           usernameController: _usernameController,
@@ -316,7 +322,8 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
     final backupUnavailableHint =
         context.t.strings.legacy.msg_local_library_only;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => _WebDavBackupSettingsScreen(
           backupAvailable: backupAvailable,
           backupUnavailableHint: backupUnavailableHint,
@@ -1669,7 +1676,8 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
     }
     if (!mounted) return;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => const VaultSecurityStatusScreen(),
       ),
     );
@@ -1746,9 +1754,12 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
   }
 
   Future<void> _openWebDavLogs() async {
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const WebDavLogsScreen()));
+    await Navigator.of(context).push(
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const WebDavLogsScreen(),
+      ),
+    );
     if (mounted) setState(() {});
   }
 
@@ -1928,34 +1939,26 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
         ? context.tr(zh: '\u5df2\u542f\u7528', en: 'Enabled')
         : context.tr(zh: '\u672a\u542f\u7528', en: 'Not enabled');
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_webdav_sync),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            tooltip: context.t.strings.legacy.msg_sync,
-            onPressed: (!_enabled || syncStatus.running) ? null : _syncNow,
-            icon: syncStatus.running
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.sync),
-          ),
-          const SizedBox(width: 4),
-        ],
+      title: Text(context.t.strings.legacy.msg_webdav_sync),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
+      actions: [
+        IconButton(
+          tooltip: context.t.strings.legacy.msg_sync,
+          onPressed: (!_enabled || syncStatus.running) ? null : _syncNow,
+          icon: syncStatus.running
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.sync),
+        ),
+      ],
       body: Stack(
         children: [
           if (isDark)
@@ -2630,7 +2633,7 @@ class _ToggleCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Switch(value: value, onChanged: onChanged),
+                PlatformSwitch(value: value, onChanged: onChanged),
               ],
             ),
             if (description.trim().isNotEmpty)
@@ -2709,7 +2712,7 @@ class _SelectRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return PlatformListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       title: Text(
         label,
@@ -2720,7 +2723,7 @@ class _SelectRow extends StatelessWidget {
         children: [
           Text(value, style: TextStyle(color: textMuted)),
           const SizedBox(width: 6),
-          Icon(Icons.chevron_right, size: 18, color: textMuted),
+          Icon(PlatformIcons.chevronForward, size: 18, color: textMuted),
         ],
       ),
       onTap: onTap,
@@ -2753,13 +2756,13 @@ class _InputRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return PlatformListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       title: Text(
         label,
         style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
       ),
-      subtitle: TextField(
+      subtitle: PlatformTextField(
         controller: controller,
         keyboardType: keyboardType,
         onChanged: onChanged,
@@ -2803,7 +2806,7 @@ class _InlineInputRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return PlatformListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       title: Text(
         label,
@@ -2811,7 +2814,7 @@ class _InlineInputRow extends StatelessWidget {
       ),
       trailing: SizedBox(
         width: 72,
-        child: TextField(
+        child: PlatformTextField(
           controller: controller,
           keyboardType: keyboardType,
           onChanged: onChanged,
@@ -2848,13 +2851,13 @@ class _ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return PlatformListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       title: Text(
         label,
         style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
       ),
-      trailing: Switch(value: value, onChanged: onChanged),
+      trailing: PlatformSwitch(value: value, onChanged: onChanged),
     );
   }
 }
@@ -2874,7 +2877,7 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return PlatformListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       title: Text(
         label,
@@ -3064,20 +3067,13 @@ class _WebDavConnectionScreenState
         widget.passwordController.text.trim().isEmpty;
     final canTestConnection = serverUrl.isNotEmpty && !hasCredentialMismatch;
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_server_connection),
-        centerTitle: false,
+      title: Text(context.t.strings.legacy.msg_server_connection),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -3140,7 +3136,7 @@ class _WebDavConnectionScreenState
                 textMuted: textMuted,
                 onChanged: widget.onUsernameChanged,
               ),
-              ListTile(
+              PlatformListTile(
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 6,
@@ -3152,7 +3148,7 @@ class _WebDavConnectionScreenState
                     color: textMain,
                   ),
                 ),
-                subtitle: TextField(
+                subtitle: PlatformTextField(
                   controller: widget.passwordController,
                   obscureText: _obscurePassword,
                   onChanged: widget.onPasswordChanged,
@@ -3659,20 +3655,13 @@ class _WebDavBackupSettingsScreenState
         if (didPop || !_shouldInterceptPop) return;
         await _requestClose();
       },
-      child: Scaffold(
+      child: PlatformPage(
         backgroundColor: bg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: _requestClose,
-          ),
-          title: Text(context.t.strings.legacy.msg_backup_settings),
-          centerTitle: false,
+        title: Text(context.t.strings.legacy.msg_backup_settings),
+        leading: IconButton(
+          tooltip: context.t.strings.legacy.msg_back,
+          icon: Icon(PlatformIcons.back),
+          onPressed: _requestClose,
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -4029,28 +4018,21 @@ class _WebDavLogsScreenState extends ConsumerState<WebDavLogsScreen> {
       );
     }
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text('WebDAV ${context.t.strings.legacy.msg_logs}'),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            tooltip: context.t.strings.legacy.msg_refresh,
-            icon: const Icon(Icons.refresh),
-            onPressed: _refresh,
-          ),
-        ],
+      title: Text('WebDAV ${context.t.strings.legacy.msg_logs}'),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
+      actions: [
+        IconButton(
+          tooltip: context.t.strings.legacy.msg_refresh,
+          icon: const Icon(Icons.refresh),
+          onPressed: _refresh,
+        ),
+      ],
       body: body,
     );
   }

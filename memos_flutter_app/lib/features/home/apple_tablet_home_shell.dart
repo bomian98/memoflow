@@ -332,7 +332,7 @@ class _AppleTabletSidebarDestination extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: CupertinoButton(
-        minSize: 0,
+        minimumSize: Size.zero,
         padding: EdgeInsets.zero,
         onPressed: onTap,
         child: Semantics(

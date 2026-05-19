@@ -8,6 +8,11 @@ import 'package:intl/intl.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/logs/debug_log_store.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_dialog.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/system/debug_log_provider.dart';
 import '../../i18n/strings.g.dart';
 
@@ -52,18 +57,21 @@ class _DebugLogsScreenState extends ConsumerState<DebugLogsScreen> {
   }
 
   Future<void> _clearLogs() async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showPlatformAlertDialog<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(context.t.strings.legacy.msg_clear_logs),
-          content: Text(context.t.strings.legacy.msg_clear_all_debug_logs),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(context.t.strings.legacy.msg_cancel_2)),
-            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(context.t.strings.legacy.msg_clear)),
-          ],
-        );
-      },
+      title: context.t.strings.legacy.msg_clear_logs,
+      message: context.t.strings.legacy.msg_clear_all_debug_logs,
+      actions: [
+        PlatformDialogAction<bool>(
+          value: false,
+          label: context.t.strings.legacy.msg_cancel_2,
+        ),
+        PlatformDialogAction<bool>(
+          value: true,
+          label: context.t.strings.legacy.msg_clear,
+          isDestructive: true,
+        ),
+      ],
     );
     if (confirm != true) return;
     await ref.read(debugLogStoreProvider).clear();
@@ -108,7 +116,7 @@ class _DebugLogsScreenState extends ConsumerState<DebugLogsScreen> {
   }
 
   void _showEntry(DebugLogEntry entry) {
-    showModalBottomSheet<void>(
+    showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -181,21 +189,15 @@ class _DebugLogsScreenState extends ConsumerState<DebugLogsScreen> {
 
     final entries = _filteredEntries();
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_debug_logs),
-        centerTitle: false,
-        actions: [
+      title: Text(context.t.strings.legacy.msg_debug_logs),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      actions: [
           IconButton(
             tooltip: context.t.strings.legacy.msg_copy,
             icon: const Icon(Icons.copy_all_outlined),
@@ -207,7 +209,6 @@ class _DebugLogsScreenState extends ConsumerState<DebugLogsScreen> {
             onPressed: _entries.isEmpty ? null : _clearLogs,
           ),
         ],
-      ),
       body: Stack(
         children: [
           if (isDark)
@@ -232,7 +233,7 @@ class _DebugLogsScreenState extends ConsumerState<DebugLogsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(color: card, borderRadius: BorderRadius.circular(18)),
-                child: TextField(
+                child: PlatformTextField(
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: context.t.strings.legacy.msg_search_logs,

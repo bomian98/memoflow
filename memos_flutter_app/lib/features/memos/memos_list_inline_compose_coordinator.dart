@@ -20,6 +20,7 @@ import '../../data/models/memo.dart';
 import '../../data/models/memo_location.dart';
 import '../../data/models/memo_template_settings.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_target.dart';
 import '../../state/attachments/queued_attachment_stager_provider.dart';
 import '../../state/memos/memo_composer_controller.dart';
 import '../../state/memos/memo_composer_state.dart';
@@ -1079,7 +1080,7 @@ class MemosListInlineComposeCoordinator extends ChangeNotifier {
   }
 
   Future<void> _openWindowsCameraSettings() async {
-    if (!Platform.isWindows) return;
+    if (!isWindowsPlatform()) return;
     try {
       await Process.start('cmd', <String>[
         '/c',
@@ -1091,7 +1092,7 @@ class MemosListInlineComposeCoordinator extends ChangeNotifier {
   }
 
   bool _isWindowsCameraPermissionError(Object error) {
-    if (!Platform.isWindows) return false;
+    if (!isWindowsPlatform()) return false;
     final message = error.toString().toLowerCase();
     return message.contains('permission') ||
         message.contains('access denied') ||
@@ -1100,7 +1101,7 @@ class MemosListInlineComposeCoordinator extends ChangeNotifier {
   }
 
   bool _isWindowsNoCameraError(Object error) {
-    if (!Platform.isWindows) return false;
+    if (!isWindowsPlatform()) return false;
     final message = error.toString().toLowerCase();
     return message.contains('no camera') ||
         message.contains('no available camera') ||

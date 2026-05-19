@@ -924,7 +924,7 @@ class _AppleHomeBottomNavigationBar extends StatelessWidget {
                       onLongPressMoveUpdate: onAddLongPressMoveUpdate,
                       onLongPressEnd: onAddLongPressEnd,
                       child: CupertinoButton(
-                        minSize: 0,
+                        minimumSize: Size.zero,
                         padding: EdgeInsets.zero,
                         onPressed: () => unawaited(onAddPressed()),
                         child: Container(
@@ -1015,7 +1015,7 @@ class _AppleHomeBottomNavigationItem extends StatelessWidget {
     final color = selected ? activeColor : inactiveColor;
 
     return CupertinoButton(
-      minSize: 0,
+      minimumSize: Size.zero,
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
       onPressed: onTap,
       child: Semantics(

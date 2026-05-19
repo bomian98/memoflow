@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/memoflow_palette.dart';
+import '../../../platform/platform_icons.dart';
+import '../../../platform/widgets/platform_controls.dart';
 import '../../../i18n/strings.g.dart';
 import '../memos_list_header_controller.dart';
 import 'memos_list_search_widgets.dart';
@@ -57,7 +59,11 @@ class MemosListSortMenuButton extends StatelessWidget {
           SizedBox(
             width: 18,
             child: selected
-                ? Icon(Icons.check, size: 16, color: MemoFlowPalette.primary)
+                ? Icon(
+                    PlatformIcons.check,
+                    size: 16,
+                    color: MemoFlowPalette.primary,
+                  )
                 : const SizedBox.shrink(),
           ),
           const SizedBox(width: 8),
@@ -189,7 +195,7 @@ class MemosListTopSearchField extends StatelessWidget {
               : MemoFlowPalette.borderLight,
         ),
       ),
-      child: TextField(
+      child: PlatformTextField(
         controller: controller,
         focusNode: focusNode,
         autofocus: autofocus,
@@ -198,7 +204,7 @@ class MemosListTopSearchField extends StatelessWidget {
           hintText: hintText ?? context.t.strings.legacy.msg_search,
           border: InputBorder.none,
           isDense: true,
-          prefixIcon: const Icon(Icons.search, size: 18),
+          prefixIcon: Icon(PlatformIcons.search, size: 18),
           suffixIconConstraints: BoxConstraints(
             minWidth: suffixIconWidth,
             minHeight: 36,
@@ -213,7 +219,7 @@ class MemosListTopSearchField extends StatelessWidget {
                   tooltip: context.t.strings.legacy.msg_advanced_search,
                   onPressed: onOpenAdvancedFilters,
                   icon: Icon(
-                    Icons.filter_alt_outlined,
+                    PlatformIcons.filter,
                     size: 18,
                     color: hasAdvancedFilters ? MemoFlowPalette.primary : null,
                   ),
@@ -222,7 +228,7 @@ class MemosListTopSearchField extends StatelessWidget {
                   buildSearchActionButton(
                     tooltip: context.t.strings.legacy.msg_clear,
                     onPressed: controller.clear,
-                    icon: const Icon(Icons.close, size: 16),
+                    icon: Icon(PlatformIcons.close, size: 16),
                   ),
               ],
             ),

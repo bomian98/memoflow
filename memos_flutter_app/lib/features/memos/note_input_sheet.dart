@@ -25,6 +25,11 @@ import '../../data/models/memo.dart';
 import '../../data/models/memo_location.dart';
 import '../../data/models/memo_template_settings.dart';
 import '../../data/models/user_setting.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/platform_target.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_dialog.dart';
 import '../../state/settings/location_settings_provider.dart';
 import '../../state/memos/attachment_upload_size_limit_provider.dart';
 import '../../state/memos/memo_composer_controller.dart';
@@ -144,7 +149,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
     ShareVideoDownloadService? shareVideoDownloadService,
     ShareVideoCompressionService? shareVideoCompressionService,
   }) {
-    return showModalBottomSheet<void>(
+    return showPlatformActionSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -152,6 +157,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
       barrierColor: Theme.of(context).brightness == Brightness.dark
           ? Colors.black.withValues(alpha: 0.4)
           : Colors.black.withValues(alpha: 0.05),
+      showDragHandle: false,
       builder: (context) => NoteInputSheet(
         initialText: initialText,
         initialSelection: initialSelection,
@@ -725,30 +731,25 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     int fileSize,
     int maxBytes,
   ) async {
-    final result = await showDialog<bool>(
+    final result = await showPlatformAlertDialog<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(shareVideoAttachmentTooLargeTitle(context.t, maxBytes)),
-          content: Text(
-            shareVideoAttachmentTooLargeBody(
-              context.t,
-              fileSizeBytes: fileSize,
-              maxBytes: maxBytes,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(context.t.strings.common.cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(context.t.strings.shareClip.compressAndSave),
-            ),
-          ],
-        );
-      },
+      title: shareVideoAttachmentTooLargeTitle(context.t, maxBytes),
+      message: shareVideoAttachmentTooLargeBody(
+        context.t,
+        fileSizeBytes: fileSize,
+        maxBytes: maxBytes,
+      ),
+      actions: [
+        PlatformDialogAction<bool>(
+          value: false,
+          label: context.t.strings.common.cancel,
+        ),
+        PlatformDialogAction<bool>(
+          value: true,
+          label: context.t.strings.shareClip.compressAndSave,
+          isDefault: true,
+        ),
+      ],
     );
     return result ?? false;
   }
@@ -786,7 +787,8 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
 
   Future<void> _openDeferredVideoPreview(ShareDeferredVideoTask task) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => AttachmentVideoScreen(
           title: task.title,
           videoUrl: task.request.candidate.url,
@@ -1258,7 +1260,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
         (key == LogicalKeyboardKey.enter ||
             key == LogicalKeyboardKey.numpadEnter) &&
         _composer.applyDesktopSmartEnter(
-          lineBreak: Platform.isWindows ? '\r\n' : '\n',
+          lineBreak: isWindowsPlatform() ? '\r\n' : '\n',
         )) {
       setState(() {});
       return KeyEventResult.handled;
@@ -1412,7 +1414,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   }
 
   Future<void> _openWindowsCameraSettings() async {
-    if (!Platform.isWindows) return;
+    if (!isWindowsPlatform()) return;
     try {
       await Process.start('cmd', <String>[
         '/c',
@@ -1424,7 +1426,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   }
 
   bool _isWindowsCameraPermissionError(Object error) {
-    if (!Platform.isWindows) return false;
+    if (!isWindowsPlatform()) return false;
     final message = error.toString().toLowerCase();
     return message.contains('permission') ||
         message.contains('access denied') ||
@@ -1433,7 +1435,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
   }
 
   bool _isWindowsNoCameraError(Object error) {
-    if (!Platform.isWindows) return false;
+    if (!isWindowsPlatform()) return false;
     final message = error.toString().toLowerCase();
     return message.contains('no camera') ||
         message.contains('no available camera') ||
@@ -2231,7 +2233,8 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     final file = _resolvePendingAttachmentFile(attachment);
     if (file == null) return;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => AttachmentVideoScreen(
           title: attachment.filename,
           localFile: file,
@@ -2776,7 +2779,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
                                                 canRequestFocus: false,
                                                 onKeyEvent:
                                                     _handleTagAutocompleteKeyEvent,
-                                                child: TextField(
+                                                child: PlatformTextField(
                                                   controller: _controller,
                                                   focusNode: _editorFocusNode,
                                                   autofocus: widget.autoFocus,

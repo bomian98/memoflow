@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:window_manager/window_manager.dart';
 
 import '../../core/drawer_navigation.dart';
 import '../../core/memo_relations.dart';
@@ -28,6 +27,8 @@ import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memo_detail_screen.dart';
 import '../memos/memos_list_screen.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../i18n/strings.g.dart';
 
 enum _NotificationAction { markRead, delete }
@@ -49,7 +50,10 @@ class NotificationsScreen extends ConsumerWidget {
       return;
     }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const HomeEntryScreen()),
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const HomeEntryScreen(),
+      ),
       (route) => false,
     );
   }
@@ -109,7 +113,6 @@ class NotificationsScreen extends ConsumerWidget {
     final shouldInterceptPop = !useEmbeddedBottomNav;
     final isWindowsDesktop =
         Theme.of(context).platform == TargetPlatform.windows;
-    final enableWindowsDragToMove = isWindowsDesktop;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.memos,
       onSelect: (d) => _navigate(context, d),
@@ -221,22 +224,14 @@ class NotificationsScreen extends ConsumerWidget {
               leadingTitle: Text(context.t.strings.legacy.msg_notifications),
               body: pageBody,
             )
-          : Scaffold(
+      : PlatformPage(
               drawer: useDesktopSidePane ? null : drawerPanel,
               drawerEnableOpenDragGesture: !useEmbeddedBottomNav,
-              appBar: AppBar(
-                flexibleSpace: enableWindowsDragToMove
-                    ? const DragToMoveArea(child: SizedBox.expand())
-                    : null,
-                title: IgnorePointer(
-                  ignoring: enableWindowsDragToMove,
-                  child: Text(context.t.strings.legacy.msg_notifications),
-                ),
-                leading: IconButton(
-                  tooltip: context.t.strings.legacy.msg_back,
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => _backToHome(context),
-                ),
+              title: Text(context.t.strings.legacy.msg_notifications),
+              leading: IconButton(
+                tooltip: context.t.strings.legacy.msg_back,
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => _backToHome(context),
               ),
               body: useDesktopSidePane
                   ? Row(
@@ -360,7 +355,8 @@ class NotificationsScreen extends ConsumerWidget {
 
       final localMemo = _toLocalMemo(targetMemo);
       Navigator.of(context).push(
-        MaterialPageRoute<void>(
+        buildPlatformPageRoute<void>(
+          context: context,
           builder: (_) => MemoDetailScreen(
             initialMemo: localMemo,
             readOnly: true,

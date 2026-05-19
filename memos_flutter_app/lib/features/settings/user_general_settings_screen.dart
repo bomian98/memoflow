@@ -7,6 +7,9 @@ import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../core/windows_adaptive_surface.dart';
 import '../../data/models/user_setting.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/widgets/platform_action_sheet.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/memos/memos_providers.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/system/session_provider.dart';
@@ -154,7 +157,7 @@ class _UserGeneralSettingsScreenState
         builder: builder,
       );
     }
-    return showModalBottomSheet<String>(
+    return showPlatformActionSheet<String>(
       context: context,
       showDragHandle: true,
       builder: builder,
@@ -219,20 +222,13 @@ class _UserGeneralSettingsScreenState
 
     final settingsAsync = ref.watch(userGeneralSettingProvider);
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(context.t.strings.legacy.msg_user_general_settings),
-        centerTitle: false,
+      title: Text(context.t.strings.legacy.msg_user_general_settings),
+      leading: IconButton(
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: Icon(PlatformIcons.back),
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
       body: Stack(
         children: [
@@ -418,7 +414,7 @@ class _SelectRow extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w600, color: textMuted),
               ),
               const SizedBox(width: 6),
-              Icon(Icons.chevron_right, size: 18, color: textMuted),
+              Icon(PlatformIcons.chevronForward, size: 18, color: textMuted),
             ],
           ),
         ),

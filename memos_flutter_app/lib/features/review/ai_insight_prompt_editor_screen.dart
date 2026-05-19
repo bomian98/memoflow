@@ -8,6 +8,8 @@ import '../../core/memoflow_palette.dart';
 import '../../data/ai/ai_settings_models.dart';
 import '../../data/logs/log_manager.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import 'ai_custom_template_access.dart';
 import 'ai_insight_models.dart';
@@ -319,15 +321,9 @@ class _AiInsightPromptEditorScreenState
     final textMuted = textMain.withValues(alpha: isDark ? 0.66 : 0.58);
 
     if (_isCustomMode) {
-      return Scaffold(
+      return PlatformPage(
         backgroundColor: background,
-        appBar: AppBar(
-          backgroundColor: background,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          title: Text(_pageTitle()),
-        ),
+        title: Text(_pageTitle()),
         body: SafeArea(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -531,25 +527,19 @@ class _AiInsightPromptEditorScreenState
 
     final definition = definitionForInsight(widget.insightId);
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: background,
-      appBar: AppBar(
-        backgroundColor: background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(_pageTitle()),
-        actions: [
-          TextButton(
-            onPressed: _restoreDefaultPlaceholder,
-            child: Text(
-              Localizations.localeOf(context).languageCode.toLowerCase() == 'zh'
-                  ? '\u6062\u590d\u9ed8\u8ba4'
-                  : 'Restore Default',
-            ),
+      title: Text(_pageTitle()),
+      actions: [
+        TextButton(
+          onPressed: _restoreDefaultPlaceholder,
+          child: Text(
+            Localizations.localeOf(context).languageCode.toLowerCase() == 'zh'
+                ? '\u6062\u590d\u9ed8\u8ba4'
+                : 'Restore Default',
           ),
-        ],
-      ),
+        ),
+      ],
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
@@ -598,7 +588,7 @@ class _AiInsightPromptEditorScreenState
                     border: Border.all(color: border),
                   ),
                   padding: const EdgeInsets.all(16),
-                  child: TextField(
+                  child: PlatformTextField(
                     controller: _promptController,
                     expands: true,
                     minLines: null,
@@ -712,7 +702,7 @@ class _EditorFieldCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          TextField(
+          PlatformTextField(
             controller: controller,
             minLines: minLines,
             maxLines: maxLines,

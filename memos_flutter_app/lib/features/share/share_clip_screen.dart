@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../memos/attachment_video_screen.dart';
 import '../memos/memo_markdown.dart';
 import 'share_capture_engine.dart';
@@ -85,10 +87,9 @@ class _ShareClipScreenState extends State<ShareClipScreen> {
             '';
         final title = _resolveTitle(result);
         final isVideoPage = result?.isVideoPage ?? false;
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(context.t.strings.legacy.msg_preview),
-            actions: [
+        return PlatformPage(
+          title: Text(context.t.strings.legacy.msg_preview),
+          actions: [
               TextButton(
                 onPressed: state.phase == ShareClipPhase.composing
                     ? null
@@ -96,7 +97,6 @@ class _ShareClipScreenState extends State<ShareClipScreen> {
                 child: Text(context.t.strings.common.cancel),
               ),
             ],
-          ),
           body: SafeArea(
             child: Column(
               children: [
@@ -201,7 +201,8 @@ class _ShareClipScreenState extends State<ShareClipScreen> {
     final probe = await _probeCandidate(result, candidate);
     if (!mounted) return;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => AttachmentVideoScreen(
           title: candidate.title ?? _resolveTitle(result),
           videoUrl: candidate.url,

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/collection_reader.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_list_tile.dart';
 import 'collection_reader_panel.dart';
 import 'reader_platform_capabilities.dart';
 
@@ -158,11 +161,11 @@ class _CollectionReaderMoreSettingsSheetState
                   ),
                 ),
                 const SizedBox(height: 8),
-                ListTile(
+                PlatformListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(readerStrings.clickActionsTitle),
                   subtitle: Text(readerStrings.clickActionsSubtitle),
-                  trailing: const Icon(Icons.chevron_right_rounded),
+                  trailing: Icon(PlatformIcons.chevronForward),
                   onTap: widget.onOpenClickActions,
                 ),
               ],
@@ -204,14 +207,15 @@ class _CollectionReaderMoreSettingsSheetState
     required ValueChanged<bool> onChanged,
     bool enabled = true,
   }) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
+    return PlatformListTile(
       title: Text(title),
       subtitle: enabled
           ? null
           : Text(context.t.strings.collections.reader.platformUnavailable),
-      value: value,
-      onChanged: enabled ? onChanged : null,
+      trailing: PlatformSwitch(
+        value: value,
+        onChanged: enabled ? onChanged : null,
+      ),
     );
   }
 

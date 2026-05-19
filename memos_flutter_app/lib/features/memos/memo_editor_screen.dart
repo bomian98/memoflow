@@ -34,6 +34,10 @@ import '../../data/models/memo.dart';
 import '../../data/models/memo_location.dart';
 import '../../data/models/memo_template_settings.dart';
 import '../../data/repositories/scene_micro_guide_repository.dart';
+import '../../platform/platform_target.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_dialog.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../state/settings/location_settings_provider.dart';
 import '../../state/attachments/queued_attachment_stager_provider.dart';
 import '../../state/memos/memo_composer_controller.dart';
@@ -396,7 +400,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
         (key == LogicalKeyboardKey.enter ||
             key == LogicalKeyboardKey.numpadEnter) &&
         _composer.applyDesktopSmartEnter(
-          lineBreak: Platform.isWindows ? '\r\n' : '\n',
+          lineBreak: isWindowsPlatform() ? '\r\n' : '\n',
         )) {
       setState(() {});
       return KeyEventResult.handled;
@@ -817,21 +821,20 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
       }
 
       final shouldRestore =
-          await showDialog<bool>(
+          await showPlatformAlertDialog<bool>(
             context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: Text(dialogContext.t.strings.legacy.msg_restore_backup),
-              actions: [
-                TextButton(
-                  onPressed: () => dialogContext.safePop(false),
-                  child: Text(dialogContext.t.strings.legacy.msg_cancel_2),
-                ),
-                FilledButton(
-                  onPressed: () => dialogContext.safePop(true),
-                  child: Text(dialogContext.t.strings.legacy.msg_restore),
-                ),
-              ],
-            ),
+            title: context.t.strings.legacy.msg_restore_backup,
+            actions: [
+              PlatformDialogAction<bool>(
+                value: false,
+                label: context.t.strings.legacy.msg_cancel_2,
+              ),
+              PlatformDialogAction<bool>(
+                value: true,
+                label: context.t.strings.legacy.msg_restore,
+                isDefault: true,
+              ),
+            ],
           ) ??
           false;
       if (!mounted || !shouldRestore) {
@@ -932,34 +935,29 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   }
 
   Future<_EditorCloseDecision?> _showUnsavedEditCloseDialog() {
-    return showDialog<_EditorCloseDecision>(
+    return showPlatformAlertDialog<_EditorCloseDecision>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(dialogContext.tr(zh: '保存编辑草稿？', en: 'Save edit draft?')),
-        content: Text(
-          dialogContext.tr(
-            zh: '这条笔记有未保存的修改。你可以继续编辑、放弃修改，或加入草稿箱稍后继续。',
-            en: 'This memo has unsaved changes. Continue editing, discard them, or add the edit to Draft Box.',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () =>
-                dialogContext.safePop(_EditorCloseDecision.continueEditing),
-            child: Text(dialogContext.tr(zh: '继续编辑', en: 'Continue editing')),
-          ),
-          TextButton(
-            onPressed: () =>
-                dialogContext.safePop(_EditorCloseDecision.discard),
-            child: Text(dialogContext.tr(zh: '放弃修改', en: 'Discard changes')),
-          ),
-          FilledButton(
-            onPressed: () =>
-                dialogContext.safePop(_EditorCloseDecision.addToDraftBox),
-            child: Text(dialogContext.tr(zh: '加入草稿箱', en: 'Add to Draft Box')),
-          ),
-        ],
+      title: context.tr(zh: '保存编辑草稿？', en: 'Save edit draft?'),
+      message: context.tr(
+        zh: '这条笔记有未保存的修改。你可以继续编辑、放弃修改，或加入草稿箱稍后继续。',
+        en: 'This memo has unsaved changes. Continue editing, discard them, or add the edit to Draft Box.',
       ),
+      actions: [
+        PlatformDialogAction<_EditorCloseDecision>(
+          value: _EditorCloseDecision.continueEditing,
+          label: context.tr(zh: '继续编辑', en: 'Continue editing'),
+        ),
+        PlatformDialogAction<_EditorCloseDecision>(
+          value: _EditorCloseDecision.discard,
+          label: context.tr(zh: '放弃修改', en: 'Discard changes'),
+          isDestructive: true,
+        ),
+        PlatformDialogAction<_EditorCloseDecision>(
+          value: _EditorCloseDecision.addToDraftBox,
+          label: context.tr(zh: '加入草稿箱', en: 'Add to Draft Box'),
+          isDefault: true,
+        ),
+      ],
     );
   }
 
@@ -1435,7 +1433,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   }
 
   Future<void> _openWindowsCameraSettings() async {
-    if (!Platform.isWindows) return;
+    if (!isWindowsPlatform()) return;
     try {
       await Process.start('cmd', <String>[
         '/c',
@@ -1447,7 +1445,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   }
 
   bool _isWindowsCameraPermissionError(Object error) {
-    if (!Platform.isWindows) return false;
+    if (!isWindowsPlatform()) return false;
     final message = error.toString().toLowerCase();
     return message.contains('permission') ||
         message.contains('access denied') ||
@@ -1456,7 +1454,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   }
 
   bool _isWindowsNoCameraError(Object error) {
-    if (!Platform.isWindows) return false;
+    if (!isWindowsPlatform()) return false;
     final message = error.toString().toLowerCase();
     return message.contains('no camera') ||
         message.contains('no available camera') ||
@@ -2964,7 +2962,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
             child: Focus(
               canRequestFocus: false,
               onKeyEvent: onEditorKeyEvent,
-              child: TextField(
+              child: PlatformTextField(
                 key: _pageFullscreenTextFieldKey,
                 controller: _contentController,
                 focusNode: _editorFocusNode,
@@ -3187,8 +3185,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
         !sceneGuideState.isSeen(SceneMicroGuideId.memoEditorTagAutocomplete) &&
         _editorFocusNode.hasFocus &&
         tagStats.isNotEmpty;
-    final tagAutocompleteGuideMessage =
-        Platform.isWindows || Platform.isLinux || Platform.isMacOS
+    final tagAutocompleteGuideMessage = isDesktopPlatform()
         ? context
               .t
               .strings
@@ -3296,7 +3293,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
                           child: Focus(
                             canRequestFocus: false,
                             onKeyEvent: _handleTagAutocompleteKeyEvent,
-                            child: TextField(
+                            child: PlatformTextField(
                               controller: _contentController,
                               focusNode: _editorFocusNode,
                               autofocus: widget.autoFocus,
@@ -3610,16 +3607,11 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
       return wrappedComposeSurface;
     }
 
-    final page = Scaffold(
+    final page = PlatformPage(
+      safeArea: false,
       backgroundColor: background,
-      appBar: AppBar(
-        backgroundColor: background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(titleText),
-        actions: [pageFullscreenAction],
-      ),
+      title: Text(titleText),
+      actions: [pageFullscreenAction],
       body: wrappedComposeSurface,
     );
     return PopScope(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../platform/widgets/platform_controls.dart';
 import 'collection_reader_tokens.dart';
 
 class CollectionReaderSheetFrame extends StatelessWidget {
@@ -184,7 +185,7 @@ class CollectionReaderLabeledSlider extends StatelessWidget {
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
           ),
-          child: Slider(
+          child: PlatformSlider(
             value: value,
             min: min,
             max: max,

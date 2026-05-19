@@ -21,6 +21,10 @@ import '../../data/models/attachment.dart';
 import '../../data/models/content_fingerprint.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/memo_clip_card_metadata.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/platform_target.dart';
+import '../../platform/widgets/platform_dialog.dart';
 import '../../state/memos/memo_detail_providers.dart';
 import '../../state/memos/memo_clip_card_providers.dart';
 import '../../state/memos/memos_providers.dart';
@@ -496,7 +500,8 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     final memo = _memo;
     if (memo == null) return;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoReminderEditorScreen(memo: memo),
       ),
     );
@@ -530,7 +535,8 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     if (wasArchived) {
       final message = context.t.strings.legacy.msg_restored;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(
+        buildPlatformPageRoute<void>(
+          context: context,
           builder: (_) => MemosListScreen(
             title: 'MemoFlow',
             state: 'NORMAL',
@@ -593,6 +599,22 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     await _handleDetailAction(action);
   }
 
+  Future<void> _showDetailActionMenuFromAnchor(
+    BuildContext anchorContext,
+  ) async {
+    if (widget.readOnly) return;
+    final memo = _memo;
+    if (memo == null) return;
+    final action = await showMemoDetailActionPopover(
+      context: context,
+      memo: memo,
+      readOnly: widget.readOnly,
+      anchorContext: anchorContext,
+    );
+    if (!mounted || action == null) return;
+    await _handleDetailAction(action);
+  }
+
   Future<void> _edit() async {
     if (widget.readOnly || _isArchivedMemo()) return;
     final memo = _memo;
@@ -605,7 +627,10 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
       return;
     }
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => MemoEditorScreen(existing: memo)),
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => MemoEditorScreen(existing: memo),
+      ),
     );
     ref.invalidate(memoRelationsProvider(memo.uid));
     await _reload();
@@ -651,7 +676,8 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     final memo = _memo;
     if (memo == null) return;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoVersionsScreen(memoUid: memo.uid),
       ),
     );
@@ -664,28 +690,26 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     if (memo == null) return;
 
     final confirmed =
-        await showDialog<bool>(
+        await showPlatformAlertDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text(context.t.strings.legacy.msg_delete_memo),
-            content: Text(
-              context
-                  .t
-                  .strings
-                  .legacy
-                  .msg_removed_locally_now_deleted_server_when,
+          title: context.t.strings.legacy.msg_delete_memo,
+          message: context
+              .t
+              .strings
+              .legacy
+              .msg_removed_locally_now_deleted_server_when,
+          actions: [
+            PlatformDialogAction<bool>(
+              value: false,
+              label: context.t.strings.legacy.msg_cancel_2,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => context.safePop(false),
-                child: Text(context.t.strings.legacy.msg_cancel_2),
-              ),
-              FilledButton(
-                onPressed: () => context.safePop(true),
-                child: Text(context.t.strings.legacy.msg_delete),
-              ),
-            ],
-          ),
+            PlatformDialogAction<bool>(
+              value: true,
+              label: context.t.strings.legacy.msg_delete,
+              isDefault: true,
+              isDestructive: true,
+            ),
+          ],
         ) ??
         false;
     if (!confirmed) return;
@@ -1026,6 +1050,87 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
       ),
     );
 
+    final target = resolvePlatformTarget(context);
+    final usePlatformActionMenu =
+        target == PlatformTarget.iPhone ||
+        target == PlatformTarget.iPad ||
+        target == PlatformTarget.macOS;
+    final detailActions = widget.readOnly
+        ? null
+        : usePlatformActionMenu
+        ? [
+            Builder(
+              builder: (buttonContext) => IconButton(
+                key: memoDetailActionMenuRegionKey,
+                tooltip: context.t.strings.legacy.msg_more,
+                onPressed: () {
+                  maybeHaptic();
+                  unawaited(_showDetailActionMenuFromAnchor(buttonContext));
+                },
+                icon: Icon(PlatformIcons.more),
+              ),
+            ),
+          ]
+        : [
+            if (!isArchived)
+              IconButton(
+                tooltip: context.t.strings.legacy.msg_edit,
+                onPressed: () {
+                  maybeHaptic();
+                  unawaited(_edit());
+                },
+                icon: const Icon(Icons.edit),
+              ),
+            IconButton(
+              tooltip: context.t.strings.settings.preferences.history,
+              onPressed: () {
+                maybeHaptic();
+                unawaited(_openVersionHistory());
+              },
+              icon: const Icon(Icons.history),
+            ),
+            if (!isArchived)
+              IconButton(
+                tooltip: memo.pinned
+                    ? context.t.strings.legacy.msg_unpin
+                    : context.t.strings.legacy.msg_pin,
+                onPressed: () {
+                  maybeHaptic();
+                  unawaited(_togglePinned());
+                },
+                icon: Icon(
+                  memo.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                ),
+              ),
+            if (!isArchived)
+              IconButton(
+                tooltip: context.t.strings.collections.addToCollection,
+                onPressed: () {
+                  maybeHaptic();
+                  unawaited(_openAddToCollection());
+                },
+                icon: const Icon(Icons.library_add_rounded),
+              ),
+            IconButton(
+              tooltip: isArchived
+                  ? context.t.strings.legacy.msg_restore
+                  : context.t.strings.legacy.msg_archive,
+              onPressed: () {
+                maybeHaptic();
+                unawaited(_toggleArchived());
+              },
+              icon: Icon(isArchived ? Icons.unarchive : Icons.archive),
+            ),
+            IconButton(
+              tooltip: context.t.strings.legacy.msg_delete,
+              onPressed: () {
+                maybeHaptic();
+                unawaited(_delete());
+              },
+              icon: const Icon(Icons.delete_outline),
+            ),
+          ];
+
     return MemoDetailView(
       backgroundColor: cardColor,
       embedded: widget.embedded,
@@ -1035,67 +1140,7 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
             ? context.t.strings.legacy.msg_archived
             : context.t.strings.legacy.msg_memo,
       ),
-      actions: widget.readOnly
-          ? null
-          : [
-              if (!isArchived)
-                IconButton(
-                  tooltip: context.t.strings.legacy.msg_edit,
-                  onPressed: () {
-                    maybeHaptic();
-                    unawaited(_edit());
-                  },
-                  icon: const Icon(Icons.edit),
-                ),
-              IconButton(
-                tooltip: context.t.strings.settings.preferences.history,
-                onPressed: () {
-                  maybeHaptic();
-                  unawaited(_openVersionHistory());
-                },
-                icon: const Icon(Icons.history),
-              ),
-              if (!isArchived)
-                IconButton(
-                  tooltip: memo.pinned
-                      ? context.t.strings.legacy.msg_unpin
-                      : context.t.strings.legacy.msg_pin,
-                  onPressed: () {
-                    maybeHaptic();
-                    unawaited(_togglePinned());
-                  },
-                  icon: Icon(
-                    memo.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                  ),
-                ),
-              if (!isArchived)
-                IconButton(
-                  tooltip: context.t.strings.collections.addToCollection,
-                  onPressed: () {
-                    maybeHaptic();
-                    unawaited(_openAddToCollection());
-                  },
-                  icon: const Icon(Icons.library_add_rounded),
-                ),
-              IconButton(
-                tooltip: isArchived
-                    ? context.t.strings.legacy.msg_restore
-                    : context.t.strings.legacy.msg_archive,
-                onPressed: () {
-                  maybeHaptic();
-                  unawaited(_toggleArchived());
-                },
-                icon: Icon(isArchived ? Icons.unarchive : Icons.archive),
-              ),
-              IconButton(
-                tooltip: context.t.strings.legacy.msg_delete,
-                onPressed: () {
-                  maybeHaptic();
-                  unawaited(_delete());
-                },
-                icon: const Icon(Icons.delete_outline),
-              ),
-            ],
+      actions: detailActions,
       backgroundChild: Hero(
         tag: _heroTag,
         createRectTween: (begin, end) =>
@@ -1662,7 +1707,8 @@ class _MemoRelationsSection extends ConsumerWidget {
 
     if (!context.mounted) return;
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      buildPlatformPageRoute<void>(
+        context: context,
         builder: (_) => MemoDetailScreen(initialMemo: memo!),
       ),
     );
