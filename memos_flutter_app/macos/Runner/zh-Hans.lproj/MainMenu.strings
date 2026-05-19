@@ -43,8 +43,10 @@
 "tools.imageCompression" = "图片压缩";
 "tools.selfRepair" = "自修复";
 "tools.exportDiagnostics" = "导出诊断";
+"window.close" = "关闭";
 "window.minimize" = "最小化";
 "window.zoom" = "缩放";
+"window.fullScreen" = "进入全屏";
 "window.bringAllToFront" = "全部置于前面";
 "window.openSettings" = "打开设置窗口";
 "window.focusQuickInput" = "聚焦快速输入";

@@ -203,6 +203,13 @@ final class MemoFlowMenuBuilder {
 
   private func windowMenu() -> NSMenu {
     let menu = NSMenu(title: localized("menu.window", "Window"))
+    let closeItem = systemItem(
+      title: localized("window.close", "Close"),
+      action: #selector(NSWindow.performClose(_:)),
+      keyEquivalent: "w"
+    )
+    closeItem.keyEquivalentModifierMask = [.command]
+    menu.addItem(closeItem)
     menu.addItem(systemItem(
       title: localized("window.minimize", "Minimize"),
       action: #selector(NSWindow.performMiniaturize(_:)),
@@ -212,6 +219,14 @@ final class MemoFlowMenuBuilder {
       title: localized("window.zoom", "Zoom"),
       action: #selector(NSWindow.performZoom(_:))
     ))
+    menu.addItem(.separator())
+    let fullScreenItem = systemItem(
+      title: localized("window.fullScreen", "Enter Full Screen"),
+      action: #selector(NSWindow.toggleFullScreen(_:)),
+      keyEquivalent: "f"
+    )
+    fullScreenItem.keyEquivalentModifierMask = [.command, .control]
+    menu.addItem(fullScreenItem)
     menu.addItem(.separator())
     menu.addItem(systemItem(
       title: localized("window.bringAllToFront", "Bring All to Front"),

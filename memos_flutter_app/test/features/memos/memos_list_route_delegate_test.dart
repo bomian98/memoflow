@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -47,6 +48,30 @@ void main() {
       expect(fallbackOpenCount, 1);
     },
   );
+
+  testWidgets('openSettings falls back on macOS', (tester) async {
+    final previousPlatformOverride = debugDefaultTargetPlatformOverride;
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+
+    try {
+      final harness = await _pumpRouteDelegateHarness(
+        tester,
+        platform: TargetPlatform.macOS,
+      );
+      var fallbackOpenCount = 0;
+      final delegate = harness.buildDelegate(
+        openSettingsFallback: (_) async {
+          fallbackOpenCount++;
+        },
+      );
+
+      await delegate.openSettings();
+
+      expect(fallbackOpenCount, 1);
+    } finally {
+      debugDefaultTargetPlatformOverride = previousPlatformOverride;
+    }
+  });
 
   testWidgets('toggleMemoFlowVisibility uses tray branch when supported', (
     tester,
@@ -143,65 +168,64 @@ void main() {
     expect(sheetOpenCount, 0);
   });
 
-  testWidgets(
-    'openVoiceNoteInput uses desktop presenter on Windows platform',
-    (tester) async {
-      final harness = await _pumpRouteDelegateHarness(
-        tester,
-        platform: TargetPlatform.windows,
-      );
-      String? capturedInitialText;
-      List<String> capturedAttachmentPaths = const <String>[];
-      bool? capturedIgnoreDraft;
-      var sheetOpenCount = 0;
-      final delegate = harness.buildDelegate(
-        showVoiceRecordOverlay:
-            (
-              context, {
-              bool autoStart = true,
-              VoiceRecordOverlayDragSession? dragSession,
-              VoiceRecordMode mode = VoiceRecordMode.standard,
-            }) async {
-              return Future<VoiceRecordResult?>.value(
-                const VoiceRecordResult(
-                  filePath: '/tmp/voice.m4a',
-                  fileName: 'voice.m4a',
-                  size: 12,
-                  duration: Duration(seconds: 3),
-                  suggestedContent: 'Voice memo',
-                ),
-              );
-            },
-        showNoteInputSheet:
-            (
-              context, {
-              String? initialText,
-              List<String> initialAttachmentPaths = const <String>[],
-              bool ignoreDraft = false,
-            }) async {
-              sheetOpenCount++;
-            },
-        showWindowsDesktopNoteInput:
-            (
-              context, {
-              String? initialText,
-              List<String> initialAttachmentPaths = const <String>[],
-              bool ignoreDraft = false,
-            }) async {
-              capturedInitialText = initialText;
-              capturedAttachmentPaths = initialAttachmentPaths;
-              capturedIgnoreDraft = ignoreDraft;
-            },
-      );
+  testWidgets('openVoiceNoteInput uses desktop presenter on Windows platform', (
+    tester,
+  ) async {
+    final harness = await _pumpRouteDelegateHarness(
+      tester,
+      platform: TargetPlatform.windows,
+    );
+    String? capturedInitialText;
+    List<String> capturedAttachmentPaths = const <String>[];
+    bool? capturedIgnoreDraft;
+    var sheetOpenCount = 0;
+    final delegate = harness.buildDelegate(
+      showVoiceRecordOverlay:
+          (
+            context, {
+            bool autoStart = true,
+            VoiceRecordOverlayDragSession? dragSession,
+            VoiceRecordMode mode = VoiceRecordMode.standard,
+          }) async {
+            return Future<VoiceRecordResult?>.value(
+              const VoiceRecordResult(
+                filePath: '/tmp/voice.m4a',
+                fileName: 'voice.m4a',
+                size: 12,
+                duration: Duration(seconds: 3),
+                suggestedContent: 'Voice memo',
+              ),
+            );
+          },
+      showNoteInputSheet:
+          (
+            context, {
+            String? initialText,
+            List<String> initialAttachmentPaths = const <String>[],
+            bool ignoreDraft = false,
+          }) async {
+            sheetOpenCount++;
+          },
+      showWindowsDesktopNoteInput:
+          (
+            context, {
+            String? initialText,
+            List<String> initialAttachmentPaths = const <String>[],
+            bool ignoreDraft = false,
+          }) async {
+            capturedInitialText = initialText;
+            capturedAttachmentPaths = initialAttachmentPaths;
+            capturedIgnoreDraft = ignoreDraft;
+          },
+    );
 
-      await delegate.openVoiceNoteInput();
+    await delegate.openVoiceNoteInput();
 
-      expect(capturedInitialText, isNull);
-      expect(capturedAttachmentPaths, <String>['/tmp/voice.m4a']);
-      expect(capturedIgnoreDraft, isTrue);
-      expect(sheetOpenCount, 0);
-    },
-  );
+    expect(capturedInitialText, isNull);
+    expect(capturedAttachmentPaths, <String>['/tmp/voice.m4a']);
+    expect(capturedIgnoreDraft, isTrue);
+    expect(sheetOpenCount, 0);
+  });
 
   testWidgets('openVoiceNoteInput uses quick fab mode and forwards result', (
     tester,

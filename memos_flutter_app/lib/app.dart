@@ -54,6 +54,7 @@ import 'features/settings/local_network_migration_screen.dart';
 import 'features/settings/location_settings_screen.dart';
 import 'features/settings/memo_toolbar_settings_screen.dart';
 import 'features/settings/self_repair_screen.dart';
+import 'features/settings/settings_screen.dart';
 import 'features/settings/template_settings_screen.dart';
 import 'features/settings/webdav_sync_screen.dart';
 import 'features/share/clipboard_share_detector.dart';
@@ -460,9 +461,12 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
         await _pushMacosMenuRoute(const ExportLogsScreen());
         return;
       case macosMenuCommandOpenSettingsWindow:
-        openDesktopSettingsWindowIfSupported(
+        final opened = openDesktopSettingsWindowIfSupported(
           feedbackContext: _navigatorKey.currentContext,
         );
+        if (!opened) {
+          await _pushMacosMenuRoute(const SettingsScreen());
+        }
         return;
       case macosMenuCommandHelpCenter:
         await _openExternalUrl('https://memoflow.hzc073.com/help/');

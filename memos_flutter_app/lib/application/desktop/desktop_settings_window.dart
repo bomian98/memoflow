@@ -38,9 +38,7 @@ void _notifyDesktopSettingsWindowVisibility({
 bool supportsDesktopSettingsWindow() {
   if (kIsWeb) return false;
   return switch (defaultTargetPlatform) {
-    TargetPlatform.windows ||
-    TargetPlatform.linux ||
-    TargetPlatform.macOS => true,
+    TargetPlatform.windows || TargetPlatform.linux => true,
     _ => false,
   };
 }

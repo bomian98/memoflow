@@ -43,8 +43,10 @@
 "tools.imageCompression" = "Image Compression";
 "tools.selfRepair" = "Self Repair";
 "tools.exportDiagnostics" = "Export Diagnostics";
+"window.close" = "Close";
 "window.minimize" = "Minimize";
 "window.zoom" = "Zoom";
+"window.fullScreen" = "Enter Full Screen";
 "window.bringAllToFront" = "Bring All to Front";
 "window.openSettings" = "Open Settings Window";
 "window.focusQuickInput" = "Focus Quick Input";
