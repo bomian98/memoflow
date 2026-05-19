@@ -11,6 +11,14 @@ import '../../core/top_toast.dart';
 import '../../core/system_fonts.dart';
 import '../../core/theme_colors.dart';
 import '../../core/windows_adaptive_surface.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/platform_target.dart';
+import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_dialog.dart';
+import '../../platform/widgets/platform_grouped_list.dart';
+import '../../platform/widgets/platform_page.dart';
+import '../../platform/widgets/platform_picker.dart';
 import '../../data/models/app_preferences.dart';
 import '../../data/models/device_preferences.dart';
 import '../../i18n/strings.g.dart';
@@ -71,11 +79,7 @@ class PreferencesSettingsScreen extends ConsumerWidget {
       );
       return;
     }
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: selectionContent,
-    );
+    await showPlatformPicker<void>(context: context, builder: selectionContent);
   }
 
   Future<void> _selectEnumDialog<T>({
@@ -86,7 +90,7 @@ class PreferencesSettingsScreen extends ConsumerWidget {
     required T selected,
     required ValueChanged<T> onSelect,
   }) async {
-    await showDialog<void>(
+    await showPlatformDialog<void>(
       context: context,
       builder: (context) {
         return SimpleDialog(
@@ -189,11 +193,7 @@ class PreferencesSettingsScreen extends ConsumerWidget {
       );
       return;
     }
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: fontContent,
-    );
+    await showPlatformPicker<void>(context: context, builder: fontContent);
   }
 
   String _fontLabel(
@@ -273,24 +273,16 @@ class PreferencesSettingsScreen extends ConsumerWidget {
         )
         .toList(growable: false);
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: showBackButton,
-        leading: showBackButton
-            ? IconButton(
-                tooltip: context.t.strings.common.back,
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).maybePop(),
-              )
-            : null,
-        title: Text(context.t.strings.settings.preferences.title),
-        centerTitle: false,
-      ),
+      leading: showBackButton
+          ? IconButton(
+              tooltip: context.t.strings.common.back,
+              icon: Icon(PlatformIcons.back),
+              onPressed: () => Navigator.of(context).maybePop(),
+            )
+          : null,
+      title: Text(context.t.strings.settings.preferences.title),
       body: Stack(
         children: [
           if (isDark)
@@ -478,7 +470,8 @@ class PreferencesSettingsScreen extends ConsumerWidget {
                     textMain: textMain,
                     textMuted: textMuted,
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
+                      buildPlatformPageRoute<void>(
+                        context: context,
                         builder: (_) => const MemoToolbarSettingsScreen(),
                       ),
                     ),
@@ -554,6 +547,10 @@ class _Group extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final target = resolvePlatformTarget(context);
+    if (target == PlatformTarget.iPhone || target == PlatformTarget.iPad) {
+      return PlatformGroupedList(children: children);
+    }
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
@@ -695,14 +692,6 @@ class _ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final inactiveTrack = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.black.withValues(alpha: 0.12);
-    final inactiveThumb = isDark
-        ? Colors.white.withValues(alpha: 0.6)
-        : Colors.white;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
@@ -713,14 +702,7 @@ class _ToggleRow extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: Colors.white,
-            activeTrackColor: MemoFlowPalette.primary,
-            inactiveTrackColor: inactiveTrack,
-            inactiveThumbColor: inactiveThumb,
-          ),
+          PlatformSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );
@@ -1860,7 +1842,7 @@ class _HexInputRow extends StatelessWidget {
           dotWidget,
           const SizedBox(width: 8),
           Expanded(
-            child: TextField(
+            child: PlatformTextField(
               controller: controller,
               onChanged: onChanged,
               inputFormatters: [
@@ -2093,7 +2075,7 @@ class _SurfaceColorDialog extends StatefulWidget {
     required String title,
     required Color initial,
   }) {
-    return showDialog<Color>(
+    return showPlatformDialog<Color>(
       context: context,
       barrierDismissible: true,
       builder: (context) => _SurfaceColorDialog(title: title, initial: initial),

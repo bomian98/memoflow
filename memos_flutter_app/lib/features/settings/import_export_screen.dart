@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/memoflow_palette.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../import/import_flow_screens.dart';
@@ -39,24 +42,16 @@ class ImportExportScreen extends ConsumerWidget {
       }
     }
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: showBackButton,
-        leading: showBackButton
-            ? IconButton(
-                tooltip: context.t.strings.legacy.msg_back,
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).maybePop(),
-              )
-            : null,
-        title: Text(context.t.strings.legacy.msg_import_export),
-        centerTitle: false,
-      ),
+      leading: showBackButton
+          ? IconButton(
+              tooltip: context.t.strings.legacy.msg_back,
+              icon: Icon(PlatformIcons.back),
+              onPressed: () => Navigator.of(context).maybePop(),
+            )
+          : null,
+      title: Text(context.t.strings.legacy.msg_import_export),
       body: Stack(
         children: [
           if (isDark)
@@ -96,7 +91,8 @@ class ImportExportScreen extends ConsumerWidget {
                     onTap: () {
                       haptic();
                       Navigator.of(context).push(
-                        MaterialPageRoute<void>(
+                        buildPlatformPageRoute<void>(
+                          context: context,
                           builder: (_) => const ExportMemosScreen(),
                         ),
                       );
@@ -127,7 +123,8 @@ class ImportExportScreen extends ConsumerWidget {
                     onTap: () {
                       haptic();
                       Navigator.of(context).push(
-                        MaterialPageRoute<void>(
+                        buildPlatformPageRoute<void>(
+                          context: context,
                           builder: (_) => const ImportSourceScreen(),
                         ),
                       );
@@ -162,7 +159,8 @@ class ImportExportScreen extends ConsumerWidget {
                     onTap: () {
                       haptic();
                       Navigator.of(context).push(
-                        MaterialPageRoute<void>(
+                        buildPlatformPageRoute<void>(
+                          context: context,
                           builder: (_) => const LocalNetworkMigrationScreen(),
                         ),
                       );

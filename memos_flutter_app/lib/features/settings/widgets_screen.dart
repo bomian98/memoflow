@@ -5,6 +5,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../application/widgets/home_widget_service.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../i18n/strings.g.dart';
 
 class WidgetsScreen extends StatelessWidget {
@@ -106,24 +108,16 @@ class WidgetsScreen extends StatelessWidget {
       );
     }
 
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: showBackButton,
-        leading: showBackButton
-            ? IconButton(
-                tooltip: context.t.strings.legacy.msg_back,
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).maybePop(),
-              )
-            : null,
-        title: Text(context.t.strings.legacy.msg_widgets),
-        centerTitle: false,
-      ),
+      leading: showBackButton
+          ? IconButton(
+              tooltip: context.t.strings.legacy.msg_back,
+              icon: Icon(PlatformIcons.back),
+              onPressed: () => Navigator.of(context).maybePop(),
+            )
+          : null,
+      title: Text(context.t.strings.legacy.msg_widgets),
       body: isDark
           ? Stack(
               children: [

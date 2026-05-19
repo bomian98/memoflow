@@ -12,6 +12,12 @@ import '../../application/desktop/desktop_settings_window.dart';
 import '../../core/drawer_navigation.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/url.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/platform_target.dart';
+import '../../platform/widgets/platform_grouped_list.dart';
+import '../../platform/widgets/platform_list_tile.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../private_hooks/private_extension_bundle_provider.dart';
 import '../../state/system/local_library_provider.dart';
 import '../../state/settings/device_preferences_provider.dart';
@@ -141,6 +147,12 @@ class SettingsScreen extends ConsumerWidget
     final isWindowsDesktop =
         Theme.of(context).platform == TargetPlatform.windows;
     final enableAppBarDragToMove = enableDragToMove || enableWindowsDragToMove;
+    final platformTarget = resolvePlatformTarget(context);
+    final closeIcon =
+        platformTarget == PlatformTarget.iPhone ||
+            platformTarget == PlatformTarget.iPad
+        ? PlatformIcons.close
+        : Icons.close;
     final bg = isDark
         ? MemoFlowPalette.backgroundDark
         : MemoFlowPalette.backgroundLight;
@@ -177,6 +189,12 @@ class SettingsScreen extends ConsumerWidget
       if (hapticsEnabled) {
         HapticFeedback.selectionClick();
       }
+    }
+
+    void pushSettingsPage(WidgetBuilder builder) {
+      Navigator.of(
+        context,
+      ).push(buildPlatformPageRoute<void>(context: context, builder: builder));
     }
 
     final account = ref.watch(appSessionProvider).valueOrNull?.currentAccount;
@@ -224,11 +242,7 @@ class SettingsScreen extends ConsumerWidget
               avatarUrl: avatarUrl,
               onTap: () {
                 haptic();
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const AccountSecurityScreen(),
-                  ),
-                );
+                pushSettingsPage((_) => const AccountSecurityScreen());
               },
             ),
             const SizedBox(height: 14),
@@ -243,11 +257,7 @@ class SettingsScreen extends ConsumerWidget
                     label: context.t.strings.legacy.msg_stats,
                     onTap: () {
                       haptic();
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const StatsScreen(),
-                        ),
-                      );
+                      pushSettingsPage((_) => const StatsScreen());
                     },
                   ),
                 ),
@@ -261,11 +271,7 @@ class SettingsScreen extends ConsumerWidget
                     label: context.t.strings.legacy.msg_widgets,
                     onTap: () {
                       haptic();
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const WidgetsScreen(),
-                        ),
-                      );
+                      pushSettingsPage((_) => const WidgetsScreen());
                     },
                   ),
                 ),
@@ -279,11 +285,7 @@ class SettingsScreen extends ConsumerWidget
                     label: context.t.strings.legacy.msg_api_plugins,
                     onTap: () {
                       haptic();
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const ApiPluginsScreen(),
-                        ),
-                      );
+                      pushSettingsPage((_) => const ApiPluginsScreen());
                     },
                   ),
                 ),
@@ -301,11 +303,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const UserGuideScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const UserGuideScreen());
                   },
                 ),
               ],
@@ -322,11 +320,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const AccountSecurityScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const AccountSecurityScreen());
                   },
                 ),
                 _SettingRow(
@@ -336,11 +330,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const PreferencesSettingsScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const PreferencesSettingsScreen());
                   },
                 ),
                 if (isWindowsDesktop)
@@ -352,10 +342,8 @@ class SettingsScreen extends ConsumerWidget
                     textMuted: textMuted,
                     onTap: () {
                       haptic();
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const WindowsRelatedSettingsScreen(),
-                        ),
+                      pushSettingsPage(
+                        (_) => const WindowsRelatedSettingsScreen(),
                       );
                     },
                   ),
@@ -366,11 +354,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const AiSettingsScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const AiSettingsScreen());
                   },
                 ),
                 _SettingRow(
@@ -380,11 +364,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const PasswordLockScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const PasswordLockScreen());
                   },
                 ),
               ],
@@ -401,11 +381,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const LaboratoryScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const LaboratoryScreen());
                   },
                 ),
                 _SettingRow(
@@ -415,11 +391,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const ComponentsSettingsScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const ComponentsSettingsScreen());
                   },
                 ),
               ],
@@ -436,11 +408,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const FeedbackScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const FeedbackScreen());
                   },
                 ),
                 _SettingRow(
@@ -460,11 +428,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const ImportExportScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const ImportExportScreen());
                   },
                 ),
                 _SettingRow(
@@ -474,11 +438,7 @@ class SettingsScreen extends ConsumerWidget
                   textMuted: textMuted,
                   onTap: () {
                     haptic();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const AboutUsScreen(),
-                      ),
-                    );
+                    pushSettingsPage((_) => const AboutUsScreen());
                   },
                 ),
               ],
@@ -555,7 +515,7 @@ class SettingsScreen extends ConsumerWidget
                   if (!useEmbeddedBottomNav) ...[
                     IconButton(
                       tooltip: context.t.strings.legacy.msg_close,
-                      icon: const Icon(Icons.close),
+                      icon: Icon(closeIcon),
                       onPressed: () => _close(context),
                     ),
                     const SizedBox(width: 4),
@@ -570,37 +530,32 @@ class SettingsScreen extends ConsumerWidget
               ),
               body: pageBody,
             )
-          : Scaffold(
+          : PlatformPage(
               backgroundColor: bg,
               drawer: drawerPanel,
               drawerEnableOpenDragGesture: !useEmbeddedBottomNav,
-              appBar: showAppBar
-                  ? AppBar(
-                      flexibleSpace: enableAppBarDragToMove
-                          ? const DragToMoveArea(child: SizedBox.expand())
-                          : null,
-                      leading: useEmbeddedBottomNav
-                          ? AppDrawerMenuButton(
-                              tooltip:
-                                  context.t.strings.legacy.msg_toggle_sidebar,
-                              iconColor: textMain,
-                              badgeBorderColor: bg,
-                            )
-                          : IconButton(
-                              tooltip: context.t.strings.legacy.msg_close,
-                              icon: const Icon(Icons.close),
-                              onPressed: () => _close(context),
-                            ),
-                      title: IgnorePointer(
-                        ignoring: enableAppBarDragToMove,
-                        child: Text(context.t.strings.legacy.msg_settings),
-                      ),
-                      centerTitle: false,
-                      elevation: 0,
-                      scrolledUnderElevation: 0,
-                      backgroundColor: Colors.transparent,
-                      surfaceTintColor: Colors.transparent,
+              leading: showAppBar
+                  ? (useEmbeddedBottomNav
+                        ? AppDrawerMenuButton(
+                            tooltip:
+                                context.t.strings.legacy.msg_toggle_sidebar,
+                            iconColor: textMain,
+                            badgeBorderColor: bg,
+                          )
+                        : IconButton(
+                            tooltip: context.t.strings.legacy.msg_close,
+                            icon: Icon(closeIcon),
+                            onPressed: () => _close(context),
+                          ))
+                  : null,
+              title: showAppBar
+                  ? IgnorePointer(
+                      ignoring: enableAppBarDragToMove,
+                      child: Text(context.t.strings.legacy.msg_settings),
                     )
+                  : null,
+              toolbar: enableAppBarDragToMove
+                  ? const DragToMoveArea(child: SizedBox(height: 0))
                   : null,
               body: pageBody,
             ),
@@ -621,6 +576,10 @@ class _CardGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final target = resolvePlatformTarget(context);
+    if (target == PlatformTarget.iPhone || target == PlatformTarget.iPad) {
+      return PlatformGroupedList(children: children);
+    }
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
@@ -667,6 +626,25 @@ class _SettingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final target = resolvePlatformTarget(context);
+    if (target == PlatformTarget.iPhone || target == PlatformTarget.iPad) {
+      return PlatformListTile(
+        leading: Icon(icon, size: 20, color: textMuted),
+        title: Text(
+          label,
+          style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
+        ),
+        subtitle: subtitle == null || subtitle!.trim().isEmpty
+            ? null
+            : Text(subtitle!, style: TextStyle(fontSize: 12, color: textMuted)),
+        trailing: Icon(
+          PlatformIcons.chevronForward,
+          size: 18,
+          color: textMuted,
+        ),
+        onTap: onTap,
+      );
+    }
     return Material(
       color: Colors.transparent,
       child: InkWell(

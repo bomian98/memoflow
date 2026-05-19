@@ -5,6 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../application/legal/legal_consent_policy.dart';
 import '../../core/memoflow_palette.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../debug/debug_tools_screen.dart';
 import '../updates/donors_wall_screen.dart';
 import '../updates/release_notes_screen.dart';
@@ -24,24 +27,16 @@ class AboutUsScreen extends StatelessWidget {
     final bg = isDark
         ? MemoFlowPalette.backgroundDark
         : MemoFlowPalette.backgroundLight;
-    return Scaffold(
+    return PlatformPage(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: showBackButton,
-        leading: showBackButton
-            ? IconButton(
-                tooltip: context.t.strings.legacy.msg_back,
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).maybePop(),
-              )
-            : null,
-        title: Text(context.t.strings.legacy.msg_about),
-        centerTitle: false,
-      ),
+      leading: showBackButton
+          ? IconButton(
+              tooltip: context.t.strings.legacy.msg_back,
+              icon: Icon(PlatformIcons.back),
+              onPressed: () => Navigator.of(context).maybePop(),
+            )
+          : null,
+      title: Text(context.t.strings.legacy.msg_about),
       body: const AboutUsContent(),
     );
   }
@@ -70,9 +65,12 @@ class _AboutUsContentState extends State<AboutUsContent> {
     _lastDebugTapAt = now;
     if (_debugTapCount < 5) return;
     _debugTapCount = 0;
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const DebugToolsScreen()));
+    Navigator.of(context).push(
+      buildPlatformPageRoute<void>(
+        context: context,
+        builder: (_) => const DebugToolsScreen(),
+      ),
+    );
   }
 
   Future<void> _openExternalLink(BuildContext context, String rawUrl) async {
@@ -168,7 +166,10 @@ class _AboutUsContentState extends State<AboutUsContent> {
         subtitle: context.t.strings.legacy.msg_about_release_notes_subtitle,
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const ReleaseNotesScreen()),
+            buildPlatformPageRoute<void>(
+              context: context,
+              builder: (_) => const ReleaseNotesScreen(),
+            ),
           );
         },
       ),
@@ -184,7 +185,10 @@ class _AboutUsContentState extends State<AboutUsContent> {
         subtitle: context.t.strings.legacy.msg_about_contributors_subtitle,
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const DonorsWallScreen()),
+            buildPlatformPageRoute<void>(
+              context: context,
+              builder: (_) => const DonorsWallScreen(),
+            ),
           );
         },
       ),
