@@ -74,6 +74,49 @@ void main() {
     );
   });
 
+  test('public platform ui seam stays free of commercial branching', () async {
+    final platformDir = Directory(
+      '${repoRoot.path}${Platform.pathSeparator}memos_flutter_app${Platform.pathSeparator}lib${Platform.pathSeparator}platform',
+    );
+    if (!platformDir.existsSync()) {
+      return;
+    }
+
+    const forbiddenTerms = <String>[
+      'StoreKit',
+      'productId',
+      'receipt',
+      'buyout',
+      'familySharing',
+      'entitlement',
+      'paywall',
+      'AccessDecision.source',
+      'subscription',
+    ];
+
+    final violations = <String>[];
+    await for (final entry in platformDir.list(recursive: true, followLinks: false)) {
+      if (entry is! File || !entry.path.endsWith('.dart')) continue;
+      final contents = await entry.readAsString();
+      final relativePath = entry.path.replaceAll('\\', '/');
+
+      for (final term in forbiddenTerms) {
+        if (contents.contains(term)) {
+          violations.add('$relativePath: forbidden term $term');
+        }
+      }
+    }
+
+    expect(
+      violations,
+      isEmpty,
+      reason: violations.isEmpty
+          ? null
+          : 'platform UI seam must not contain commercial branching:\n'
+                '${violations.join('\n')}',
+    );
+  });
+
   test('legacy root lib duplicates stay removed', () {
     expect(
       File(

@@ -123,7 +123,8 @@ $restrictedShellFiles = @(
   'memos_flutter_app/lib/state/settings/preferences_provider.dart',
   'memos_flutter_app/lib/data/models/app_preferences.dart',
   'memos_flutter_app/lib/state/system/session_provider.dart',
-  'memos_flutter_app/lib/data/models/account.dart'
+  'memos_flutter_app/lib/data/models/account.dart',
+  'memos_flutter_app/lib/platform'
 )
 
 $strongTerms = @(
@@ -203,6 +204,36 @@ foreach ($term in $weakPatterns.Keys) {
 
 foreach ($path in $restrictedShellFiles) {
   if (-not (Test-Path $path)) {
+    continue
+  }
+
+  if ($path.EndsWith('/platform')) {
+    $platformFiles = Get-ChildItem -Path $path -Recurse -File -ErrorAction SilentlyContinue |
+      ForEach-Object { Normalize-Path $_.FullName.Replace($repoRoot + [System.IO.Path]::DirectorySeparatorChar, '') }
+    foreach ($platformFile in $platformFiles) {
+      foreach ($term in $restrictedCommercialPatterns.Keys) {
+        $pattern = $restrictedCommercialPatterns[$term]
+        foreach ($match in (Select-String -Path $platformFile -Pattern $pattern)) {
+          Add-Failure $failures "${platformFile}:$($match.LineNumber) restricted platform term '$term'"
+        }
+      }
+      $platformLines = Get-Content $platformFile
+      for ($index = 0; $index -lt $platformLines.Count; $index++) {
+        $line = $platformLines[$index]
+        $importPath = $null
+        if ($line -match "^import '([^']+)';$") {
+          $importPath = $Matches[1]
+        } elseif ($line -match '^import "([^"]+)";$') {
+          $importPath = $Matches[1]
+        }
+        if ($null -ne $importPath) {
+          if ($importPath -match 'package:memos_flutter_app/(features|state|application|data)/' -or
+              $importPath -match '(^|/)(features|state|application|data)/') {
+            Add-Failure $failures "${platformFile}:$($index + 1) platform import '$importPath'"
+          }
+        }
+      }
+    }
     continue
   }
 
