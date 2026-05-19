@@ -16,21 +16,21 @@
 
 ## 3. Settings Pilot
 
-- [ ] 3.1 Migrate `SettingsScreen` page chrome and primary list groups to `PlatformPage`, `PlatformGroupedList`, `PlatformListTile`, and `PlatformIcons` while preserving private extension settings entry rendering through the existing bundle seam.
-- [ ] 3.2 Migrate `PreferencesSettingsScreen` enum, font, theme, switch, slider, text input, color, and route interactions to platform picker / dialog / control wrappers.
-- [ ] 3.3 Migrate high-frequency settings child pages that are directly reachable from the main settings screen to platform page chrome and grouped list components where the change is low-risk.
-- [ ] 3.4 Update the migration inventory to mark the settings pilot complete, in progress, and pending areas explicitly.
-- [ ] 3.5 Add focused tests for settings shell behavior, private extension entry rendering, public commercial boundary preservation, and Apple grouped-list fallback behavior.
+- [x] 3.1 Migrate `SettingsScreen` page chrome and primary list groups to `PlatformPage`, `PlatformGroupedList`, `PlatformListTile`, and `PlatformIcons` while preserving private extension settings entry rendering through the existing bundle seam.
+- [x] 3.2 Migrate `PreferencesSettingsScreen` enum, font, theme, switch, slider, text input, color, and route interactions to platform picker / dialog / control wrappers.
+- [x] 3.3 Migrate high-frequency settings child pages that are directly reachable from the main settings screen to platform page chrome and grouped list components where the change is low-risk.
+- [x] 3.4 Update the migration inventory to mark the settings pilot complete, in progress, and pending areas explicitly.
+- [x] 3.5 Add focused tests for settings shell behavior, private extension entry rendering, public commercial boundary preservation, and Apple grouped-list fallback behavior.
 
 ## 4. Apple Shells
 
-- [ ] 4.1 Update `HomeEntryScreen` or its composition boundary so iOS, iPadOS, macOS, Android, Windows, Linux, and web choose the correct shell without duplicating feature pages.
-- [ ] 4.2 Implement Apple mobile shell for iPhone-sized layouts with Apple-style tab / primary navigation, safe-area handling, route behavior, and no Android drawer-first presentation.
-- [ ] 4.3 Implement Apple tablet shell for iPadOS / tablet-sized Apple layouts with sidebar or split-view navigation and narrow-width fallback.
-- [ ] 4.4 Implement Apple desktop shell for macOS with independent sidebar, toolbar, menu / shortcut / window semantics, and no final dependency on Windows window controls.
-- [ ] 4.5 Refactor `DesktopShellHost` or equivalent desktop composition so Windows-specific shell code stays in Windows-owned files and macOS shell code is separately owned.
-- [ ] 4.6 Update app-level theme / scroll / safe-area behavior so Apple shells respect dark mode, platform scrolling expectations, and dynamic text constraints without regressing Android / Windows.
-- [ ] 4.7 Add widget or architecture tests covering shell selection, destination reuse, and Windows / macOS shell separation.
+- [x] 4.1 Update `HomeEntryScreen` or its composition boundary so iOS, iPadOS, macOS, Android, Windows, Linux, and web choose the correct shell without duplicating feature pages.
+- [x] 4.2 Implement Apple mobile shell for iPhone-sized layouts with Apple-style tab / primary navigation, safe-area handling, route behavior, and no Android drawer-first presentation.
+- [x] 4.3 Implement Apple tablet shell for iPadOS / tablet-sized Apple layouts with sidebar or split-view navigation and narrow-width fallback.
+- [x] 4.4 Implement Apple desktop shell for macOS with independent sidebar, toolbar, menu / shortcut / window semantics, and no final dependency on Windows window controls.
+- [x] 4.5 Refactor `DesktopShellHost` or equivalent desktop composition so Windows-specific shell code stays in Windows-owned files and macOS shell code is separately owned.
+- [x] 4.6 Update app-level theme / scroll / safe-area behavior so Apple shells respect dark mode, platform scrolling expectations, and dynamic text constraints without regressing Android / Windows.
+- [x] 4.7 Add widget or architecture tests covering shell selection, destination reuse, and Windows / macOS shell separation.
 
 ## 5. Memo Main Flow
 
