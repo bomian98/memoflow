@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,8 @@ import '../../core/memoflow_palette.dart';
 import '../../core/tags.dart';
 import '../../core/top_toast.dart';
 import '../../data/models/home_navigation_preferences.dart';
+import '../../platform/platform_icons.dart';
+import '../../platform/platform_target.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
 import '../../state/system/session_provider.dart';
@@ -89,7 +92,9 @@ class _HomeBottomNavShellState extends ConsumerState<HomeBottomNavShell>
 
   bool _isMobileNativePlatform() {
     if (kIsWeb) return false;
-    return defaultTargetPlatform == TargetPlatform.android;
+    final target = resolvePlatformTarget(context);
+    return defaultTargetPlatform == TargetPlatform.android ||
+        target == PlatformTarget.iPhone;
   }
 
   void _switchDestination(
@@ -758,6 +763,20 @@ class _HomeBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final target = resolvePlatformTarget(context);
+    if (target == PlatformTarget.iPhone) {
+      return _AppleHomeBottomNavigationBar(
+        resolved: resolved,
+        activeDestination: activeDestination,
+        onSelectDestination: onSelectDestination,
+        onAddPressed: onAddPressed,
+        onAddLongPressStart: onAddLongPressStart,
+        onAddLongPressMoveUpdate: onAddLongPressMoveUpdate,
+        onAddLongPressEnd: onAddLongPressEnd,
+        hapticsEnabled: hapticsEnabled,
+      );
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark
         ? MemoFlowPalette.cardDark
@@ -831,6 +850,193 @@ class _HomeBottomNavigationBar extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppleHomeBottomNavigationBar extends StatelessWidget {
+  const _AppleHomeBottomNavigationBar({
+    required this.resolved,
+    required this.activeDestination,
+    required this.onSelectDestination,
+    required this.onAddPressed,
+    required this.onAddLongPressStart,
+    required this.onAddLongPressMoveUpdate,
+    required this.onAddLongPressEnd,
+    required this.hapticsEnabled,
+  });
+
+  final ResolvedHomeNavigationPreferences resolved;
+  final HomeRootDestination activeDestination;
+  final ValueChanged<HomeRootDestination> onSelectDestination;
+  final Future<void> Function() onAddPressed;
+  final Future<void> Function(LongPressStartDetails details)?
+  onAddLongPressStart;
+  final void Function(LongPressMoveUpdateDetails details)?
+  onAddLongPressMoveUpdate;
+  final void Function(LongPressEndDetails details)? onAddLongPressEnd;
+  final bool hapticsEnabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final background = CupertinoDynamicColor.resolve(
+      CupertinoColors.systemBackground.withValues(alpha: isDark ? 0.9 : 0.96),
+      context,
+    );
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.black.withValues(alpha: 0.12);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        border: Border(top: BorderSide(color: borderColor)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 58,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _AppleHomeBottomNavigationSlot(
+                    destination: resolved.leftPrimary,
+                    activeDestination: activeDestination,
+                    onSelectDestination: onSelectDestination,
+                  ),
+                ),
+                Expanded(
+                  child: _AppleHomeBottomNavigationSlot(
+                    destination: resolved.leftSecondary,
+                    activeDestination: activeDestination,
+                    onSelectDestination: onSelectDestination,
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: GestureDetector(
+                      onLongPressStart: onAddLongPressStart,
+                      onLongPressMoveUpdate: onAddLongPressMoveUpdate,
+                      onLongPressEnd: onAddLongPressEnd,
+                      child: CupertinoButton(
+                        minSize: 0,
+                        padding: EdgeInsets.zero,
+                        onPressed: () => unawaited(onAddPressed()),
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: MemoFlowPalette.primary,
+                            border: Border.all(color: background, width: 2),
+                          ),
+                          child: Icon(
+                            PlatformIcons.add,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _AppleHomeBottomNavigationSlot(
+                    destination: resolved.rightPrimary,
+                    activeDestination: activeDestination,
+                    onSelectDestination: onSelectDestination,
+                  ),
+                ),
+                Expanded(
+                  child: _AppleHomeBottomNavigationSlot(
+                    destination: resolved.rightSecondary,
+                    activeDestination: activeDestination,
+                    onSelectDestination: onSelectDestination,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppleHomeBottomNavigationSlot extends StatelessWidget {
+  const _AppleHomeBottomNavigationSlot({
+    required this.destination,
+    required this.activeDestination,
+    required this.onSelectDestination,
+  });
+
+  final HomeRootDestination destination;
+  final HomeRootDestination activeDestination;
+  final ValueChanged<HomeRootDestination> onSelectDestination;
+
+  @override
+  Widget build(BuildContext context) {
+    if (destination == HomeRootDestination.none) {
+      return const SizedBox.shrink();
+    }
+    return _AppleHomeBottomNavigationItem(
+      destination: destination,
+      selected: destination == activeDestination,
+      onTap: () => onSelectDestination(destination),
+    );
+  }
+}
+
+class _AppleHomeBottomNavigationItem extends StatelessWidget {
+  const _AppleHomeBottomNavigationItem({
+    required this.destination,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final HomeRootDestination destination;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final definition = homeRootDestinationDefinition(destination);
+    if (definition == null) {
+      return const SizedBox.shrink();
+    }
+
+    final activeColor = CupertinoTheme.of(context).primaryColor;
+    final inactiveColor = CupertinoColors.secondaryLabel.resolveFrom(context);
+    final color = selected ? activeColor : inactiveColor;
+
+    return CupertinoButton(
+      minSize: 0,
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+      onPressed: onTap,
+      child: Semantics(
+        selected: selected,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(definition.icon, color: color, size: 21),
+            const SizedBox(height: 2),
+            Text(
+              definition.labelBuilder(context),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                height: 1,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/platform_layout.dart';
 import '../app_drawer.dart';
+import 'apple_macos_page_shell.dart';
 import 'windows_desktop_page_shell.dart';
 export 'windows_desktop_workspace_shell.dart'
     show
@@ -59,6 +60,29 @@ class DesktopShellHost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Theme.of(context).platform == TargetPlatform.macOS) {
+      return AppleMacosPageShell(
+        navigationBuilder: navigationBuilder,
+        leadingTitle: leadingTitle,
+        body: body,
+        commandBar: commandBar,
+        center: center,
+        trailing: trailing,
+        secondaryPane: secondaryPane,
+        secondaryPaneVisible: secondaryPaneVisible,
+        secondaryPaneWidth: secondaryPaneWidth,
+        secondaryPanePresentation: secondaryPanePresentation,
+        secondaryPaneMotionSpec: secondaryPaneMotionSpec,
+        onSecondaryPaneWidthChanged: onSecondaryPaneWidthChanged,
+        modalSurface: modalSurface,
+        modalSurfaceVisible: modalSurfaceVisible,
+        modalBarrierColor: modalBarrierColor,
+        modalBarrierBlurSigma: modalBarrierBlurSigma,
+        modalSurfaceMotionSpec: modalSurfaceMotionSpec,
+        backgroundColor: backgroundColor,
+      );
+    }
+
     return WindowsDesktopPageShell(
       navigationBuilder: navigationBuilder,
       leadingTitle: leadingTitle,

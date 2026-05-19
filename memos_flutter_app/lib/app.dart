@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui' show ImageFilter, PointerDeviceKind;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -64,6 +64,7 @@ import 'features/updates/announcement_dialog_presenter.dart';
 import 'features/updates/release_notes_screen.dart';
 import 'application/widgets/home_widget_service.dart';
 import 'i18n/strings.g.dart';
+import 'platform/platform_scroll_behavior.dart';
 import 'private_hooks/private_extension_bundle_provider.dart';
 import 'presentation/navigation/app_navigator.dart';
 import 'presentation/reminders/reminder_tap_handler.dart';
@@ -804,15 +805,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
           buildAppTheme(Brightness.dark),
           deviceLegacyPrefs,
         ),
-        scrollBehavior: const MaterialScrollBehavior().copyWith(
-          dragDevices: {
-            PointerDeviceKind.touch,
-            PointerDeviceKind.mouse,
-            PointerDeviceKind.stylus,
-            PointerDeviceKind.invertedStylus,
-            PointerDeviceKind.trackpad,
-          },
-        ),
+        scrollBehavior: const PlatformAppScrollBehavior(),
         themeMode: themeMode,
         locale: appLocale.flutterLocale,
         navigatorKey: _navigatorKey,
