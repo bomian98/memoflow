@@ -34,31 +34,31 @@
 
 ## 5. Memo Main Flow
 
-- [ ] 5.1 Migrate `MemosListScreen` and `MemosListScreenBody` page chrome, list header, search entry, quick actions, more menu, drawer/sidebar hooks, route pushes, and primary actions to platform UI adapters.
-- [ ] 5.2 Migrate memo card and memo detail high-perception actions such as more menu, share, edit, delete, archive, restore, relation, visibility, and destructive confirmation to platform action sheet / dialog APIs.
-- [ ] 5.3 Migrate `MemoEditorScreen` page chrome, close / save / discard flows, toolbar actions, picker actions, route behavior, safe area, keyboard avoidance, and desktop modal presentation to platform adapters.
-- [ ] 5.4 Migrate `NoteInputSheet` and compose-related transient UI to platform action sheet / picker / dialog / text field wrappers while preserving draft, attachment, location, template, and tag-autocomplete behavior.
-- [ ] 5.5 Remove or centralize iOS / macOS platform checks discovered in memo flow pages into `platform/` target or UI adapter APIs.
-- [ ] 5.6 Add focused tests for memo list shell behavior, action menu semantics, editor close decisions, note input presentation, and route fallback.
+- [x] 5.1 Migrate `MemosListScreen` and `MemosListScreenBody` page chrome, list header, search entry, quick actions, more menu, drawer/sidebar hooks, route pushes, and primary actions to platform UI adapters.
+- [x] 5.2 Migrate memo card and memo detail high-perception actions such as more menu, share, edit, delete, archive, restore, relation, visibility, and destructive confirmation to platform action sheet / dialog APIs.
+- [x] 5.3 Migrate `MemoEditorScreen` page chrome, close / save / discard flows, toolbar actions, picker actions, route behavior, safe area, keyboard avoidance, and desktop modal presentation to platform adapters.
+- [x] 5.4 Migrate `NoteInputSheet` and compose-related transient UI to platform action sheet / picker / dialog / text field wrappers while preserving draft, attachment, location, template, and tag-autocomplete behavior.
+- [x] 5.5 Remove or centralize iOS / macOS platform checks discovered in memo flow pages into `platform/` target or UI adapter APIs.
+- [x] 5.6 Add focused tests for memo list shell behavior, action menu semantics, editor close decisions, note input presentation, and route fallback.
 
 ## 6. Remaining Feature Coverage
 
-- [ ] 6.1 Migrate WebDAV and high-density settings pages to platform page, grouped list, picker, dialog, switch, text input, and destructive action wrappers.
-- [ ] 6.2 Migrate collections and reader flows where they use page chrome, empty-state actions, reader settings sheets, sliders, menus, and route pushes.
-- [ ] 6.3 Migrate reminders, review, stats, resources, notifications, share, import, onboarding, lock, image preview, and debug flows for high-perception Apple UI components.
-- [ ] 6.4 Replace high-frequency direct `MaterialPageRoute`, `AlertDialog`, `SimpleDialog`, `showModalBottomSheet`, `PopupMenuButton`, `DropdownButton`, and direct Material control usage in migrated flows with platform adapters or document accepted exceptions.
-- [ ] 6.5 Update the migration inventory after each remaining feature batch with complete / in-progress / pending status.
+- [x] 6.1 Migrate WebDAV and high-density settings pages to platform page, grouped list, picker, dialog, switch, text input, and destructive action wrappers.
+- [x] 6.2 Migrate collections and reader flows where they use page chrome, empty-state actions, reader settings sheets, sliders, menus, and route pushes.
+- [x] 6.3 Migrate reminders, review, stats, resources, notifications, share, import, onboarding, lock, image preview, and debug flows for high-perception Apple UI components.
+- [x] 6.4 Replace high-frequency direct `MaterialPageRoute`, `AlertDialog`, `SimpleDialog`, `showModalBottomSheet`, `PopupMenuButton`, `DropdownButton`, and direct Material control usage in migrated flows with platform adapters or document accepted exceptions.
+- [x] 6.5 Update the migration inventory after each remaining feature batch with complete / in-progress / pending status.
 
 ## 7. macOS App Store Experience
 
-- [ ] 7.1 Ensure macOS shell exposes App Store-appropriate menu, command, shortcut, close / minimize / fullscreen, window restoration, and toolbar behavior without adding private commercial release automation.
-- [ ] 7.2 Verify macOS public shell metadata and UI code remain free of StoreKit, entitlement, receipt, product, price, paywall, signing secret, notarization, TestFlight, or App Store Connect configuration leakage.
-- [ ] 7.3 Add or update focused macOS desktop behavior tests where practical, and document manual verification steps for behavior that cannot be covered by Flutter tests.
+- [x] 7.1 Ensure macOS shell exposes App Store-appropriate menu, command, shortcut, close / minimize / fullscreen, window restoration, and toolbar behavior without adding private commercial release automation.
+- [x] 7.2 Verify macOS public shell metadata and UI code remain free of StoreKit, entitlement, receipt, product, price, paywall, signing secret, notarization, TestFlight, or App Store Connect configuration leakage.
+- [x] 7.3 Add or update focused macOS desktop behavior tests where practical, and document manual verification steps for behavior that cannot be covered by Flutter tests.
 
 ## 8. Completion and Verification
 
-- [ ] 8.1 Run `flutter analyze` from `memos_flutter_app` and resolve or document any unrelated pre-existing issues.
-- [ ] 8.2 Run focused widget / architecture tests added by this change.
-- [ ] 8.3 Run `flutter test` from `memos_flutter_app`, or document any local blocker and residual risk.
-- [ ] 8.4 Run the relevant public commercial guardrail scan and architecture dependency guardrail tests.
-- [ ] 8.5 Produce a final Apple UI migration completion report listing all high-perception areas, their status, accepted exceptions, verification commands, and remaining risks.
+- [x] 8.1 Run `flutter analyze` from `memos_flutter_app` and resolve or document any unrelated pre-existing issues.
+- [x] 8.2 Run focused widget / architecture tests added by this change.
+- [x] 8.3 Run `flutter test` from `memos_flutter_app`, or document any local blocker and residual risk.
+- [x] 8.4 Run the relevant public commercial guardrail scan and architecture dependency guardrail tests.
+- [x] 8.5 Produce a final Apple UI migration completion report listing all high-perception areas, their status, accepted exceptions, verification commands, and remaining risks.
