@@ -148,7 +148,15 @@ void main() {
       expect(find.text('Bundle supplied entry'), findsOneWidget);
       expect(find.byIcon(Icons.workspace_premium_rounded), findsNothing);
 
-      await tester.tap(find.text('Private Entry'));
+      tester
+          .widget<ListTile>(
+            find.ancestor(
+              of: find.text('Private Entry'),
+              matching: find.byType(ListTile),
+            ),
+          )
+          .onTap
+          ?.call();
       await tester.pump();
 
       expect(tapped, isTrue);

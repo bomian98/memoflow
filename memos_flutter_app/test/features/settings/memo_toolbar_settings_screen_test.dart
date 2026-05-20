@@ -16,6 +16,7 @@ import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/features/settings/memo_toolbar_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/preferences_settings_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
+import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_migration_service.dart';
@@ -25,6 +26,10 @@ import 'package:memos_flutter_app/state/system/system_fonts_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  tearDown(() {
+    debugPlatformTargetOverride = null;
+  });
 
   testWidgets('opens toolbar settings from preferences screen', (tester) async {
     final container = _createContainer(includeSession: true);
@@ -37,11 +42,15 @@ void main() {
     );
     await tester.scrollUntilVisible(
       toolbarEntry,
-      200,
+      260,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.ensureVisible(toolbarEntry);
-    tester.widget<InkWell>(toolbarEntry).onTap?.call();
+    final tile = find.descendant(
+      of: toolbarEntry,
+      matching: find.byType(ListTile),
+    );
+    tester.widget<ListTile>(tile).onTap?.call();
     await tester.pumpAndSettle();
 
     expect(find.byType(MemoToolbarSettingsScreen), findsOneWidget);
@@ -62,6 +71,7 @@ void main() {
   testWidgets('launch action opens centered dialog and supports Explore', (
     tester,
   ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
     final container = _createContainer(includeSession: true);
     addTearDown(container.dispose);
 
@@ -76,7 +86,8 @@ void main() {
     await tester.tap(launchAction);
     await tester.pumpAndSettle();
 
-    expect(find.byType(SimpleDialog), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
     expect(find.text('Explore'), findsOneWidget);
   });
 
@@ -134,7 +145,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        container.read(currentWorkspacePreferencesProvider).memoToolbarPreferences,
+        container
+            .read(currentWorkspacePreferencesProvider)
+            .memoToolbarPreferences,
         MemoToolbarPreferences.defaults,
       );
     },
@@ -524,7 +537,8 @@ class _TestAppPreferencesController extends AppPreferencesController {
   }
 }
 
-class _TestWorkspacePreferencesRepository extends WorkspacePreferencesRepository {
+class _TestWorkspacePreferencesRepository
+    extends WorkspacePreferencesRepository {
   _TestWorkspacePreferencesRepository({MemoToolbarPreferences? initialPrefs})
     : _prefs = WorkspacePreferences.defaults.copyWith(
         memoToolbarPreferences: initialPrefs ?? MemoToolbarPreferences.defaults,
@@ -552,7 +566,8 @@ class _TestWorkspacePreferencesRepository extends WorkspacePreferencesRepository
   }
 }
 
-class _TestWorkspacePreferencesController extends WorkspacePreferencesController {
+class _TestWorkspacePreferencesController
+    extends WorkspacePreferencesController {
   _TestWorkspacePreferencesController(super.ref, super.repo)
     : super(
         onLoaded: () {

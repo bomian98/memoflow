@@ -1,0 +1,292 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:memos_flutter_app/core/storage_read.dart';
+import 'package:memos_flutter_app/data/models/account.dart';
+import 'package:memos_flutter_app/data/models/app_preferences.dart';
+import 'package:memos_flutter_app/data/models/device_preferences.dart';
+import 'package:memos_flutter_app/data/models/instance_profile.dart';
+import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
+import 'package:memos_flutter_app/features/settings/preferences_settings_screen.dart';
+import 'package:memos_flutter_app/features/settings/settings_screen.dart';
+import 'package:memos_flutter_app/i18n/strings.g.dart';
+import 'package:memos_flutter_app/platform/platform_target.dart';
+import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
+import 'package:memos_flutter_app/state/settings/preferences_migration_service.dart';
+import 'package:memos_flutter_app/state/settings/workspace_preferences_provider.dart';
+import 'package:memos_flutter_app/state/system/session_provider.dart';
+import 'package:memos_flutter_app/state/system/system_fonts_provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    LocaleSettings.setLocale(AppLocale.en);
+    PackageInfo.setMockInitialValues(
+      appName: 'MemoFlow',
+      packageName: 'dev.memoflow.test',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+      installerStore: null,
+    );
+  });
+
+  tearDown(() {
+    debugPlatformTargetOverride = null;
+  });
+
+  testWidgets('settings center is bounded and dense on desktop', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(1200, 900));
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+
+    await tester.pumpWidget(_buildApp(child: const SettingsScreen()));
+    await tester.pumpAndSettle();
+
+    final bounded = find.byKey(
+      const ValueKey<String>('settings.boundedContent'),
+    );
+
+    expect(bounded, findsOneWidget);
+    expect(tester.getSize(bounded).width, lessThanOrEqualTo(760));
+    expect(
+      tester
+          .widgetList<ListTile>(find.byType(ListTile))
+          .any((row) => row.dense == true),
+      isTrue,
+    );
+  });
+
+  testWidgets('preferences uses apple grouped list rows on iPhone', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(390, 844));
+    debugPlatformTargetOverride = TargetPlatform.iOS;
+
+    await tester.pumpWidget(
+      _buildApp(child: const PreferencesSettingsScreen()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CupertinoListSection), findsWidgets);
+    expect(find.byType(CupertinoListTile), findsWidgets);
+  });
+
+  testWidgets('preferences enum choices use desktop picker dialog', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(1200, 900));
+    debugPlatformTargetOverride = TargetPlatform.windows;
+
+    await tester.pumpWidget(
+      _buildApp(child: const PreferencesSettingsScreen()),
+    );
+    await tester.pumpAndSettle();
+
+    final fontSize = find.text('Font Size').first;
+    await tester.tap(fontSize);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.text('Large'), findsOneWidget);
+  });
+
+  test('settings public shell stays free of commercial branching terms', () {
+    const files = [
+      'lib/features/settings/settings_screen.dart',
+      'lib/features/settings/preferences_settings_screen.dart',
+    ];
+    const blocked = [
+      'AccessDecision.source',
+      'StoreKit',
+      'subscription',
+      'entitlement',
+      'receipt',
+      'paywall',
+      'productId',
+    ];
+
+    for (final path in files) {
+      final source = File(path).readAsStringSync();
+      for (final term in blocked) {
+        expect(
+          source,
+          isNot(contains(term)),
+          reason: '$path must not contain $term',
+        );
+      }
+    }
+  });
+}
+
+Future<void> _setViewport(WidgetTester tester, Size size) async {
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = size;
+  addTearDown(tester.view.resetDevicePixelRatio);
+  addTearDown(tester.view.resetPhysicalSize);
+}
+
+Widget _buildApp({required Widget child}) {
+  return ProviderScope(
+    overrides: [
+      appSessionProvider.overrideWith((ref) => _TestSessionController()),
+      devicePreferencesProvider.overrideWith(
+        (ref) => _TestDevicePreferencesController(
+          ref,
+          _TestDevicePreferencesRepository(),
+        ),
+      ),
+      currentWorkspacePreferencesProvider.overrideWith(
+        (ref) => _TestWorkspacePreferencesController(
+          ref,
+          _TestWorkspacePreferencesRepository(),
+        ),
+      ),
+      systemFontsProvider.overrideWith((ref) async => const []),
+    ],
+    child: TranslationProvider(
+      child: MaterialApp(
+        locale: AppLocale.en.flutterLocale,
+        supportedLocales: AppLocaleUtils.supportedLocales,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        home: child,
+      ),
+    ),
+  );
+}
+
+class _TestSessionController extends AppSessionController {
+  _TestSessionController()
+    : super(
+        const AsyncValue.data(AppSessionState(accounts: [], currentKey: null)),
+      );
+
+  @override
+  Future<void> addAccountWithPat({
+    required Uri baseUrl,
+    required String personalAccessToken,
+    bool? useLegacyApiOverride,
+    String? serverVersionOverride,
+  }) async {}
+
+  @override
+  Future<void> addAccountWithPassword({
+    required Uri baseUrl,
+    required String username,
+    required String password,
+    required bool useLegacyApi,
+    String? serverVersionOverride,
+  }) async {}
+
+  @override
+  Future<void> removeAccount(String accountKey) async {}
+
+  @override
+  Future<void> switchAccount(String accountKey) async {}
+
+  @override
+  Future<void> setCurrentKey(String? key) async {}
+
+  @override
+  Future<void> switchWorkspace(String workspaceKey) async {}
+
+  @override
+  Future<void> refreshCurrentUser({bool ignoreErrors = true}) async {}
+
+  @override
+  Future<void> reloadFromStorage() async {}
+
+  @override
+  bool resolveUseLegacyApiForAccount({
+    required Account account,
+    required bool globalDefault,
+  }) => globalDefault;
+
+  @override
+  InstanceProfile resolveEffectiveInstanceProfileForAccount({
+    required Account account,
+  }) => account.instanceProfile;
+
+  @override
+  String resolveEffectiveServerVersionForAccount({required Account account}) =>
+      account.serverVersionOverride ?? account.instanceProfile.version;
+
+  @override
+  Future<void> setCurrentAccountUseLegacyApiOverride(bool value) async {}
+
+  @override
+  Future<void> setCurrentAccountServerVersionOverride(String? version) async {}
+
+  @override
+  Future<InstanceProfile> detectCurrentAccountInstanceProfile() async {
+    return const InstanceProfile.empty();
+  }
+}
+
+class _TestDevicePreferencesRepository extends DevicePreferencesRepository {
+  _TestDevicePreferencesRepository()
+    : _prefs = DevicePreferences.defaultsForLanguage(AppLanguage.en),
+      super(PreferencesMigrationService(const FlutterSecureStorage()));
+
+  DevicePreferences _prefs;
+
+  @override
+  Future<StorageReadResult<DevicePreferences>> readWithStatus() async {
+    return StorageReadResult.success(_prefs);
+  }
+
+  @override
+  Future<DevicePreferences> read() async {
+    return _prefs;
+  }
+
+  @override
+  Future<void> write(DevicePreferences prefs) async {
+    _prefs = prefs;
+  }
+}
+
+class _TestWorkspacePreferencesRepository
+    extends WorkspacePreferencesRepository {
+  _TestWorkspacePreferencesRepository()
+    : _prefs = WorkspacePreferences.defaults,
+      super(
+        PreferencesMigrationService(const FlutterSecureStorage()),
+        workspaceKey: 'test-workspace',
+      );
+
+  WorkspacePreferences _prefs;
+
+  @override
+  Future<StorageReadResult<WorkspacePreferences>> readWithStatus() async {
+    return StorageReadResult.success(_prefs);
+  }
+
+  @override
+  Future<WorkspacePreferences> read() async {
+    return _prefs;
+  }
+
+  @override
+  Future<void> write(WorkspacePreferences prefs) async {
+    _prefs = prefs;
+  }
+}
+
+class _TestDevicePreferencesController extends DevicePreferencesController {
+  _TestDevicePreferencesController(super.ref, super.repo);
+}
+
+class _TestWorkspacePreferencesController
+    extends WorkspacePreferencesController {
+  _TestWorkspacePreferencesController(super.ref, super.repo);
+}

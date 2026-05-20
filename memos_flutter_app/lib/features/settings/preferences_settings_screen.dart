@@ -10,13 +10,12 @@ import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../core/system_fonts.dart';
 import '../../core/theme_colors.dart';
-import '../../core/windows_adaptive_surface.dart';
 import '../../platform/platform_icons.dart';
 import '../../platform/platform_route.dart';
-import '../../platform/platform_target.dart';
+import '../../platform/widgets/platform_adaptive_layout.dart';
 import '../../platform/widgets/platform_controls.dart';
 import '../../platform/widgets/platform_dialog.dart';
-import '../../platform/widgets/platform_grouped_list.dart';
+import '../../platform/widgets/platform_list_section.dart';
 import '../../platform/widgets/platform_page.dart';
 import '../../platform/widgets/platform_picker.dart';
 import '../../data/models/app_preferences.dart';
@@ -70,55 +69,10 @@ class PreferencesSettingsScreen extends ConsumerWidget {
       );
     }
 
-    if (shouldUseWindowsAdaptiveSurface(context)) {
-      await showWindowsAdaptiveSurface<void>(
-        context: context,
-        kind: WindowsAdaptiveSurfaceKind.popover,
-        maxWidth: 440,
-        builder: selectionContent,
-      );
-      return;
-    }
-    await showPlatformPicker<void>(context: context, builder: selectionContent);
-  }
-
-  Future<void> _selectEnumDialog<T>({
-    required BuildContext context,
-    required String title,
-    required List<T> values,
-    required String Function(T v) label,
-    required T selected,
-    required ValueChanged<T> onSelect,
-  }) async {
-    await showPlatformDialog<void>(
+    await showPlatformPicker<void>(
       context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: Text(title),
-          children: values
-              .map((v) {
-                final isSelected = v == selected;
-                return SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    onSelect(v);
-                  },
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_off,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(label(v))),
-                    ],
-                  ),
-                );
-              })
-              .toList(growable: false),
-        );
-      },
+      desktopMaxWidth: 440,
+      builder: selectionContent,
     );
   }
 
@@ -184,16 +138,11 @@ class PreferencesSettingsScreen extends ConsumerWidget {
       );
     }
 
-    if (shouldUseWindowsAdaptiveSurface(context)) {
-      await showWindowsAdaptiveSurface<void>(
-        context: context,
-        kind: WindowsAdaptiveSurfaceKind.largeDialog,
-        maxWidth: 720,
-        builder: fontContent,
-      );
-      return;
-    }
-    await showPlatformPicker<void>(context: context, builder: fontContent);
+    await showPlatformPicker<void>(
+      context: context,
+      desktopMaxWidth: 720,
+      builder: fontContent,
+    );
   }
 
   String _fontLabel(
@@ -253,25 +202,10 @@ class PreferencesSettingsScreen extends ConsumerWidget {
     final bg = isDark
         ? MemoFlowPalette.backgroundDark
         : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
     final textMain = isDark
         ? MemoFlowPalette.textDark
         : MemoFlowPalette.textLight;
     final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
-    final languageItems = AppLanguage.values
-        .map(
-          (language) => DropdownMenuItem<AppLanguage>(
-            value: language,
-            child: Text(
-              language.labelFor(devicePrefs.language),
-              style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-            ),
-          ),
-        )
-        .toList(growable: false);
 
     return PlatformPage(
       backgroundColor: bg,
@@ -298,233 +232,273 @@ class PreferencesSettingsScreen extends ConsumerWidget {
               ),
             ),
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             children: [
-              _Group(
-                card: card,
-                divider: divider,
-                children: [
-                  _DropdownRow<AppLanguage>(
-                    label: context.t.strings.settings.preferences.language,
-                    value: devicePrefs.language,
-                    items: languageItems,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onChanged: (v) {
-                      if (v == null) return;
-                      deviceNotifier.setLanguage(v);
-                    },
-                  ),
-                  _SelectRow(
-                    label: context.t.strings.settings.preferences.fontSize,
-                    value: devicePrefs.fontSize.labelFor(devicePrefs.language),
-                    icon: Icons.chevron_right,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () => _selectEnum<AppFontSize>(
-                      context: context,
-                      title: context.t.strings.settings.preferences.fontSize,
-                      values: AppFontSize.values,
-                      label: (v) => v.labelFor(devicePrefs.language),
-                      selected: devicePrefs.fontSize,
-                      onSelect: deviceNotifier.setFontSize,
+              PlatformBoundedContent(
+                desktopMaxWidth: 760,
+                tabletMaxWidth: 680,
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                child: Column(
+                  key: const ValueKey<String>('preferences.boundedContent'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Group(
+                      children: [
+                        _SelectRow(
+                          label:
+                              context.t.strings.settings.preferences.language,
+                          value: devicePrefs.language.labelFor(
+                            devicePrefs.language,
+                          ),
+                          icon: Icons.expand_more,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          onTap: () => _selectEnum<AppLanguage>(
+                            context: context,
+                            title:
+                                context.t.strings.settings.preferences.language,
+                            values: AppLanguage.values,
+                            label: (v) => v.labelFor(devicePrefs.language),
+                            selected: devicePrefs.language,
+                            onSelect: deviceNotifier.setLanguage,
+                          ),
+                        ),
+                        _SelectRow(
+                          label:
+                              context.t.strings.settings.preferences.fontSize,
+                          value: devicePrefs.fontSize.labelFor(
+                            devicePrefs.language,
+                          ),
+                          icon: Icons.chevron_right,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          onTap: () => _selectEnum<AppFontSize>(
+                            context: context,
+                            title:
+                                context.t.strings.settings.preferences.fontSize,
+                            values: AppFontSize.values,
+                            label: (v) => v.labelFor(devicePrefs.language),
+                            selected: devicePrefs.fontSize,
+                            onSelect: deviceNotifier.setFontSize,
+                          ),
+                        ),
+                        _SelectRow(
+                          label:
+                              context.t.strings.settings.preferences.lineHeight,
+                          value: devicePrefs.lineHeight.labelFor(
+                            devicePrefs.language,
+                          ),
+                          icon: Icons.chevron_right,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          onTap: () => _selectEnum<AppLineHeight>(
+                            context: context,
+                            title: context
+                                .t
+                                .strings
+                                .settings
+                                .preferences
+                                .lineHeight,
+                            values: AppLineHeight.values,
+                            label: (v) => v.labelFor(devicePrefs.language),
+                            selected: devicePrefs.lineHeight,
+                            onSelect: deviceNotifier.setLineHeight,
+                          ),
+                        ),
+                        _SelectRow(
+                          label: context.t.strings.settings.preferences.font,
+                          value: fontLabel,
+                          icon: Icons.chevron_right,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          onTap: () async {
+                            try {
+                              final List<SystemFontInfo> fonts =
+                                  fontsAsync.valueOrNull ??
+                                  await ref.read(systemFontsProvider.future);
+                              if (!context.mounted) return;
+                              await _selectFont(
+                                context: context,
+                                ref: ref,
+                                prefs: devicePrefs,
+                                fonts: fonts,
+                              );
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.t.strings.settings.preferences
+                                        .loadFontsFailed(error: e.toString()),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                        _ToggleRow(
+                          label: context
+                              .t
+                              .strings
+                              .settings
+                              .preferences
+                              .collapseLongContent,
+                          value: workspacePrefs.collapseLongContent,
+                          textMain: textMain,
+                          onChanged: workspaceNotifier.setCollapseLongContent,
+                        ),
+                        _ToggleRow(
+                          label: context
+                              .t
+                              .strings
+                              .settings
+                              .preferences
+                              .collapseReferences,
+                          value: workspacePrefs.collapseReferences,
+                          textMain: textMain,
+                          onChanged: workspaceNotifier.setCollapseReferences,
+                        ),
+                        _ToggleRow(
+                          label: context
+                              .t
+                              .strings
+                              .settings
+                              .preferences
+                              .showEngagementInAllMemoDetails,
+                          value: workspacePrefs.showEngagementInAllMemoDetails,
+                          textMain: textMain,
+                          onChanged: workspaceNotifier
+                              .setShowEngagementInAllMemoDetails,
+                        ),
+                      ],
                     ),
-                  ),
-                  _SelectRow(
-                    label: context.t.strings.settings.preferences.lineHeight,
-                    value: devicePrefs.lineHeight.labelFor(
-                      devicePrefs.language,
-                    ),
-                    icon: Icons.chevron_right,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () => _selectEnum<AppLineHeight>(
-                      context: context,
-                      title: context.t.strings.settings.preferences.lineHeight,
-                      values: AppLineHeight.values,
-                      label: (v) => v.labelFor(devicePrefs.language),
-                      selected: devicePrefs.lineHeight,
-                      onSelect: deviceNotifier.setLineHeight,
-                    ),
-                  ),
-                  _SelectRow(
-                    label: context.t.strings.settings.preferences.font,
-                    value: fontLabel,
-                    icon: Icons.chevron_right,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () async {
-                      try {
-                        final List<SystemFontInfo> fonts =
-                            fontsAsync.valueOrNull ??
-                            await ref.read(systemFontsProvider.future);
-                        if (!context.mounted) return;
-                        await _selectFont(
-                          context: context,
-                          ref: ref,
-                          prefs: devicePrefs,
-                          fonts: fonts,
-                        );
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              context.t.strings.settings.preferences
-                                  .loadFontsFailed(error: e.toString()),
+                    const SizedBox(height: 12),
+                    _Group(
+                      children: [
+                        _SelectRow(
+                          label: context
+                              .t
+                              .strings
+                              .settings
+                              .preferences
+                              .launchAction,
+                          value: devicePrefs.launchAction.labelFor(
+                            devicePrefs.language,
+                          ),
+                          icon: Icons.expand_more,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          onTap: () => _selectEnum<LaunchAction>(
+                            context: context,
+                            title: context
+                                .t
+                                .strings
+                                .settings
+                                .preferences
+                                .launchAction,
+                            values: LaunchAction.values
+                                .where((v) => v != LaunchAction.sync)
+                                .toList(growable: false),
+                            label: (v) => v.labelFor(devicePrefs.language),
+                            selected: devicePrefs.launchAction,
+                            onSelect: deviceNotifier.setLaunchAction,
+                          ),
+                        ),
+                        _ToggleRow(
+                          label: context
+                              .t
+                              .strings
+                              .settings
+                              .preferences
+                              .confirmExitOnBack,
+                          value: devicePrefs.confirmExitOnBack,
+                          textMain: textMain,
+                          onChanged: deviceNotifier.setConfirmExitOnBack,
+                        ),
+                        _SelectRow(
+                          rowKey: const ValueKey(
+                            'preferences-editor-toolbar-entry',
+                          ),
+                          label: context
+                              .t
+                              .strings
+                              .settings
+                              .preferences
+                              .editorToolbar
+                              .title,
+                          value: context
+                              .t
+                              .strings
+                              .settings
+                              .preferences
+                              .editorToolbar
+                              .dragToSort,
+                          icon: Icons.chevron_right,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          onTap: () => Navigator.of(context).push(
+                            buildPlatformPageRoute<void>(
+                              context: context,
+                              builder: (_) => const MemoToolbarSettingsScreen(),
                             ),
                           ),
-                        );
-                      }
-                    },
-                  ),
-                  _ToggleRow(
-                    label: context
-                        .t
-                        .strings
-                        .settings
-                        .preferences
-                        .collapseLongContent,
-                    value: workspacePrefs.collapseLongContent,
-                    textMain: textMain,
-                    onChanged: workspaceNotifier.setCollapseLongContent,
-                  ),
-                  _ToggleRow(
-                    label: context
-                        .t
-                        .strings
-                        .settings
-                        .preferences
-                        .collapseReferences,
-                    value: workspacePrefs.collapseReferences,
-                    textMain: textMain,
-                    onChanged: workspaceNotifier.setCollapseReferences,
-                  ),
-                  _ToggleRow(
-                    label: context
-                        .t
-                        .strings
-                        .settings
-                        .preferences
-                        .showEngagementInAllMemoDetails,
-                    value: workspacePrefs.showEngagementInAllMemoDetails,
-                    textMain: textMain,
-                    onChanged:
-                        workspaceNotifier.setShowEngagementInAllMemoDetails,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _Group(
-                card: card,
-                divider: divider,
-                children: [
-                  _SelectRow(
-                    label: context.t.strings.settings.preferences.launchAction,
-                    value: devicePrefs.launchAction.labelFor(
-                      devicePrefs.language,
-                    ),
-                    icon: Icons.expand_more,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () => _selectEnumDialog<LaunchAction>(
-                      context: context,
-                      title:
-                          context.t.strings.settings.preferences.launchAction,
-                      values: LaunchAction.values
-                          .where((v) => v != LaunchAction.sync)
-                          .toList(growable: false),
-                      label: (v) => v.labelFor(devicePrefs.language),
-                      selected: devicePrefs.launchAction,
-                      onSelect: deviceNotifier.setLaunchAction,
-                    ),
-                  ),
-                  _ToggleRow(
-                    label: context
-                        .t
-                        .strings
-                        .settings
-                        .preferences
-                        .confirmExitOnBack,
-                    value: devicePrefs.confirmExitOnBack,
-                    textMain: textMain,
-                    onChanged: deviceNotifier.setConfirmExitOnBack,
-                  ),
-                  _SelectRow(
-                    rowKey: const ValueKey('preferences-editor-toolbar-entry'),
-                    label: context
-                        .t
-                        .strings
-                        .settings
-                        .preferences
-                        .editorToolbar
-                        .title,
-                    value: context
-                        .t
-                        .strings
-                        .settings
-                        .preferences
-                        .editorToolbar
-                        .dragToSort,
-                    icon: Icons.chevron_right,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () => Navigator.of(context).push(
-                      buildPlatformPageRoute<void>(
-                        context: context,
-                        builder: (_) => const MemoToolbarSettingsScreen(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _Group(
-                card: card,
-                divider: divider,
-                children: [
-                  _SelectRow(
-                    label: context.t.strings.settings.preferences.appearance,
-                    value: themeModeLabel,
-                    icon: Icons.expand_more,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () => _selectEnum<AppThemeMode>(
-                      context: context,
-                      title: context.t.strings.settings.preferences.appearance,
-                      values: const [
-                        AppThemeMode.system,
-                        AppThemeMode.light,
-                        AppThemeMode.dark,
+                        ),
                       ],
-                      label: (v) => v.labelFor(devicePrefs.language),
-                      selected: themeMode,
-                      onSelect: deviceNotifier.setThemeMode,
                     ),
-                  ),
-                  _ThemeColorRow(
-                    label: context.t.strings.settings.preferences.themeColor,
-                    selected: themeColor,
-                    textMain: textMain,
-                    isDark: isDark,
-                    onSelect: setThemeColor,
-                    onCustomTap: () async {
-                      final next = await CustomThemeDialog.show(
-                        context: context,
-                        initial: customTheme,
-                      );
-                      if (next == null || !context.mounted) return;
-                      setCustomTheme(next);
-                      setThemeColor(AppThemeColor.custom);
-                    },
-                  ),
-                  _ToggleRow(
-                    label: context.t.strings.settings.preferences.haptics,
-                    value: devicePrefs.hapticsEnabled,
-                    textMain: textMain,
-                    onChanged: deviceNotifier.setHapticsEnabled,
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    _Group(
+                      children: [
+                        _SelectRow(
+                          label:
+                              context.t.strings.settings.preferences.appearance,
+                          value: themeModeLabel,
+                          icon: Icons.expand_more,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          onTap: () => _selectEnum<AppThemeMode>(
+                            context: context,
+                            title: context
+                                .t
+                                .strings
+                                .settings
+                                .preferences
+                                .appearance,
+                            values: const [
+                              AppThemeMode.system,
+                              AppThemeMode.light,
+                              AppThemeMode.dark,
+                            ],
+                            label: (v) => v.labelFor(devicePrefs.language),
+                            selected: themeMode,
+                            onSelect: deviceNotifier.setThemeMode,
+                          ),
+                        ),
+                        _ThemeColorRow(
+                          label:
+                              context.t.strings.settings.preferences.themeColor,
+                          selected: themeColor,
+                          textMain: textMain,
+                          isDark: isDark,
+                          onSelect: setThemeColor,
+                          onCustomTap: () async {
+                            final next = await CustomThemeDialog.show(
+                              context: context,
+                              initial: customTheme,
+                            );
+                            if (next == null || !context.mounted) return;
+                            setCustomTheme(next);
+                            setThemeColor(AppThemeColor.custom);
+                          },
+                        ),
+                        _ToggleRow(
+                          label: context.t.strings.settings.preferences.haptics,
+                          value: devicePrefs.hapticsEnabled,
+                          textMain: textMain,
+                          onChanged: deviceNotifier.setHapticsEnabled,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -535,46 +509,13 @@ class PreferencesSettingsScreen extends ConsumerWidget {
 }
 
 class _Group extends StatelessWidget {
-  const _Group({
-    required this.card,
-    required this.divider,
-    required this.children,
-  });
+  const _Group({required this.children});
 
-  final Color card;
-  final Color divider;
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    final target = resolvePlatformTarget(context);
-    if (target == PlatformTarget.iPhone || target == PlatformTarget.iPad) {
-      return PlatformGroupedList(children: children);
-    }
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i != children.length - 1) Divider(height: 1, color: divider),
-          ],
-        ],
-      ),
-    );
+    return PlatformListSection(padding: EdgeInsets.zero, children: children);
   }
 }
 
@@ -599,80 +540,29 @@ class _SelectRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: rowKey,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: textMain,
-                  ),
-                ),
-              ),
-              Text(
-                value,
-                style: TextStyle(fontWeight: FontWeight.w600, color: textMuted),
-              ),
-              const SizedBox(width: 6),
-              Icon(icon, size: 18, color: textMuted),
-            ],
-          ),
-        ),
+    final maxTrailingWidth = MediaQuery.sizeOf(context).width * 0.42;
+    return PlatformListSectionRow(
+      key: rowKey,
+      title: Text(
+        label,
+        style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
       ),
-    );
-  }
-}
-
-class _DropdownRow<T> extends StatelessWidget {
-  const _DropdownRow({
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.textMain,
-    required this.textMuted,
-    required this.onChanged,
-  });
-
-  final String label;
-  final T value;
-  final List<DropdownMenuItem<T>> items;
-  final Color textMain;
-  final Color textMuted;
-  final ValueChanged<T?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxTrailingWidth),
             child: Text(
-              label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-            ),
-          ),
-          DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              value: value,
-              items: items,
-              onChanged: onChanged,
-              isDense: true,
-              icon: Icon(Icons.expand_more, size: 18, color: textMuted),
+              value,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(fontWeight: FontWeight.w600, color: textMuted),
-              dropdownColor: Theme.of(context).cardColor,
             ),
           ),
+          const SizedBox(width: 6),
+          Icon(icon, size: 18, color: textMuted),
         ],
       ),
+      onTap: onTap,
     );
   }
 }
@@ -692,19 +582,12 @@ class _ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-            ),
-          ),
-          PlatformSwitch(value: value, onChanged: onChanged),
-        ],
+    return PlatformListSectionRow(
+      title: Text(
+        label,
+        style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
       ),
+      trailing: PlatformSwitch(value: value, onChanged: onChanged),
     );
   }
 }
@@ -730,37 +613,30 @@ class _ThemeColorRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final ringColor = textMain.withValues(alpha: isDark ? 0.28 : 0.18);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
+    return PlatformListSectionRow(
+      title: Text(
+        label,
+        style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-            ),
-          ),
-          Row(
-            children: [
-              for (final color in AppThemeColor.values) ...[
-                if (color == AppThemeColor.custom)
-                  _CustomThemeColorDot(
-                    selected: color == selected,
-                    ringColor: ringColor,
-                    onTap: onCustomTap,
-                  )
-                else
-                  _ThemeColorDot(
-                    color: color,
-                    selected: color == selected,
-                    ringColor: ringColor,
-                    onTap: () => onSelect(color),
-                  ),
-                if (color != AppThemeColor.values.last)
-                  const SizedBox(width: 10),
-              ],
-            ],
-          ),
+          for (final color in AppThemeColor.values) ...[
+            if (color == AppThemeColor.custom)
+              _CustomThemeColorDot(
+                selected: color == selected,
+                ringColor: ringColor,
+                onTap: onCustomTap,
+              )
+            else
+              _ThemeColorDot(
+                color: color,
+                selected: color == selected,
+                ringColor: ringColor,
+                onTap: () => onSelect(color),
+              ),
+            if (color != AppThemeColor.values.last) const SizedBox(width: 10),
+          ],
         ],
       ),
     );
@@ -787,24 +663,28 @@ class _ThemeColorDot extends StatelessWidget {
     final size = 22.0;
     final ringPadding = selected ? 2.0 : 0.0;
 
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: AnimatedContainer(
-        duration: AppMotion.effectiveDuration(context, AppMotion.fast),
-        curve: AppMotion.standardCurve,
-        padding: EdgeInsets.all(ringPadding),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: selected ? Border.all(color: ringColor, width: 1.4) : null,
-        ),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
-          child: selected
-              ? const Icon(Icons.check, size: 14, color: Colors.white)
-              : null,
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: AnimatedContainer(
+          duration: AppMotion.effectiveDuration(context, AppMotion.fast),
+          curve: AppMotion.standardCurve,
+          padding: EdgeInsets.all(ringPadding),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: selected ? Border.all(color: ringColor, width: 1.4) : null,
+          ),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
+            child: selected
+                ? const Icon(Icons.check, size: 14, color: Colors.white)
+                : null,
+          ),
         ),
       ),
     );
@@ -838,28 +718,32 @@ class _CustomThemeColorDot extends StatelessWidget {
       ],
     );
 
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: AnimatedContainer(
-        duration: AppMotion.effectiveDuration(context, AppMotion.fast),
-        curve: AppMotion.standardCurve,
-        padding: EdgeInsets.all(ringPadding),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: selected ? Border.all(color: ringColor, width: 1.4) : null,
-        ),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: const BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: AnimatedContainer(
+          duration: AppMotion.effectiveDuration(context, AppMotion.fast),
+          curve: AppMotion.standardCurve,
+          padding: EdgeInsets.all(ringPadding),
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: gradient,
+            border: selected ? Border.all(color: ringColor, width: 1.4) : null,
           ),
-          child: Icon(
-            selected ? Icons.check : Icons.add,
-            size: 14,
-            color: Colors.white,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: gradient,
+            ),
+            child: Icon(
+              selected ? Icons.check : Icons.add,
+              size: 14,
+              color: Colors.white,
+            ),
           ),
         ),
       ),

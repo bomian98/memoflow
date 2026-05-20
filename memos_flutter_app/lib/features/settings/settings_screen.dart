@@ -15,8 +15,8 @@ import '../../core/url.dart';
 import '../../platform/platform_icons.dart';
 import '../../platform/platform_route.dart';
 import '../../platform/platform_target.dart';
-import '../../platform/widgets/platform_grouped_list.dart';
-import '../../platform/widgets/platform_list_tile.dart';
+import '../../platform/widgets/platform_adaptive_layout.dart';
+import '../../platform/widgets/platform_list_section.dart';
 import '../../platform/widgets/platform_page.dart';
 import '../../private_hooks/private_extension_bundle_provider.dart';
 import '../../state/system/local_library_provider.dart';
@@ -161,9 +161,6 @@ class SettingsScreen extends ConsumerWidget
         ? MemoFlowPalette.textDark
         : MemoFlowPalette.textLight;
     final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
     final versionStyle = TextStyle(fontSize: 11, color: textMuted);
     final hapticsEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.hapticsEnabled),
@@ -231,261 +228,270 @@ class SettingsScreen extends ConsumerWidget
             ),
           ),
         ListView(
-          padding: EdgeInsets.fromLTRB(16, showAppBar ? 8 : 16, 16, 88),
           children: [
-            _ProfileCard(
-              card: card,
-              textMain: textMain,
-              textMuted: textMuted,
-              name: name,
-              subtitle: subtitle,
-              avatarUrl: avatarUrl,
-              onTap: () {
-                haptic();
-                pushSettingsPage((_) => const AccountSecurityScreen());
-              },
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _ShortcutTile(
-                    card: card,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    icon: Icons.calendar_month_outlined,
-                    label: context.t.strings.legacy.msg_stats,
-                    onTap: () {
-                      haptic();
-                      pushSettingsPage((_) => const StatsScreen());
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ShortcutTile(
-                    card: card,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    icon: Icons.widgets_outlined,
-                    label: context.t.strings.legacy.msg_widgets,
-                    onTap: () {
-                      haptic();
-                      pushSettingsPage((_) => const WidgetsScreen());
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ShortcutTile(
-                    card: card,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    icon: Icons.code,
-                    label: context.t.strings.legacy.msg_api_plugins,
-                    onTap: () {
-                      haptic();
-                      pushSettingsPage((_) => const ApiPluginsScreen());
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _CardGroup(
-              card: card,
-              divider: divider,
-              children: [
-                _SettingRow(
-                  icon: Icons.menu_book_outlined,
-                  label: context.t.strings.legacy.msg_user_guide,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const UserGuideScreen());
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _CardGroup(
-              card: card,
-              divider: divider,
-              children: [
-                _SettingRow(
-                  icon: Icons.person_outline,
-                  label: context.t.strings.legacy.msg_account_security,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const AccountSecurityScreen());
-                  },
-                ),
-                _SettingRow(
-                  icon: Icons.tune,
-                  label: context.t.strings.legacy.msg_preferences,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const PreferencesSettingsScreen());
-                  },
-                ),
-                if (isWindowsDesktop)
-                  _SettingRow(
-                    icon: Icons.desktop_windows_outlined,
-                    label:
-                        context.t.strings.legacy.msg_windows_related_settings,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () {
-                      haptic();
-                      pushSettingsPage(
-                        (_) => const WindowsRelatedSettingsScreen(),
-                      );
-                    },
-                  ),
-                _SettingRow(
-                  icon: Icons.smart_toy_outlined,
-                  label: context.t.strings.legacy.msg_ai_settings,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const AiSettingsScreen());
-                  },
-                ),
-                _SettingRow(
-                  icon: Icons.lock_outline,
-                  label: context.t.strings.legacy.msg_app_lock,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const PasswordLockScreen());
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _CardGroup(
-              card: card,
-              divider: divider,
-              children: [
-                _SettingRow(
-                  icon: Icons.science_outlined,
-                  label: context.t.strings.legacy.msg_laboratory,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const LaboratoryScreen());
-                  },
-                ),
-                _SettingRow(
-                  icon: Icons.extension_outlined,
-                  label: context.t.strings.legacy.msg_components,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const ComponentsSettingsScreen());
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _CardGroup(
-              card: card,
-              divider: divider,
-              children: [
-                _SettingRow(
-                  icon: Icons.chat_bubble_outline,
-                  label: context.t.strings.legacy.msg_feedback,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const FeedbackScreen());
-                  },
-                ),
-                _SettingRow(
-                  icon: Icons.bolt_outlined,
-                  label: context.t.strings.legacy.msg_charging_station,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    DonationDialog.show(context);
-                  },
-                ),
-                _SettingRow(
-                  icon: Icons.import_export,
-                  label: context.t.strings.legacy.msg_import_export,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const ImportExportScreen());
-                  },
-                ),
-                _SettingRow(
-                  icon: Icons.info_outline,
-                  label: context.t.strings.legacy.msg_about,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  onTap: () {
-                    haptic();
-                    pushSettingsPage((_) => const AboutUsScreen());
-                  },
-                ),
-              ],
-            ),
-            if (extensionEntries.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _CardGroup(
-                card: card,
-                divider: divider,
+            PlatformBoundedContent(
+              desktopMaxWidth: 760,
+              tabletMaxWidth: 680,
+              padding: EdgeInsets.fromLTRB(16, showAppBar ? 8 : 16, 16, 88),
+              child: Column(
+                key: const ValueKey<String>('settings.boundedContent'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ...extensionEntries.map(
-                    (entry) => _SettingRow(
-                      icon: entry.icon,
-                      label: entry.titleBuilder(context),
-                      subtitle: entry.subtitleBuilder?.call(context),
-                      textMain: textMain,
-                      textMuted: textMuted,
-                      onTap: () {
-                        haptic();
-                        entry.onTap();
-                      },
+                  _ProfileCard(
+                    card: card,
+                    textMain: textMain,
+                    textMuted: textMuted,
+                    name: name,
+                    subtitle: subtitle,
+                    avatarUrl: avatarUrl,
+                    onTap: () {
+                      haptic();
+                      pushSettingsPage((_) => const AccountSecurityScreen());
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ShortcutTile(
+                          card: card,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          icon: Icons.calendar_month_outlined,
+                          label: context.t.strings.legacy.msg_stats,
+                          onTap: () {
+                            haptic();
+                            pushSettingsPage((_) => const StatsScreen());
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _ShortcutTile(
+                          card: card,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          icon: Icons.widgets_outlined,
+                          label: context.t.strings.legacy.msg_widgets,
+                          onTap: () {
+                            haptic();
+                            pushSettingsPage((_) => const WidgetsScreen());
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _ShortcutTile(
+                          card: card,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          icon: Icons.code,
+                          label: context.t.strings.legacy.msg_api_plugins,
+                          onTap: () {
+                            haptic();
+                            pushSettingsPage((_) => const ApiPluginsScreen());
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _CardGroup(
+                    children: [
+                      _SettingRow(
+                        icon: Icons.menu_book_outlined,
+                        label: context.t.strings.legacy.msg_user_guide,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage((_) => const UserGuideScreen());
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _CardGroup(
+                    children: [
+                      _SettingRow(
+                        icon: Icons.person_outline,
+                        label: context.t.strings.legacy.msg_account_security,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage(
+                            (_) => const AccountSecurityScreen(),
+                          );
+                        },
+                      ),
+                      _SettingRow(
+                        icon: Icons.tune,
+                        label: context.t.strings.legacy.msg_preferences,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage(
+                            (_) => const PreferencesSettingsScreen(),
+                          );
+                        },
+                      ),
+                      if (isWindowsDesktop)
+                        _SettingRow(
+                          icon: Icons.desktop_windows_outlined,
+                          label: context
+                              .t
+                              .strings
+                              .legacy
+                              .msg_windows_related_settings,
+                          textMain: textMain,
+                          textMuted: textMuted,
+                          onTap: () {
+                            haptic();
+                            pushSettingsPage(
+                              (_) => const WindowsRelatedSettingsScreen(),
+                            );
+                          },
+                        ),
+                      _SettingRow(
+                        icon: Icons.smart_toy_outlined,
+                        label: context.t.strings.legacy.msg_ai_settings,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage((_) => const AiSettingsScreen());
+                        },
+                      ),
+                      _SettingRow(
+                        icon: Icons.lock_outline,
+                        label: context.t.strings.legacy.msg_app_lock,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage((_) => const PasswordLockScreen());
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _CardGroup(
+                    children: [
+                      _SettingRow(
+                        icon: Icons.science_outlined,
+                        label: context.t.strings.legacy.msg_laboratory,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage((_) => const LaboratoryScreen());
+                        },
+                      ),
+                      _SettingRow(
+                        icon: Icons.extension_outlined,
+                        label: context.t.strings.legacy.msg_components,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage(
+                            (_) => const ComponentsSettingsScreen(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _CardGroup(
+                    children: [
+                      _SettingRow(
+                        icon: Icons.chat_bubble_outline,
+                        label: context.t.strings.legacy.msg_feedback,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage((_) => const FeedbackScreen());
+                        },
+                      ),
+                      _SettingRow(
+                        icon: Icons.bolt_outlined,
+                        label: context.t.strings.legacy.msg_charging_station,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          DonationDialog.show(context);
+                        },
+                      ),
+                      _SettingRow(
+                        icon: Icons.import_export,
+                        label: context.t.strings.legacy.msg_import_export,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage((_) => const ImportExportScreen());
+                        },
+                      ),
+                      _SettingRow(
+                        icon: Icons.info_outline,
+                        label: context.t.strings.legacy.msg_about,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        onTap: () {
+                          haptic();
+                          pushSettingsPage((_) => const AboutUsScreen());
+                        },
+                      ),
+                    ],
+                  ),
+                  if (extensionEntries.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _CardGroup(
+                      children: [
+                        ...extensionEntries.map(
+                          (entry) => _SettingRow(
+                            icon: entry.icon,
+                            label: entry.titleBuilder(context),
+                            subtitle: entry.subtitleBuilder?.call(context),
+                            textMain: textMain,
+                            textMuted: textMuted,
+                            onTap: () {
+                              haptic();
+                              entry.onTap();
+                            },
+                          ),
+                        ),
+                      ],
                     ),
+                  ],
+                  const SizedBox(height: 18),
+                  Column(
+                    children: [
+                      FutureBuilder<PackageInfo>(
+                        future: _packageInfoFuture,
+                        builder: (context, snapshot) {
+                          final version = snapshot.data?.version.trim() ?? '';
+                          final label = version.isEmpty
+                              ? context.t.strings.legacy.msg_version
+                              : context.t.strings.legacy.msg_version_v(
+                                  version: version,
+                                );
+                          return Text(label, style: versionStyle);
+                        },
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.t.strings.legacy.msg_made_love_note_taking,
+                        style: versionStyle,
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: 18),
-            Column(
-              children: [
-                FutureBuilder<PackageInfo>(
-                  future: _packageInfoFuture,
-                  builder: (context, snapshot) {
-                    final version = snapshot.data?.version.trim() ?? '';
-                    final label = version.isEmpty
-                        ? context.t.strings.legacy.msg_version
-                        : context.t.strings.legacy.msg_version_v(
-                            version: version,
-                          );
-                    return Text(label, style: versionStyle);
-                  },
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.t.strings.legacy.msg_made_love_note_taking,
-                  style: versionStyle,
-                ),
-              ],
             ),
           ],
         ),
@@ -564,46 +570,13 @@ class SettingsScreen extends ConsumerWidget
 }
 
 class _CardGroup extends StatelessWidget {
-  const _CardGroup({
-    required this.card,
-    required this.divider,
-    required this.children,
-  });
+  const _CardGroup({required this.children});
 
-  final Color card;
-  final Color divider;
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    final target = resolvePlatformTarget(context);
-    if (target == PlatformTarget.iPhone || target == PlatformTarget.iPad) {
-      return PlatformGroupedList(children: children);
-    }
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i != children.length - 1) Divider(height: 1, color: divider),
-          ],
-        ],
-      ),
-    );
+    return PlatformListSection(padding: EdgeInsets.zero, children: children);
   }
 }
 
@@ -626,61 +599,21 @@ class _SettingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final target = resolvePlatformTarget(context);
-    if (target == PlatformTarget.iPhone || target == PlatformTarget.iPad) {
-      return PlatformListTile(
-        leading: Icon(icon, size: 20, color: textMuted),
-        title: Text(
-          label,
-          style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-        ),
-        subtitle: subtitle == null || subtitle!.trim().isEmpty
-            ? null
-            : Text(subtitle!, style: TextStyle(fontSize: 12, color: textMuted)),
-        trailing: Icon(
-          PlatformIcons.chevronForward,
-          size: 18,
-          color: textMuted,
-        ),
-        onTap: onTap,
-      );
-    }
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: textMuted),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: textMain,
-                      ),
-                    ),
-                    if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle!,
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, size: 20, color: textMuted),
-            ],
-          ),
-        ),
+    final normalizedSubtitle = subtitle?.trim();
+    return PlatformListSectionRow(
+      leading: Icon(icon, size: 20, color: textMuted),
+      title: Text(
+        label,
+        style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
       ),
+      subtitle: normalizedSubtitle == null || normalizedSubtitle.isEmpty
+          ? null
+          : Text(
+              normalizedSubtitle,
+              style: TextStyle(fontSize: 12, color: textMuted),
+            ),
+      trailing: Icon(PlatformIcons.chevronForward, size: 18, color: textMuted),
+      onTap: onTap,
     );
   }
 }
