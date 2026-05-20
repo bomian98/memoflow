@@ -1,7 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../platform_target.dart';
+import 'platform_popover_or_sheet.dart';
 
 Future<T?> showPlatformActionSheet<T>({
   required BuildContext context,
@@ -11,24 +10,25 @@ Future<T?> showPlatformActionSheet<T>({
   Color? backgroundColor,
   Color? barrierColor,
   bool showDragHandle = true,
+  bool barrierDismissible = true,
+  String? barrierLabel,
+  double desktopMaxWidth = 420,
+  EdgeInsets desktopInsetPadding = const EdgeInsets.symmetric(
+    horizontal: 24,
+    vertical: 24,
+  ),
 }) {
-  final target = resolvePlatformTarget(context);
-  if (target == PlatformTarget.iPhone || target == PlatformTarget.iPad) {
-    return showCupertinoModalPopup<T>(
-      context: context,
-      builder: (context) => Material(
-        type: MaterialType.transparency,
-        child: builder(context),
-      ),
-    );
-  }
-  return showModalBottomSheet<T>(
+  return showPlatformPopoverOrSheet<T>(
     context: context,
+    builder: builder,
     isScrollControlled: isScrollControlled,
     useSafeArea: useSafeArea,
     backgroundColor: backgroundColor,
     barrierColor: barrierColor,
+    barrierDismissible: barrierDismissible,
+    barrierLabel: barrierLabel,
     showDragHandle: showDragHandle,
-    builder: builder,
+    desktopMaxWidth: desktopMaxWidth,
+    desktopInsetPadding: desktopInsetPadding,
   );
 }
