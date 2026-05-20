@@ -64,6 +64,10 @@ import '../../i18n/strings.g.dart';
 const Key memoDetailActionMenuRegionKey = ValueKey<String>(
   'memo-detail-action-menu-region',
 );
+const Key memoDetailBoundedDocumentKey = ValueKey<String>(
+  'memo-detail-bounded-document',
+);
+const double _memoDetailDesktopMaxReadWidth = 820;
 
 String memoDetailMarkdownCacheKey(
   LocalMemo memo, {
@@ -599,6 +603,20 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
     await _handleDetailAction(action);
   }
 
+  Future<void> _showDetailActionMenuFromPosition(Offset globalPosition) async {
+    if (widget.readOnly) return;
+    final memo = _memo;
+    if (memo == null) return;
+    final action = await showMemoDetailActionPopover(
+      context: context,
+      memo: memo,
+      readOnly: widget.readOnly,
+      globalPosition: globalPosition,
+    );
+    if (!mounted || action == null) return;
+    await _handleDetailAction(action);
+  }
+
   Future<void> _showDetailActionMenuFromAnchor(
     BuildContext anchorContext,
   ) async {
@@ -1037,11 +1055,20 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
       scrollController: _scrollController,
       showSupplementarySections: _routeSettled,
       shouldShowEngagement: shouldShowEngagement,
+      boundDesktopReadWidth: !widget.embedded,
       onLongPressStart: widget.readOnly
           ? null
           : (details) {
               maybeHaptic();
               unawaited(_showDetailActionMenu(details));
+            },
+      onSecondaryTapDown: widget.readOnly
+          ? null
+          : (details) {
+              maybeHaptic();
+              unawaited(
+                _showDetailActionMenuFromPosition(details.globalPosition),
+              );
             },
       audioHandle: MemoDocumentAudioHandle(
         isPlayingForUrl: (url) => _player.playing && _currentAudioUrl == url,
@@ -1165,6 +1192,8 @@ class MemoDocumentBody extends StatelessWidget {
     required this.resolvedData,
     this.audioHandle,
     this.onLongPressStart,
+    this.onSecondaryTapDown,
+    this.boundDesktopReadWidth = false,
   });
 
   final ScrollController scrollController;
@@ -1174,6 +1203,8 @@ class MemoDocumentBody extends StatelessWidget {
   final MemoDocumentResolvedData resolvedData;
   final MemoDocumentAudioHandle? audioHandle;
   final GestureLongPressStartCallback? onLongPressStart;
+  final GestureTapDownCallback? onSecondaryTapDown;
+  final bool boundDesktopReadWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -1201,67 +1232,48 @@ class MemoDocumentBody extends StatelessWidget {
       return thumbnail ? appendThumbnailParam(url) : url;
     }
 
-    final body = ListView(
-      controller: scrollController,
-      padding: const EdgeInsets.all(16),
-      children: [
-        header,
-        if (showSupplementarySections && shouldShowEngagement)
-          MemoEngagementSurface(
-            memoUid: memo.uid,
-            memoVisibility: memo.visibility,
-          ),
-        if (showSupplementarySections) _MemoRelationsSection(memoUid: memo.uid),
-        if (showSupplementarySections && nonImageAttachments.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text(
-            context.t.strings.legacy.msg_attachments,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final attachment in nonImageAttachments)
-                Builder(
-                  builder: (context) {
-                    final isAudio = attachment.type.startsWith('audio');
-                    final fullUrl = (baseUrl == null)
-                        ? ''
-                        : resolveAttachmentUrl(
-                            baseUrl,
-                            attachment,
-                            thumbnail: false,
-                          );
+    final document = _MemoDocumentReadWidth(
+      enabled: boundDesktopReadWidth,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          header,
+          if (showSupplementarySections && shouldShowEngagement)
+            MemoEngagementSurface(
+              memoUid: memo.uid,
+              memoVisibility: memo.visibility,
+            ),
+          if (showSupplementarySections)
+            _MemoRelationsSection(memoUid: memo.uid),
+          if (showSupplementarySections && nonImageAttachments.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              context.t.strings.legacy.msg_attachments,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final attachment in nonImageAttachments)
+                  Builder(
+                    builder: (context) {
+                      final isAudio = attachment.type.startsWith('audio');
+                      final fullUrl = (baseUrl == null)
+                          ? ''
+                          : resolveAttachmentUrl(
+                              baseUrl,
+                              attachment,
+                              thumbnail: false,
+                            );
 
-                    if (isAudio && baseUrl != null && fullUrl.isNotEmpty) {
-                      final handle = audioHandle;
-                      final stream = handle?.playerStateStream;
-                      final togglePlayAudio = handle?.onTogglePlayAudio;
-                      if (stream == null) {
-                        return ListTile(
-                          leading: const Icon(Icons.play_arrow),
-                          title: Text(attachment.filename),
-                          subtitle: Text(attachment.type),
-                          onTap: togglePlayAudio == null
-                              ? null
-                              : () => togglePlayAudio(
-                                  fullUrl,
-                                  headers: authHeader == null
-                                      ? null
-                                      : {'Authorization': authHeader},
-                                ),
-                        );
-                      }
-                      return StreamBuilder<PlayerState>(
-                        stream: stream,
-                        builder: (context, snap) {
-                          final playing =
-                              handle?.isPlayingForUrl(fullUrl) ?? false;
+                      if (isAudio && baseUrl != null && fullUrl.isNotEmpty) {
+                        final handle = audioHandle;
+                        final stream = handle?.playerStateStream;
+                        final togglePlayAudio = handle?.onTogglePlayAudio;
+                        if (stream == null) {
                           return ListTile(
-                            leading: Icon(
-                              playing ? Icons.pause : Icons.play_arrow,
-                            ),
+                            leading: const Icon(Icons.play_arrow),
                             title: Text(attachment.filename),
                             subtitle: Text(attachment.type),
                             onTap: togglePlayAudio == null
@@ -1273,28 +1285,87 @@ class MemoDocumentBody extends StatelessWidget {
                                         : {'Authorization': authHeader},
                                   ),
                           );
-                        },
-                      );
-                    }
+                        }
+                        return StreamBuilder<PlayerState>(
+                          stream: stream,
+                          builder: (context, snap) {
+                            final playing =
+                                handle?.isPlayingForUrl(fullUrl) ?? false;
+                            return ListTile(
+                              leading: Icon(
+                                playing ? Icons.pause : Icons.play_arrow,
+                              ),
+                              title: Text(attachment.filename),
+                              subtitle: Text(attachment.type),
+                              onTap: togglePlayAudio == null
+                                  ? null
+                                  : () => togglePlayAudio(
+                                      fullUrl,
+                                      headers: authHeader == null
+                                          ? null
+                                          : {'Authorization': authHeader},
+                                    ),
+                            );
+                          },
+                        );
+                      }
 
-                    return ListTile(
-                      leading: const Icon(Icons.attach_file),
-                      title: Text(attachment.filename),
-                      subtitle: Text(attachment.type),
-                    );
-                  },
-                ),
-            ],
-          ),
+                      return ListTile(
+                        leading: const Icon(Icons.attach_file),
+                        title: Text(attachment.filename),
+                        subtitle: Text(attachment.type),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ],
         ],
-      ],
+      ),
     );
-    if (onLongPressStart == null) return body;
+
+    final body = ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.all(16),
+      children: [document],
+    );
+    if (onLongPressStart == null && onSecondaryTapDown == null) return body;
     return GestureDetector(
       key: memoDetailActionMenuRegionKey,
       behavior: HitTestBehavior.translucent,
       onLongPressStart: onLongPressStart,
+      onSecondaryTapDown: onSecondaryTapDown,
       child: body,
+    );
+  }
+}
+
+class _MemoDocumentReadWidth extends StatelessWidget {
+  const _MemoDocumentReadWidth({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+
+    final target = resolvePlatformTarget(context);
+    final isDesktop =
+        target == PlatformTarget.macOS ||
+        target == PlatformTarget.windows ||
+        target == PlatformTarget.linux;
+    if (!isDesktop) return child;
+
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        key: memoDetailBoundedDocumentKey,
+        constraints: const BoxConstraints(
+          maxWidth: _memoDetailDesktopMaxReadWidth,
+        ),
+        child: child,
+      ),
     );
   }
 }

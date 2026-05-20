@@ -20,6 +20,7 @@ import 'package:memos_flutter_app/features/memos/home_quick_actions.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_floating_collapse_controller.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_screen_view_state.dart';
 import 'package:memos_flutter_app/features/memos/widgets/floating_collapse_button.dart';
+import 'package:memos_flutter_app/features/memos/widgets/memos_list_desktop_split_layout.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_floating_actions.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_macos_desktop_title_bar.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_search_widgets.dart';
@@ -406,6 +407,52 @@ void main() {
     expect(scaffoldKey.currentState!.isDrawerOpen, isFalse);
   });
 
+  testWidgets(
+    'desktop side pane uses memo-owned split layout with bounded preview slot',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1440, 1000);
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(
+        TranslationProvider(
+          child: MaterialApp(
+            locale: AppLocale.en.flutterLocale,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            theme: ThemeData(platform: TargetPlatform.macOS),
+            home: _buildBodyScreen(
+              drawerPanel: const SizedBox(child: Text('desktop drawer')),
+              data: _buildBodyData(
+                layout: _buildLayout(
+                  useDesktopSidePane: true,
+                  supportsDesktopPreviewPane: true,
+                ),
+                desktopPreviewVisible: true,
+              ),
+              desktopPreviewPane: const SizedBox(
+                child: Text('desktop preview'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MemosListDesktopSplitLayout), findsOneWidget);
+      expect(find.text('desktop drawer'), findsOneWidget);
+      expect(find.text('desktop preview'), findsOneWidget);
+      expect(
+        tester.getRect(find.byKey(memosListDesktopPreviewPaneSlotKey)).width,
+        closeTo(460, 0.1),
+      );
+      expect(find.byType(Drawer), findsNothing);
+    },
+  );
+
   testWidgets('keyword empty state offers explicit AI search CTA', (
     tester,
   ) async {
@@ -714,6 +761,7 @@ Widget _buildBodyScreen({
   ValueListenable<MemosListFloatingCollapseState>? floatingCollapseListenable,
   VoidCallback? onStartAiSearch,
   VoidCallback? onStopAiSearch,
+  Widget? desktopPreviewPane,
 }) {
   final resolvedData = data ?? _buildBodyData();
   final resolvedShowBackToTopListenable =
@@ -742,7 +790,7 @@ Widget _buildBodyScreen({
     tagFilterBarChild: null,
     searchLandingChild: null,
     bootstrapOverlayChild: null,
-    desktopPreviewPane: null,
+    desktopPreviewPane: desktopPreviewPane,
     desktopEditorModalSurface: null,
     desktopEditorModalVisible: false,
     desktopPreviewPaneWidth: 420,
@@ -831,6 +879,7 @@ MemosListScreenBodyData _buildBodyData({
   bool searching = false,
   MemosListScreenQueryState? query,
   MemosListScreenLayoutState? layout,
+  bool desktopPreviewVisible = false,
 }) {
   final resolvedQuery = query ?? _buildQueryState();
   return MemosListScreenBodyData(
@@ -866,7 +915,7 @@ MemosListScreenBodyData _buildBodyData({
     headerBackgroundColor: Colors.white,
     bottomInset: 0,
     hapticsEnabled: false,
-    desktopPreviewVisible: false,
+    desktopPreviewVisible: desktopPreviewVisible,
     enableDrawerOpenDragGesture: true,
   );
 }
@@ -874,6 +923,7 @@ MemosListScreenBodyData _buildBodyData({
 MemosListScreenLayoutState _buildLayout({
   bool showHeaderPillActions = false,
   bool useDesktopSidePane = false,
+  bool supportsDesktopPreviewPane = false,
   bool useWindowsDesktopHeader = false,
   bool useMacosDesktopTitleBar = false,
 }) {
@@ -883,8 +933,8 @@ MemosListScreenLayoutState _buildLayout({
     listVisualOffset: 0,
     supportsDesktopSidePane: useDesktopSidePane,
     useDesktopSidePane: useDesktopSidePane,
-    supportsDesktopPreviewPane: false,
-    useDesktopPreviewPane: false,
+    supportsDesktopPreviewPane: supportsDesktopPreviewPane,
+    useDesktopPreviewPane: supportsDesktopPreviewPane,
     useInlineCompose: false,
     useWindowsDesktopHeader: useWindowsDesktopHeader,
     useMacosDesktopTitleBar: useMacosDesktopTitleBar,

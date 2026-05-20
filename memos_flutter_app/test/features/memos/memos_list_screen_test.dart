@@ -925,6 +925,44 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets('macOS desktop secondary click opens memo context menu', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 1200);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1280, 1200),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'macOS context menu memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byType(MemoListCard).first),
+      kind: PointerDeviceKind.mouse,
+      buttons: kSecondaryMouseButton,
+    );
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Copy'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Delete'), findsOneWidget);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
   testWidgets('windows wide layout persists preview pane width changes', (
     tester,
   ) async {

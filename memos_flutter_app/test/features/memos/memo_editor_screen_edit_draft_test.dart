@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -286,6 +287,30 @@ void main() {
     );
     expect(find.byTooltip('Restore'), findsOneWidget);
     expect(find.byTooltip('Save'), findsOneWidget);
+  });
+
+  testWidgets('desktop modal escape closes through desktop chrome path', (
+    tester,
+  ) async {
+    await _pumpEditor(
+      tester,
+      presentation: MemoEditorPresentation.desktopModal,
+      useExisting: false,
+      initialText: '',
+    );
+
+    expect(
+      find.byKey(const ValueKey<String>('memo-editor-desktop-header')),
+      findsOneWidget,
+    );
+    expect(_pageFullscreenButton, findsNothing);
+
+    await tester.tap(find.byType(EditableText));
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await _pumpRouteFrames(tester);
+
+    expect(find.byType(MemoEditorScreen), findsNothing);
   });
 }
 

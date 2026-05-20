@@ -19,6 +19,7 @@ import '../home_quick_actions.dart';
 import '../memos_list_floating_collapse_controller.dart';
 import '../memos_list_screen_view_state.dart';
 import 'floating_collapse_button.dart';
+import 'memos_list_desktop_split_layout.dart';
 import 'memos_list_floating_actions.dart';
 import 'memos_list_macos_desktop_title_bar.dart';
 import 'memos_list_search_widgets.dart';
@@ -34,8 +35,8 @@ typedef MemosListAnimatedItemBuilder =
 typedef DesktopDrawerPanelBuilder =
     Widget Function(AppDrawerViewMode viewMode, bool embedded);
 
-const WindowsDesktopSecondaryPaneMotionSpec _desktopMemoPreviewPaneMotionSpec =
-    WindowsDesktopSecondaryPaneMotionSpec(
+const DesktopShellSecondaryPaneMotionSpec _desktopMemoPreviewPaneMotionSpec =
+    DesktopShellSecondaryPaneMotionSpec(
       resizeDuration: AppMotion.desktopPreviewPaneResize,
       surfaceEnterDuration: AppMotion.desktopPreviewPaneEnter,
       surfaceExitDuration: AppMotion.desktopPreviewPaneExit,
@@ -994,70 +995,12 @@ class MemosListScreenBody extends StatelessWidget {
       if (!data.viewState.layout.useDesktopSidePane || drawerPanel == null) {
         return memoListBody;
       }
-      final dividerColor = isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.08);
-      final previewPaneDuration = AppMotion.effectiveDuration(
-        context,
-        showDesktopPreview
-            ? AppMotion.desktopContent
-            : AppMotion.desktopOverlayExit,
-      );
-      return Row(
-        children: [
-          SizedBox(width: kMemoFlowDesktopDrawerWidth, child: drawerPanel),
-          VerticalDivider(width: 1, thickness: 1, color: dividerColor),
-          Expanded(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: showDesktopPreview
-                    ? kMemoFlowDesktopPreviewListMinWidth
-                    : 0,
-              ),
-              child: desktopBodyContent,
-            ),
-          ),
-          AnimatedContainer(
-            duration: previewPaneDuration,
-            curve: AppMotion.standardCurve,
-            width: showDesktopPreview ? 1 : 0,
-            child: ColoredBox(color: dividerColor),
-          ),
-          AnimatedContainer(
-            duration: previewPaneDuration,
-            curve: AppMotion.emphasizedEnterCurve,
-            width: showDesktopPreview ? kMemoFlowDesktopPreviewPaneWidth : 0,
-            child: ClipRect(
-              child: OverflowBox(
-                alignment: Alignment.centerLeft,
-                minWidth: kMemoFlowDesktopPreviewPaneWidth,
-                maxWidth: kMemoFlowDesktopPreviewPaneWidth,
-                child: SizedBox(
-                  width: kMemoFlowDesktopPreviewPaneWidth,
-                  child: AnimatedOpacity(
-                    duration: previewPaneDuration,
-                    curve: AppMotion.emphasizedEnterCurve,
-                    opacity: showDesktopPreview ? 1 : 0,
-                    child: AnimatedSlide(
-                      duration: previewPaneDuration,
-                      curve: AppMotion.emphasizedEnterCurve,
-                      offset: showDesktopPreview
-                          ? Offset.zero
-                          : const Offset(0.04, 0),
-                      child: AnimatedScale(
-                        duration: previewPaneDuration,
-                        curve: AppMotion.emphasizedEnterCurve,
-                        scale: showDesktopPreview ? 1 : 0.985,
-                        alignment: Alignment.centerLeft,
-                        child: desktopPreviewPane ?? const SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+      return MemosListDesktopSplitLayout(
+        drawerPanel: drawerPanel!,
+        body: desktopBodyContent,
+        previewPane: desktopPreviewPane,
+        previewVisible: showDesktopPreview,
+        previewPaneWidth: kMemoFlowDesktopPreviewPaneWidth,
       );
     }();
 

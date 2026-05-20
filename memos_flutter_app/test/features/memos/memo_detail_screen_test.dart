@@ -2,6 +2,8 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -479,6 +481,51 @@ void main() {
       expect(popoverRect.bottom, lessThanOrEqualTo(480));
     },
   );
+
+  testWidgets(
+    'desktop detail bounds reading width and supports secondary tap menu',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      final memo = _buildMemo(content: 'desktop bounded detail body');
+
+      await tester.pumpWidget(_buildTestApp(memo: memo));
+      await tester.tap(find.byKey(const ValueKey('open-detail')));
+      await tester.pumpAndSettle();
+
+      final boundedRect = tester.getRect(
+        find.byKey(memoDetailBoundedDocumentKey),
+      );
+      expect(boundedRect.width, closeTo(820, 0.1));
+      expect(boundedRect.center.dx, closeTo(640, 0.1));
+
+      await tester.tapAt(
+        boundedRect.center,
+        buttons: kSecondaryMouseButton,
+        pointer: 2,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(memoCardActionPopoverKey), findsOneWidget);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets('mobile detail keeps full-width document flow', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    final memo = _buildMemo(content: 'mobile detail body');
+
+    await tester.pumpWidget(_buildTestApp(memo: memo));
+    await tester.tap(find.byKey(const ValueKey('open-detail')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(memoDetailBoundedDocumentKey), findsNothing);
+    expect(find.byType(MemoDetailScreen), findsOneWidget);
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   testWidgets('detail long press menu copy action closes and copies content', (
     tester,

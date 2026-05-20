@@ -326,6 +326,12 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   bool get _isMacosDesktopTarget =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 
+  bool get _isDesktopContextMenuTarget =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.macOS ||
+          defaultTargetPlatform == TargetPlatform.linux);
+
   DesktopHomeLayoutPreference get _desktopHomeLayoutPreference =>
       ref.read(devicePreferencesProvider).desktopHomeLayoutPreference;
 
@@ -3980,12 +3986,12 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
                 _memoActionDelegate.handleMemoAction(memo, MemoCardAction.edit),
               );
             },
-            onLongPressCopy: _isWindowsDesktopTarget
+            onLongPressCopy: _isDesktopContextMenuTarget
                 ? null
                 : () {
                     _markSceneGuideSeen(SceneMicroGuideId.memoListGestures);
                   },
-            onSecondaryTapDown: _isWindowsDesktopTarget
+            onSecondaryTapDown: _isDesktopContextMenuTarget
                 ? (details) => unawaited(
                     _showMemoContextMenu(
                       memo,
