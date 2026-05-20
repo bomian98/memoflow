@@ -47,6 +47,14 @@ final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
       runtimeRole: ref.watch(desktopRuntimeRoleProvider),
     );
   }
+  if (kDebugMode && !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
+    return EphemeralSecureStorage();
+  }
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
+    return QueuedFlutterSecureStorage(
+      mOptions: const MacOsOptions(useDataProtectionKeyChain: false),
+    );
+  }
   return QueuedFlutterSecureStorage();
 });
 

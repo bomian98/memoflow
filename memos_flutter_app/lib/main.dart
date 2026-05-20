@@ -201,6 +201,11 @@ void main(List<String> args) {
           await windowManager.focus();
         });
       }
+      if (!kIsWeb &&
+          defaultTargetPlatform == TargetPlatform.macOS &&
+          !isMultiWindow) {
+        await windowManager.ensureInitialized();
+      }
       if (supportsDesktopTrayRuntime) {
         await DesktopTrayController.instance.ensureInitialized();
       }

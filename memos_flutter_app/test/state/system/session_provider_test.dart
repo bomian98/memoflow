@@ -9,6 +9,7 @@ import 'package:memos_flutter_app/data/models/instance_profile.dart';
 import 'package:memos_flutter_app/data/models/user.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
 import 'package:memos_flutter_app/data/repositories/accounts_repository.dart';
+import 'package:memos_flutter_app/data/repositories/ephemeral_secure_storage.dart';
 import 'package:memos_flutter_app/data/repositories/windows_locked_secure_storage.dart';
 import 'package:memos_flutter_app/state/system/session_provider.dart';
 
@@ -185,6 +186,16 @@ void main() {
       (storage as WindowsLockedQueuedFlutterSecureStorage).runtimeRole,
       DesktopRuntimeRole.mainApp,
     );
+  });
+
+  test('secureStorageProvider uses debug file storage on macOS', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final storage = container.read(secureStorageProvider);
+
+    expect(storage, isA<EphemeralSecureStorage>());
   });
 
   for (final role in DesktopRuntimeRole.values) {
