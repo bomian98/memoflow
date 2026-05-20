@@ -1,5 +1,8 @@
 // ignore_for_file: deprecated_member_use_from_same_package
 
+import 'dart:ui';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -14,6 +17,7 @@ import 'package:memos_flutter_app/data/models/instance_profile.dart';
 import 'package:memos_flutter_app/data/models/memo_relation.dart';
 import 'package:memos_flutter_app/features/resources/resources_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
+import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/memos/sync_queue_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
@@ -49,6 +53,7 @@ void main() {
 
   tearDown(() async {
     ResourcesScreen.debugRouteRequestOverride = null;
+    debugPlatformTargetOverride = null;
     await database.close();
     await deleteTestDatabase(dbName);
   });
@@ -271,6 +276,151 @@ void main() {
 
     await _disposeTree(tester);
   });
+
+  testWidgets('desktop resources screen uses dense table with search filter', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    await _setViewport(tester, const Size(1280, 900));
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        database: database,
+        resourceEntries: [
+          _entry(
+            memoUid: 'memo-image',
+            updateTime: DateTime(2024, 1, 10, 9),
+            attachment: _attachment(
+              'desk-image',
+              'desk-image.png',
+              'image/png',
+            ),
+          ),
+          _entry(
+            memoUid: 'memo-document',
+            updateTime: DateTime(2024, 1, 9, 9),
+            attachment: _attachment(
+              'desk-document',
+              'desk-document.pdf',
+              'application/pdf',
+            ),
+          ),
+        ],
+        screenSize: const Size(1280, 900),
+        platform: TargetPlatform.macOS,
+      ),
+    );
+    await _settle(tester);
+
+    expect(
+      find.byKey(const ValueKey('resources-desktop-table')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('resources-section-title-image')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('resources-desktop-row-memo-image-desk-image')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        const ValueKey('resources-desktop-row-memo-document-desk-document'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('resources-desktop-search-field')),
+      'document',
+    );
+    await _settle(tester);
+
+    expect(find.text('desk-image.png'), findsNothing);
+    expect(find.text('desk-document.pdf'), findsOneWidget);
+
+    await _disposeTree(tester);
+  });
+
+  testWidgets('desktop secondary click opens resources context menu', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    await _setViewport(tester, const Size(1280, 900));
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        database: database,
+        resourceEntries: [
+          _entry(
+            memoUid: 'memo-image',
+            updateTime: DateTime(2024, 1, 10, 9),
+            attachment: _attachment(
+              'context-image',
+              'context.png',
+              'image/png',
+            ),
+          ),
+        ],
+        screenSize: const Size(1280, 900),
+        platform: TargetPlatform.macOS,
+      ),
+    );
+    await _settle(tester);
+
+    final row = find.byKey(
+      const ValueKey('resources-desktop-row-memo-image-context-image'),
+    );
+    final gesture = await tester.startGesture(
+      tester.getCenter(row),
+      kind: PointerDeviceKind.mouse,
+      buttons: kSecondaryMouseButton,
+    );
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Preview'), findsOneWidget);
+    expect(find.text('Open memo'), findsOneWidget);
+    expect(find.text('Download'), findsOneWidget);
+
+    await _disposeTree(tester);
+  });
+
+  testWidgets('mobile resources screen keeps attachment card grid fallback', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.android;
+    await _setViewport(tester, const Size(390, 844));
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        database: database,
+        resourceEntries: [
+          _entry(
+            memoUid: 'memo-image',
+            updateTime: DateTime(2024, 1, 10, 9),
+            attachment: _attachment('mobile-image', 'mobile.png', 'image/png'),
+          ),
+        ],
+        screenSize: const Size(390, 844),
+        platform: TargetPlatform.android,
+      ),
+    );
+    await _settle(tester);
+
+    expect(find.byKey(const ValueKey('resources-desktop-table')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('resources-section-title-image')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('resources-card-memo-image-mobile-image')),
+      findsOneWidget,
+    );
+
+    await _disposeTree(tester);
+  });
 }
 
 Future<void> _settle(WidgetTester tester) async {
@@ -282,6 +432,13 @@ Future<void> _settle(WidgetTester tester) async {
 Future<void> _disposeTree(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pump();
+}
+
+Future<void> _setViewport(WidgetTester tester, Size size) async {
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = size;
+  addTearDown(tester.view.resetDevicePixelRatio);
+  addTearDown(tester.view.resetPhysicalSize);
 }
 
 Future<void> _invokeCardTap(WidgetTester tester, Finder tapTarget) async {
@@ -307,6 +464,8 @@ Widget _buildTestApp({
   List<ResourceEntry>? resourceEntries,
   int unreadNotificationCount = 0,
   int syncAttentionCount = 0,
+  Size screenSize = const Size(900, 3000),
+  TargetPlatform platform = TargetPlatform.android,
 }) {
   return ProviderScope(
     overrides: [
@@ -331,11 +490,12 @@ Widget _buildTestApp({
     ],
     child: TranslationProvider(
       child: MaterialApp(
+        theme: ThemeData(platform: platform),
         locale: AppLocale.en.flutterLocale,
         supportedLocales: AppLocaleUtils.supportedLocales,
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: const MediaQuery(
-          data: MediaQueryData(size: Size(900, 3000)),
+        home: MediaQuery(
+          data: MediaQueryData(size: screenSize),
           child: ResourcesScreen(),
         ),
       ),

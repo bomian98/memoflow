@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/memoflow_palette.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_adaptive_layout.dart';
 import '../../platform/widgets/platform_page.dart';
 import 'ai_insight_models.dart';
 
@@ -72,167 +73,171 @@ class AiAnalysisPreviewScreen extends StatelessWidget {
     return PlatformPage(
       backgroundColor: background,
       title: Text(isZh ? '检索预览' : 'Retrieval Preview'),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: card,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  definition.title(context),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: textMain,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _PreviewMetricRow(
-                  label: isZh ? '匹配笔记数' : 'Matching memos',
-                  value: '${payload.totalMatchingMemos}',
-                  textColor: textMain,
-                  mutedColor: textMuted,
-                ),
-                const SizedBox(height: 10),
-                _PreviewMetricRow(
-                  label: isZh ? '候选分片数' : 'Candidate chunks',
-                  value: '${payload.candidateChunks}',
-                  textColor: textMain,
-                  mutedColor: textMuted,
-                ),
-                const SizedBox(height: 10),
-                _PreviewMetricRow(
-                  label: context.t.strings.aiInsight.contentPreview.timeRange,
-                  value: rangeLabel,
-                  textColor: textMain,
-                  mutedColor: textMuted,
-                ),
-                const SizedBox(height: 10),
-                _PreviewMetricRow(
-                  label: isZh ? '可见性范围' : 'Visibility scope',
-                  value: selectedVisibilities.isEmpty
-                      ? (isZh ? '未选择' : 'None selected')
-                      : selectedVisibilities.join(' / '),
-                  textColor: textMain,
-                  mutedColor: textMuted,
-                ),
-                const SizedBox(height: 10),
-                _PreviewMetricRow(
-                  label: isZh ? '向量已就绪' : 'Embeddings ready',
-                  value: '${payload.embeddingReady}',
-                  textColor: textMain,
-                  mutedColor: textMuted,
-                ),
-                const SizedBox(height: 10),
-                _PreviewMetricRow(
-                  label: isZh ? '向量处理中' : 'Embeddings pending',
-                  value: '${payload.embeddingPending}',
-                  textColor: textMain,
-                  mutedColor: textMuted,
-                ),
-                const SizedBox(height: 10),
-                _PreviewMetricRow(
-                  label: isZh ? '向量失败数' : 'Embeddings failed',
-                  value: '${payload.embeddingFailed}',
-                  textColor: textMain,
-                  mutedColor: textMuted,
-                ),
-                if (payload.isSampled) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: definition.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      isZh
-                          ? '候选集超过上限，当前预览为采样结果。'
-                          : 'The candidate set exceeded the limit, so this preview is sampled.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        height: 1.4,
-                        fontWeight: FontWeight.w600,
-                        color: textMain,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (payload.items.isEmpty)
+      body: PlatformBoundedContent(
+        desktopMaxWidth: 860,
+        tabletMaxWidth: 760,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: card,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: border),
               ),
-              child: Text(
-                isZh
-                    ? '当前没有可展示的证据片段。'
-                    : 'No evidence snippets are available yet.',
-                style: TextStyle(fontSize: 14, height: 1.6, color: textMuted),
-              ),
-            )
-          else
-            for (final item in payload.items.reversed) ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: card,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          dateFormatter.format(item.createdAt),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: definition.accent,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${formatVisibility(item.visibility)} · ${formatEmbeddingStatusName(item.embeddingStatus.name)}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: textMuted,
-                          ),
-                        ),
-                      ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    definition.title(context),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: textMain,
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      item.content,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.55,
-                        color: textMain,
+                  ),
+                  const SizedBox(height: 14),
+                  _PreviewMetricRow(
+                    label: isZh ? '匹配笔记数' : 'Matching memos',
+                    value: '${payload.totalMatchingMemos}',
+                    textColor: textMain,
+                    mutedColor: textMuted,
+                  ),
+                  const SizedBox(height: 10),
+                  _PreviewMetricRow(
+                    label: isZh ? '候选分片数' : 'Candidate chunks',
+                    value: '${payload.candidateChunks}',
+                    textColor: textMain,
+                    mutedColor: textMuted,
+                  ),
+                  const SizedBox(height: 10),
+                  _PreviewMetricRow(
+                    label: context.t.strings.aiInsight.contentPreview.timeRange,
+                    value: rangeLabel,
+                    textColor: textMain,
+                    mutedColor: textMuted,
+                  ),
+                  const SizedBox(height: 10),
+                  _PreviewMetricRow(
+                    label: isZh ? '可见性范围' : 'Visibility scope',
+                    value: selectedVisibilities.isEmpty
+                        ? (isZh ? '未选择' : 'None selected')
+                        : selectedVisibilities.join(' / '),
+                    textColor: textMain,
+                    mutedColor: textMuted,
+                  ),
+                  const SizedBox(height: 10),
+                  _PreviewMetricRow(
+                    label: isZh ? '向量已就绪' : 'Embeddings ready',
+                    value: '${payload.embeddingReady}',
+                    textColor: textMain,
+                    mutedColor: textMuted,
+                  ),
+                  const SizedBox(height: 10),
+                  _PreviewMetricRow(
+                    label: isZh ? '向量处理中' : 'Embeddings pending',
+                    value: '${payload.embeddingPending}',
+                    textColor: textMain,
+                    mutedColor: textMuted,
+                  ),
+                  const SizedBox(height: 10),
+                  _PreviewMetricRow(
+                    label: isZh ? '向量失败数' : 'Embeddings failed',
+                    value: '${payload.embeddingFailed}',
+                    textColor: textMain,
+                    mutedColor: textMuted,
+                  ),
+                  if (payload.isSampled) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: definition.accent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        isZh
+                            ? '候选集超过上限，当前预览为采样结果。'
+                            : 'The candidate set exceeded the limit, so this preview is sampled.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                          color: textMain,
+                        ),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-              const SizedBox(height: 12),
-            ],
-        ],
+            ),
+            const SizedBox(height: 16),
+            if (payload.items.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: card,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: border),
+                ),
+                child: Text(
+                  isZh
+                      ? '当前没有可展示的证据片段。'
+                      : 'No evidence snippets are available yet.',
+                  style: TextStyle(fontSize: 14, height: 1.6, color: textMuted),
+                ),
+              )
+            else
+              for (final item in payload.items.reversed) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: card,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            dateFormatter.format(item.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: definition.accent,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${formatVisibility(item.visibility)} · ${formatEmbeddingStatusName(item.embeddingStatus.name)}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        item.content,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.55,
+                          color: textMain,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+          ],
+        ),
       ),
     );
   }

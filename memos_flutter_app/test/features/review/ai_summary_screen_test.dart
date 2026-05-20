@@ -33,6 +33,7 @@ import 'package:memos_flutter_app/features/review/ai_insight_models.dart';
 import 'package:memos_flutter_app/features/review/ai_insight_settings_sheet.dart';
 import 'package:memos_flutter_app/features/review/ai_summary_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
+import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/memos/sync_queue_provider.dart';
 import 'package:memos_flutter_app/state/review/ai_analysis_provider.dart';
 import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
@@ -289,18 +290,27 @@ Widget _buildTestApp({
   List<Override> overrides = const [],
   bool scaffoldBody = false,
   double? textScaleFactor,
+  Size? screenSize,
+  TargetPlatform? platform,
 }) {
   LocaleSettings.setLocale(AppLocale.en);
   return TranslationProvider(
     child: ProviderScope(
       overrides: overrides,
       child: MaterialApp(
+        theme: platform == null ? null : ThemeData(platform: platform),
         builder: textScaleFactor == null
-            ? null
+            ? screenSize == null
+                  ? null
+                  : (context, appChild) => MediaQuery(
+                      data: MediaQuery.of(context).copyWith(size: screenSize),
+                      child: appChild ?? const SizedBox.shrink(),
+                    )
             : (context, appChild) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: TextScaler.linear(textScaleFactor)),
+                data: MediaQuery.of(context).copyWith(
+                  size: screenSize,
+                  textScaler: TextScaler.linear(textScaleFactor),
+                ),
                 child: appChild ?? const SizedBox.shrink(),
               ),
         locale: AppLocale.en.flutterLocale,
@@ -1310,6 +1320,53 @@ Future<void> main() async {
     expect(find.text('2'), findsOneWidget);
     expect(find.text('First note'), findsOneWidget);
     expect(find.text('Second note'), findsOneWidget);
+  });
+
+  testWidgets('preview screen bounds content on desktop width', (tester) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    addTearDown(() => debugPlatformTargetOverride = null);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1440, 900);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        screenSize: const Size(1440, 900),
+        platform: TargetPlatform.macOS,
+        child: AiAnalysisPreviewScreen(
+          definition: visibleAiInsightDefinitions.first,
+          allowPublic: true,
+          allowPrivate: true,
+          allowProtected: false,
+          rangeLabel: '2026.03.01 - 2026.03.07',
+          payload: AiAnalysisPreviewPayload(
+            totalMatchingMemos: 1,
+            candidateChunks: 1,
+            embeddingReady: 1,
+            embeddingPending: 0,
+            embeddingFailed: 0,
+            isSampled: false,
+            items: <AiPreviewMemoItem>[
+              AiPreviewMemoItem(
+                memoUid: 'memo-1',
+                chunkId: 1,
+                createdAt: DateTime(2026, 3, 6),
+                content: 'Desktop bounded preview note',
+                visibility: 'PRIVATE',
+                embeddingStatus: AiEmbeddingStatus.ready,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final previewNote = find.text('Desktop bounded preview note');
+    expect(previewNote, findsOneWidget);
+    expect(tester.getTopLeft(previewNote).dx, greaterThan(260));
   });
 
   testWidgets('analysis can start with chat model only', (tester) async {

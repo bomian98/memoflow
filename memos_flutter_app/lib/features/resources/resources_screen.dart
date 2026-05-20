@@ -9,6 +9,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/app_localization.dart';
 import '../../core/drawer_navigation.dart';
 import '../../core/platform_layout.dart';
 import '../../core/top_toast.dart';
@@ -40,6 +41,30 @@ class _AttachmentSection {
   final List<ResourceEntry> entries;
 }
 
+class _ResourceEntryPresentation {
+  const _ResourceEntryPresentation({
+    required this.kind,
+    required this.displayName,
+    required this.localFile,
+    required this.thumbnailUrl,
+    required this.remoteUrl,
+    required this.videoEntry,
+    required this.canPreview,
+    required this.canDownload,
+  });
+
+  final AttachmentCategory kind;
+  final String displayName;
+  final File? localFile;
+  final String? thumbnailUrl;
+  final String? remoteUrl;
+  final MemoVideoEntry? videoEntry;
+  final bool canPreview;
+  final bool canDownload;
+}
+
+enum _ResourceDesktopAction { preview, openMemo, download }
+
 class ResourcesScreen extends ConsumerStatefulWidget {
   const ResourcesScreen({
     super.key,
@@ -59,6 +84,15 @@ class ResourcesScreen extends ConsumerStatefulWidget {
 
 class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
   final Set<AttachmentCategory> _collapsedKinds = <AttachmentCategory>{};
+  final TextEditingController _desktopSearchController =
+      TextEditingController();
+  AttachmentCategory? _desktopFilter;
+
+  @override
+  void dispose() {
+    _desktopSearchController.dispose();
+    super.dispose();
+  }
 
   File? _localAttachmentFile(Attachment attachment) {
     final raw = attachment.externalLink.trim();
@@ -425,6 +459,22 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     return sections;
   }
 
+  List<ResourceEntry> _filterDesktopEntries(List<ResourceEntry> entries) {
+    final query = _desktopSearchController.text.trim().toLowerCase();
+    return entries
+        .where((entry) {
+          final kind = _classifyAttachment(entry.attachment);
+          if (_desktopFilter != null && kind != _desktopFilter) return false;
+          if (query.isEmpty) return true;
+          final attachment = entry.attachment;
+          return _displayName(attachment).toLowerCase().contains(query) ||
+              attachment.type.toLowerCase().contains(query) ||
+              entry.memoUid.toLowerCase().contains(query);
+        })
+        .toList(growable: false)
+      ..sort(_compareEntries);
+  }
+
   String _kindLabel(BuildContext context, AttachmentCategory kind) {
     return switch (kind) {
       AttachmentCategory.image => context.t.strings.legacy.msg_image,
@@ -449,6 +499,100 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         .replaceFirst('.', '');
     if (extension.isNotEmpty) return extension.toUpperCase();
     return context.t.strings.legacy.msg_file;
+  }
+
+  String _fileSizeLabel(BuildContext context, int bytes) {
+    if (bytes <= 0) return context.tr(zh: '未知', en: 'Unknown');
+    const units = ['B', 'KB', 'MB', 'GB'];
+    var value = bytes.toDouble();
+    var unitIndex = 0;
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex++;
+    }
+    final digits = value >= 10 || unitIndex == 0 ? 0 : 1;
+    return '${value.toStringAsFixed(digits)} ${units[unitIndex]}';
+  }
+
+  _ResourceEntryPresentation _buildEntryPresentation({
+    required ResourceEntry entry,
+    required Uri? baseUrl,
+    required String? authHeader,
+    required bool rebaseAbsoluteFileUrlForV024,
+    required bool attachAuthForSameOriginAbsolute,
+  }) {
+    final attachment = entry.attachment;
+    final kind = _classifyAttachment(attachment);
+    final isVideo = attachment.isVideo;
+    final localFile = _localAttachmentFile(attachment);
+    final thumbnailUrl = _resolveRemoteUrl(
+      baseUrl,
+      attachment,
+      thumbnail: true,
+    );
+    final remoteUrl = _resolveRemoteUrl(baseUrl, attachment, thumbnail: false);
+    final videoEntry = isVideo
+        ? memoVideoEntryFromAttachment(
+            attachment,
+            baseUrl,
+            authHeader,
+            rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+            attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+          )
+        : null;
+    final hasVideoSource =
+        videoEntry != null &&
+        (videoEntry.localFile != null ||
+            (videoEntry.videoUrl ?? '').isNotEmpty);
+    final hasDebugRouteOverride =
+        ResourcesScreen.debugRouteRequestOverride != null;
+    final canPreview =
+        switch (kind) {
+          AttachmentCategory.image ||
+          AttachmentCategory.audio => localFile != null || remoteUrl != null,
+          AttachmentCategory.document => false,
+          AttachmentCategory.other =>
+            isVideo &&
+                (localFile != null || remoteUrl != null || hasVideoSource),
+        } ||
+        (hasDebugRouteOverride &&
+            (kind == AttachmentCategory.image ||
+                kind == AttachmentCategory.audio ||
+                isVideo));
+
+    return _ResourceEntryPresentation(
+      kind: kind,
+      displayName: _displayName(attachment),
+      localFile: localFile,
+      thumbnailUrl: thumbnailUrl,
+      remoteUrl: remoteUrl,
+      videoEntry: videoEntry,
+      canPreview: canPreview,
+      canDownload: localFile != null || remoteUrl != null,
+    );
+  }
+
+  void _openResourceEntry(
+    BuildContext context, {
+    required ResourceEntry entry,
+    required _ResourceEntryPresentation presentation,
+    required Uri? baseUrl,
+    required String? authHeader,
+    required bool rebaseAbsoluteFileUrlForV024,
+    required bool attachAuthForSameOriginAbsolute,
+  }) {
+    if (presentation.canPreview) {
+      _openPreview(
+        context,
+        entry.attachment,
+        baseUrl: baseUrl,
+        authHeader: authHeader,
+        rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+        attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+      );
+      return;
+    }
+    _openSourceMemo(context, entry.memoUid);
   }
 
   Future<void> _openSourceMemo(BuildContext context, String memoUid) async {
@@ -525,6 +669,136 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     );
   }
 
+  Widget _buildDesktopToolbar(
+    BuildContext context,
+    List<ResourceEntry> entries,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final filteredCount = _filterDesktopEntries(entries).length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 18, 8, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: 40,
+              child: TextField(
+                key: const ValueKey<String>('resources-desktop-search-field'),
+                controller: _desktopSearchController,
+                onChanged: (_) => setState(() {}),
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                  suffixIcon: _desktopSearchController.text.trim().isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: context.t.strings.legacy.msg_clear_2,
+                          onPressed: () {
+                            _desktopSearchController.clear();
+                            setState(() {});
+                          },
+                          icon: const Icon(Icons.close_rounded, size: 18),
+                        ),
+                  hintText: context.t.strings.legacy.msg_search,
+                  isDense: true,
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerLowest,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          PopupMenuButton<AttachmentCategory?>(
+            key: const ValueKey<String>('resources-desktop-filter-button'),
+            tooltip: context.t.strings.legacy.msg_filter,
+            initialValue: _desktopFilter,
+            onSelected: (value) => setState(() => _desktopFilter = value),
+            itemBuilder: (context) => [
+              PopupMenuItem<AttachmentCategory?>(
+                value: null,
+                child: Row(
+                  children: [
+                    if (_desktopFilter == null)
+                      const Icon(Icons.check_rounded, size: 18)
+                    else
+                      const SizedBox(width: 18),
+                    const SizedBox(width: 8),
+                    Text(context.t.strings.legacy.msg_all),
+                  ],
+                ),
+              ),
+              for (final kind in AttachmentCategory.values)
+                PopupMenuItem<AttachmentCategory?>(
+                  value: kind,
+                  child: Row(
+                    children: [
+                      if (_desktopFilter == kind)
+                        const Icon(Icons.check_rounded, size: 18)
+                      else
+                        const SizedBox(width: 18),
+                      const SizedBox(width: 8),
+                      Text(_kindLabel(context, kind)),
+                    ],
+                  ),
+                ),
+            ],
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: colorScheme.outlineVariant),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _desktopFilter == null
+                        ? Icons.filter_list_rounded
+                        : _kindIcon(_desktopFilter!),
+                    size: 18,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _desktopFilter == null
+                        ? context.t.strings.legacy.msg_all
+                        : _kindLabel(context, _desktopFilter!),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            context.tr(zh: '$filteredCount 个附件', en: '$filteredCount items'),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCardPreview(
     BuildContext context, {
     required Attachment attachment,
@@ -533,6 +807,10 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     required String? thumbnailUrl,
     required String? authHeader,
     required MemoVideoEntry? videoEntry,
+    double height = 82,
+    double iconSize = 34,
+    double borderRadius = 12,
+    bool showFileBadge = true,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final isVideo = attachment.isVideo;
@@ -542,9 +820,16 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(_kindIcon(kind), size: 34, color: colorScheme.onSurfaceVariant),
-          const SizedBox(height: 8),
-          if (!attachment.isImage && !attachment.isAudio && !isVideo)
+          Icon(
+            _kindIcon(kind),
+            size: iconSize,
+            color: colorScheme.onSurfaceVariant,
+          ),
+          if (showFileBadge) const SizedBox(height: 8),
+          if (showFileBadge &&
+              !attachment.isImage &&
+              !attachment.isAudio &&
+              !isVideo)
             Text(
               _fileBadgeLabel(context, attachment),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -579,8 +864,8 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     };
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(height: 82, width: double.infinity, child: child),
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: SizedBox(height: height, width: double.infinity, child: child),
     );
   }
 
@@ -594,46 +879,13 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     required DateFormat dateFmt,
   }) {
     final attachment = entry.attachment;
-    final kind = _classifyAttachment(attachment);
-    final isVideo = attachment.isVideo;
-    final displayName = _displayName(attachment);
-    final localFile = _localAttachmentFile(attachment);
-    final thumbnailUrl = _resolveRemoteUrl(
-      baseUrl,
-      attachment,
-      thumbnail: true,
+    final presentation = _buildEntryPresentation(
+      entry: entry,
+      baseUrl: baseUrl,
+      authHeader: authHeader,
+      rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+      attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
     );
-    final remoteUrl = _resolveRemoteUrl(baseUrl, attachment, thumbnail: false);
-    final videoEntry = isVideo
-        ? memoVideoEntryFromAttachment(
-            attachment,
-            baseUrl,
-            authHeader,
-            rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
-            attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
-          )
-        : null;
-    final hasVideoSource =
-        videoEntry != null &&
-        (videoEntry.localFile != null ||
-            (videoEntry.videoUrl ?? '').isNotEmpty);
-
-    final hasDebugRouteOverride =
-        ResourcesScreen.debugRouteRequestOverride != null;
-    final canPreview =
-        switch (kind) {
-          AttachmentCategory.image ||
-          AttachmentCategory.audio => localFile != null || remoteUrl != null,
-          AttachmentCategory.document => false,
-          AttachmentCategory.other =>
-            isVideo &&
-                (localFile != null || remoteUrl != null || hasVideoSource),
-        } ||
-        (hasDebugRouteOverride &&
-            (kind == AttachmentCategory.image ||
-                kind == AttachmentCategory.audio ||
-                isVideo));
-    final canDownload = localFile != null || remoteUrl != null;
     final colorScheme = Theme.of(context).colorScheme;
     final actionStyle = IconButton.styleFrom(
       visualDensity: VisualDensity.compact,
@@ -653,20 +905,15 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
       child: InkWell(
         key: ValueKey('resources-card-tap-${entry.memoUid}-${attachment.uid}'),
         borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          if (canPreview) {
-            _openPreview(
-              context,
-              attachment,
-              baseUrl: baseUrl,
-              authHeader: authHeader,
-              rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
-              attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
-            );
-            return;
-          }
-          _openSourceMemo(context, entry.memoUid);
-        },
+        onTap: () => _openResourceEntry(
+          context,
+          entry: entry,
+          presentation: presentation,
+          baseUrl: baseUrl,
+          authHeader: authHeader,
+          rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+          attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -679,18 +926,18 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 child: _buildCardPreview(
                   context,
                   attachment: attachment,
-                  kind: kind,
-                  localFile: localFile,
-                  thumbnailUrl: thumbnailUrl,
+                  kind: presentation.kind,
+                  localFile: presentation.localFile,
+                  thumbnailUrl: presentation.thumbnailUrl,
                   authHeader: authHeader,
-                  videoEntry: videoEntry,
+                  videoEntry: presentation.videoEntry,
                 ),
               ),
               const SizedBox(height: 10),
               Tooltip(
-                message: displayName,
+                message: presentation.displayName,
                 child: Text(
-                  displayName,
+                  presentation.displayName,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -703,13 +950,13 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
               Row(
                 children: [
                   Icon(
-                    _kindIcon(kind),
+                    _kindIcon(presentation.kind),
                     size: 15,
                     color: colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    _kindLabel(context, kind),
+                    _kindLabel(context, presentation.kind),
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: colorScheme.onSurfaceVariant,
@@ -759,7 +1006,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                         'resources-download-${entry.memoUid}-${attachment.uid}',
                       ),
                       style: actionStyle,
-                      onPressed: canDownload
+                      onPressed: presentation.canDownload
                           ? () => _downloadAttachment(
                               context,
                               attachment,
@@ -775,6 +1022,371 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _showDesktopResourceContextMenu(
+    BuildContext context, {
+    required Offset position,
+    required ResourceEntry entry,
+    required _ResourceEntryPresentation presentation,
+    required Uri? baseUrl,
+    required String? authHeader,
+    required bool rebaseAbsoluteFileUrlForV024,
+    required bool attachAuthForSameOriginAbsolute,
+  }) async {
+    final overlayState = Overlay.maybeOf(context);
+    final overlay = overlayState?.context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+
+    final selected = await showMenu<_ResourceDesktopAction>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(position.dx, position.dy, 1, 1),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        PopupMenuItem<_ResourceDesktopAction>(
+          value: _ResourceDesktopAction.preview,
+          enabled: presentation.canPreview,
+          child: Row(
+            children: [
+              const Icon(Icons.visibility_outlined, size: 18),
+              const SizedBox(width: 10),
+              Text(context.tr(zh: '预览', en: 'Preview')),
+            ],
+          ),
+        ),
+        PopupMenuItem<_ResourceDesktopAction>(
+          value: _ResourceDesktopAction.openMemo,
+          child: Row(
+            children: [
+              const Icon(Icons.note_alt_outlined, size: 18),
+              const SizedBox(width: 10),
+              Text(context.t.strings.legacy.msg_open_memo),
+            ],
+          ),
+        ),
+        PopupMenuItem<_ResourceDesktopAction>(
+          value: _ResourceDesktopAction.download,
+          enabled: presentation.canDownload,
+          child: Row(
+            children: [
+              const Icon(Icons.download_rounded, size: 18),
+              const SizedBox(width: 10),
+              Text(context.t.strings.legacy.msg_download),
+            ],
+          ),
+        ),
+      ],
+    );
+    if (!mounted || !context.mounted || selected == null) return;
+
+    switch (selected) {
+      case _ResourceDesktopAction.preview:
+        _openPreview(
+          context,
+          entry.attachment,
+          baseUrl: baseUrl,
+          authHeader: authHeader,
+          rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+          attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+        );
+      case _ResourceDesktopAction.openMemo:
+        await _openSourceMemo(context, entry.memoUid);
+      case _ResourceDesktopAction.download:
+        await _downloadAttachment(
+          context,
+          entry.attachment,
+          baseUrl,
+          authHeader,
+        );
+    }
+  }
+
+  Widget _buildDesktopResourceRow(
+    BuildContext context, {
+    required ResourceEntry entry,
+    required Uri? baseUrl,
+    required String? authHeader,
+    required bool rebaseAbsoluteFileUrlForV024,
+    required bool attachAuthForSameOriginAbsolute,
+    required DateFormat dateFmt,
+  }) {
+    final attachment = entry.attachment;
+    final presentation = _buildEntryPresentation(
+      entry: entry,
+      baseUrl: baseUrl,
+      authHeader: authHeader,
+      rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+      attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+    );
+    final colorScheme = Theme.of(context).colorScheme;
+    final rowKey = ValueKey<String>(
+      'resources-desktop-row-${entry.memoUid}-${attachment.uid}',
+    );
+    final actionStyle = IconButton.styleFrom(
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      minimumSize: const Size(30, 30),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      foregroundColor: colorScheme.onSurfaceVariant,
+    );
+
+    return GestureDetector(
+      onSecondaryTapDown: (details) => _showDesktopResourceContextMenu(
+        context,
+        position: details.globalPosition,
+        entry: entry,
+        presentation: presentation,
+        baseUrl: baseUrl,
+        authHeader: authHeader,
+        rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+        attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: rowKey,
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => _openResourceEntry(
+            context,
+            entry: entry,
+            presentation: presentation,
+            baseUrl: baseUrl,
+            authHeader: authHeader,
+            rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+            attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: _buildCardPreview(
+                        context,
+                        attachment: attachment,
+                        kind: presentation.kind,
+                        localFile: presentation.localFile,
+                        thumbnailUrl: presentation.thumbnailUrl,
+                        authHeader: authHeader,
+                        videoEntry: presentation.videoEntry,
+                        height: 44,
+                        iconSize: 22,
+                        borderRadius: 8,
+                        showFileBadge: false,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 42,
+                  child: Tooltip(
+                    message: presentation.displayName,
+                    child: Text(
+                      presentation.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 120,
+                  child: Row(
+                    children: [
+                      Icon(
+                        _kindIcon(presentation.kind),
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          _kindLabel(context, presentation.kind),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 88,
+                  child: Text(
+                    _fileSizeLabel(context, attachment.size),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 98,
+                  child: Text(
+                    dateFmt.format(entry.memoUpdateTime),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Tooltip(
+                  message: context.t.strings.legacy.msg_open_memo,
+                  child: IconButton(
+                    key: ValueKey(
+                      'resources-desktop-open-memo-${entry.memoUid}-${attachment.uid}',
+                    ),
+                    style: actionStyle,
+                    onPressed: () => _openSourceMemo(context, entry.memoUid),
+                    icon: const Icon(Icons.note_alt_outlined, size: 18),
+                  ),
+                ),
+                Tooltip(
+                  message: context.t.strings.legacy.msg_download,
+                  child: IconButton(
+                    key: ValueKey(
+                      'resources-desktop-download-${entry.memoUid}-${attachment.uid}',
+                    ),
+                    style: actionStyle,
+                    onPressed: presentation.canDownload
+                        ? () => _downloadAttachment(
+                            context,
+                            attachment,
+                            baseUrl,
+                            authHeader,
+                          )
+                        : null,
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopResourcesTable(
+    BuildContext context, {
+    required List<ResourceEntry> entries,
+    required Uri? baseUrl,
+    required String? authHeader,
+    required bool rebaseAbsoluteFileUrlForV024,
+    required bool attachAuthForSameOriginAbsolute,
+    required DateFormat dateFmt,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final filteredEntries = _filterDesktopEntries(entries);
+    final border = colorScheme.outlineVariant.withValues(alpha: 0.7);
+    final table = DecoratedBox(
+      key: const ValueKey<String>('resources-desktop-table'),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        children: [
+          Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.55),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
+              border: Border(bottom: BorderSide(color: border)),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 56),
+                Expanded(
+                  flex: 42,
+                  child: Text(context.tr(zh: '名称', en: 'Name')),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 120,
+                  child: Text(context.tr(zh: '类型', en: 'Type')),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 88,
+                  child: Text(
+                    context.tr(zh: '大小', en: 'Size'),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 98,
+                  child: Text(
+                    context.tr(zh: '日期', en: 'Date'),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                const SizedBox(width: 74),
+              ],
+            ),
+          ),
+          if (filteredEntries.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+              child: Text(
+                context.tr(zh: '没有匹配的附件', en: 'No matching attachments'),
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+            )
+          else
+            for (var index = 0; index < filteredEntries.length; index++) ...[
+              if (index > 0) Divider(height: 1, color: border),
+              _buildDesktopResourceRow(
+                context,
+                entry: filteredEntries[index],
+                baseUrl: baseUrl,
+                authHeader: authHeader,
+                rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+                attachAuthForSameOriginAbsolute:
+                    attachAuthForSameOriginAbsolute,
+                dateFmt: dateFmt,
+              ),
+            ],
+        ],
+      ),
+    );
+
+    return Scrollbar(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        children: [_buildDesktopToolbar(context, entries), table],
       ),
     );
   }
@@ -801,6 +1413,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isWindowsDesktop = platform == TargetPlatform.windows;
+    final useDesktopResourcesTable = isDesktopTargetPlatform(platform);
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final drawerPanel = AppDrawer(
@@ -818,6 +1431,17 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
           );
         }
 
+        if (useDesktopResourcesTable) {
+          return _buildDesktopResourcesTable(
+            context,
+            entries: entries,
+            baseUrl: baseUrl,
+            authHeader: authHeader,
+            rebaseAbsoluteFileUrlForV024: rebaseAbsoluteFileUrlForV024,
+            attachAuthForSameOriginAbsolute: attachAuthForSameOriginAbsolute,
+            dateFmt: dateFmt,
+          );
+        }
         final sections = _groupEntries(entries);
         return Scrollbar(
           child: CustomScrollView(
@@ -894,15 +1518,17 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 child: Align(
                   alignment: Alignment.topCenter,
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: kMemoFlowDesktopContentMaxWidth,
+                    constraints: BoxConstraints(
+                      maxWidth: useDesktopResourcesTable
+                          ? 1180
+                          : kMemoFlowDesktopContentMaxWidth,
                     ),
                     child: pageBody,
                   ),
                 ),
               ),
             )
-      : PlatformPage(
+          : PlatformPage(
               drawer: useDesktopSidePane ? null : drawerPanel,
               drawerEnableOpenDragGesture:
                   widget.presentation !=
@@ -919,7 +1545,9 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                   : AppDrawerMenuButton(
                       tooltip: context.t.strings.legacy.msg_toggle_sidebar,
                       iconColor: colorScheme.onSurface,
-                      badgeBorderColor: Theme.of(context).scaffoldBackgroundColor,
+                      badgeBorderColor: Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor,
                     ),
               body: (() {
                 if (!useDesktopSidePane) {
@@ -931,8 +1559,10 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                   child: Align(
                     alignment: Alignment.topCenter,
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: kMemoFlowDesktopContentMaxWidth,
+                      constraints: BoxConstraints(
+                        maxWidth: useDesktopResourcesTable
+                            ? 1180
+                            : kMemoFlowDesktopContentMaxWidth,
                       ),
                       child: pageBody,
                     ),

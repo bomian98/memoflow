@@ -21,6 +21,7 @@ import '../../data/models/app_preferences.dart';
 import '../../data/models/local_memo.dart';
 import '../../platform/platform_icons.dart';
 import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_adaptive_layout.dart';
 import '../../platform/widgets/platform_dialog.dart';
 import '../../platform/widgets/platform_page.dart';
 import '../../features/collections/add_to_collection_sheet.dart';
@@ -32,6 +33,7 @@ import '../../state/tags/tag_color_lookup.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memo_editor_screen.dart';
+import '../memos/memo_card_preview.dart';
 import '../memos/memo_markdown.dart';
 import '../memos/memo_detail_screen.dart';
 import '../memos/memo_time_adjustment_sheet.dart';
@@ -46,7 +48,8 @@ import '../../i18n/strings.g.dart';
 
 enum _StatsScreenView { data, calendar }
 
-final _calendarDayMemosProvider =
+@visibleForTesting
+final statsCalendarDayMemosProvider =
     StreamProvider.family<List<LocalMemo>, DateTime>((ref, day) async* {
       final db = ref.watch(databaseProvider);
       final normalizedDay = DateTime(day.year, day.month, day.day);
@@ -84,6 +87,11 @@ class StatsScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<StatsScreen> createState() => _StatsScreenState();
 }
+
+const statsDesktopDashboardKey = ValueKey<String>('stats-desktop-dashboard');
+const statsDesktopCalendarSplitKey = ValueKey<String>(
+  'stats-desktop-calendar-split',
+);
 
 class _StatsScreenState extends ConsumerState<StatsScreen> {
   late DateTime _selectedMonth;
@@ -517,102 +525,109 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     ];
 
     if (isDesktop) {
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-        children: [
-          ...headerChildren,
-          const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      return PlatformBoundedContent(
+        desktopMaxWidth: 1180,
+        tabletMaxWidth: 920,
+        child: KeyedSubtree(
+          key: statsDesktopDashboardKey,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             children: [
-              Expanded(
-                flex: 35,
-                child: _MonthlyOverviewCardNew(
-                  card: card,
-                  textMain: textMain,
-                  textMuted: textMuted,
-                  title: monthTitle,
-                  monthLabel: monthLabel,
-                  onPickMonth: onPickMonth,
-                  memos: monthly.totalMemos,
-                  chars: monthly.totalChars,
-                  maxMemosPerDay: monthly.maxMemosPerDay,
-                  maxCharsPerDay: monthly.maxCharsPerDay,
-                  growth: growth,
+              ...headerChildren,
+              const SizedBox(height: 14),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 35,
+                    child: _MonthlyOverviewCardNew(
+                      card: card,
+                      textMain: textMain,
+                      textMuted: textMuted,
+                      title: monthTitle,
+                      monthLabel: monthLabel,
+                      onPickMonth: onPickMonth,
+                      memos: monthly.totalMemos,
+                      chars: monthly.totalChars,
+                      maxMemosPerDay: monthly.maxMemosPerDay,
+                      maxCharsPerDay: monthly.maxCharsPerDay,
+                      growth: growth,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    flex: 65,
+                    child: _DailyTrendCardNew(
+                      card: card,
+                      textMain: textMain,
+                      textMuted: textMuted,
+                      monthLabel: trendMonthLabel,
+                      month: monthDate,
+                      counts: daySeries,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: annualRowHeight,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 66,
+                      child: _HeatmapCard(
+                        card: card,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        title: '\u5e74\u5ea6\u7b14\u8bb0\u70ed\u529b\u56fe',
+                        dailyCounts: lastYear,
+                        isDark: isDark,
+                        compact: false,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      flex: 34,
+                      child: _AnnualInsightsCardNew(
+                        card: card,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        insights: annual,
+                        isDark: isDark,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                flex: 65,
-                child: _DailyTrendCardNew(
+              const SizedBox(height: 12),
+              SizedBox(
+                height: annualTrendHeight,
+                child: _YearCharsTrendCardNew(
                   card: card,
                   textMain: textMain,
                   textMuted: textMuted,
-                  monthLabel: trendMonthLabel,
-                  month: monthDate,
-                  counts: daySeries,
+                  points: annual.monthlyChars,
+                  isDark: isDark,
                 ),
+              ),
+              const SizedBox(height: 14),
+              _BottomMetricRowNew(
+                items: bottomItems,
+                card: card,
+                textMain: textMain,
+                textMuted: textMuted,
+              ),
+              const SizedBox(height: 12),
+              _BottomMetricRowNew(
+                items: additionalBottomItems,
+                card: card,
+                textMain: textMain,
+                textMuted: textMuted,
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: annualRowHeight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 66,
-                  child: _HeatmapCard(
-                    card: card,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    title: '\u5e74\u5ea6\u7b14\u8bb0\u70ed\u529b\u56fe',
-                    dailyCounts: lastYear,
-                    isDark: isDark,
-                    compact: false,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  flex: 34,
-                  child: _AnnualInsightsCardNew(
-                    card: card,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    insights: annual,
-                    isDark: isDark,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: annualTrendHeight,
-            child: _YearCharsTrendCardNew(
-              card: card,
-              textMain: textMain,
-              textMuted: textMuted,
-              points: annual.monthlyChars,
-              isDark: isDark,
-            ),
-          ),
-          const SizedBox(height: 14),
-          _BottomMetricRowNew(
-            items: bottomItems,
-            card: card,
-            textMain: textMain,
-            textMuted: textMuted,
-          ),
-          const SizedBox(height: 12),
-          _BottomMetricRowNew(
-            items: additionalBottomItems,
-            card: card,
-            textMain: textMain,
-            textMuted: textMuted,
-          ),
-        ],
+        ),
       );
     }
 
@@ -700,7 +715,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       monthly.dailyCounts,
     );
     final selectedDayMemosAsync = ref.watch(
-      _calendarDayMemosProvider(selectedDay),
+      statsCalendarDayMemosProvider(selectedDay),
     );
     final outboxStatus =
         ref.watch(memosListOutboxStatusProvider).valueOrNull ??
@@ -746,6 +761,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final selectedDaySection = _CalendarSelectedDaySection(
       selectedDay: selectedDay,
       dayMemosAsync: selectedDayMemosAsync,
+      compactRows: isDesktop,
       memoCardKeyForUid: _calendarMemoCardKeyForUid,
       prefs: prefs,
       outboxStatus: outboxStatus,
@@ -760,13 +776,32 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       textMuted: textMuted,
     );
 
+    if (isDesktop) {
+      return PlatformBoundedContent(
+        desktopMaxWidth: 1180,
+        tabletMaxWidth: 920,
+        child: KeyedSubtree(
+          key: statsDesktopCalendarSplitKey,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            children: [
+              ...headerChildren,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 58, child: calendarCard),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 42, child: selectedDaySection),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView(
-      padding: EdgeInsets.fromLTRB(
-        isDesktop ? 16 : 12,
-        0,
-        isDesktop ? 16 : 12,
-        24,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
       children: [
         ...headerChildren,
         calendarCard,
@@ -948,28 +983,28 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               )
             : null,
         actions: [
-            TextButton(
-              onPressed: () async {
-                final stats = statsAsync.valueOrNull;
-                if (stats == null) {
-                  showTopToast(
-                    context,
-                    context.t.strings.legacy.msg_stats_loading,
-                  );
-                  return;
-                }
-                await _shareStatsPoster();
-              },
-              child: Text(
-                context.t.strings.legacy.msg_share,
-                style: TextStyle(
-                  color: MemoFlowPalette.primary.withValues(
-                    alpha: isDark ? 0.9 : 1.0,
-                  ),
+          TextButton(
+            onPressed: () async {
+              final stats = statsAsync.valueOrNull;
+              if (stats == null) {
+                showTopToast(
+                  context,
+                  context.t.strings.legacy.msg_stats_loading,
+                );
+                return;
+              }
+              await _shareStatsPoster();
+            },
+            child: Text(
+              context.t.strings.legacy.msg_share,
+              style: TextStyle(
+                color: MemoFlowPalette.primary.withValues(
+                  alpha: isDark ? 0.9 : 1.0,
                 ),
               ),
             ),
-          ],
+          ),
+        ],
         body: statsAsync.when(
           data: (stats) {
             final months = _deriveMonths(stats.dailyCounts);
@@ -1180,6 +1215,11 @@ class _StatsViewModeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isNarrow = MediaQuery.sizeOf(context).width < 420;
+    final itemPadding = EdgeInsets.symmetric(
+      horizontal: isNarrow ? 14 : 22,
+      vertical: 10,
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final trackColor = isDark
         ? Colors.white.withValues(alpha: 0.05)
@@ -1200,7 +1240,7 @@ class _StatsViewModeToggle extends StatelessWidget {
       },
       children: {
         _StatsScreenView.data: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+          padding: itemPadding,
           child: Text(
             context.tr(zh: '\u6570\u636e', en: 'Data'),
             style: TextStyle(
@@ -1213,7 +1253,7 @@ class _StatsViewModeToggle extends StatelessWidget {
           ),
         ),
         _StatsScreenView.calendar: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+          padding: itemPadding,
           child: Text(
             context.tr(zh: '\u65e5\u5386', en: 'Calendar'),
             style: TextStyle(
@@ -1478,6 +1518,7 @@ class _CalendarSelectedDaySection extends StatelessWidget {
   const _CalendarSelectedDaySection({
     required this.selectedDay,
     required this.dayMemosAsync,
+    required this.compactRows,
     required this.memoCardKeyForUid,
     required this.prefs,
     required this.outboxStatus,
@@ -1494,6 +1535,7 @@ class _CalendarSelectedDaySection extends StatelessWidget {
 
   final DateTime selectedDay;
   final AsyncValue<List<LocalMemo>> dayMemosAsync;
+  final bool compactRows;
   final GlobalKey<MemoListCardState> Function(String memoUid) memoCardKeyForUid;
   final AppPreferences prefs;
   final OutboxMemoStatus outboxStatus;
@@ -1545,6 +1587,7 @@ class _CalendarSelectedDaySection extends StatelessWidget {
                     _CalendarSelectedMemoRow(
                       memoCardKey: memoCardKeyForUid(memos[index].uid),
                       memo: memos[index],
+                      compact: compactRows,
                       prefs: prefs,
                       outboxStatus: outboxStatus,
                       tagColors: tagColors,
@@ -1657,6 +1700,7 @@ class _CalendarSelectedMemoRow extends StatelessWidget {
   const _CalendarSelectedMemoRow({
     required this.memoCardKey,
     required this.memo,
+    required this.compact,
     required this.prefs,
     required this.outboxStatus,
     required this.tagColors,
@@ -1670,6 +1714,7 @@ class _CalendarSelectedMemoRow extends StatelessWidget {
 
   final GlobalKey<MemoListCardState> memoCardKey;
   final LocalMemo memo;
+  final bool compact;
   final AppPreferences prefs;
   final OutboxMemoStatus outboxStatus;
   final TagColorLookup tagColors;
@@ -1683,6 +1728,51 @@ class _CalendarSelectedMemoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (compact) {
+      final textMain = Theme.of(context).colorScheme.onSurface;
+      final textMuted = textMain.withValues(alpha: 0.58);
+      final previewText = buildMemoCardPreviewText(
+        memo.content,
+        collapseReferences: prefs.collapseReferences,
+        language: context.appLanguage,
+      );
+      final displayText = previewText.trim().isEmpty
+          ? context.t.strings.legacy.msg_empty_content
+          : previewText;
+      return Material(
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          key: ValueKey<String>('stats-calendar-compact-memo-${memo.uid}'),
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => onOpenMemo(memo),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.notes_rounded, size: 18, color: textMuted),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    displayText,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.45,
+                      fontWeight: FontWeight.w600,
+                      color: textMain.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return MemosListMemoCardContainer(
       memoCardKey: memoCardKey,
       memo: memo,
@@ -2569,6 +2659,21 @@ class _MonthlyOverviewCardNew extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleChild = Text(
+      title,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        color: textMain,
+      ),
+    );
+    final monthPill = _MonthPill(
+      label: monthLabel,
+      textMuted: textMuted,
+      onTap: onPickMonth,
+    );
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -2587,24 +2692,22 @@ class _MonthlyOverviewCardNew extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: textMain,
-                  ),
-                ),
-              ),
-              _MonthPill(
-                label: monthLabel,
-                textMuted: textMuted,
-                onTap: onPickMonth,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [titleChild, const SizedBox(height: 8), monthPill],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: titleChild),
+                  const SizedBox(width: 10),
+                  monthPill,
+                ],
+              );
+            },
           ),
           const SizedBox(height: 12),
           Row(
@@ -2791,7 +2894,10 @@ class _DailyTrendCardNew extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 context.t.strings.legacy.msg_daily_memo_trend,
@@ -2801,7 +2907,6 @@ class _DailyTrendCardNew extends StatelessWidget {
                   color: textMain,
                 ),
               ),
-              const Spacer(),
               Text(
                 monthLabel,
                 style: TextStyle(
