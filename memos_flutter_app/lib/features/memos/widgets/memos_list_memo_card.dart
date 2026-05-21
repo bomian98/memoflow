@@ -91,13 +91,11 @@ class _LruCache<K, V> {
 
 class _MemoRenderCacheEntry {
   const _MemoRenderCacheEntry({
-    required this.previewText,
-    required this.preview,
+    required this.previewPlan,
     required this.taskStats,
   });
 
-  final String previewText;
-  final MemoCardPreviewResult preview;
+  final MemoCardPreviewPlan previewPlan;
   final TaskStats taskStats;
 }
 
@@ -546,30 +544,22 @@ class MemoListCardState extends State<MemoListCard> {
         ? cacheKeyBase
         : '$cacheKeyBase|clip=${contentText.hashCode}';
     final cached = _memoRenderCache.get(cacheKey);
-    final previewText =
-        cached?.previewText ??
-        buildMemoCardPreviewText(
+    final previewPlan =
+        cached?.previewPlan ??
+        buildMemoCardPreviewPlan(
           contentText,
-          collapseReferences: false,
+          collapseReferences: collapseReferences,
           language: language,
-        );
-    final preview =
-        cached?.preview ??
-        truncateMemoCardPreview(
-          previewText,
           collapseLongContent: collapseLongContent,
         );
+    final preview = previewPlan.preview;
     final taskStats =
         cached?.taskStats ??
         countTaskStats(contentText, skipQuotedLines: collapseReferences);
     if (cached == null) {
       _memoRenderCache.set(
         cacheKey,
-        _MemoRenderCacheEntry(
-          previewText: previewText,
-          preview: preview,
-          taskStats: taskStats,
-        ),
+        _MemoRenderCacheEntry(previewPlan: previewPlan, taskStats: taskStats),
       );
     }
     final showToggle = preview.truncated;
@@ -589,7 +579,7 @@ class MemoListCardState extends State<MemoListCard> {
         : mediaEntries;
     final displayText = showExpandedBody
         ? contentText
-        : (showCollapsed ? preview.text : previewText);
+        : previewPlan.renderSource;
     final markdownSource = showExpandedBody
         ? 'body'
         : (showCollapsed ? 'previewCollapsed' : 'previewFull');

@@ -84,17 +84,75 @@ class MemoCardPreviewResult {
   final bool truncated;
 }
 
+class MemoCardPreviewPlan {
+  const MemoCardPreviewPlan({
+    required this.measurementText,
+    required this.renderSource,
+    required this.preview,
+  });
+
+  final String measurementText;
+  final String renderSource;
+  final MemoCardPreviewResult preview;
+
+  bool get isEmpty =>
+      measurementText.trim().isEmpty && renderSource.trim().isEmpty;
+}
+
+MemoCardPreviewPlan buildMemoCardPreviewPlan(
+  String content, {
+  required bool collapseReferences,
+  required AppLanguage language,
+  required bool collapseLongContent,
+  String fallbackText = '',
+}) {
+  final renderSource = buildMemoCardPreviewRenderSource(
+    content,
+    collapseReferences: collapseReferences,
+    language: language,
+  );
+  final measurementText = _normalizeMemoCardPreviewText(renderSource);
+  final effectiveMeasurementText = measurementText.trim().isEmpty
+      ? fallbackText.trim()
+      : measurementText;
+  final effectiveRenderSource = renderSource.trim().isEmpty
+      ? fallbackText.trim()
+      : renderSource;
+  return MemoCardPreviewPlan(
+    measurementText: effectiveMeasurementText,
+    renderSource: effectiveRenderSource,
+    preview: truncateMemoCardPreview(
+      effectiveMeasurementText,
+      collapseLongContent: collapseLongContent,
+    ),
+  );
+}
+
+String buildMemoCardPreviewRenderSource(
+  String content, {
+  required bool collapseReferences,
+  required AppLanguage language,
+}) {
+  final trimmed = stripTaskListToggleHint(
+    content.replaceAll('\r\n', '\n').replaceAll('\r', '\n'),
+  ).trim();
+  if (trimmed.isEmpty) return '';
+
+  return collapseReferences
+      ? _collapseQuotedPreviewLines(trimmed, language: language)
+      : trimmed;
+}
+
 String buildMemoCardPreviewText(
   String content, {
   required bool collapseReferences,
   required AppLanguage language,
 }) {
-  final trimmed = stripTaskListToggleHint(content).trim();
-  if (trimmed.isEmpty) return '';
-
-  final previewSource = collapseReferences
-      ? _collapseQuotedPreviewLines(trimmed, language: language)
-      : trimmed;
+  final previewSource = buildMemoCardPreviewRenderSource(
+    content,
+    collapseReferences: collapseReferences,
+    language: language,
+  );
   return _normalizeMemoCardPreviewText(previewSource);
 }
 

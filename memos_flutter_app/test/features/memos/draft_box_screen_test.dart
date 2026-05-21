@@ -117,6 +117,29 @@ void main() {
     );
   });
 
+  testWidgets('draft card preview preserves markdown and html render source', (
+    tester,
+  ) async {
+    final draft = _buildDraft(
+      uid: 'draft-rich',
+      content:
+          '上标 x<sup>2</sup>\n'
+          '下标 H<sub>2</sub>\n'
+          '这里是 `inline code` 示例',
+    );
+
+    await tester.pumpWidget(_buildCardHarness(draft: draft));
+    await tester.pumpAndSettle();
+
+    final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+    expect(markdown.maxLines, isNull);
+    expect(markdown.renderImages, isFalse);
+    expect(markdown.data, contains('<sup>2</sup>'));
+    expect(markdown.data, contains('<sub>2</sub>'));
+    expect(markdown.data, contains('`inline code`'));
+    expect(find.textContaining('上标', findRichText: true), findsOneWidget);
+  });
+
   testWidgets('tapping card body triggers restore callback', (tester) async {
     var tapCount = 0;
 

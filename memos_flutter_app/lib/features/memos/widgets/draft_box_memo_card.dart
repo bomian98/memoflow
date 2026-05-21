@@ -75,21 +75,18 @@ class _DraftBoxMemoCardState extends State<DraftBoxMemoCard> {
         : MemoFlowPalette.audioSurfaceLight;
     final snapshot = widget.draft.snapshot;
     final language = context.appLanguage;
-    final contentPreviewText = buildMemoCardPreviewText(
+    final previewPlan = buildMemoCardPreviewPlan(
       snapshot.content,
       collapseReferences: false,
       language: language,
-    );
-    final previewText = contentPreviewText.trim().isEmpty
-        ? snapshot.previewText
-        : contentPreviewText;
-    final preview = truncateMemoCardPreview(
-      previewText,
       collapseLongContent: true,
+      fallbackText: snapshot.previewText,
     );
+    final previewText = previewPlan.measurementText;
+    final preview = previewPlan.preview;
     final showToggle = preview.truncated;
     final showCollapsed = showToggle && !_expanded;
-    final markdownText = showCollapsed ? preview.text : previewText;
+    final markdownText = previewPlan.renderSource;
     final mediaEntries = buildDraftBoxMediaEntries(snapshot);
     final nonMediaAttachmentCount = countDraftNonMediaAttachments(snapshot);
     final visibilityPresentation = _resolveVisibilityPresentation(

@@ -49,4 +49,59 @@ void main() {
     expect(previewText, isNot(contains('<img')));
     expect(previewText, isNot(contains('https://example.com/clip.jpg')));
   });
+
+  test('preview plan separates measurement text from render source', () {
+    final plan = buildMemoCardPreviewPlan(
+      '上标 x<sup>2</sup>\n\n这里是 `inline code` 示例',
+      collapseReferences: false,
+      language: AppLanguage.en,
+      collapseLongContent: true,
+    );
+
+    expect(plan.measurementText, contains('上标 x2'));
+    expect(plan.measurementText, contains('这里是 inline code 示例'));
+    expect(plan.measurementText, isNot(contains('<sup>')));
+    expect(plan.measurementText, isNot(contains('`inline code`')));
+    expect(plan.renderSource, contains('<sup>2</sup>'));
+    expect(plan.renderSource, contains('`inline code`'));
+    expect(plan.preview.truncated, isFalse);
+  });
+
+  test('preview plan applies reference collapse to measurement and source', () {
+    final plan = buildMemoCardPreviewPlan(
+      '**Main**\n> Quote 1\n> Quote 2',
+      collapseReferences: true,
+      language: AppLanguage.en,
+      collapseLongContent: true,
+    );
+
+    expect(plan.measurementText, contains('Main'));
+    expect(plan.measurementText, contains('Quoted 2 lines'));
+    expect(plan.measurementText, isNot(contains('Quote 1')));
+    expect(plan.renderSource, contains('**Main**'));
+    expect(plan.renderSource, contains('Quoted 2 lines'));
+    expect(plan.renderSource, isNot(contains('> Quote 1')));
+  });
+
+  test('long preview plan does not truncate render source before markdown', () {
+    final content =
+        '```dart\n'
+        'final x = 1;\n'
+        '```\n\n'
+        '${List<String>.generate(12, (index) => 'line $index').join('\n')}';
+
+    final plan = buildMemoCardPreviewPlan(
+      content,
+      collapseReferences: false,
+      language: AppLanguage.en,
+      collapseLongContent: true,
+    );
+
+    expect(plan.preview.truncated, isTrue);
+    expect(plan.preview.text, contains('...'));
+    expect(plan.renderSource, contains('```dart'));
+    expect(plan.renderSource, contains('final x = 1;'));
+    expect(plan.renderSource, contains('line 11'));
+    expect(plan.renderSource, isNot(endsWith('...')));
+  });
 }

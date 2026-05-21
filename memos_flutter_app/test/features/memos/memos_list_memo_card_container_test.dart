@@ -20,6 +20,7 @@ import 'package:memos_flutter_app/data/models/location_settings.dart';
 import 'package:memos_flutter_app/data/models/memo_reminder.dart';
 import 'package:memos_flutter_app/data/repositories/location_settings_repository.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_floating_collapse_controller.dart';
+import 'package:memos_flutter_app/features/memos/memo_card_preview.dart';
 import 'package:memos_flutter_app/features/memos/memo_markdown.dart';
 import 'package:memos_flutter_app/features/memos/memo_image_grid.dart';
 import 'package:memos_flutter_app/features/memos/memo_inline_image_syntax.dart';
@@ -759,8 +760,13 @@ void main() {
       var markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
       expect(markdown.renderImages, isFalse);
       expect(markdown.data, contains('Intro paragraph.'));
-      expect(markdown.data, isNot(contains('<img')));
-      expect(markdown.data.trimRight(), endsWith('...'));
+      expect(
+        markdown.data,
+        contains('<img src="https://example.com/clip.jpg">'),
+      );
+      expect(markdown.data, contains('Detailed body paragraph.'));
+      expect(markdown.maxLines, kMemoCardPreviewMaxLines);
+      expect(markdown.data.trimRight(), isNot(endsWith('...')));
 
       await tester.tap(find.text('Expand'));
       await _pumpTestFrames(tester);
@@ -898,10 +904,103 @@ void main() {
       final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
       expect(markdown.renderImages, isFalse);
       expect(markdown.allowedLocalImageUrls, isEmpty);
-      expect(markdown.data, isNot(contains('<img')));
+      expect(markdown.data, contains('<img src="$localUrl">'));
       expect(find.byType(Image), findsNothing);
     },
   );
+
+  testWidgets(
+    'MemoListCard preview preserves markdown and html render source',
+    (tester) async {
+      final memo = _buildMemo(
+        content:
+            '上标 x<sup>2</sup>\n'
+            '下标 H<sub>2</sub>\n'
+            '这里是 `inline code` 示例 [OpenAI](https://openai.com)\n'
+            '```dart\n'
+            'final x = 1;\n'
+            '```',
+      );
+
+      await tester.pumpWidget(_buildHarness(memo: memo));
+      await tester.pumpAndSettle();
+
+      final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.maxLines, isNull);
+      expect(markdown.renderImages, isFalse);
+      expect(markdown.data, contains('<sup>2</sup>'));
+      expect(markdown.data, contains('<sub>2</sub>'));
+      expect(markdown.data, contains('`inline code`'));
+      expect(markdown.data, contains('```dart'));
+      expect(markdown.data, contains('[OpenAI](https://openai.com)'));
+      expect(find.textContaining('上标', findRichText: true), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'MemoListCard collapsed preview clips markdown without source truncation',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(900, 2200));
+      final memo = _buildMemo(
+        content:
+            '标题 `code`\n\n'
+            '${List<String>.generate(12, (index) => '第 $index 行长内容用于触发折叠预览。').join('\n')}\n\n'
+            '```dart\n'
+            'final x = 1;\n'
+            '```',
+      );
+
+      await tester.pumpWidget(
+        _buildHarness(memo: memo, wrapInScrollView: true),
+      );
+      await tester.pumpAndSettle();
+
+      final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+      expect(markdown.maxLines, kMemoCardPreviewMaxLines);
+      expect(markdown.renderImages, isFalse);
+      expect(markdown.data, contains('第 11 行长内容用于触发折叠预览。'));
+      expect(markdown.data, contains('```dart'));
+      expect(markdown.data.trimRight(), isNot(endsWith('...')));
+      expect(find.byType(OverflowBox), findsOneWidget);
+    },
+  );
+
+  testWidgets('MemoListCard collapsed preview keeps image syntax image-free', (
+    tester,
+  ) async {
+    final memo = _buildMemo(
+      content:
+          'before <sup>2</sup>\n\n'
+          '![alt](https://example.com/image.png)\n\n'
+          '<img src="https://example.com/raw.png">\n\n'
+          'after',
+    );
+
+    await tester.pumpWidget(_buildHarness(memo: memo));
+    await tester.pumpAndSettle();
+
+    final markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
+    expect(markdown.renderImages, isFalse);
+    expect(markdown.imageSyntax, MemoInlineImageSyntax.none);
+    expect(markdown.data, contains('<sup>2</sup>'));
+    expect(markdown.data, contains('![alt](https://example.com/image.png)'));
+    expect(markdown.data, contains('<img src="https://example.com/raw.png">'));
+    expect(
+      find.descendant(
+        of: find.byType(MemoMarkdown),
+        matching: find.byType(Image),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(MemoMarkdown),
+        matching: find.byType(CircularProgressIndicator),
+      ),
+      findsNothing,
+    );
+  });
 
   testWidgets(
     'MemoListCard preserves remote inline image request configuration',
@@ -1002,7 +1101,7 @@ void main() {
   );
 
   testWidgets(
-    'MemoListCard expands normal memo cards from preview text to full body content',
+    'MemoListCard expands normal memo cards from clipped markdown preview',
     (tester) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.binding.setSurfaceSize(const Size(900, 2200));
@@ -1027,15 +1126,13 @@ void main() {
 
       var markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
       expect(markdown.renderImages, isFalse);
-      expect(markdown.data, isNot(contains('<img')));
-      expect(markdown.data.trimRight(), endsWith('...'));
+      expect(markdown.maxLines, kMemoCardPreviewMaxLines);
       expect(
-        find.textContaining(
-          'Tail marker visible after expand.',
-          findRichText: true,
-        ),
-        findsNothing,
+        markdown.data,
+        contains('<img src="https://example.com/raw-body.jpg">'),
       );
+      expect(markdown.data, contains('Tail marker visible after expand.'));
+      expect(markdown.data.trimRight(), isNot(endsWith('...')));
       expect(find.text('Expand'), findsOneWidget);
 
       memoCardKey.currentState!.debugExpandForTest();
@@ -1043,6 +1140,7 @@ void main() {
 
       markdown = tester.widget<MemoMarkdown>(find.byType(MemoMarkdown));
       expect(markdown.renderImages, isFalse);
+      expect(markdown.maxLines, isNull);
       expect(
         markdown.data,
         contains('<img src="https://example.com/raw-body.jpg">'),
