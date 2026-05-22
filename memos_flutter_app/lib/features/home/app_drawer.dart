@@ -12,9 +12,9 @@ import '../../core/measure_size.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/tag_list_mode.dart';
 import '../../core/top_toast.dart';
-import '../../state/system/database_provider.dart';
-import '../../state/system/local_library_provider.dart';
 import '../../state/memos/memos_providers.dart';
+import '../../state/memos/sync_queue_provider.dart';
+import '../../state/system/local_library_provider.dart';
 import '../../state/system/notifications_provider.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
 import '../../state/system/session_provider.dart';
@@ -48,19 +48,6 @@ enum AppDrawerDestination {
 enum AppDrawerViewMode { expandedSidebar, rail, overlayPanel }
 
 enum _DrawerTagFilter { all, frequent, recent, pinned }
-
-final _pendingOutboxCountProvider = StreamProvider<int>((ref) async* {
-  final db = ref.watch(databaseProvider);
-
-  Future<int> load() async {
-    return db.countOutboxPending();
-  }
-
-  yield await load();
-  await for (final _ in db.changes) {
-    yield await load();
-  }
-});
 
 class AppDrawer extends ConsumerStatefulWidget {
   const AppDrawer({
@@ -293,7 +280,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
       ),
     );
     final pendingOutboxCount =
-        ref.watch(_pendingOutboxCountProvider).valueOrNull ?? 0;
+        ref.watch(syncQueuePendingCountProvider).valueOrNull ?? 0;
     final unreadNotificationCount = ref.watch(unreadNotificationCountProvider);
 
     final bg = isDark
@@ -788,7 +775,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                           icon: Consumer(
                             builder: (context, ref, child) {
                               final pendingOutboxAsync = ref.watch(
-                                _pendingOutboxCountProvider,
+                                syncQueuePendingCountProvider,
                               );
                               final pendingOutboxCount =
                                   pendingOutboxAsync.valueOrNull ?? 0;
