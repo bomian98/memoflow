@@ -16,6 +16,7 @@ import '../../application/sync/sync_types.dart';
 import '../../application/sync/webdav_backup_service.dart';
 import '../../application/sync/webdav_sync_service.dart';
 import '../../core/app_localization.dart';
+import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../core/log_sanitizer.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/sync_error_presenter.dart';
@@ -1942,10 +1943,13 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
     return PlatformPage(
       backgroundColor: bg,
       title: Text(context.t.strings.legacy.msg_webdav_sync),
-      leading: IconButton(
-        tooltip: context.t.strings.legacy.msg_back,
-        icon: Icon(PlatformIcons.back),
-        onPressed: () => Navigator.of(context).maybePop(),
+      leading: resolveDesktopRouteDismissalLeading(
+        context: context,
+        leading: IconButton(
+          tooltip: context.t.strings.legacy.msg_back,
+          icon: Icon(PlatformIcons.back),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
       ),
       actions: [
         IconButton(
@@ -3070,10 +3074,13 @@ class _WebDavConnectionScreenState
     return PlatformPage(
       backgroundColor: bg,
       title: Text(context.t.strings.legacy.msg_server_connection),
-      leading: IconButton(
-        tooltip: context.t.strings.legacy.msg_back,
-        icon: Icon(PlatformIcons.back),
-        onPressed: () => Navigator.of(context).maybePop(),
+      leading: resolveDesktopRouteDismissalLeading(
+        context: context,
+        leading: IconButton(
+          tooltip: context.t.strings.legacy.msg_back,
+          icon: Icon(PlatformIcons.back),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -3658,10 +3665,13 @@ class _WebDavBackupSettingsScreenState
       child: PlatformPage(
         backgroundColor: bg,
         title: Text(context.t.strings.legacy.msg_backup_settings),
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: Icon(PlatformIcons.back),
-          onPressed: _requestClose,
+        leading: resolveDesktopRouteDismissalLeading(
+          context: context,
+          leading: IconButton(
+            tooltip: context.t.strings.legacy.msg_back,
+            icon: Icon(PlatformIcons.back),
+            onPressed: _requestClose,
+          ),
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -4021,10 +4031,13 @@ class _WebDavLogsScreenState extends ConsumerState<WebDavLogsScreen> {
     return PlatformPage(
       backgroundColor: bg,
       title: Text('WebDAV ${context.t.strings.legacy.msg_logs}'),
-      leading: IconButton(
-        tooltip: context.t.strings.legacy.msg_back,
-        icon: Icon(PlatformIcons.back),
-        onPressed: () => Navigator.of(context).maybePop(),
+      leading: resolveDesktopRouteDismissalLeading(
+        context: context,
+        leading: IconButton(
+          tooltip: context.t.strings.legacy.msg_back,
+          icon: Icon(PlatformIcons.back),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
       ),
       actions: [
         IconButton(
