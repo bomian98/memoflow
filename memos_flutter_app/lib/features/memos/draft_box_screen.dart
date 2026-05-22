@@ -79,6 +79,17 @@ class DraftBoxScreen extends ConsumerWidget {
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isWindowsDesktop =
         Theme.of(context).platform == TargetPlatform.windows;
+    final desktopPlatform = Theme.of(context).platform;
+    final desktopNavigationMode = useDesktopSidePane
+        ? DesktopTitlebarNavigationMode.expandedSidebar
+        : DesktopTitlebarNavigationMode.hidden;
+    const desktopNavigationContext =
+        DesktopTitlebarNavigationContext.topLevelDestination;
+    final omitTopLevelChrome = shouldOmitDesktopTopLevelChrome(
+      platform: desktopPlatform,
+      navigationMode: desktopNavigationMode,
+      navigationContext: desktopNavigationContext,
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final useEmbeddedBottomNav =
         presentation == HomeScreenPresentation.embeddedBottomNav;
@@ -163,26 +174,42 @@ class DraftBoxScreen extends ConsumerWidget {
           ? drawerPanel
           : null,
       appBar: AppBar(
-        leading: showDrawer && !useDesktopSidePane
-            ? useEmbeddedBottomNav
-                  ? IconButton(
-                      tooltip: context.t.strings.legacy.msg_back,
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () => embeddedNavigationHost
-                          ?.handleBackToPrimaryDestination(context),
-                    )
-                  : AppDrawerMenuButton(
-                      tooltip: context.t.strings.legacy.msg_toggle_sidebar,
-                      iconColor:
-                          Theme.of(context).appBarTheme.iconTheme?.color ??
-                          IconTheme.of(context).color ??
-                          Theme.of(context).colorScheme.onSurface,
-                      badgeBorderColor:
-                          Theme.of(context).appBarTheme.backgroundColor ??
-                          Theme.of(context).scaffoldBackgroundColor,
-                    )
-            : null,
-        title: Text(title),
+        toolbarHeight: resolveDesktopTopLevelToolbarHeight(
+          platform: desktopPlatform,
+          navigationMode: desktopNavigationMode,
+          navigationContext: desktopNavigationContext,
+        ),
+        automaticallyImplyLeading: !omitTopLevelChrome,
+        leading: resolveDesktopTopLevelLeading(
+          platform: desktopPlatform,
+          navigationMode: desktopNavigationMode,
+          navigationContext: desktopNavigationContext,
+          leading: showDrawer && !useDesktopSidePane
+              ? useEmbeddedBottomNav
+                    ? IconButton(
+                        tooltip: context.t.strings.legacy.msg_back,
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () => embeddedNavigationHost
+                            ?.handleBackToPrimaryDestination(context),
+                      )
+                    : AppDrawerMenuButton(
+                        tooltip: context.t.strings.legacy.msg_toggle_sidebar,
+                        iconColor:
+                            Theme.of(context).appBarTheme.iconTheme?.color ??
+                            IconTheme.of(context).color ??
+                            Theme.of(context).colorScheme.onSurface,
+                        badgeBorderColor:
+                            Theme.of(context).appBarTheme.backgroundColor ??
+                            Theme.of(context).scaffoldBackgroundColor,
+                      )
+              : null,
+        ),
+        title: resolveDesktopTopLevelTitle(
+          platform: desktopPlatform,
+          navigationMode: desktopNavigationMode,
+          navigationContext: desktopNavigationContext,
+          title: Text(title),
+        ),
       ),
       body: useDesktopSidePane && drawerPanel != null
           ? Row(

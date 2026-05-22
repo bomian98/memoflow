@@ -780,12 +780,28 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
         : (isReport
               ? context.t.strings.legacy.msg_ai_summary_report
               : context.t.strings.aiInsight.title);
+    final desktopPlatform = Theme.of(context).platform;
+    final desktopNavigationMode = useDesktopSidePane
+        ? DesktopTitlebarNavigationMode.expandedSidebar
+        : DesktopTitlebarNavigationMode.hidden;
+    const desktopNavigationContext =
+        DesktopTitlebarNavigationContext.topLevelDestination;
+    final omitTopLevelChrome = shouldOmitDesktopTopLevelChrome(
+      platform: desktopPlatform,
+      navigationMode: desktopNavigationMode,
+      navigationContext: desktopNavigationContext,
+    );
     return AppBar(
-      title: IgnorePointer(
-        ignoring: enableWindowsDragToMove,
-        child: Text(
-          titleText,
-          style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
+      title: resolveDesktopTopLevelTitle(
+        platform: desktopPlatform,
+        navigationMode: desktopNavigationMode,
+        navigationContext: desktopNavigationContext,
+        title: IgnorePointer(
+          ignoring: enableWindowsDragToMove,
+          child: Text(
+            titleText,
+            style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
+          ),
         ),
       ),
       centerTitle: !useDesktopSidePane,
@@ -793,21 +809,32 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      automaticallyImplyLeading: !useDesktopSidePane,
-      toolbarHeight: 46,
-      leading: useDesktopSidePane
-          ? null
-          : widget.presentation == HomeScreenPresentation.embeddedBottomNav
-          ? AppDrawerMenuButton(
-              tooltip: context.t.strings.legacy.msg_toggle_sidebar,
-              iconColor: textMain,
-              badgeBorderColor: bg,
-            )
-          : IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new),
-              color: textMain,
-              onPressed: () => _backToAllMemos(context),
-            ),
+      automaticallyImplyLeading: !omitTopLevelChrome && !useDesktopSidePane,
+      toolbarHeight:
+          resolveDesktopTopLevelToolbarHeight(
+            platform: desktopPlatform,
+            navigationMode: desktopNavigationMode,
+            navigationContext: desktopNavigationContext,
+          ) ??
+          46,
+      leading: resolveDesktopTopLevelLeading(
+        platform: desktopPlatform,
+        navigationMode: desktopNavigationMode,
+        navigationContext: desktopNavigationContext,
+        leading: useDesktopSidePane
+            ? null
+            : widget.presentation == HomeScreenPresentation.embeddedBottomNav
+            ? AppDrawerMenuButton(
+                tooltip: context.t.strings.legacy.msg_toggle_sidebar,
+                iconColor: textMain,
+                badgeBorderColor: bg,
+              )
+            : IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new),
+                color: textMain,
+                onPressed: () => _backToAllMemos(context),
+              ),
+      ),
       actions: [
         if (isReport)
           IconButton(
@@ -869,7 +896,13 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
                       child: Container(color: bg.withValues(alpha: 0.9)),
                     ),
                   )),
-      bottom: isReport
+      bottom:
+          isReport ||
+              !shouldRenderDesktopTopLevelToolbarDivider(
+                platform: desktopPlatform,
+                navigationMode: desktopNavigationMode,
+                navigationContext: desktopNavigationContext,
+              )
           ? null
           : PreferredSize(
               preferredSize: const Size.fromHeight(1),

@@ -11,6 +11,7 @@ import '../../core/app_localization.dart';
 import '../../application/desktop/desktop_settings_window.dart';
 import '../../core/drawer_navigation.dart';
 import '../../core/memoflow_palette.dart';
+import '../../core/platform_layout.dart';
 import '../../core/url.dart';
 import '../../platform/platform_icons.dart';
 import '../../platform/platform_route.dart';
@@ -172,6 +173,9 @@ class SettingsScreen extends ConsumerWidget
     ]..sort((a, b) => a.order.compareTo(b.order));
     final useEmbeddedBottomNav =
         presentation == HomeScreenPresentation.embeddedBottomNav;
+    final useDesktopSidePane =
+        embeddedNavigationHost != null &&
+        shouldUseDesktopSidePaneLayout(MediaQuery.sizeOf(context).width);
     final drawerPanel = useEmbeddedBottomNav
         ? AppDrawer(
             selected: AppDrawerDestination.settings,
@@ -540,6 +544,11 @@ class SettingsScreen extends ConsumerWidget
               backgroundColor: bg,
               drawer: drawerPanel,
               drawerEnableOpenDragGesture: !useEmbeddedBottomNav,
+              desktopNavigationMode: useDesktopSidePane
+                  ? DesktopTitlebarNavigationMode.expandedSidebar
+                  : DesktopTitlebarNavigationMode.hidden,
+              desktopNavigationContext:
+                  DesktopTitlebarNavigationContext.topLevelDestination,
               leading: showAppBar
                   ? (useEmbeddedBottomNav
                         ? AppDrawerMenuButton(

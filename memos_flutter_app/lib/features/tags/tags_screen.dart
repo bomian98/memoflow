@@ -135,6 +135,17 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isWindowsDesktop =
         Theme.of(context).platform == TargetPlatform.windows;
+    final desktopPlatform = Theme.of(context).platform;
+    final desktopNavigationMode = useDesktopSidePane
+        ? DesktopTitlebarNavigationMode.expandedSidebar
+        : DesktopTitlebarNavigationMode.hidden;
+    const desktopNavigationContext =
+        DesktopTitlebarNavigationContext.topLevelDestination;
+    final omitTopLevelChrome = shouldOmitDesktopTopLevelChrome(
+      platform: desktopPlatform,
+      navigationMode: desktopNavigationMode,
+      navigationContext: desktopNavigationContext,
+    );
     final enableWindowsDragToMove = isWindowsDesktop;
     final useEmbeddedBottomNav =
         widget.presentation == HomeScreenPresentation.embeddedBottomNav;
@@ -309,26 +320,42 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
           : Scaffold(
               drawer: useDesktopSidePane ? null : drawerPanel,
               appBar: AppBar(
+                toolbarHeight: resolveDesktopTopLevelToolbarHeight(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                ),
                 flexibleSpace: enableWindowsDragToMove
                     ? const DragToMoveArea(child: SizedBox.expand())
                     : null,
-                automaticallyImplyLeading: false,
-                leading: useDesktopSidePane
-                    ? null
-                    : AppDrawerMenuButton(
-                        tooltip: context.t.strings.legacy.msg_toggle_sidebar,
-                        iconColor:
-                            Theme.of(context).appBarTheme.iconTheme?.color ??
-                            IconTheme.of(context).color ??
-                            Theme.of(context).colorScheme.onSurface,
-                        badgeBorderColor: Theme.of(
-                          context,
-                        ).scaffoldBackgroundColor,
-                      ),
-                title: IgnorePointer(
-                  ignoring: enableWindowsDragToMove,
-                  child: Text(context.t.strings.legacy.msg_tags),
+                leading: resolveDesktopTopLevelLeading(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  leading: useDesktopSidePane
+                      ? null
+                      : AppDrawerMenuButton(
+                          tooltip: context.t.strings.legacy.msg_toggle_sidebar,
+                          iconColor:
+                              Theme.of(context).appBarTheme.iconTheme?.color ??
+                              IconTheme.of(context).color ??
+                              Theme.of(context).colorScheme.onSurface,
+                          badgeBorderColor: Theme.of(
+                            context,
+                          ).scaffoldBackgroundColor,
+                        ),
                 ),
+                title: resolveDesktopTopLevelTitle(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  title: IgnorePointer(
+                    ignoring: enableWindowsDragToMove,
+                    child: Text(context.t.strings.legacy.msg_tags),
+                  ),
+                ),
+                automaticallyImplyLeading:
+                    !omitTopLevelChrome && !useDesktopSidePane,
                 actions: [
                   TagListModeMenuButton(
                     mode: tagListMode,

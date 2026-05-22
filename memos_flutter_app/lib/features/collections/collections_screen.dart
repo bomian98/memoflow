@@ -524,6 +524,11 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
             : PlatformPage(
                 backgroundColor: bg,
                 drawer: useDesktopSidePane ? null : drawerPanel,
+                desktopNavigationMode: useDesktopSidePane && !_searchExpanded
+                    ? DesktopTitlebarNavigationMode.expandedSidebar
+                    : DesktopTitlebarNavigationMode.hidden,
+                desktopNavigationContext:
+                    DesktopTitlebarNavigationContext.topLevelDestination,
                 leading: useDesktopSidePane
                     ? null
                     : AppDrawerMenuButton(
@@ -535,97 +540,96 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                         badgeBorderColor: bg,
                       ),
                 title: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: _searchExpanded
-                        ? Container(
-                            key: const ValueKey<String>('search-field'),
-                            height: 40,
-                            alignment: Alignment.center,
-                            child: PlatformTextField(
-                              controller: _searchController,
-                              focusNode: _searchFocusNode,
-                              onChanged: (_) => setState(() {}),
-                              autofocus: true,
-                              textInputAction: TextInputAction.search,
-                              decoration: InputDecoration(
-                                hintText: context
-                                    .t
-                                    .strings
-                                    .collections
-                                    .searchCollections,
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
+                  duration: const Duration(milliseconds: 180),
+                  child: _searchExpanded
+                      ? Container(
+                          key: const ValueKey<String>('search-field'),
+                          height: 40,
+                          alignment: Alignment.center,
+                          child: PlatformTextField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            onChanged: (_) => setState(() {}),
+                            autofocus: true,
+                            textInputAction: TextInputAction.search,
+                            decoration: InputDecoration(
+                              hintText: context
+                                  .t
+                                  .strings
+                                  .collections
+                                  .searchCollections,
+                              border: InputBorder.none,
+                              isDense: true,
                             ),
-                          )
-                        : Text(context.t.strings.collections.title),
+                          ),
+                        )
+                      : Text(context.t.strings.collections.title),
                 ),
                 actions: _searchExpanded
-                      ? [
-                          IconButton(
-                            tooltip: _searchController.text.trim().isEmpty
-                                ? context.t.strings.legacy.msg_close_search
-                                : context.t.strings.legacy.msg_clear_2,
-                            onPressed: _collapseSearch,
-                            icon: Icon(PlatformIcons.platformClose),
+                    ? [
+                        IconButton(
+                          tooltip: _searchController.text.trim().isEmpty
+                              ? context.t.strings.legacy.msg_close_search
+                              : context.t.strings.legacy.msg_clear_2,
+                          onPressed: _collapseSearch,
+                          icon: Icon(PlatformIcons.platformClose),
+                        ),
+                      ]
+                    : [
+                        IconButton(
+                          key: const ValueKey<String>('search-button'),
+                          tooltip:
+                              context.t.strings.collections.searchCollections,
+                          onPressed: _expandSearch,
+                          icon: const Icon(Icons.search_rounded),
+                        ),
+                        PopupMenuButton<_CollectionsFilter>(
+                          tooltip: _filterTooltip(context),
+                          icon: Icon(
+                            _filter == _CollectionsFilter.all
+                                ? Icons.filter_list_rounded
+                                : Icons.filter_alt_rounded,
                           ),
-                        ]
-                      : [
-                          IconButton(
-                            key: const ValueKey<String>('search-button'),
-                            tooltip:
-                                context.t.strings.collections.searchCollections,
-                            onPressed: _expandSearch,
-                            icon: const Icon(Icons.search_rounded),
-                          ),
-                          PopupMenuButton<_CollectionsFilter>(
-                            tooltip: _filterTooltip(context),
-                            icon: Icon(
-                              _filter == _CollectionsFilter.all
-                                  ? Icons.filter_list_rounded
-                                  : Icons.filter_alt_rounded,
-                            ),
-                            initialValue: _filter,
-                            onSelected: (value) {
-                              setState(() => _filter = value);
-                            },
-                            itemBuilder: (context) => [
-                              for (final filter in _CollectionsFilter.values)
-                                PopupMenuItem<_CollectionsFilter>(
-                                  value: filter,
-                                  child: Row(
-                                    children: [
-                                      if (filter == _filter)
-                                        const Padding(
-                                          padding: EdgeInsets.only(right: 8),
-                                          child: Icon(
-                                            Icons.check_rounded,
-                                            size: 18,
-                                          ),
-                                        )
-                                      else
-                                        const SizedBox(width: 26),
-                                      Text(_filterLabel(context, filter)),
-                                    ],
-                                  ),
+                          initialValue: _filter,
+                          onSelected: (value) {
+                            setState(() => _filter = value);
+                          },
+                          itemBuilder: (context) => [
+                            for (final filter in _CollectionsFilter.values)
+                              PopupMenuItem<_CollectionsFilter>(
+                                value: filter,
+                                child: Row(
+                                  children: [
+                                    if (filter == _filter)
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 8),
+                                        child: Icon(
+                                          Icons.check_rounded,
+                                          size: 18,
+                                        ),
+                                      )
+                                    else
+                                      const SizedBox(width: 26),
+                                    Text(_filterLabel(context, filter)),
+                                  ],
                                 ),
-                            ],
-                          ),
-                          IconButton(
-                            tooltip: context.t.strings.collections.reorderShelf,
-                            onPressed: reorderItems.length < 2
-                                ? null
-                                : () =>
-                                      _openReorderSheet(context, reorderItems),
-                            icon: const Icon(Icons.reorder_rounded),
-                          ),
-                          IconButton(
-                            tooltip:
-                                context.t.strings.collections.createCollection,
-                            onPressed: () => _openEditor(context),
-                            icon: const Icon(Icons.add_rounded),
-                          ),
-                        ],
+                              ),
+                          ],
+                        ),
+                        IconButton(
+                          tooltip: context.t.strings.collections.reorderShelf,
+                          onPressed: reorderItems.length < 2
+                              ? null
+                              : () => _openReorderSheet(context, reorderItems),
+                          icon: const Icon(Icons.reorder_rounded),
+                        ),
+                        IconButton(
+                          tooltip:
+                              context.t.strings.collections.createCollection,
+                          onPressed: () => _openEditor(context),
+                          icon: const Icon(Icons.add_rounded),
+                        ),
+                      ],
                 body: useDesktopSidePane
                     ? Row(
                         children: [

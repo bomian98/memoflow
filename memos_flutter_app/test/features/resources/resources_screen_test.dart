@@ -20,6 +20,7 @@ import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/memos/sync_queue_provider.dart';
+import 'package:memos_flutter_app/state/memos/stats_providers.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
 import 'package:memos_flutter_app/state/system/database_provider.dart';
 import 'package:memos_flutter_app/state/system/notifications_provider.dart';
@@ -477,11 +478,25 @@ Widget _buildTestApp({
       unreadNotificationCountProvider.overrideWith(
         (ref) => unreadNotificationCount,
       ),
+      syncQueuePendingCountProvider.overrideWith((ref) => Stream<int>.value(0)),
       syncQueueAttentionCountProvider.overrideWith(
         (ref) => Stream<int>.value(syncAttentionCount),
       ),
       if (resourceEntries != null)
         resourcesProvider.overrideWith((ref) => Stream.value(resourceEntries)),
+      localStatsProvider.overrideWith(
+        (ref) => Stream.value(
+          const LocalStats(
+            totalMemos: 0,
+            archivedMemos: 0,
+            activeDays: 0,
+            daysSinceFirstMemo: 0,
+            totalChars: 0,
+            dailyCounts: <DateTime, int>{},
+          ),
+        ),
+      ),
+      tagStatsProvider.overrideWith((ref) => Stream.value(const <TagStat>[])),
       tagColorLookupProvider.overrideWith((ref) => TagColorLookup(const [])),
       memoRelationsProvider.overrideWith(
         (ref, memoUid) =>

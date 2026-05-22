@@ -84,6 +84,16 @@ class AboutScreen extends StatelessWidget {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isWindowsDesktop = platform == TargetPlatform.windows;
+    final desktopNavigationMode = useDesktopSidePane
+        ? DesktopTitlebarNavigationMode.expandedSidebar
+        : DesktopTitlebarNavigationMode.hidden;
+    const desktopNavigationContext =
+        DesktopTitlebarNavigationContext.topLevelDestination;
+    final omitTopLevelChrome = shouldOmitDesktopTopLevelChrome(
+      platform: platform,
+      navigationMode: desktopNavigationMode,
+      navigationContext: desktopNavigationContext,
+    );
     final enableWindowsDragToMove = isWindowsDesktop;
     final useEmbeddedBottomNav =
         presentation == HomeScreenPresentation.embeddedBottomNav;
@@ -129,17 +139,33 @@ class AboutScreen extends StatelessWidget {
                 elevation: 0,
                 scrolledUnderElevation: 0,
                 surfaceTintColor: Colors.transparent,
+                toolbarHeight: resolveDesktopTopLevelToolbarHeight(
+                  platform: platform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                ),
                 flexibleSpace: enableWindowsDragToMove
                     ? const DragToMoveArea(child: SizedBox.expand())
                     : null,
-                leading: IconButton(
-                  tooltip: context.t.strings.legacy.msg_back,
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => _backToAllMemos(context),
+                automaticallyImplyLeading: !omitTopLevelChrome,
+                leading: resolveDesktopTopLevelLeading(
+                  platform: platform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  leading: IconButton(
+                    tooltip: context.t.strings.legacy.msg_back,
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => _backToAllMemos(context),
+                  ),
                 ),
-                title: IgnorePointer(
-                  ignoring: enableWindowsDragToMove,
-                  child: Text(context.t.strings.legacy.msg_about),
+                title: resolveDesktopTopLevelTitle(
+                  platform: platform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  title: IgnorePointer(
+                    ignoring: enableWindowsDragToMove,
+                    child: Text(context.t.strings.legacy.msg_about),
+                  ),
                 ),
                 centerTitle: false,
               ),

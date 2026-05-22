@@ -1273,10 +1273,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     );
   }
 
-  void _handleMemoTap(
-    Memo memo, {
-    required bool supportsDesktopPreviewPane,
-  }) {
+  void _handleMemoTap(Memo memo, {required bool supportsDesktopPreviewPane}) {
     if (supportsDesktopPreviewPane) {
       setState(() {
         _selectedPreviewMemoUid = memo.uid;
@@ -1329,6 +1326,17 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isWindowsDesktop =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+    final desktopPlatform = Theme.of(context).platform;
+    final desktopNavigationMode = useDesktopSidePane
+        ? DesktopTitlebarNavigationMode.expandedSidebar
+        : DesktopTitlebarNavigationMode.hidden;
+    const desktopNavigationContext =
+        DesktopTitlebarNavigationContext.topLevelDestination;
+    final omitTopLevelChrome = shouldOmitDesktopTopLevelChrome(
+      platform: desktopPlatform,
+      navigationMode: desktopNavigationMode,
+      navigationContext: desktopNavigationContext,
+    );
     final windowsDesktopLayout = isWindowsDesktop
         ? resolveWindowsDesktopLayout(
             screenWidth,
@@ -1660,7 +1668,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: kMemoFlowDesktopContentMaxWidth,
-            minWidth: previewPaneVisible ? kMemoFlowDesktopPreviewListMinWidth : 0,
+            minWidth: previewPaneVisible
+                ? kMemoFlowDesktopPreviewListMinWidth
+                : 0,
           ),
           child: pageBody,
         ),
@@ -1733,26 +1743,43 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 elevation: 0,
                 scrolledUnderElevation: 0,
                 surfaceTintColor: Colors.transparent,
-                automaticallyImplyLeading: false,
-                toolbarHeight: 46,
+                automaticallyImplyLeading:
+                    !omitTopLevelChrome && !useDesktopSidePane,
+                toolbarHeight:
+                    resolveDesktopTopLevelToolbarHeight(
+                      platform: desktopPlatform,
+                      navigationMode: desktopNavigationMode,
+                      navigationContext: desktopNavigationContext,
+                    ) ??
+                    46,
                 iconTheme: IconThemeData(color: textMain),
                 flexibleSpace: enableWindowsDragToMove
                     ? const DragToMoveArea(child: SizedBox.expand())
                     : null,
-                leading: useDesktopSidePane
-                    ? null
-                    : AppDrawerMenuButton(
-                        tooltip: context.t.strings.legacy.msg_toggle_sidebar,
-                        iconColor: textMain,
-                        badgeBorderColor: bg,
+                leading: resolveDesktopTopLevelLeading(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  leading: useDesktopSidePane
+                      ? null
+                      : AppDrawerMenuButton(
+                          tooltip: context.t.strings.legacy.msg_toggle_sidebar,
+                          iconColor: textMain,
+                          badgeBorderColor: bg,
+                        ),
+                ),
+                title: resolveDesktopTopLevelTitle(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  title: IgnorePointer(
+                    ignoring: enableWindowsDragToMove,
+                    child: Text(
+                      context.t.strings.legacy.msg_explore,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: textMain,
                       ),
-                title: IgnorePointer(
-                  ignoring: enableWindowsDragToMove,
-                  child: Text(
-                    context.t.strings.legacy.msg_explore,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: textMain,
                     ),
                   ),
                 ),

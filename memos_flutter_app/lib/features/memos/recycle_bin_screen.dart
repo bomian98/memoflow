@@ -117,6 +117,17 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isWindowsDesktop =
         Theme.of(context).platform == TargetPlatform.windows;
+    final desktopPlatform = Theme.of(context).platform;
+    final desktopNavigationMode = useDesktopSidePane
+        ? DesktopTitlebarNavigationMode.expandedSidebar
+        : DesktopTitlebarNavigationMode.hidden;
+    const desktopNavigationContext =
+        DesktopTitlebarNavigationContext.topLevelDestination;
+    final omitTopLevelChrome = shouldOmitDesktopTopLevelChrome(
+      platform: desktopPlatform,
+      navigationMode: desktopNavigationMode,
+      navigationContext: desktopNavigationContext,
+    );
     final enableWindowsDragToMove = isWindowsDesktop;
     final useEmbeddedBottomNav =
         widget.presentation == HomeScreenPresentation.embeddedBottomNav;
@@ -295,17 +306,33 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
           : Scaffold(
               drawer: useDesktopSidePane ? null : drawerPanel,
               appBar: AppBar(
+                toolbarHeight: resolveDesktopTopLevelToolbarHeight(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                ),
                 flexibleSpace: enableWindowsDragToMove
                     ? const DragToMoveArea(child: SizedBox.expand())
                     : null,
-                leading: IconButton(
-                  tooltip: context.t.strings.legacy.msg_back,
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: _handleBack,
+                automaticallyImplyLeading: !omitTopLevelChrome,
+                leading: resolveDesktopTopLevelLeading(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  leading: IconButton(
+                    tooltip: context.t.strings.legacy.msg_back,
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: _handleBack,
+                  ),
                 ),
-                title: IgnorePointer(
-                  ignoring: enableWindowsDragToMove,
-                  child: Text(context.t.strings.legacy.msg_recycle_bin),
+                title: resolveDesktopTopLevelTitle(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  title: IgnorePointer(
+                    ignoring: enableWindowsDragToMove,
+                    child: Text(context.t.strings.legacy.msg_recycle_bin),
+                  ),
                 ),
                 actions: [
                   if ((asyncItems.valueOrNull ?? const <RecycleBinItem>[])

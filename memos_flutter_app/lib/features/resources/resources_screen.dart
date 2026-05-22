@@ -1533,6 +1533,11 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
               drawerEnableOpenDragGesture:
                   widget.presentation !=
                   HomeScreenPresentation.embeddedBottomNav,
+              desktopNavigationMode: useDesktopSidePane
+                  ? DesktopTitlebarNavigationMode.expandedSidebar
+                  : DesktopTitlebarNavigationMode.hidden,
+              desktopNavigationContext:
+                  DesktopTitlebarNavigationContext.topLevelDestination,
               title: Text(
                 context.t.strings.legacy.msg_attachments,
                 style: TextStyle(

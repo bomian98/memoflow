@@ -1372,6 +1372,17 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
         Theme.of(context).platform == TargetPlatform.windows;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
+    final desktopPlatform = Theme.of(context).platform;
+    final desktopNavigationMode = useDesktopSidePane
+        ? DesktopTitlebarNavigationMode.expandedSidebar
+        : DesktopTitlebarNavigationMode.hidden;
+    const desktopNavigationContext =
+        DesktopTitlebarNavigationContext.topLevelDestination;
+    final omitTopLevelChrome = shouldOmitDesktopTopLevelChrome(
+      platform: desktopPlatform,
+      navigationMode: desktopNavigationMode,
+      navigationContext: desktopNavigationContext,
+    );
     final tagStats =
         ref.watch(tagStatsProvider).valueOrNull ?? const <TagStat>[];
     final tagColors = ref.watch(tagColorLookupProvider);
@@ -1804,28 +1815,45 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
                 elevation: 0,
                 scrolledUnderElevation: 0,
                 surfaceTintColor: Colors.transparent,
-                automaticallyImplyLeading: !useDesktopSidePane,
-                toolbarHeight: 46,
+                automaticallyImplyLeading:
+                    !omitTopLevelChrome && !useDesktopSidePane,
+                toolbarHeight:
+                    resolveDesktopTopLevelToolbarHeight(
+                      platform: desktopPlatform,
+                      navigationMode: desktopNavigationMode,
+                      navigationContext: desktopNavigationContext,
+                    ) ??
+                    46,
                 iconTheme: IconThemeData(color: textMain),
-                leading: useDesktopSidePane
-                    ? null
-                    : widget.presentation ==
-                          HomeScreenPresentation.embeddedBottomNav
-                    ? AppDrawerMenuButton(
-                        tooltip: context.t.strings.legacy.msg_toggle_sidebar,
-                        iconColor: textMain,
-                        badgeBorderColor: bg,
-                      )
-                    : IconButton(
-                        tooltip: context.t.strings.legacy.msg_back,
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: _back,
-                      ),
-                title: Text(
-                  context.t.strings.legacy.msg_random_review,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: textMain,
+                leading: resolveDesktopTopLevelLeading(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  leading: useDesktopSidePane
+                      ? null
+                      : widget.presentation ==
+                            HomeScreenPresentation.embeddedBottomNav
+                      ? AppDrawerMenuButton(
+                          tooltip: context.t.strings.legacy.msg_toggle_sidebar,
+                          iconColor: textMain,
+                          badgeBorderColor: bg,
+                        )
+                      : IconButton(
+                          tooltip: context.t.strings.legacy.msg_back,
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: _back,
+                        ),
+                ),
+                title: resolveDesktopTopLevelTitle(
+                  platform: desktopPlatform,
+                  navigationMode: desktopNavigationMode,
+                  navigationContext: desktopNavigationContext,
+                  title: Text(
+                    context.t.strings.legacy.msg_random_review,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: textMain,
+                    ),
                   ),
                 ),
                 centerTitle: !useDesktopSidePane,
