@@ -82,6 +82,55 @@ void main() {
       expect(shouldUseWindowsSecondaryPane(1280), isTrue);
     });
 
+    test('desktop memo list preview policy aligns Windows and macOS tiers', () {
+      for (final platform in [TargetPlatform.windows, TargetPlatform.macOS]) {
+        final narrow = resolveDesktopMemoListLayout(959, platform: platform);
+        final compact = resolveDesktopMemoListLayout(1199, platform: platform);
+        final expanded = resolveDesktopMemoListLayout(1200, platform: platform);
+        final expandedHigh = resolveDesktopMemoListLayout(
+          1359,
+          platform: platform,
+        );
+        final wide = resolveDesktopMemoListLayout(1360, platform: platform);
+
+        expect(narrow.tier, DesktopMemoListLayoutTier.narrow);
+        expect(narrow.supportsPreviewPane, isFalse);
+        expect(narrow.defaultMemoClickOpensPreview, isFalse);
+
+        expect(compact.tier, DesktopMemoListLayoutTier.compact);
+        expect(compact.supportsPreviewPane, isFalse);
+        expect(compact.defaultMemoClickOpensPreview, isFalse);
+
+        expect(expanded.tier, DesktopMemoListLayoutTier.expanded);
+        expect(expanded.supportsPreviewPane, isTrue);
+        expect(expanded.defaultMemoClickOpensPreview, isFalse);
+
+        expect(expandedHigh.tier, DesktopMemoListLayoutTier.expanded);
+        expect(expandedHigh.supportsPreviewPane, isTrue);
+        expect(expandedHigh.defaultMemoClickOpensPreview, isFalse);
+
+        expect(wide.tier, DesktopMemoListLayoutTier.wide);
+        expect(wide.supportsPreviewPane, isTrue);
+        expect(wide.defaultMemoClickOpensPreview, isTrue);
+      }
+    });
+
+    test('desktop memo list preview policy excludes unaligned platforms', () {
+      final linux = resolveDesktopMemoListLayout(
+        1600,
+        platform: TargetPlatform.linux,
+      );
+      final android = resolveDesktopMemoListLayout(
+        1600,
+        platform: TargetPlatform.android,
+      );
+
+      expect(linux.supportsPreviewPane, isFalse);
+      expect(linux.defaultMemoClickOpensPreview, isFalse);
+      expect(android.supportsPreviewPane, isFalse);
+      expect(android.defaultMemoClickOpensPreview, isFalse);
+    });
+
     test('windows helpers are disabled on non-windows platforms', () {
       debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
       addTearDown(() => debugDefaultTargetPlatformOverride = null);

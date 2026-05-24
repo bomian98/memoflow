@@ -363,39 +363,60 @@ void main() {
     expect(layoutState.listVisualOffset, 0);
   });
 
-  test('macOS wide layout supports desktop preview pane', () {
-    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-    final queryState = buildMemosListScreenQueryState(
-      searchQuery: '',
-      filterDay: null,
-      state: 'NORMAL',
-      pageSize: 40,
-      shortcuts: const <Shortcut>[],
-      selectedShortcutId: null,
-      selectedQuickSearchKind: null,
-      resolvedTag: null,
-      advancedFilters: AdvancedSearchFilters.empty,
-      searching: false,
-      showDrawer: true,
-    );
-    final layoutState = buildMemosListScreenLayoutState(
-      query: queryState,
-      state: 'NORMAL',
-      showDrawer: true,
-      showPillActions: true,
-      showFilterTagChip: false,
-      enableCompose: true,
-      hidePrimaryComposeFab: false,
-      searching: false,
-      screenWidth: 1440,
-      isWindowsDesktop: false,
-      isMacosDesktop: true,
-    );
+  test(
+    'macOS desktop preview layout follows shared expanded and wide tiers',
+    () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      final queryState = buildMemosListScreenQueryState(
+        searchQuery: '',
+        filterDay: null,
+        state: 'NORMAL',
+        pageSize: 40,
+        shortcuts: const <Shortcut>[],
+        selectedShortcutId: null,
+        selectedQuickSearchKind: null,
+        resolvedTag: null,
+        advancedFilters: AdvancedSearchFilters.empty,
+        searching: false,
+        showDrawer: true,
+      );
 
-    expect(layoutState.supportsDesktopSidePane, isTrue);
-    expect(layoutState.supportsDesktopPreviewPane, isTrue);
-    expect(layoutState.useDesktopPreviewPane, isTrue);
-  });
+      MemosListScreenLayoutState layoutFor(double width) {
+        return buildMemosListScreenLayoutState(
+          query: queryState,
+          state: 'NORMAL',
+          showDrawer: true,
+          showPillActions: true,
+          showFilterTagChip: false,
+          enableCompose: true,
+          hidePrimaryComposeFab: false,
+          searching: false,
+          screenWidth: width,
+          isWindowsDesktop: false,
+          isMacosDesktop: true,
+        );
+      }
+
+      final compact = layoutFor(1199);
+      final expanded = layoutFor(1200);
+      final expandedHigh = layoutFor(1359);
+      final wide = layoutFor(1360);
+
+      expect(compact.supportsDesktopSidePane, isTrue);
+      expect(compact.supportsDesktopPreviewPane, isFalse);
+      expect(compact.useDesktopPreviewPane, isFalse);
+
+      expect(expanded.supportsDesktopSidePane, isTrue);
+      expect(expanded.supportsDesktopPreviewPane, isTrue);
+      expect(expanded.useDesktopPreviewPane, isFalse);
+
+      expect(expandedHigh.supportsDesktopPreviewPane, isTrue);
+      expect(expandedHigh.useDesktopPreviewPane, isFalse);
+
+      expect(wide.supportsDesktopPreviewPane, isTrue);
+      expect(wide.useDesktopPreviewPane, isTrue);
+    },
+  );
 
   test('windows wide layout enables desktop preview pane at 1360', () {
     final queryState = buildMemosListScreenQueryState(

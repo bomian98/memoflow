@@ -1000,7 +1000,7 @@ void main() {
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
     tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(1600, 1800);
+    tester.view.physicalSize = const Size(1360, 1800);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
@@ -1010,7 +1010,7 @@ void main() {
     await tester.pumpWidget(
       _buildHarness(
         memosStream: memosController.stream,
-        screenSize: const Size(1600, 1800),
+        screenSize: const Size(1360, 1800),
         showDrawer: true,
       ),
     );
@@ -1042,6 +1042,99 @@ void main() {
     expect(
       tester.widget<MemoListCard>(find.byType(MemoListCard).first).selected,
       isTrue,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets(
+    'macOS expanded layout supports preview without default memo tap preview',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1280, 1800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1280, 1800),
+          showDrawer: true,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'macOS expanded preview memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MemosListScreen)),
+      );
+      final screenState = tester.state(find.byType(MemosListScreen)) as dynamic;
+      final layout = screenState.debugBuildCurrentLayoutState();
+      expect(layout.supportsDesktopPreviewPane, isTrue);
+      expect(layout.useDesktopPreviewPane, isFalse);
+
+      await tester.tap(find.byType(MemoListCard).first);
+      await tester.pump(const Duration(milliseconds: 420));
+      await _pumpScreenFrames(tester);
+
+      expect(find.byType(MemoDetailScreen), findsOneWidget);
+      expect(
+        container.read(desktopHomePaneStateProvider).previewVisible,
+        isFalse,
+      );
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets('macOS expanded layout updates preview when pane is active', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1280, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'macOS active pane preview memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+    container.read(desktopHomePaneStateProvider.notifier).openPreviewPane();
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(const ValueKey<String>('desktop-memo-preview-pane')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byType(MemoListCard).first);
+    await tester.pump(const Duration(milliseconds: 420));
+    await _pumpScreenFrames(tester);
+
+    expect(find.byType(MemoDetailScreen), findsNothing);
+    expect(container.read(desktopHomePaneStateProvider).previewVisible, isTrue);
+    expect(
+      container.read(desktopHomePaneStateProvider).selectedMemoUid,
+      'memo-1',
     );
     debugDefaultTargetPlatformOverride = null;
   });

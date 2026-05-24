@@ -290,20 +290,22 @@ MemosListScreenLayoutState buildMemosListScreenLayoutState({
   final supportsDesktopSidePane =
       showDrawer && shouldUseDesktopSidePaneLayout(screenWidth);
   final useDesktopSidePane = supportsDesktopSidePane;
-  final windowsDesktopLayout = isWindowsDesktop
-      ? resolveWindowsDesktopLayout(
-          screenWidth,
-          platform: TargetPlatform.windows,
-        )
-      : null;
+  final desktopMemoListLayout = resolveDesktopMemoListLayout(
+    screenWidth,
+    platform: isWindowsDesktop
+        ? TargetPlatform.windows
+        : (isMacosDesktop ? TargetPlatform.macOS : null),
+  );
+  final useAlignedDesktopPreviewPolicy = isWindowsDesktop || isMacosDesktop;
   final supportsDesktopPreviewPane =
       showDrawer &&
       supportsDesktopSidePane &&
-      (isWindowsDesktop
-          ? windowsDesktopLayout!.supportsSecondaryPane
+      (useAlignedDesktopPreviewPolicy
+          ? desktopMemoListLayout.supportsPreviewPane
           : shouldUseDesktopPreviewPaneLayout(screenWidth));
-  final useDesktopPreviewPane = isWindowsDesktop
-      ? windowsDesktopLayout!.tier == WindowsDesktopLayoutTier.wide
+  final useDesktopPreviewPane = useAlignedDesktopPreviewPolicy
+      ? supportsDesktopPreviewPane &&
+            desktopMemoListLayout.defaultMemoClickOpensPreview
       : supportsDesktopPreviewPane;
   final useInlineCompose =
       enableCompose &&

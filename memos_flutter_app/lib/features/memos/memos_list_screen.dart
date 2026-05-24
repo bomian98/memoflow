@@ -268,6 +268,38 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   @visibleForTesting
   void debugStartAiSearch() => _startAiSearch();
 
+  @visibleForTesting
+  MemosListScreenLayoutState debugBuildCurrentLayoutState() {
+    final mediaQuery = MediaQuery.of(context);
+    final queryState = buildMemosListScreenQueryState(
+      searchQuery: _searchController.text,
+      filterDay: widget.dayFilter,
+      state: widget.state,
+      pageSize: _pageSize,
+      shortcuts: const <Shortcut>[],
+      selectedShortcutId: _selectedShortcutId,
+      selectedQuickSearchKind: _selectedQuickSearchKind,
+      aiSearchActive: _aiSearchActive,
+      resolvedTag: _activeTagFilter,
+      advancedFilters: _advancedSearchFilters,
+      searching: _searching,
+      showDrawer: widget.showDrawer,
+    );
+    return buildMemosListScreenLayoutState(
+      query: queryState,
+      state: widget.state,
+      showDrawer: widget.showDrawer,
+      showPillActions: widget.showPillActions,
+      showFilterTagChip: widget.showFilterTagChip,
+      enableCompose: widget.enableCompose,
+      hidePrimaryComposeFab: widget.hidePrimaryComposeFab,
+      searching: _searching,
+      screenWidth: mediaQuery.size.width,
+      isWindowsDesktop: _isWindowsDesktopTarget,
+      isMacosDesktop: _isMacosDesktopTarget,
+    );
+  }
+
   TextEditingController get _searchController =>
       _headerController.searchController;
   FocusNode get _searchFocusNode => _headerController.searchFocusNode;

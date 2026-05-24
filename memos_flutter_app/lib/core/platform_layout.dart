@@ -11,6 +11,9 @@ const double kMemoFlowInlineComposeBreakpoint = 760;
 const double kWindowsDesktopNarrowBreakpoint = 960;
 const double kWindowsDesktopExpandedBreakpoint = 1200;
 const double kWindowsDesktopWideBreakpoint = 1360;
+const double kDesktopMemoListExpandedBreakpoint =
+    kWindowsDesktopExpandedBreakpoint;
+const double kDesktopMemoListWideBreakpoint = kWindowsDesktopWideBreakpoint;
 const double kWindowsDesktopSidebarWidth = 280;
 const double kWindowsDesktopRailWidth = 72;
 const double kWindowsDesktopSecondaryPaneDefaultWidth = 420;
@@ -19,7 +22,21 @@ const double kWindowsDesktopSecondaryPaneMaxWidth = 560;
 
 enum WindowsDesktopLayoutTier { narrow, compact, expanded, wide }
 
+enum DesktopMemoListLayoutTier { narrow, compact, expanded, wide }
+
 enum WindowsDesktopNavMode { overlay, rail, expanded }
+
+class DesktopMemoListLayoutSpec {
+  const DesktopMemoListLayoutSpec({
+    required this.tier,
+    required this.supportsPreviewPane,
+    required this.defaultMemoClickOpensPreview,
+  });
+
+  final DesktopMemoListLayoutTier tier;
+  final bool supportsPreviewPane;
+  final bool defaultMemoClickOpensPreview;
+}
 
 class WindowsDesktopLayoutSpec {
   const WindowsDesktopLayoutSpec({
@@ -42,6 +59,54 @@ bool isDesktopTargetPlatform([TargetPlatform? platform]) {
   return value == TargetPlatform.windows ||
       value == TargetPlatform.macOS ||
       value == TargetPlatform.linux;
+}
+
+bool isAlignedDesktopMemoPreviewPlatform([TargetPlatform? platform]) {
+  final value = platform ?? defaultTargetPlatform;
+  return value == TargetPlatform.windows || value == TargetPlatform.macOS;
+}
+
+DesktopMemoListLayoutSpec resolveDesktopMemoListLayout(
+  double width, {
+  TargetPlatform? platform,
+}) {
+  if (!isAlignedDesktopMemoPreviewPlatform(platform)) {
+    return const DesktopMemoListLayoutSpec(
+      tier: DesktopMemoListLayoutTier.narrow,
+      supportsPreviewPane: false,
+      defaultMemoClickOpensPreview: false,
+    );
+  }
+
+  if (width < kWindowsDesktopNarrowBreakpoint) {
+    return const DesktopMemoListLayoutSpec(
+      tier: DesktopMemoListLayoutTier.narrow,
+      supportsPreviewPane: false,
+      defaultMemoClickOpensPreview: false,
+    );
+  }
+
+  if (width < kDesktopMemoListExpandedBreakpoint) {
+    return const DesktopMemoListLayoutSpec(
+      tier: DesktopMemoListLayoutTier.compact,
+      supportsPreviewPane: false,
+      defaultMemoClickOpensPreview: false,
+    );
+  }
+
+  if (width < kDesktopMemoListWideBreakpoint) {
+    return const DesktopMemoListLayoutSpec(
+      tier: DesktopMemoListLayoutTier.expanded,
+      supportsPreviewPane: true,
+      defaultMemoClickOpensPreview: false,
+    );
+  }
+
+  return const DesktopMemoListLayoutSpec(
+    tier: DesktopMemoListLayoutTier.wide,
+    supportsPreviewPane: true,
+    defaultMemoClickOpensPreview: true,
+  );
 }
 
 WindowsDesktopLayoutSpec resolveWindowsDesktopLayout(
