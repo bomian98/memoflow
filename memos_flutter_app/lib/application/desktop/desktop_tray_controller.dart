@@ -42,8 +42,12 @@ class DesktopTrayController with TrayListener {
     trayManager.addListener(this);
     final iconPath = Platform.isWindows
         ? 'windows/runner/resources/app_icon.ico'
-        : 'assets/images/default_avatar.webp';
-    await trayManager.setIcon(iconPath);
+        : 'assets/images/tray_icon_macos.png';
+    if (Platform.isMacOS) {
+      await trayManager.setIcon(iconPath, isTemplate: true, iconSize: 18);
+    } else {
+      await trayManager.setIcon(iconPath);
+    }
     await trayManager.setToolTip('MemoFlow');
     await trayManager.setContextMenu(
       Menu(
@@ -83,6 +87,10 @@ class DesktopTrayController with TrayListener {
 
   @override
   void onTrayIconMouseDown() {
+    if (Platform.isMacOS) {
+      unawaited(trayManager.popUpContextMenu());
+      return;
+    }
     unawaited(_toggleByTrayIcon());
   }
 
