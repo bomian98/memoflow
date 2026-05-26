@@ -1,6 +1,7 @@
 const String desktopWindowTypeKey = 'window_type';
 const String desktopWindowTypeQuickInput = 'quick_input';
 const String desktopWindowTypeSettings = 'settings';
+const String desktopWindowTypeShare = 'share';
 
 const String desktopQuickInputSubmitMethod = 'desktop.quickInput.submit';
 const String desktopQuickInputPlaceholderMethod =
@@ -30,3 +31,7 @@ const String desktopHomeShowLoadingOverlayMethod =
 const String desktopSubWindowVisibilityMethod = 'desktop.subWindow.visibility';
 const String desktopSubWindowIsVisibleMethod = 'desktop.subWindow.isVisible';
 const String desktopSubWindowExitMethod = 'desktop.subWindow.exit';
+
+const String desktopShareResultMethod = 'desktop.share.result';
+const String desktopShareCanceledMethod = 'desktop.share.canceled';
+const String desktopSharePingMethod = 'desktop.share.ping';

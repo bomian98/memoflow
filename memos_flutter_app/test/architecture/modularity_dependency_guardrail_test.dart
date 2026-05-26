@@ -70,6 +70,7 @@ void main() {
       'lib/application/startup/startup_coordinator.dart -> lib/features/share/share_quick_clip_models.dart',
       'lib/application/startup/startup_coordinator.dart -> lib/features/share/share_quick_clip_service.dart',
       'lib/application/startup/startup_coordinator.dart -> lib/features/share/share_quick_clip_sheet.dart',
+      'lib/application/startup/startup_coordinator.dart -> lib/features/share/share_task_window_codec.dart',
       'lib/application/widgets/home_widget_snapshot_builder.dart -> lib/features/review/random_walk_display.dart',
       'lib/application/widgets/home_widget_snapshot_builder.dart -> lib/features/review/random_walk_models.dart',
       'lib/application/widgets/home_widget_snapshot_builder.dart -> lib/features/review/random_walk_providers.dart',

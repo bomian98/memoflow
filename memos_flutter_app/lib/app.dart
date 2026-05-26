@@ -241,6 +241,9 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
       openQuickInput: ({required bool autoFocus}) =>
           _startupCoordinator.openQuickInput(autoFocus: autoFocus),
       openSettingsFallback: () => _pushMacosMenuRoute(const SettingsScreen()),
+      handleShareTaskResult: _startupCoordinator.handleDesktopShareTaskResult,
+      handleShareTaskCanceled:
+          _startupCoordinator.handleDesktopShareTaskCanceled,
       isMounted: () => mounted,
       onVisibilityChanged: () {
         if (!mounted) return;

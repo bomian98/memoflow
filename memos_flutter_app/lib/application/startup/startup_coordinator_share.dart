@@ -30,6 +30,7 @@ extension _StartupCoordinatorShare on StartupCoordinator {
       if (!_isMounted()) return;
       _handlePendingShare();
     });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   bool _handlePendingShare() {
@@ -69,7 +70,7 @@ extension _StartupCoordinatorShare on StartupCoordinator {
       ),
     );
     if (_shouldOpenSharePreviewDirectly(payload)) {
-      unawaited(_openShareQuickClipFlow(payload));
+      unawaited(_openSharePreviewTaskFlow(payload));
       return true;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,6 +81,16 @@ extension _StartupCoordinatorShare on StartupCoordinator {
     });
     WidgetsBinding.instance.scheduleFrame();
     return true;
+  }
+
+  Future<void> _openSharePreviewTaskFlow(SharePayload payload) async {
+    if (await _tryOpenDesktopShareTaskWindow(
+      payload,
+      source: 'direct_preview',
+    )) {
+      return;
+    }
+    await _openShareQuickClipFlow(payload);
   }
 
   void _scheduleShareFlowAfterNavigation(
@@ -103,6 +114,178 @@ extension _StartupCoordinatorShare on StartupCoordinator {
   bool _shouldOpenSharePreviewDirectly(SharePayload payload) {
     return payload.type == SharePayloadType.text &&
         buildShareCaptureRequest(payload) != null;
+  }
+
+  String _nextDesktopShareTaskRequestId() {
+    final candidate = _desktopShareTaskRequestIdFactory?.call().trim();
+    if (candidate != null &&
+        candidate.isNotEmpty &&
+        !_activeDesktopShareTasks.containsKey(candidate)) {
+      return candidate;
+    }
+    var requestId = '';
+    do {
+      _desktopShareTaskRequestSequence += 1;
+      requestId = 'share-$_desktopShareTaskRequestSequence';
+    } while (_activeDesktopShareTasks.containsKey(requestId));
+    return requestId;
+  }
+
+  Future<bool> _tryOpenDesktopShareTaskWindow(
+    SharePayload payload, {
+    required String source,
+  }) async {
+    final captureRequest = buildShareCaptureRequest(payload);
+    if (captureRequest == null) return false;
+    final requestId = _nextDesktopShareTaskRequestId();
+    final result = await _desktopShareTaskWindowOpener(
+      requestId: requestId,
+      payloadJson: sharePayloadToJson(payload),
+    );
+    if (result.opened) {
+      _activeDesktopShareTasks[requestId] = payload;
+      _clearStartupShareLaunchUi();
+      _setShareFlowActive(true);
+      _logStartupInfo(
+        'Startup: share_task_window_opened',
+        context: _buildStartupContext(
+          phase: _startupHandled ? 'runtime' : 'startup',
+          source: source,
+          extra: <String, Object?>{
+            ..._sharePayloadContext(payload),
+            'requestId': requestId,
+            'windowId': result.windowId,
+            'sharePreviewUrl': captureRequest.url.toString(),
+          },
+        ),
+      );
+      return true;
+    }
+    _logStartupInfo(
+      'Startup: share_task_window_fallback',
+      context: _buildStartupContext(
+        phase: _startupHandled ? 'runtime' : 'startup',
+        source: source,
+        reason: result.status.name,
+        extra: <String, Object?>{
+          ..._sharePayloadContext(payload),
+          'sharePreviewUrl': captureRequest.url.toString(),
+          if (result.error != null) 'error': result.error.toString(),
+        },
+      ),
+    );
+    return false;
+  }
+
+  Future<bool> _handleDesktopShareTaskResult(
+    Object? arguments,
+    int fromWindowId,
+  ) async {
+    final result = DesktopShareTaskResult.fromArgs(arguments);
+    if (result == null) {
+      _logStartupInfo(
+        'Startup: share_task_result_ignored',
+        context: _buildStartupContext(
+          phase: 'runtime',
+          reason: 'invalid_payload',
+          extra: <String, Object?>{'fromWindowId': fromWindowId},
+        ),
+      );
+      return false;
+    }
+    final payload = _activeDesktopShareTasks[result.requestId];
+    if (payload == null) {
+      _logStartupInfo(
+        'Startup: share_task_result_ignored',
+        context: _buildStartupContext(
+          phase: 'runtime',
+          reason: 'unknown_request_id',
+          extra: <String, Object?>{
+            'fromWindowId': fromWindowId,
+            'requestId': result.requestId,
+          },
+        ),
+      );
+      return false;
+    }
+    await _desktopMainWindowForegrounder();
+    if (!_isMounted()) return false;
+    final context = _navigatorKey.currentContext;
+    if (context == null) return false;
+    if (!context.mounted) return false;
+
+    _activeDesktopShareTasks.remove(result.requestId);
+    _logStartupInfo(
+      'Startup: share_task_result',
+      context: _buildStartupContext(
+        phase: 'runtime',
+        extra: <String, Object?>{
+          ..._sharePayloadContext(payload),
+          'fromWindowId': fromWindowId,
+          'requestId': result.requestId,
+        },
+      ),
+    );
+    _openComposeRequest(
+      context,
+      result.request.copyWith(showLocalSaveSuccessToast: true),
+    );
+    await _completeDesktopShareTaskUpdate(source: 'share_task_result');
+    return true;
+  }
+
+  Future<bool> _handleDesktopShareTaskCanceled(
+    Object? arguments,
+    int fromWindowId,
+  ) async {
+    final requestId = desktopShareTaskCanceledRequestId(arguments);
+    if (requestId == null || requestId.isEmpty) {
+      _logStartupInfo(
+        'Startup: share_task_cancel_ignored',
+        context: _buildStartupContext(
+          phase: 'runtime',
+          reason: 'invalid_payload',
+          extra: <String, Object?>{'fromWindowId': fromWindowId},
+        ),
+      );
+      return false;
+    }
+    final payload = _activeDesktopShareTasks.remove(requestId);
+    if (payload == null) {
+      _logStartupInfo(
+        'Startup: share_task_cancel_ignored',
+        context: _buildStartupContext(
+          phase: 'runtime',
+          reason: 'unknown_request_id',
+          extra: <String, Object?>{
+            'fromWindowId': fromWindowId,
+            'requestId': requestId,
+          },
+        ),
+      );
+      return false;
+    }
+    _logStartupInfo(
+      'Startup: share_task_canceled',
+      context: _buildStartupContext(
+        phase: 'runtime',
+        extra: <String, Object?>{
+          ..._sharePayloadContext(payload),
+          'fromWindowId': fromWindowId,
+          'requestId': requestId,
+        },
+      ),
+    );
+    await _completeDesktopShareTaskUpdate(source: 'share_task_canceled');
+    return true;
+  }
+
+  Future<void> _completeDesktopShareTaskUpdate({required String source}) async {
+    _refreshShareFlowActiveAfterDesktopTaskUpdate();
+    if (_activeDesktopShareTasks.isNotEmpty) return;
+    _flushDeferredQuickClipRecoveryIfNeeded(source: source);
+    scheduleQuickClipRecovery(source: source);
+    await _flushDeferredLaunchSyncIfNeeded();
   }
 
   Future<void> _openShareQuickClipFlow(SharePayload payload) async {
@@ -204,13 +387,28 @@ extension _StartupCoordinatorShare on StartupCoordinator {
 
     final navigator = _navigatorKey.currentState;
     if (navigator == null) return;
-    final composeRequest = await navigator.push<ShareComposeRequest>(
-      _buildSharePreviewRoute(payload),
-    );
-    if (!_isMounted() || composeRequest == null) return;
-    _openComposeRequestWithCurrentContext(
-      composeRequest.copyWith(showLocalSaveSuccessToast: true),
-    );
+    if (await _tryOpenDesktopShareTaskWindow(
+      payload,
+      source: 'route_preview',
+    )) {
+      return;
+    }
+    _setShareFlowActive(true);
+    try {
+      final composeRequest = await navigator.push<ShareComposeRequest>(
+        _buildSharePreviewRoute(payload),
+      );
+      if (!_isMounted() || composeRequest == null) return;
+      _openComposeRequestWithCurrentContext(
+        composeRequest.copyWith(showLocalSaveSuccessToast: true),
+      );
+    } finally {
+      _clearStartupShareLaunchUi();
+      _setShareFlowActive(false);
+      _flushDeferredQuickClipRecoveryIfNeeded(source: 'share_flow_completed');
+      scheduleQuickClipRecovery(source: 'share_flow_completed');
+      unawaited(_flushDeferredLaunchSyncIfNeeded());
+    }
   }
 
   Route<T> _buildInstantRoute<T>(Widget child) {

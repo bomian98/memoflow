@@ -58,6 +58,9 @@ Future<StartupCoordinatorTestHarness> pumpStartupCoordinatorHarness(
   ShareQuickClipStartCallback? shareQuickClipStartOverride,
   ShareComposeRequestPresenter? shareComposeRequestPresenterOverride,
   TopToastPresenter? topToastPresenterOverride,
+  DesktopShareTaskWindowOpener? desktopShareTaskWindowOpenerOverride,
+  DesktopShareTaskRequestIdFactory? desktopShareTaskRequestIdFactory,
+  DesktopMainWindowForegrounder? desktopMainWindowForegrounderOverride,
   AppNavigator? appNavigator,
   AppNavigator Function(GlobalKey<NavigatorState> navigatorKey)?
   appNavigatorBuilder,
@@ -101,6 +104,10 @@ Future<StartupCoordinatorTestHarness> pumpStartupCoordinatorHarness(
     shareQuickClipStartOverride: shareQuickClipStartOverride,
     shareComposeRequestPresenterOverride: shareComposeRequestPresenterOverride,
     topToastPresenterOverride: topToastPresenterOverride,
+    desktopShareTaskWindowOpenerOverride: desktopShareTaskWindowOpenerOverride,
+    desktopShareTaskRequestIdFactory: desktopShareTaskRequestIdFactory,
+    desktopMainWindowForegrounderOverride:
+        desktopMainWindowForegrounderOverride,
   );
   addTearDown(coordinator.dispose);
   return StartupCoordinatorTestHarness(

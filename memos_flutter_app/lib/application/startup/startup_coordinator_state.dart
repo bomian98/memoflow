@@ -45,6 +45,12 @@ extension _StartupCoordinatorState on StartupCoordinator {
     _notifyCoordinatorListeners();
   }
 
+  void _refreshShareFlowActiveAfterDesktopTaskUpdate() {
+    if (_activeDesktopShareTasks.isNotEmpty) return;
+    _clearStartupShareLaunchUi();
+    _setShareFlowActive(false);
+  }
+
   void _deferLaunchSync(WorkspacePreferences prefs) {
     _deferredLaunchSyncPreferences = prefs;
   }

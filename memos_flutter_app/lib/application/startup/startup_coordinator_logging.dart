@@ -33,6 +33,8 @@ extension _StartupCoordinatorLogging on StartupCoordinator {
       if (action != null) 'action': action.name,
       if (reason != null) 'reason': reason,
       if (retryCount != null) 'retryCount': retryCount,
+      if (_activeDesktopShareTasks.isNotEmpty)
+        'activeDesktopShareTasks': _activeDesktopShareTasks.length,
       ...?extra,
     };
     return context;

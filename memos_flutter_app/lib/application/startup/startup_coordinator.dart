@@ -18,10 +18,12 @@ import '../../features/share/share_handler.dart';
 import '../../features/share/share_quick_clip_models.dart';
 import '../../features/share/share_quick_clip_service.dart';
 import '../../features/share/share_quick_clip_sheet.dart';
+import '../../features/share/share_task_window_codec.dart';
 import '../../i18n/strings.g.dart';
 import '../../presentation/navigation/app_navigator.dart';
 import '../../state/memos/app_bootstrap_adapter_provider.dart';
 import '../app/app_sync_orchestrator.dart';
+import '../desktop/desktop_share_window.dart';
 import '../widgets/home_widget_service.dart';
 
 part 'startup_coordinator_models.dart';
@@ -42,6 +44,13 @@ typedef ShareQuickClipStartCallback =
 typedef ShareComposeRequestPresenter =
     void Function(BuildContext context, ShareComposeRequest request);
 typedef TopToastPresenter = bool Function(BuildContext context, String message);
+typedef DesktopShareTaskWindowOpener =
+    Future<DesktopShareTaskWindowOpenResult> Function({
+      required String requestId,
+      required Map<String, dynamic> payloadJson,
+    });
+typedef DesktopShareTaskRequestIdFactory = String Function();
+typedef DesktopMainWindowForegrounder = Future<void> Function();
 
 class StartupCoordinator extends ChangeNotifier {
   StartupCoordinator({
@@ -59,6 +68,12 @@ class StartupCoordinator extends ChangeNotifier {
     @visibleForTesting
     ShareComposeRequestPresenter? shareComposeRequestPresenterOverride,
     @visibleForTesting TopToastPresenter? topToastPresenterOverride,
+    @visibleForTesting
+    DesktopShareTaskWindowOpener? desktopShareTaskWindowOpenerOverride,
+    @visibleForTesting
+    DesktopShareTaskRequestIdFactory? desktopShareTaskRequestIdFactory,
+    @visibleForTesting
+    DesktopMainWindowForegrounder? desktopMainWindowForegrounderOverride,
   }) : _bootstrapAdapter = bootstrapAdapter,
        _syncOrchestrator = syncOrchestrator,
        _appNavigator = appNavigator,
@@ -70,7 +85,13 @@ class StartupCoordinator extends ChangeNotifier {
        _shareQuickClipStartOverride = shareQuickClipStartOverride,
        _shareComposeRequestPresenterOverride =
            shareComposeRequestPresenterOverride,
-       _topToastPresenterOverride = topToastPresenterOverride;
+       _topToastPresenterOverride = topToastPresenterOverride,
+       _desktopShareTaskWindowOpener =
+           desktopShareTaskWindowOpenerOverride ?? openDesktopShareTaskWindow,
+       _desktopShareTaskRequestIdFactory = desktopShareTaskRequestIdFactory,
+       _desktopMainWindowForegrounder =
+           desktopMainWindowForegrounderOverride ??
+           foregroundDesktopMainWindowForShareResult;
 
   final AppBootstrapAdapter _bootstrapAdapter;
   final AppSyncOrchestrator _syncOrchestrator;
@@ -84,6 +105,9 @@ class StartupCoordinator extends ChangeNotifier {
   final ShareQuickClipStartCallback? _shareQuickClipStartOverride;
   final ShareComposeRequestPresenter? _shareComposeRequestPresenterOverride;
   final TopToastPresenter? _topToastPresenterOverride;
+  final DesktopShareTaskWindowOpener _desktopShareTaskWindowOpener;
+  final DesktopShareTaskRequestIdFactory? _desktopShareTaskRequestIdFactory;
+  final DesktopMainWindowForegrounder _desktopMainWindowForegrounder;
 
   set onQuickInputRequested(ValueChanged<String>? value) {
     _onQuickInputRequested = value;
@@ -110,6 +134,9 @@ class StartupCoordinator extends ChangeNotifier {
   Future<void>? _pendingShareLoad;
   SharePayload? _startupSharePreviewPayload;
   bool _shareFlowActive = false;
+  final Map<String, SharePayload> _activeDesktopShareTasks =
+      <String, SharePayload>{};
+  int _desktopShareTaskRequestSequence = 0;
   bool _quickClipRecoveryScheduled = false;
   bool _quickClipRecoveryStartupTriggered = false;
   bool _quickClipRecoveryPendingAfterDefer = false;
@@ -118,7 +145,9 @@ class StartupCoordinator extends ChangeNotifier {
   SharePayload? get startupSharePreviewPayload => _startupSharePreviewPayload;
 
   bool get shouldDeferHeavyStartupWork =>
-      _startupSharePreviewPayload != null || _shareFlowActive;
+      _startupSharePreviewPayload != null ||
+      _shareFlowActive ||
+      _activeDesktopShareTasks.isNotEmpty;
 
   @visibleForTesting
   Map<String, Object?> debugReadStartupSnapshot() {
@@ -238,6 +267,20 @@ class StartupCoordinator extends ChangeNotifier {
       return;
     }
     _requestStartupHandlingFromState(source: 'launch');
+  }
+
+  Future<bool> handleDesktopShareTaskResult(
+    Object? arguments,
+    int fromWindowId,
+  ) {
+    return _handleDesktopShareTaskResult(arguments, fromWindowId);
+  }
+
+  Future<bool> handleDesktopShareTaskCanceled(
+    Object? arguments,
+    int fromWindowId,
+  ) {
+    return _handleDesktopShareTaskCanceled(arguments, fromWindowId);
   }
 
   void onPrefsLoaded({String? source}) {

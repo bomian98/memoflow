@@ -26,6 +26,8 @@ import 'core/startup_timing.dart';
 import 'data/logs/log_manager.dart';
 import 'core/desktop_quick_input_channel.dart';
 import 'features/desktop/quick_input/desktop_quick_input_window.dart';
+import 'features/share/desktop_share_task_window_app.dart';
+import 'features/share/share_task_window_codec.dart';
 import 'features/settings/desktop_settings_window_app.dart';
 
 const String _kMediaKitNativeReferenceHolderPrefix =
@@ -181,6 +183,31 @@ void main(List<String> args) {
                 desktopWindowIdProvider.overrideWith((ref) => windowId),
               ],
               child: DesktopSettingsWindowApp(windowId: windowId),
+            ),
+          );
+          _schedulePostFirstFrameInit();
+          return;
+        }
+        if (type == desktopWindowTypeShare) {
+          _initializeDesktopDatabaseFactory();
+          StartupTiming.markRunApp(target: 'desktop_share_task');
+          final launchPayload = DesktopShareTaskLaunchPayload.fromArgs(
+            launchArgs,
+          );
+          runApp(
+            ProviderScope(
+              overrides: [
+                desktopRuntimeRoleProvider.overrideWith(
+                  (ref) => DesktopRuntimeRole.desktopShareTask,
+                ),
+                desktopWindowIdProvider.overrideWith((ref) => windowId),
+              ],
+              child: launchPayload == null
+                  ? const SizedBox.shrink()
+                  : DesktopShareTaskWindowApp(
+                      windowId: windowId,
+                      launchPayload: launchPayload,
+                    ),
             ),
           );
           _schedulePostFirstFrameInit();

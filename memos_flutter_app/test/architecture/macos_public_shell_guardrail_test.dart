@@ -24,6 +24,13 @@ void main() {
         'memos_flutter_app/macos/Runner/Base.lproj/MainMenu.strings',
       );
       final app = readRepoFile('memos_flutter_app/lib/app.dart');
+      final main = readRepoFile('memos_flutter_app/lib/main.dart');
+      final desktopShareWindow = readRepoFile(
+        'memos_flutter_app/lib/application/desktop/desktop_share_window.dart',
+      );
+      final desktopShareTaskWindowApp = readRepoFile(
+        'memos_flutter_app/lib/features/share/desktop_share_task_window_app.dart',
+      );
       final macosTitleBar = readRepoFile(
         'memos_flutter_app/lib/features/memos/widgets/'
         'memos_list_macos_desktop_title_bar.dart',
@@ -63,6 +70,10 @@ void main() {
       );
       expect(
         mainFlutterWindow.contains('RegisterMemoFlowSubWindowPlugins'),
+        isTrue,
+      );
+      expect(
+        mainFlutterWindow.contains('InAppWebViewFlutterPlugin.register'),
         isTrue,
       );
       expect(mainFlutterWindow.contains('fullSizeContentView'), isTrue);
@@ -132,6 +143,15 @@ void main() {
           menuStrings,
         ),
         MapEntry('memos_flutter_app/lib/app.dart', app),
+        MapEntry('memos_flutter_app/lib/main.dart', main),
+        MapEntry(
+          'memos_flutter_app/lib/application/desktop/desktop_share_window.dart',
+          desktopShareWindow,
+        ),
+        MapEntry(
+          'memos_flutter_app/lib/features/share/desktop_share_task_window_app.dart',
+          desktopShareTaskWindowApp,
+        ),
         MapEntry(
           'memos_flutter_app/lib/features/memos/widgets/'
           'memos_list_macos_desktop_title_bar.dart',

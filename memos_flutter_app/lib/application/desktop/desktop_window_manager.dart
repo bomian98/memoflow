@@ -39,6 +39,8 @@ import 'desktop_quick_input_controller.dart';
 typedef DesktopQuickInputLauncher =
     Future<void> Function({required bool autoFocus});
 typedef DesktopSettingsFallbackLauncher = Future<void> Function();
+typedef DesktopShareTaskMethodHandler =
+    Future<bool> Function(Object? arguments, int fromWindowId);
 
 class DesktopWindowManager {
   DesktopWindowManager({
@@ -48,6 +50,8 @@ class DesktopWindowManager {
     required DesktopQuickInputController quickInputController,
     required DesktopQuickInputLauncher openQuickInput,
     DesktopSettingsFallbackLauncher? openSettingsFallback,
+    DesktopShareTaskMethodHandler? handleShareTaskResult,
+    DesktopShareTaskMethodHandler? handleShareTaskCanceled,
     required bool Function() isMounted,
     required VoidCallback onVisibilityChanged,
   }) : _bootstrapAdapter = bootstrapAdapter,
@@ -56,6 +60,8 @@ class DesktopWindowManager {
        _quickInputController = quickInputController,
        _openQuickInput = openQuickInput,
        _openSettingsFallback = openSettingsFallback,
+       _handleShareTaskResult = handleShareTaskResult,
+       _handleShareTaskCanceled = handleShareTaskCanceled,
        _isMounted = isMounted,
        _onVisibilityChanged = onVisibilityChanged;
 
@@ -65,6 +71,8 @@ class DesktopWindowManager {
   final DesktopQuickInputController _quickInputController;
   final DesktopQuickInputLauncher _openQuickInput;
   final DesktopSettingsFallbackLauncher? _openSettingsFallback;
+  final DesktopShareTaskMethodHandler? _handleShareTaskResult;
+  final DesktopShareTaskMethodHandler? _handleShareTaskCanceled;
   final bool Function() _isMounted;
   final VoidCallback _onVisibilityChanged;
 
@@ -254,6 +262,20 @@ class DesktopWindowManager {
           visible: visible ?? true,
         );
         return true;
+      case desktopSharePingMethod:
+        return true;
+      case desktopShareResultMethod:
+        return await _handleShareTaskResult?.call(
+              call.arguments,
+              fromWindowId,
+            ) ??
+            false;
+      case desktopShareCanceledMethod:
+        return await _handleShareTaskCanceled?.call(
+              call.arguments,
+              fromWindowId,
+            ) ??
+            false;
       case desktopDbWriteMethod:
         return _handleDesktopDbWrite(call.arguments);
       case desktopSyncRequestMethod:
