@@ -92,7 +92,7 @@ void main() {
     expect(find.text('Body'), findsOneWidget);
   });
 
-  testWidgets('macOS secondary pages omit app-level leading dismissal', (
+  testWidgets('macOS secondary pages keep app-level back affordance', (
     tester,
   ) async {
     setTargetPlatform(TargetPlatform.macOS);
@@ -108,7 +108,7 @@ void main() {
                     builder: (_) => PlatformPage(
                       title: const Text('Details'),
                       leading: IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(Icons.arrow_back),
                         onPressed: () {},
                       ),
                       body: const Text('Body'),
@@ -127,8 +127,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Details'), findsOneWidget);
-    expect(find.byIcon(Icons.close), findsNothing);
-    expect(find.byType(BackButton), findsNothing);
+    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+    expect(
+      debugDesktopRouteDismissalControlPolicy(
+        platform: TargetPlatform.macOS,
+        navigationContext: DesktopTitlebarNavigationContext.secondaryTask,
+      ),
+      'visible',
+    );
   });
 
   testWidgets('macOS expanded sidebar top-level page omits title and leading', (

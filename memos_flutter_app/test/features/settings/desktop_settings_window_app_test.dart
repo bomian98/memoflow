@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -441,9 +442,126 @@ void main() {
       final titleLeft = tester.getTopLeft(find.text('Settings').first).dx;
 
       expect(titleLeft, greaterThan(kMacosTrafficLightReservedWidth));
+      expect(find.byIcon(Icons.close), findsNothing);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
+  });
+
+  testWidgets('macOS nested settings detail stays inside content pane', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    try {
+      final sessionController = _TestSessionController();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_multiWindowEventChannel, (call) async {
+            switch (call.method) {
+              case 'desktop.quickInput.ping':
+              case 'desktop.settings.ping':
+              case 'desktop.subWindow.visibility':
+                return true;
+              case 'desktop.main.getWorkspaceSnapshot':
+                return <String, dynamic>{
+                  'currentKey': null,
+                  'hasCurrentAccount': false,
+                  'hasLocalLibrary': false,
+                };
+            }
+            return true;
+          });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appSessionProvider.overrideWith((ref) => sessionController),
+            appPreferencesProvider.overrideWith(
+              (ref) => _TestAppPreferencesController(ref),
+            ),
+          ],
+          child: const DesktopSettingsWindowApp(windowId: 7),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.tap(find.text('Components').first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Image Bed').first);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.text('Image Bed'), findsWidgets);
+      expect(
+        tester.getTopLeft(find.text('Image Bed').last).dy,
+        greaterThan(46),
+      );
+
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Components'), findsWidgets);
+      expect(find.text('Image Bed'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('refreshSession resets nested settings route to home pane', (
+    tester,
+  ) async {
+    final sessionController = _TestSessionController();
+    final localLibraryRepo = _TestLocalLibraryRepository();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_multiWindowEventChannel, (call) async {
+          switch (call.method) {
+            case 'desktop.quickInput.ping':
+            case 'desktop.settings.ping':
+            case 'desktop.subWindow.visibility':
+              return true;
+            case 'desktop.main.getWorkspaceSnapshot':
+              return <String, dynamic>{
+                'currentKey': null,
+                'hasCurrentAccount': false,
+                'hasLocalLibrary': false,
+              };
+          }
+          return true;
+        });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appSessionProvider.overrideWith((ref) => sessionController),
+          localLibraryRepositoryProvider.overrideWith(
+            (ref) => localLibraryRepo,
+          ),
+          appPreferencesProvider.overrideWith(
+            (ref) => _TestAppPreferencesController(ref),
+          ),
+        ],
+        child: const DesktopSettingsWindowApp(windowId: 7),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(find.text('Components').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Image Bed').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Image Bed'), findsWidgets);
+
+    await _dispatchIncomingMultiWindowMethod(
+      desktopSettingsRefreshSessionMethod,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Image Bed'), findsNothing);
+    expect(find.text('Account & Security'), findsWidgets);
   });
 
   testWidgets('refreshSession reloads local workspace state before redraw', (

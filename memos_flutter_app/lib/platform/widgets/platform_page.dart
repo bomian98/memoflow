@@ -85,12 +85,10 @@ class PlatformPage extends StatelessWidget {
       navigationMode: navigationMode,
       navigationContext: navigationContext,
     );
-    final omitRouteDismissalControl =
-        target == PlatformTarget.macOS &&
-        shouldOmitDesktopRouteDismissalControl(
-          platform: TargetPlatform.macOS,
-          navigationContext: navigationContext,
-        );
+    final omitRouteDismissalControl = shouldOmitDesktopRouteDismissalControl(
+      platform: platform,
+      navigationContext: navigationContext,
+    );
     final effectiveLeading = omitRouteDismissalControl || topLevelChromeOmitted
         ? null
         : leading;

@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:memos_flutter_app/core/desktop/desktop_titlebar_navigation_policy.dart';
 
 void main() {
   test('desktop window chrome safe-area seam stays lower-layer safe', () async {
@@ -73,5 +75,31 @@ void main() {
       ),
       isFalse,
     );
+  });
+
+  test('desktop secondary routes keep app-level back controls visible', () {
+    for (final platform in <TargetPlatform>[
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    ]) {
+      expect(
+        debugDesktopRouteDismissalControlPolicy(
+          platform: platform,
+          navigationContext: DesktopTitlebarNavigationContext.secondaryTask,
+        ),
+        'visible',
+      );
+    }
+  });
+
+  test('desktop settings app-owned close stays platform gated', () async {
+    final settingsWindow = await File(
+      'lib/features/settings/desktop_settings_window_app.dart',
+    ).readAsString();
+
+    expect(settingsWindow.contains('showAppCloseButton'), isTrue);
+    expect(settingsWindow.contains('TargetPlatform.macOS'), isTrue);
+    expect(settingsWindow.contains('if (showAppCloseButton)'), isTrue);
   });
 }

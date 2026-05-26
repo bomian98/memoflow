@@ -226,6 +226,7 @@ class _DesktopSettingsWindowScreenState
   bool _workspaceListenersBound = false;
   bool _workspaceSnapshotLoading = true;
   bool _windowVisible = true;
+  int _settingsRootResetToken = 0;
   String? _workspaceSnapshotError;
 
   @override
@@ -635,6 +636,11 @@ class _DesktopSettingsWindowScreenState
       return _windowVisible;
     }
     if (call.method == desktopSettingsRefreshSessionMethod) {
+      if (mounted) {
+        setState(() {
+          _settingsRootResetToken += 1;
+        });
+      }
       await _reloadWorkspaceStateFromStorage();
       await _refreshWorkspaceSnapshotWithRetry(showErrorOnFailure: false);
       return true;
@@ -749,6 +755,9 @@ class _DesktopSettingsWindowScreenState
     _windowVisible = false;
     await _notifyMainWindowVisibility(false);
     if (mounted) {
+      setState(() {
+        _settingsRootResetToken += 1;
+      });
       final navigator = Navigator.of(context, rootNavigator: true);
       if (navigator.canPop()) {
         navigator.popUntil((route) => route.isFirst);
@@ -780,6 +789,7 @@ class _DesktopSettingsWindowScreenState
       );
     }
     return _DesktopSettingsWorkbench(
+      rootResetToken: _settingsRootResetToken,
       onRequestClose: () => unawaited(_closeWindow()),
     );
   }
@@ -858,8 +868,12 @@ enum _DesktopSettingsPane {
 }
 
 class _DesktopSettingsWorkbench extends StatefulWidget {
-  const _DesktopSettingsWorkbench({required this.onRequestClose});
+  const _DesktopSettingsWorkbench({
+    required this.rootResetToken,
+    required this.onRequestClose,
+  });
 
+  final int rootResetToken;
   final VoidCallback onRequestClose;
 
   @override
@@ -869,6 +883,33 @@ class _DesktopSettingsWorkbench extends StatefulWidget {
 
 class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
   var _pane = _DesktopSettingsPane.account;
+  GlobalKey<NavigatorState> _paneNavigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void didUpdateWidget(covariant _DesktopSettingsWorkbench oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.rootResetToken != widget.rootResetToken) {
+      _pane = _DesktopSettingsPane.account;
+      _paneNavigatorKey = GlobalKey<NavigatorState>();
+    }
+  }
+
+  void _selectPane(_DesktopSettingsPane pane) {
+    if (_pane == pane) {
+      _paneNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+      return;
+    }
+    setState(() {
+      _pane = pane;
+      _paneNavigatorKey = GlobalKey<NavigatorState>();
+    });
+  }
+
+  Future<T?> _pushPaneRoute<T>(Route<T> route) {
+    final navigator = _paneNavigatorKey.currentState;
+    if (navigator != null) return navigator.push<T>(route);
+    return Navigator.of(context).push<T>(route);
+  }
 
   bool _handleDesktopSettingsShortcuts(KeyEvent event) {
     if (!mounted || !isDesktopShortcutEnabled()) return false;
@@ -906,7 +947,7 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
             'keyLabel': event.logicalKey.keyLabel,
           },
         );
-    Navigator.of(context).push(
+    _pushPaneRoute(
       MaterialPageRoute<void>(
         builder: (_) => DesktopShortcutsOverviewScreen(bindings: bindings),
       ),
@@ -928,6 +969,8 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
     final leftBg = isDark ? const Color(0xFF1D1D1D) : const Color(0xFFF7F5F2);
     final rightBg = isDark ? const Color(0xFF181818) : const Color(0xFFEFEBE6);
     final divider = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE0DBD3);
+    final showAppCloseButton =
+        Theme.of(context).platform != TargetPlatform.macOS;
     final chromeInsets = resolveDesktopWindowChromeInsets(
       platform: Theme.of(context).platform,
       contentExtendsIntoTitleBar: true,
@@ -1023,11 +1066,12 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
                     ),
                   ),
                 ),
-                IconButton(
-                  tooltip: context.t.strings.legacy.msg_close,
-                  icon: Icon(Icons.close, size: 18, color: textMuted),
-                  onPressed: widget.onRequestClose,
-                ),
+                if (showAppCloseButton)
+                  IconButton(
+                    tooltip: context.t.strings.legacy.msg_close,
+                    icon: Icon(Icons.close, size: 18, color: textMuted),
+                    onPressed: widget.onRequestClose,
+                  ),
               ],
             ),
           ),
@@ -1046,7 +1090,7 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
                             icon: item.icon,
                             label: item.label,
                             selected: _pane == item.pane,
-                            onTap: () => setState(() => _pane = item.pane),
+                            onTap: () => _selectPane(item.pane),
                           ),
                       ],
                     ),
@@ -1060,7 +1104,12 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
                       duration: const Duration(milliseconds: 160),
                       child: KeyedSubtree(
                         key: ValueKey(_pane),
-                        child: _DesktopPaneContent(pane: _pane),
+                        child: Navigator(
+                          key: _paneNavigatorKey,
+                          onGenerateRoute: (_) => MaterialPageRoute<void>(
+                            builder: (_) => _DesktopPaneContent(pane: _pane),
+                          ),
+                        ),
                       ),
                     ),
                   ),

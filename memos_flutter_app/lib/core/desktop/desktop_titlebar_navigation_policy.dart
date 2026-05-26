@@ -34,8 +34,17 @@ bool shouldOmitDesktopRouteDismissalControl({
   required TargetPlatform platform,
   required DesktopTitlebarNavigationContext navigationContext,
 }) {
-  return platform == TargetPlatform.macOS &&
-      navigationContext == DesktopTitlebarNavigationContext.secondaryTask;
+  return !shouldRenderDesktopRouteDismissalControl(
+    platform: platform,
+    navigationContext: navigationContext,
+  );
+}
+
+bool shouldRenderDesktopRouteDismissalControl({
+  required TargetPlatform platform,
+  required DesktopTitlebarNavigationContext navigationContext,
+}) {
+  return true;
 }
 
 bool shouldOmitDesktopRouteDismissalControlForContext(BuildContext context) {

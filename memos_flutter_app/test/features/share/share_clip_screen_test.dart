@@ -1,5 +1,6 @@
-﻿import 'dart:async';
+import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,7 +10,6 @@ import 'package:memos_flutter_app/features/share/share_clip_screen.dart';
 import 'package:memos_flutter_app/features/share/share_handler.dart';
 import 'package:memos_flutter_app/features/share/share_video_download_service.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
-
 
 void main() {
   late SharePayload payload;
@@ -51,7 +51,9 @@ void main() {
 
     engine.complete();
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppLocale.en.build().strings.legacy.msg_save_memo));
+    await tester.tap(
+      find.text(AppLocale.en.build().strings.legacy.msg_save_memo),
+    );
     await tester.pumpAndSettle();
 
     final result = await routeFuture;
@@ -83,7 +85,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text(AppLocale.en.build().strings.shareClip.linkOnlyLabel));
+    await tester.tap(
+      find.text(AppLocale.en.build().strings.shareClip.linkOnlyLabel),
+    );
     await tester.pumpAndSettle();
 
     final result = await routeFuture;
@@ -139,52 +143,96 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text(AppLocale.en.build().strings.shareClip.videoCandidatesTitle), findsOneWidget);
+    expect(
+      find.text(AppLocale.en.build().strings.shareClip.videoCandidatesTitle),
+      findsOneWidget,
+    );
     expect(find.text('Candidate Video'), findsOneWidget);
-    expect(find.text(AppLocale.en.build().strings.shareClip.downloadAndAttach), findsOneWidget);
+    expect(
+      find.text(AppLocale.en.build().strings.shareClip.downloadAndAttach),
+      findsOneWidget,
+    );
     expect(find.text('2.0 MB'), findsOneWidget);
     expect(find.text('https://cdn.example.com/video.mp4'), findsNothing);
   });
-  testWidgets('video page without direct candidates auto falls back to link-only', (
-    WidgetTester tester,
-  ) async {
-    final engine = _FakeShareCaptureEngine(
-      result: ShareCaptureResult.success(
-        finalUrl: Uri.parse('https://www.bilibili.com/video/BV1xx'),
-        articleTitle: 'Bilibili Video',
-        pageKind: SharePageKind.video,
-        unsupportedVideoCandidates: const [
-          ShareVideoCandidate(
-            id: 'stream-1',
-            url: 'https://cdn.example.com/video.m3u8',
-            source: ShareVideoSource.parser,
-            isDirectDownloadable: false,
-            parserTag: 'bilibili',
-          ),
-        ],
-      ),
-    );
-    final navigatorKey = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(_buildTestApp(navigatorKey: navigatorKey));
 
-    ShareComposeRequest? fallbackRequest;
-    navigatorKey.currentState!
-        .push<ShareComposeRequest>(
+  testWidgets(
+    'desktop share preview uses back affordance and explicit cancel',
+    (WidgetTester tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      try {
+        final engine = _FakeShareCaptureEngine(
+          result: ShareCaptureResult.success(
+            finalUrl: Uri.parse('https://example.com/articles/1'),
+            articleTitle: 'Interesting Article',
+            contentHtml: '<p>Hello world</p>',
+            readabilitySucceeded: true,
+            pageKind: SharePageKind.article,
+          ),
+        );
+        final navigatorKey = GlobalKey<NavigatorState>();
+        await tester.pumpWidget(_buildTestApp(navigatorKey: navigatorKey));
+
+        navigatorKey.currentState!.push<ShareComposeRequest>(
           MaterialPageRoute<ShareComposeRequest>(
             builder: (_) => ShareClipScreen(payload: payload, engine: engine),
           ),
-        )
-        .then((value) => fallbackRequest = value);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+        );
+        await tester.pumpAndSettle();
 
-    expect(fallbackRequest, isNotNull);
-    expect(fallbackRequest!.attachmentPaths, isEmpty);
-    expect(
-      fallbackRequest!.userMessage,
-      AppLocale.en.build().strings.shareClip.fallbackParseFailed,
-    );
-  });
+        expect(find.byType(BackButton), findsOneWidget);
+        expect(
+          find.text(AppLocale.en.build().strings.common.cancel),
+          findsOneWidget,
+        );
+        expect(find.byIcon(Icons.close), findsNothing);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
+
+  testWidgets(
+    'video page without direct candidates auto falls back to link-only',
+    (WidgetTester tester) async {
+      final engine = _FakeShareCaptureEngine(
+        result: ShareCaptureResult.success(
+          finalUrl: Uri.parse('https://www.bilibili.com/video/BV1xx'),
+          articleTitle: 'Bilibili Video',
+          pageKind: SharePageKind.video,
+          unsupportedVideoCandidates: const [
+            ShareVideoCandidate(
+              id: 'stream-1',
+              url: 'https://cdn.example.com/video.m3u8',
+              source: ShareVideoSource.parser,
+              isDirectDownloadable: false,
+              parserTag: 'bilibili',
+            ),
+          ],
+        ),
+      );
+      final navigatorKey = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(_buildTestApp(navigatorKey: navigatorKey));
+
+      ShareComposeRequest? fallbackRequest;
+      navigatorKey.currentState!
+          .push<ShareComposeRequest>(
+            MaterialPageRoute<ShareComposeRequest>(
+              builder: (_) => ShareClipScreen(payload: payload, engine: engine),
+            ),
+          )
+          .then((value) => fallbackRequest = value);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(fallbackRequest, isNotNull);
+      expect(fallbackRequest!.attachmentPaths, isEmpty);
+      expect(
+        fallbackRequest!.userMessage,
+        AppLocale.en.build().strings.shareClip.fallbackParseFailed,
+      );
+    },
+  );
 }
 
 Widget _buildTestApp({required GlobalKey<NavigatorState> navigatorKey}) {
@@ -264,4 +312,3 @@ class _FakeShareVideoHttpClient implements ShareVideoHttpClient {
     return probeResult;
   }
 }
-
