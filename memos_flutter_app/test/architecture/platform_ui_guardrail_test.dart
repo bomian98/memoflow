@@ -12,6 +12,7 @@ void main() {
       'lib/platform/widgets/platform_picker.dart',
       'lib/platform/widgets/platform_popover_or_sheet.dart',
       'lib/platform/widgets/platform_primary_action.dart',
+      'lib/platform/platform_experience.dart',
     ];
 
     final missingSeams = requiredAdaptiveSeams

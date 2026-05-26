@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,4 +52,34 @@ void main() {
       expect(enableButton.onPressed, isNotNull);
     },
   );
+
+  test('components screen uses shared settings UI seam', () {
+    final source = File(
+      'lib/features/settings/components_settings_screen.dart',
+    ).readAsStringSync();
+    final settingsUiSource = File(
+      'lib/features/settings/settings_ui.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('SettingsPage('));
+    expect(source, contains('SettingsTitleWithHelp('));
+    expect(source, contains('_componentsStatusTooltip('));
+    expect(source, contains('SettingsFeatureModule('));
+    expect(source, contains('SettingsFeatureStatus'));
+    expect(source, contains('_configuredStatus('));
+    expect(settingsUiSource, contains('enum SettingsFeatureStatus'));
+    expect(settingsUiSource, contains('_SettingsFeatureStatusIndicator'));
+    expect(settingsUiSource, contains('const SizedBox(width: 10)'));
+    expect(
+      settingsUiSource,
+      contains('const EdgeInsets.symmetric(horizontal: 5)'),
+    );
+    expect(settingsUiSource, isNot(contains('flex: 3')));
+    expect(source, isNot(contains('SettingsSection(')));
+    expect(source, isNot(contains('SettingsToggleCard(')));
+    expect(source, isNot(contains('class _ToggleCard')));
+    expect(source, isNot(contains('return Scaffold(')));
+    expect(source, isNot(contains('Switch(')));
+    expect(source, isNot(contains('MemoFlowPalette.')));
+  });
 }
