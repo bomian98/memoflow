@@ -192,6 +192,50 @@ void main() {
     expect(tester.getSize(find.byType(AppBar)).height, kMacosTitleBarHeight);
   });
 
+  testWidgets(
+    'macOS desktop chrome safe area keeps title outside traffic lights',
+    (tester) async {
+      setTargetPlatform(TargetPlatform.macOS);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: PlatformPage(
+            title: Text('Task Title'),
+            body: Text('Body'),
+            desktopWindowChromeSafeArea: true,
+          ),
+        ),
+      );
+
+      expect(
+        tester.getTopLeft(find.text('Task Title')).dx,
+        greaterThanOrEqualTo(kMacosTrafficLightReservedWidth),
+      );
+    },
+  );
+
+  testWidgets(
+    'non-macOS desktop chrome safe area keeps default title spacing',
+    (tester) async {
+      setTargetPlatform(TargetPlatform.windows);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: PlatformPage(
+            title: Text('Task Title'),
+            body: Text('Body'),
+            desktopWindowChromeSafeArea: true,
+          ),
+        ),
+      );
+
+      expect(
+        tester.getTopLeft(find.text('Task Title')).dx,
+        lessThan(kMacosTrafficLightReservedWidth),
+      );
+    },
+  );
+
   test('macOS expanded sidebar top-level page omits toolbar divider', () {
     expect(
       shouldRenderDesktopTopLevelToolbarDivider(

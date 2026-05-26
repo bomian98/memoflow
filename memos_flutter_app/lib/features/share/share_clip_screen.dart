@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../i18n/strings.g.dart';
 import '../../platform/platform_route.dart';
 import '../../platform/widgets/platform_page.dart';
@@ -22,12 +23,24 @@ class ShareClipScreen extends StatefulWidget {
     this.engine,
     this.downloadService,
     this.inlineImageDownloadService,
+    this.onComplete,
+    this.onCancel,
+    this.showGenericCancelAction = true,
+    this.desktopNavigationMode,
+    this.desktopNavigationContext,
+    this.desktopWindowChromeSafeArea = false,
   });
 
   final SharePayload payload;
   final ShareCaptureEngine? engine;
   final ShareVideoDownloadService? downloadService;
   final ShareInlineImageDownloadService? inlineImageDownloadService;
+  final ValueChanged<ShareComposeRequest>? onComplete;
+  final VoidCallback? onCancel;
+  final bool showGenericCancelAction;
+  final DesktopTitlebarNavigationMode? desktopNavigationMode;
+  final DesktopTitlebarNavigationContext? desktopNavigationContext;
+  final bool desktopWindowChromeSafeArea;
 
   @override
   State<ShareClipScreen> createState() => _ShareClipScreenState();
@@ -38,6 +51,7 @@ class _ShareClipScreenState extends State<ShareClipScreen> {
   late final ShareVideoDownloadService _downloadService;
   final Map<String, Future<ShareVideoProbeResult>> _probeFutures =
       <String, Future<ShareVideoProbeResult>>{};
+  bool _completed = false;
 
   @override
   void initState() {
@@ -78,7 +92,7 @@ class _ShareClipScreenState extends State<ShareClipScreen> {
                         context.t.strings.shareClip.fallbackParseFailed,
                   )
                 : request;
-            Navigator.of(context).pop(resolvedRequest);
+            _complete(resolvedRequest);
           });
         }
         final domain =
@@ -89,14 +103,19 @@ class _ShareClipScreenState extends State<ShareClipScreen> {
         final isVideoPage = result?.isVideoPage ?? false;
         return PlatformPage(
           title: Text(context.t.strings.legacy.msg_preview),
-          actions: [
-              TextButton(
-                onPressed: state.phase == ShareClipPhase.composing
-                    ? null
-                    : () => Navigator.of(context).pop(),
-                child: Text(context.t.strings.common.cancel),
-              ),
-            ],
+          actions: widget.showGenericCancelAction
+              ? [
+                  TextButton(
+                    onPressed: state.phase == ShareClipPhase.composing
+                        ? null
+                        : _cancel,
+                    child: Text(context.t.strings.common.cancel),
+                  ),
+                ]
+              : const <Widget>[],
+          desktopNavigationMode: widget.desktopNavigationMode,
+          desktopNavigationContext: widget.desktopNavigationContext,
+          desktopWindowChromeSafeArea: widget.desktopWindowChromeSafeArea,
           body: SafeArea(
             child: Column(
               children: [
@@ -153,9 +172,7 @@ class _ShareClipScreenState extends State<ShareClipScreen> {
                       : null,
                   onUseLinkOnly: state.phase == ShareClipPhase.composing
                       ? null
-                      : () => Navigator.of(
-                          context,
-                        ).pop(_controller.useLinkOnly()),
+                      : () => _complete(_controller.useLinkOnly()),
                   onRetry:
                       state.phase == ShareClipPhase.loading ||
                           state.phase == ShareClipPhase.composing ||
@@ -171,17 +188,39 @@ class _ShareClipScreenState extends State<ShareClipScreen> {
     );
   }
 
+  void _complete(ShareComposeRequest request) {
+    if (_completed) return;
+    final callback = widget.onComplete;
+    if (callback != null) {
+      callback(request);
+      return;
+    }
+    _completed = true;
+    Navigator.of(context).pop(request);
+  }
+
+  void _cancel() {
+    if (_completed) return;
+    final callback = widget.onCancel;
+    if (callback != null) {
+      callback();
+      return;
+    }
+    _completed = true;
+    Navigator.of(context).pop();
+  }
+
   Future<void> _handleVideoDownload(ShareVideoCandidate candidate) async {
     final request = _controller.attachVideo(candidate);
     if (!mounted) return;
     if (request == null) return;
-    Navigator.of(context).pop(request);
+    _complete(request);
   }
 
   Future<void> _handleSaveMemo() async {
     final request = await _controller.saveArticle();
     if (!mounted || request == null) return;
-    Navigator.of(context).pop(request);
+    _complete(request);
   }
 
   Future<ShareVideoProbeResult> _probeCandidate(

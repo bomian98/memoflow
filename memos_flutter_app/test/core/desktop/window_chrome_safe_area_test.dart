@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/core/desktop/window_chrome_safe_area.dart';
 
@@ -43,4 +43,40 @@ void main() {
       0,
     );
   });
+
+  testWidgets(
+    'shared safe area reserves macOS leading chrome only when needed',
+    (tester) async {
+      const childKey = ValueKey<String>('safe-area-child');
+
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: DesktopWindowChromeSafeArea(
+            platform: TargetPlatform.macOS,
+            contentExtendsIntoTitleBar: true,
+            child: SizedBox(key: childKey, width: 10, height: 10),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getTopLeft(find.byKey(childKey)).dx,
+        kMacosTrafficLightReservedWidth,
+      );
+
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: DesktopWindowChromeSafeArea(
+            platform: TargetPlatform.windows,
+            contentExtendsIntoTitleBar: true,
+            child: SizedBox(key: childKey, width: 10, height: 10),
+          ),
+        ),
+      );
+
+      expect(tester.getTopLeft(find.byKey(childKey)).dx, 0);
+    },
+  );
 }

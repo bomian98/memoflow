@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:memos_flutter_app/core/desktop/window_chrome_safe_area.dart';
 import 'package:memos_flutter_app/features/share/share_capture_engine.dart';
 import 'package:memos_flutter_app/features/share/share_clip_models.dart';
 import 'package:memos_flutter_app/features/share/share_clip_screen.dart';
@@ -193,6 +194,61 @@ void main() {
   );
 
   testWidgets(
+    'desktop share task root omits app-owned generic close and cancel UI',
+    (WidgetTester tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      try {
+        final engine = _FakeShareCaptureEngine(
+          result: ShareCaptureResult.success(
+            finalUrl: Uri.parse('https://example.com/articles/1'),
+            articleTitle: 'Interesting Article',
+            contentHtml: '<p>Hello world</p>',
+            readabilitySucceeded: true,
+            pageKind: SharePageKind.article,
+          ),
+        );
+        await tester.pumpWidget(
+          _buildShareTaskRootTestApp(
+            ShareClipScreen(
+              payload: payload,
+              engine: engine,
+              showGenericCancelAction: false,
+              desktopWindowChromeSafeArea: true,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(BackButton), findsNothing);
+        expect(
+          find.text(AppLocale.en.build().strings.common.cancel),
+          findsNothing,
+        );
+        expect(find.byIcon(Icons.close), findsNothing);
+        expect(
+          find.text(AppLocale.en.build().strings.shareClip.linkOnlyLabel),
+          findsOneWidget,
+        );
+        expect(
+          tester
+              .getTopLeft(
+                find.descendant(
+                  of: find.byType(AppBar),
+                  matching: find.text(
+                    AppLocale.en.build().strings.legacy.msg_preview,
+                  ),
+                ),
+              )
+              .dx,
+          greaterThanOrEqualTo(kMacosTrafficLightReservedWidth),
+        );
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
+
+  testWidgets(
     'video page without direct candidates auto falls back to link-only',
     (WidgetTester tester) async {
       final engine = _FakeShareCaptureEngine(
@@ -244,6 +300,18 @@ Widget _buildTestApp({required GlobalKey<NavigatorState> navigatorKey}) {
       supportedLocales: AppLocaleUtils.supportedLocales,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       home: const Scaffold(body: SizedBox.shrink()),
+    ),
+  );
+}
+
+Widget _buildShareTaskRootTestApp(Widget home) {
+  LocaleSettings.setLocale(AppLocale.en);
+  return TranslationProvider(
+    child: MaterialApp(
+      locale: AppLocale.en.flutterLocale,
+      supportedLocales: AppLocaleUtils.supportedLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: home,
     ),
   );
 }

@@ -28,6 +28,41 @@ class DesktopWindowChromeInsets {
   }
 }
 
+class DesktopWindowChromeSafeArea extends StatelessWidget {
+  const DesktopWindowChromeSafeArea({
+    super.key,
+    required this.child,
+    this.platform,
+    this.contentExtendsIntoTitleBar = false,
+    this.includeTop = false,
+    this.includeLeading = true,
+    this.includeTrailing = true,
+  });
+
+  final Widget child;
+  final TargetPlatform? platform;
+  final bool contentExtendsIntoTitleBar;
+  final bool includeTop;
+  final bool includeLeading;
+  final bool includeTrailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final insets = resolveDesktopWindowChromeInsets(
+      platform: platform ?? defaultTargetPlatform,
+      contentExtendsIntoTitleBar: contentExtendsIntoTitleBar,
+    );
+    return Padding(
+      padding: EdgeInsetsDirectional.only(
+        start: includeLeading ? insets.leading : 0,
+        top: includeTop ? insets.top : 0,
+        end: includeTrailing ? insets.trailing : 0,
+      ),
+      child: child,
+    );
+  }
+}
+
 DesktopWindowChromeInsets resolveDesktopWindowChromeInsets({
   required TargetPlatform platform,
   bool contentExtendsIntoTitleBar = false,

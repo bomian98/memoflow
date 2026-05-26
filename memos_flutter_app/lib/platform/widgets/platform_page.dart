@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
+import '../../core/desktop/window_chrome_safe_area.dart';
 import '../platform_target.dart';
 
 class PlatformPage extends StatelessWidget {
@@ -9,6 +10,7 @@ class PlatformPage extends StatelessWidget {
     super.key,
     required this.body,
     this.title,
+    this.centerTitle,
     this.leading,
     this.actions,
     this.bottomBar,
@@ -21,10 +23,12 @@ class PlatformPage extends StatelessWidget {
     this.extendBodyBehindAppBar = false,
     this.desktopNavigationMode,
     this.desktopNavigationContext,
+    this.desktopWindowChromeSafeArea = false,
   });
 
   final Widget body;
   final Widget? title;
+  final bool? centerTitle;
   final Widget? leading;
   final List<Widget>? actions;
   final Widget? bottomBar;
@@ -37,6 +41,7 @@ class PlatformPage extends StatelessWidget {
   final bool extendBodyBehindAppBar;
   final DesktopTitlebarNavigationMode? desktopNavigationMode;
   final DesktopTitlebarNavigationContext? desktopNavigationContext;
+  final bool desktopWindowChromeSafeArea;
 
   @override
   Widget build(BuildContext context) {
@@ -71,9 +76,12 @@ class PlatformPage extends StatelessWidget {
         resolveDesktopTitlebarNavigationContext(context);
     final navigationMode =
         desktopNavigationMode ?? DesktopTitlebarNavigationMode.hidden;
-    final platform = target == PlatformTarget.macOS
-        ? TargetPlatform.macOS
-        : Theme.of(context).platform;
+    final platform = switch (target) {
+      PlatformTarget.macOS => TargetPlatform.macOS,
+      PlatformTarget.windows => TargetPlatform.windows,
+      PlatformTarget.linux => TargetPlatform.linux,
+      _ => Theme.of(context).platform,
+    };
     final effectiveTitle = resolveDesktopTopLevelTitle(
       platform: platform,
       navigationMode: navigationMode,
@@ -99,6 +107,43 @@ class PlatformPage extends StatelessWidget {
       navigationMode: navigationMode,
       navigationContext: navigationContext,
     );
+    final chromeInsets = resolveDesktopWindowChromeInsets(
+      platform: platform,
+      contentExtendsIntoTitleBar: desktopWindowChromeSafeArea,
+    );
+    final routeCanPop = ModalRoute.of(context)?.canPop ?? false;
+    final needsChromeLeadingInset = chromeInsets.leading > 0;
+    final impliedChromeLeading =
+        needsChromeLeadingInset &&
+            effectiveLeading == null &&
+            automaticallyImplyLeading &&
+            routeCanPop
+        ? const BackButton()
+        : null;
+    final appBarLeadingChild = effectiveLeading ?? impliedChromeLeading;
+    final appBarLeading = needsChromeLeadingInset && appBarLeadingChild != null
+        ? DesktopWindowChromeSafeArea(
+            contentExtendsIntoTitleBar: true,
+            platform: platform,
+            includeTop: false,
+            includeTrailing: false,
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: appBarLeadingChild,
+            ),
+          )
+        : effectiveLeading;
+    final appBarLeadingWidth =
+        needsChromeLeadingInset && appBarLeadingChild != null
+        ? kToolbarHeight + chromeInsets.leading
+        : null;
+    final appBarTitleSpacing =
+        needsChromeLeadingInset && appBarLeadingChild == null
+        ? NavigationToolbar.kMiddleSpacing + chromeInsets.leading
+        : null;
+    final appBarAutomaticallyImplyLeading = needsChromeLeadingInset
+        ? false
+        : automaticallyImplyLeading;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -112,8 +157,11 @@ class PlatformPage extends StatelessWidget {
           : AppBar(
               toolbarHeight: effectiveToolbarHeight,
               title: effectiveTitle,
-              leading: effectiveLeading,
-              automaticallyImplyLeading: automaticallyImplyLeading,
+              centerTitle: centerTitle,
+              leading: appBarLeading,
+              leadingWidth: appBarLeadingWidth,
+              titleSpacing: appBarTitleSpacing,
+              automaticallyImplyLeading: appBarAutomaticallyImplyLeading,
               actions: actions,
             ),
       drawer: drawer,
