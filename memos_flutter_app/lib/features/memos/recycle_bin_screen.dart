@@ -19,7 +19,6 @@ import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import 'memos_list_screen.dart';
-import '../notifications/notifications_screen.dart';
 import 'recycle_bin_preview_screen.dart';
 
 class RecycleBinScreen extends ConsumerStatefulWidget {
@@ -94,12 +93,11 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
   }
 
   void _openNotifications() {
-    final embeddedNavigationHost = widget.embeddedNavigationHost;
-    if (embeddedNavigationHost != null) {
-      embeddedNavigationHost.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: widget.embeddedNavigationHost,
+      presentation: widget.presentation,
+    );
   }
 
   @override

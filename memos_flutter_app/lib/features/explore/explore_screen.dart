@@ -41,7 +41,6 @@ import '../memos/memo_media_grid.dart';
 import '../memos/memo_video_grid.dart';
 import '../memos/memo_markdown.dart';
 import '../memos/memos_list_screen.dart';
-import '../notifications/notifications_screen.dart';
 import '../../i18n/strings.g.dart';
 
 const _pageSize = 30;
@@ -316,12 +315,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   }
 
   void _openNotifications(BuildContext context) {
-    final embeddedNavigationHost = widget.embeddedNavigationHost;
-    if (embeddedNavigationHost != null) {
-      embeddedNavigationHost.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: widget.embeddedNavigationHost,
+      presentation: widget.presentation,
+    );
   }
 
   void _toggleSearch() {

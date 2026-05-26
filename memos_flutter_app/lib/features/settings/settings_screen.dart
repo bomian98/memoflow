@@ -30,7 +30,6 @@ import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memos_list_screen.dart';
-import '../notifications/notifications_screen.dart';
 import '../stats/stats_screen.dart';
 import 'about_us_screen.dart';
 import 'account_security_screen.dart';
@@ -132,12 +131,11 @@ class SettingsScreen extends ConsumerWidget
   }
 
   void _openNotifications(BuildContext context) {
-    final host = embeddedNavigationHost;
-    if (host != null) {
-      host.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: embeddedNavigationHost,
+      presentation: presentation,
+    );
   }
 
   @override

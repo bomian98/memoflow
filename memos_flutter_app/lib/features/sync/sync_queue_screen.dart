@@ -20,6 +20,9 @@ import '../../state/system/logging_provider.dart';
 import '../../state/system/database_provider.dart';
 import '../../data/models/local_memo.dart';
 import '../../state/memos/memo_sync_constraints.dart';
+import '../../platform/platform_target.dart';
+import '../../platform/widgets/platform_page.dart';
+import '../home/desktop/desktop_embedded_utility_surface.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memo_detail_screen.dart';
@@ -28,9 +31,20 @@ import '../../i18n/strings.g.dart';
 final _bridgeBulkPushRunningProvider = StateProvider<bool>((ref) => false);
 
 class SyncQueueScreen extends ConsumerWidget {
-  const SyncQueueScreen({super.key, this.embeddedNavigationHost});
+  const SyncQueueScreen({
+    super.key,
+    this.presentation = HomeScreenPresentation.standalone,
+    this.embeddedNavigationHost,
+    this.onDesktopEmbeddedBack,
+  }) : assert(
+         presentation != HomeScreenPresentation.desktopEmbedded ||
+             onDesktopEmbeddedBack != null,
+         'Desktop embedded sync queue requires onDesktopEmbeddedBack.',
+       );
 
+  final HomeScreenPresentation presentation;
   final HomeEmbeddedNavigationHost? embeddedNavigationHost;
+  final VoidCallback? onDesktopEmbeddedBack;
 
   void _backToAllMemos(BuildContext context) {
     final host = embeddedNavigationHost;
@@ -301,6 +315,192 @@ class SyncQueueScreen extends ConsumerWidget {
         : attentionQueueAsync.hasError
         ? attentionQueueAsync.error
         : null;
+    final target = resolvePlatformTarget(context);
+    final useDesktopChromeSafeArea =
+        target == PlatformTarget.macOS ||
+        target == PlatformTarget.windows ||
+        target == PlatformTarget.linux;
+    final title = Text(context.t.strings.legacy.msg_sync_queue);
+    final leading = IconButton(
+      tooltip: context.t.strings.legacy.msg_back,
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => _handleBack(context),
+    );
+    final actions = [
+      IconButton(
+        tooltip: context.t.strings.legacy.msg_sync,
+        onPressed: (syncing || bridgeBulkPushing)
+            ? null
+            : () => _syncAll(context, ref),
+        icon: const Icon(Icons.sync),
+      ),
+    ];
+    final body = queueLoading
+        ? const Center(child: CircularProgressIndicator())
+        : (queueError != null && activeItems.isEmpty && attentionItems.isEmpty)
+        ? Center(
+            child: Text(
+              context.t.strings.legacy.msg_failed_load_4(e: queueError),
+              style: TextStyle(color: textMuted),
+            ),
+          )
+        : ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+            children: [
+              _SyncSummaryCard(
+                card: card,
+                textMain: textMain,
+                textMuted: textMuted,
+                border: border,
+                pendingCount: pendingCount,
+                attentionCount: attentionCount,
+                lastSuccessLabel: lastSuccessLabel,
+                syncing: syncing,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                context.t.strings.legacy.msg_active_tasks,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: textMain,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (activeItems.isEmpty)
+                _EmptyQueueCard(card: card, textMuted: textMuted)
+              else
+                ...activeItems.map((item) {
+                  final title = _resolveItemTitle(context, item);
+                  final subtitle = _resolveItemSubtitle(item);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _SyncQueueItemCard(
+                      item: item,
+                      title: title,
+                      subtitle: subtitle,
+                      card: card,
+                      border: border,
+                      textMain: textMain,
+                      textMuted: textMuted,
+                      activeOutboxId: activeOutboxId,
+                      activeProgress: queueProgress.currentProgress,
+                      actionLabel: context.t.strings.legacy.msg_sync,
+                      onDelete: () => _confirmDelete(context, ref, item),
+                      onSync: (syncing || bridgeBulkPushing)
+                          ? null
+                          : () => _syncAll(context, ref),
+                    ),
+                  );
+                }),
+              if (attentionItems.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  context.tr(zh: '需处理', en: 'Needs attention'),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: textMain,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...attentionItems.map((item) {
+                  final title = _resolveItemTitle(context, item);
+                  final subtitle = _resolveItemSubtitle(item);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _SyncQueueItemCard(
+                      item: item,
+                      title: title,
+                      subtitle: subtitle,
+                      card: card,
+                      border: border,
+                      textMain: textMain,
+                      textMuted: textMuted,
+                      activeOutboxId: null,
+                      activeProgress: null,
+                      actionLabel: context.tr(zh: '重试', en: 'Retry'),
+                      onDelete: () => _confirmDelete(context, ref, item),
+                      onOpenMemo: item.memoUid?.trim().isNotEmpty == true
+                          ? () => _openMemo(context, ref, item)
+                          : null,
+                      onSync: (syncing || bridgeBulkPushing)
+                          ? null
+                          : () => _retryItem(context, ref, item),
+                    ),
+                  );
+                }),
+              ],
+            ],
+          );
+    final bottomBar = SafeArea(
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: canPushToBridge
+                  ? () => _pushAllToBridge(context, ref)
+                  : null,
+              icon: bridgeBulkPushing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.cloud_upload_outlined),
+              label: Text(
+                bridgeBulkPushing
+                    ? context.t.strings.legacy.msg_sync_to_obsidian_in_progress
+                    : context.t.strings.legacy.msg_sync_to_obsidian,
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: (activeItems.isEmpty || syncing || bridgeBulkPushing)
+                  ? null
+                  : () => _syncAll(context, ref),
+              icon: syncing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sync),
+              label: Text(
+                syncing
+                    ? context.t.strings.legacy.msg_syncing
+                    : context.t.strings.legacy.msg_sync_all,
+              ),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (presentation == HomeScreenPresentation.desktopEmbedded) {
+      return DesktopEmbeddedUtilitySurface(
+        title: title,
+        onBack: onDesktopEmbeddedBack,
+        backTooltip: context.t.strings.legacy.msg_back,
+        actions: actions,
+        body: body,
+        bottomBar: bottomBar,
+      );
+    }
 
     return PopScope(
       canPop: false,
@@ -308,202 +508,40 @@ class SyncQueueScreen extends ConsumerWidget {
         if (didPop) return;
         _handleBack(context);
       },
-      child: Scaffold(
-        backgroundColor: bg,
-        appBar: AppBar(
-          title: Text(context.t.strings.legacy.msg_sync_queue),
-          centerTitle: false,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading:
-              resolveDesktopRouteAutomaticallyImplyLeading(
-                context: context,
-                automaticallyImplyLeading: true,
+      child: useDesktopChromeSafeArea
+          ? PlatformPage(
+              backgroundColor: bg,
+              desktopWindowChromeSafeArea: true,
+              title: title,
+              centerTitle: false,
+              leading: leading,
+              actions: actions,
+              body: body,
+              bottomBar: bottomBar,
+            )
+          : Scaffold(
+              backgroundColor: bg,
+              appBar: AppBar(
+                title: title,
+                centerTitle: false,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                surfaceTintColor: Colors.transparent,
+                automaticallyImplyLeading:
+                    resolveDesktopRouteAutomaticallyImplyLeading(
+                      context: context,
+                      automaticallyImplyLeading: true,
+                    ),
+                leading: resolveDesktopRouteDismissalLeading(
+                  context: context,
+                  leading: leading,
+                ),
+                actions: actions,
               ),
-          leading: resolveDesktopRouteDismissalLeading(
-            context: context,
-            leading: IconButton(
-              tooltip: context.t.strings.legacy.msg_back,
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => _handleBack(context),
+              body: body,
+              bottomNavigationBar: bottomBar,
             ),
-          ),
-          actions: [
-            IconButton(
-              tooltip: context.t.strings.legacy.msg_sync,
-              onPressed: (syncing || bridgeBulkPushing)
-                  ? null
-                  : () => _syncAll(context, ref),
-              icon: const Icon(Icons.sync),
-            ),
-          ],
-        ),
-        body: queueLoading
-            ? const Center(child: CircularProgressIndicator())
-            : (queueError != null &&
-                  activeItems.isEmpty &&
-                  attentionItems.isEmpty)
-            ? Center(
-                child: Text(
-                  context.t.strings.legacy.msg_failed_load_4(e: queueError),
-                  style: TextStyle(color: textMuted),
-                ),
-              )
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                children: [
-                  _SyncSummaryCard(
-                    card: card,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    border: border,
-                    pendingCount: pendingCount,
-                    attentionCount: attentionCount,
-                    lastSuccessLabel: lastSuccessLabel,
-                    syncing: syncing,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    context.t.strings.legacy.msg_active_tasks,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: textMain,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (activeItems.isEmpty)
-                    _EmptyQueueCard(card: card, textMuted: textMuted)
-                  else
-                    ...activeItems.map((item) {
-                      final title = _resolveItemTitle(context, item);
-                      final subtitle = _resolveItemSubtitle(item);
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _SyncQueueItemCard(
-                          item: item,
-                          title: title,
-                          subtitle: subtitle,
-                          card: card,
-                          border: border,
-                          textMain: textMain,
-                          textMuted: textMuted,
-                          activeOutboxId: activeOutboxId,
-                          activeProgress: queueProgress.currentProgress,
-                          actionLabel: context.t.strings.legacy.msg_sync,
-                          onDelete: () => _confirmDelete(context, ref, item),
-                          onSync: (syncing || bridgeBulkPushing)
-                              ? null
-                              : () => _syncAll(context, ref),
-                        ),
-                      );
-                    }),
-                  if (attentionItems.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      context.tr(zh: '需处理', en: 'Needs attention'),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: textMain,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ...attentionItems.map((item) {
-                      final title = _resolveItemTitle(context, item);
-                      final subtitle = _resolveItemSubtitle(item);
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _SyncQueueItemCard(
-                          item: item,
-                          title: title,
-                          subtitle: subtitle,
-                          card: card,
-                          border: border,
-                          textMain: textMain,
-                          textMuted: textMuted,
-                          activeOutboxId: null,
-                          activeProgress: null,
-                          actionLabel: context.tr(zh: '重试', en: 'Retry'),
-                          onDelete: () => _confirmDelete(context, ref, item),
-                          onOpenMemo: item.memoUid?.trim().isNotEmpty == true
-                              ? () => _openMemo(context, ref, item)
-                              : null,
-                          onSync: (syncing || bridgeBulkPushing)
-                              ? null
-                              : () => _retryItem(context, ref, item),
-                        ),
-                      );
-                    }),
-                  ],
-                ],
-              ),
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: canPushToBridge
-                      ? () => _pushAllToBridge(context, ref)
-                      : null,
-                  icon: bridgeBulkPushing
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.cloud_upload_outlined),
-                  label: Text(
-                    bridgeBulkPushing
-                        ? context
-                              .t
-                              .strings
-                              .legacy
-                              .msg_sync_to_obsidian_in_progress
-                        : context.t.strings.legacy.msg_sync_to_obsidian,
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed:
-                      (activeItems.isEmpty || syncing || bridgeBulkPushing)
-                      ? null
-                      : () => _syncAll(context, ref),
-                  icon: syncing
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.sync),
-                  label: Text(
-                    syncing
-                        ? context.t.strings.legacy.msg_syncing
-                        : context.t.strings.legacy.msg_sync_all,
-                  ),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

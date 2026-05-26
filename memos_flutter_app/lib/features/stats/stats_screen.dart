@@ -31,6 +31,7 @@ import '../../state/settings/resolved_preferences_provider.dart';
 import '../../state/system/database_provider.dart';
 import '../../state/tags/tag_color_lookup.dart';
 import '../home/home_entry_screen.dart';
+import '../home/app_drawer_destination_builder.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memo_editor_screen.dart';
 import '../memos/memo_card_preview.dart';
@@ -189,6 +190,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
   Future<void> _openSyncQueue() async {
     if (!mounted) return;
+    if (openDesktopHomeUtilityDestination(
+      context: context,
+      utility: DesktopHomeUtilityView.syncQueue,
+      navigationHost: widget.embeddedNavigationHost,
+    )) {
+      return;
+    }
     await Navigator.of(context).push(
       buildPlatformPageRoute<void>(
         context: context,
@@ -974,6 +982,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       },
       child: PlatformPage(
         backgroundColor: bg,
+        desktopWindowChromeSafeArea: true,
         title: const Text('MemoFlow'),
         leading: widget.showBackButton
             ? IconButton(

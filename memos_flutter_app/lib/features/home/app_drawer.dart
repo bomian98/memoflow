@@ -61,7 +61,7 @@ class AppDrawer extends ConsumerStatefulWidget {
     this.viewMode = AppDrawerViewMode.expandedSidebar,
   });
 
-  final AppDrawerDestination selected;
+  final AppDrawerDestination? selected;
   final ValueChanged<AppDrawerDestination> onSelect;
   final ValueChanged<String>? onSelectTag;
   final VoidCallback? onOpenNotifications;
@@ -496,7 +496,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
 
       return AppDrawerModel(
         title: title,
-        selected: selected.name,
+        selected: selected?.name ?? '',
         selectedTagPath: selectedTagPath,
         destinations: destinations,
         quickActions: quickActions,

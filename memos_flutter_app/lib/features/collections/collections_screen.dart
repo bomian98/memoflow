@@ -31,7 +31,6 @@ import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memos_list_screen.dart';
-import '../notifications/notifications_screen.dart';
 import 'collection_diagnostics.dart';
 import 'collection_detail_screen.dart';
 import 'collection_editor_screen.dart';
@@ -107,12 +106,10 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
   }
 
   void _openNotifications(BuildContext context) {
-    final host = widget.embeddedNavigationHost;
-    if (host != null) {
-      host.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: widget.embeddedNavigationHost,
+    );
   }
 
   void _backToHome(BuildContext context) {

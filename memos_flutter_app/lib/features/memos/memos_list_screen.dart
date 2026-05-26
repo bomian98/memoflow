@@ -74,6 +74,7 @@ import '../resources/resources_screen.dart';
 import '../review/ai_summary_screen.dart';
 import '../review/daily_review_screen.dart';
 import '../stats/stats_screen.dart';
+import '../sync/sync_queue_screen.dart';
 import '../tags/tag_edit_sheet.dart';
 import '../voice/voice_record_screen.dart';
 import 'advanced_search_sheet.dart';
@@ -134,6 +135,7 @@ class MemosListScreen extends ConsumerStatefulWidget {
     this.hidePrimaryComposeFab = false,
     this.enableDesktopResizableHomeInlineCompose = false,
     this.enableDrawerOpenDragGesture = true,
+    this.initialDesktopUtilityView = DesktopHomeUtilityView.none,
   });
 
   final String title;
@@ -156,6 +158,7 @@ class MemosListScreen extends ConsumerStatefulWidget {
   final bool hidePrimaryComposeFab;
   final bool enableDesktopResizableHomeInlineCompose;
   final bool enableDrawerOpenDragGesture;
+  final DesktopHomeUtilityView initialDesktopUtilityView;
 
   @override
   ConsumerState<MemosListScreen> createState() => _MemosListScreenState();
@@ -238,6 +241,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   List<String> _desktopComposeInitialAttachmentPaths = const <String>[];
   bool _desktopComposeIgnoreDraft = false;
   String _floatingCollapseVisibleMemoSignature = '';
+  late DesktopHomeUtilityView _desktopHomeUtilityView;
   Timer? _scrollPerfIdleTimer;
   _MemosScrollPerfSession? _scrollPerfSession;
   late final VoidCallback _audioPlaybackCoordinatorListener;
@@ -1149,6 +1153,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   @override
   void initState() {
     super.initState();
+    _desktopHomeUtilityView = widget.initialDesktopUtilityView;
     _inlineComposer = MemoComposerController();
     _headerController = MemosListHeaderController(initialTag: widget.tag);
     _inlineComposeCoordinator = MemosListInlineComposeCoordinator(
@@ -1232,6 +1237,10 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       showNoteInputSheet: widget.showNoteInputSheet,
       showWindowsDesktopNoteInput: _showWindowsDesktopComposeSurface,
       showVoiceRecordOverlay: widget.showVoiceRecordOverlay,
+      openDesktopSyncQueue: () =>
+          _showDesktopHomeUtilityView(DesktopHomeUtilityView.syncQueue),
+      openDesktopNotifications: () =>
+          _showDesktopHomeUtilityView(DesktopHomeUtilityView.notifications),
     );
     _memoActionDelegate = MemosListMemoActionDelegate(
       contextResolver: () => context,
@@ -1455,6 +1464,11 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.tag != widget.tag) {
       _headerController.syncExternalTag(widget.tag);
+    }
+    if (oldWidget.initialDesktopUtilityView !=
+            widget.initialDesktopUtilityView &&
+        widget.initialDesktopUtilityView != DesktopHomeUtilityView.none) {
+      _desktopHomeUtilityView = widget.initialDesktopUtilityView;
     }
   }
 
@@ -2683,6 +2697,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       embeddedNavigationHost.handleDrawerTag(context, tag);
       return;
     }
+    _clearDesktopHomeUtilityView();
     closeDrawerThenPushReplacement(
       context,
       MemosListScreen(
@@ -2693,6 +2708,50 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         enableCompose: true,
       ),
     );
+  }
+
+  bool _supportsDesktopHomeUtilityEmbedding() {
+    if (!widget.showDrawer || widget.embeddedNavigationHost != null) {
+      return false;
+    }
+    final target = resolvePlatformTarget(context);
+    return target == PlatformTarget.macOS ||
+        target == PlatformTarget.windows ||
+        target == PlatformTarget.linux;
+  }
+
+  bool _showDesktopHomeUtilityView(DesktopHomeUtilityView view) {
+    if (!_supportsDesktopHomeUtilityEmbedding()) return false;
+    if (_desktopHomeUtilityView == view) return true;
+    setState(() => _desktopHomeUtilityView = view);
+    return true;
+  }
+
+  void _clearDesktopHomeUtilityView() {
+    if (_desktopHomeUtilityView == DesktopHomeUtilityView.none) return;
+    setState(() => _desktopHomeUtilityView = DesktopHomeUtilityView.none);
+  }
+
+  void _handleHomeDrawerDestination(AppDrawerDestination destination) {
+    final currentDestination = widget.state == 'ARCHIVED'
+        ? AppDrawerDestination.archived
+        : AppDrawerDestination.memos;
+    if (destination == currentDestination &&
+        _desktopHomeUtilityView != DesktopHomeUtilityView.none) {
+      if (ref.read(devicePreferencesProvider).hapticsEnabled) {
+        HapticFeedback.selectionClick();
+      }
+      _clearDesktopHomeUtilityView();
+      return;
+    }
+    if (destination != AppDrawerDestination.syncQueue) {
+      _clearDesktopHomeUtilityView();
+    }
+    _routeDelegate.navigateDrawer(destination);
+  }
+
+  void _handleHomeOpenNotifications() {
+    _routeDelegate.openNotifications();
   }
 
   Future<void> _handleVoiceFabLongPressStart(
@@ -3418,29 +3477,39 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     };
     final debugApiVersionText = ref.watch(memosListDebugApiVersionTextProvider);
     final resolvedTagPath = (resolvedTag ?? '').trim();
+    final desktopUtilityView = _supportsDesktopHomeUtilityEmbedding()
+        ? _desktopHomeUtilityView
+        : DesktopHomeUtilityView.none;
+    final desktopUtilityActive =
+        desktopUtilityView != DesktopHomeUtilityView.none;
+    final selectedDrawerDestination = desktopUtilityActive
+        ? null
+        : (widget.state == 'ARCHIVED'
+              ? AppDrawerDestination.archived
+              : AppDrawerDestination.memos);
+    final selectedDrawerTagPath =
+        desktopUtilityActive || resolvedTagPath.isEmpty
+        ? null
+        : resolvedTagPath;
     final drawerPanel = widget.showDrawer
         ? AppDrawer(
-            selected: widget.state == 'ARCHIVED'
-                ? AppDrawerDestination.archived
-                : AppDrawerDestination.memos,
-            onSelect: _routeDelegate.navigateDrawer,
+            selected: selectedDrawerDestination,
+            onSelect: _handleHomeDrawerDestination,
             onSelectTag: _openTagFromDrawer,
-            onOpenNotifications: _routeDelegate.openNotifications,
+            onOpenNotifications: _handleHomeOpenNotifications,
             embedded: viewState.layout.useDesktopSidePane,
-            selectedTagPath: resolvedTagPath.isEmpty ? null : resolvedTagPath,
+            selectedTagPath: selectedDrawerTagPath,
           )
         : null;
     final desktopDrawerPanelBuilder = widget.showDrawer
         ? (AppDrawerViewMode viewMode, bool embedded) => AppDrawer(
-            selected: widget.state == 'ARCHIVED'
-                ? AppDrawerDestination.archived
-                : AppDrawerDestination.memos,
-            onSelect: _routeDelegate.navigateDrawer,
+            selected: selectedDrawerDestination,
+            onSelect: _handleHomeDrawerDestination,
             onSelectTag: _openTagFromDrawer,
-            onOpenNotifications: _routeDelegate.openNotifications,
+            onOpenNotifications: _handleHomeOpenNotifications,
             embedded: embedded,
             viewMode: viewMode,
-            selectedTagPath: resolvedTagPath.isEmpty ? null : resolvedTagPath,
+            selectedTagPath: selectedDrawerTagPath,
           )
         : null;
 
@@ -3802,10 +3871,23 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       }
     }
     final desktopSecondaryPaneVisible =
-        desktopHomePaneState.previewVisible && desktopPreviewPane != null;
+        !desktopUtilityActive &&
+        desktopHomePaneState.previewVisible &&
+        desktopPreviewPane != null;
+    final desktopPrimaryContentOverride = switch (desktopUtilityView) {
+      DesktopHomeUtilityView.none => null,
+      DesktopHomeUtilityView.syncQueue => SyncQueueScreen(
+        presentation: HomeScreenPresentation.desktopEmbedded,
+        onDesktopEmbeddedBack: _clearDesktopHomeUtilityView,
+      ),
+      DesktopHomeUtilityView.notifications => NotificationsScreen(
+        presentation: HomeScreenPresentation.desktopEmbedded,
+        onDesktopEmbeddedBack: _clearDesktopHomeUtilityView,
+      ),
+    };
     final windowsDesktopTrailingActions = <Widget>[
-      if (sortButton != null) sortButton,
-      if (supportsDesktopSecondaryPane)
+      if (!desktopUtilityActive && sortButton != null) sortButton,
+      if (!desktopUtilityActive && supportsDesktopSecondaryPane)
         IconButton(
           key: const ValueKey<String>('desktop-preview-pane-toggle'),
           tooltip: context.t.strings.legacy.msg_preview,
@@ -3841,6 +3923,10 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       canPop: !shouldInterceptPop,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop || !shouldInterceptPop) return;
+        if (desktopUtilityActive) {
+          _clearDesktopHomeUtilityView();
+          return;
+        }
         final shouldPop = await _routeDelegate.handleWillPop();
         if (!context.mounted) return;
         if (!shouldPop) return;
@@ -3898,6 +3984,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         bootstrapOverlayChild: _localLibraryCoordinator.bootstrapImportActive
             ? bootstrapOverlayChild
             : null,
+        desktopPrimaryContentOverride: desktopPrimaryContentOverride,
         desktopPreviewPane: desktopPreviewPane,
         desktopEditorModalSurface: desktopEditorModalSurface,
         desktopEditorModalVisible:

@@ -463,6 +463,7 @@ class MemosListScreenBody extends StatelessWidget {
     required this.tagFilterBarChild,
     required this.searchLandingChild,
     required this.bootstrapOverlayChild,
+    this.desktopPrimaryContentOverride,
     required this.desktopPreviewPane,
     required this.desktopEditorModalSurface,
     required this.desktopEditorModalVisible,
@@ -511,6 +512,7 @@ class MemosListScreenBody extends StatelessWidget {
   final Widget? tagFilterBarChild;
   final Widget? searchLandingChild;
   final Widget? bootstrapOverlayChild;
+  final Widget? desktopPrimaryContentOverride;
   final Widget? desktopPreviewPane;
   final Widget? desktopEditorModalSurface;
   final bool desktopEditorModalVisible;
@@ -549,10 +551,14 @@ class MemosListScreenBody extends StatelessWidget {
         data.viewState.layout.useWindowsDesktopHeader;
     final useMacosDesktopTitleBar =
         data.viewState.layout.useMacosDesktopTitleBar;
+    final desktopPrimaryContentOverridden =
+        desktopPrimaryContentOverride != null;
     final useExternalDesktopTitleBar =
         useWindowsDesktopHeader || useMacosDesktopTitleBar;
     final showHeaderPillActionsInScroll =
-        data.viewState.layout.showHeaderPillActions && !useMacosDesktopTitleBar;
+        data.viewState.layout.showHeaderPillActions &&
+        !useMacosDesktopTitleBar &&
+        !desktopPrimaryContentOverridden;
     final statusTransitionDuration = AppMotion.effectiveDuration(
       context,
       AppMotion.medium,
@@ -576,157 +582,165 @@ class MemosListScreenBody extends StatelessWidget {
         : (data.visibleMemos.isEmpty)
         ? (query.useAiSearch ? 'ai-empty' : 'empty')
         : null;
-    final memoListBody = _MemoListFloatingActionSideScope(
-      viewportKey: floatingCollapseViewportKey,
-      onScrollNotification: onScrollNotification,
-      builder: (context, floatingActionSide, handleScrollNotification) {
-        return NotificationListener<SizeChangedLayoutNotification>(
-          onNotification: (_) {
-            onViewportLayoutChanged();
-            return false;
-          },
-          child: SizeChangedLayoutNotifier(
-            child: Stack(
-              key: floatingCollapseViewportKey,
-              children: [
-                RefreshIndicator(
-                  onRefresh: onRefresh,
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: handleScrollNotification,
-                    child: Listener(
-                      onPointerSignal: onPointerSignal,
-                      child: CustomScrollView(
-                        controller: scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          SliverAppBar(
-                            pinned: true,
-                            backgroundColor: data.headerBackgroundColor,
-                            elevation: 0,
-                            scrolledUnderElevation: 0,
-                            surfaceTintColor: Colors.transparent,
-                            toolbarHeight: useExternalDesktopTitleBar
-                                ? 0
-                                : kToolbarHeight,
-                            titleSpacing: useExternalDesktopTitleBar
-                                ? 0
-                                : NavigationToolbar.kMiddleSpacing,
-                            automaticallyImplyLeading:
-                                !useExternalDesktopTitleBar &&
-                                !data.searching &&
-                                drawerPanel == null,
-                            leading: useExternalDesktopTitleBar
-                                ? null
-                                : (data.searching
-                                      ? IconButton(
-                                          icon: const Icon(
-                                            Icons.arrow_back_ios_new,
-                                          ),
-                                          onPressed: onCloseSearch,
-                                        )
-                                      : (drawerPanel != null &&
-                                                !data
+    final memoListBody =
+        desktopPrimaryContentOverride ??
+        _MemoListFloatingActionSideScope(
+          viewportKey: floatingCollapseViewportKey,
+          onScrollNotification: onScrollNotification,
+          builder: (context, floatingActionSide, handleScrollNotification) {
+            return NotificationListener<SizeChangedLayoutNotification>(
+              onNotification: (_) {
+                onViewportLayoutChanged();
+                return false;
+              },
+              child: SizeChangedLayoutNotifier(
+                child: Stack(
+                  key: floatingCollapseViewportKey,
+                  children: [
+                    RefreshIndicator(
+                      onRefresh: onRefresh,
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: handleScrollNotification,
+                        child: Listener(
+                          onPointerSignal: onPointerSignal,
+                          child: CustomScrollView(
+                            controller: scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              SliverAppBar(
+                                pinned: true,
+                                backgroundColor: data.headerBackgroundColor,
+                                elevation: 0,
+                                scrolledUnderElevation: 0,
+                                surfaceTintColor: Colors.transparent,
+                                toolbarHeight: useExternalDesktopTitleBar
+                                    ? 0
+                                    : kToolbarHeight,
+                                titleSpacing: useExternalDesktopTitleBar
+                                    ? 0
+                                    : NavigationToolbar.kMiddleSpacing,
+                                automaticallyImplyLeading:
+                                    !useExternalDesktopTitleBar &&
+                                    !data.searching &&
+                                    drawerPanel == null,
+                                leading: useExternalDesktopTitleBar
+                                    ? null
+                                    : (data.searching
+                                          ? IconButton(
+                                              icon: const Icon(
+                                                Icons.arrow_back_ios_new,
+                                              ),
+                                              onPressed: onCloseSearch,
+                                            )
+                                          : (drawerPanel != null &&
+                                                    !data
+                                                        .viewState
+                                                        .layout
+                                                        .useDesktopSidePane
+                                                ? AppDrawerMenuButton(
+                                                    tooltip: context
+                                                        .t
+                                                        .strings
+                                                        .legacy
+                                                        .msg_toggle_sidebar,
+                                                    iconColor:
+                                                        Theme.of(context)
+                                                            .appBarTheme
+                                                            .iconTheme
+                                                            ?.color ??
+                                                        IconTheme.of(
+                                                          context,
+                                                        ).color ??
+                                                        Theme.of(
+                                                          context,
+                                                        ).colorScheme.onSurface,
+                                                    badgeBorderColor: data
+                                                        .headerBackgroundColor,
+                                                  )
+                                                : null)),
+                                title: useExternalDesktopTitleBar
+                                    ? null
+                                    : (data.searching
+                                          ? searchFieldChild
+                                          : titleChild),
+                                actions: useExternalDesktopTitleBar
+                                    ? null
+                                    : [
+                                        if (!data.searching &&
+                                            data
                                                     .viewState
-                                                    .layout
-                                                    .useDesktopSidePane
-                                            ? AppDrawerMenuButton(
-                                                tooltip: context
-                                                    .t
-                                                    .strings
-                                                    .legacy
-                                                    .msg_toggle_sidebar,
-                                                iconColor:
-                                                    Theme.of(context)
-                                                        .appBarTheme
-                                                        .iconTheme
-                                                        ?.color ??
-                                                    IconTheme.of(
-                                                      context,
-                                                    ).color ??
-                                                    Theme.of(
-                                                      context,
-                                                    ).colorScheme.onSurface,
-                                                badgeBorderColor:
-                                                    data.headerBackgroundColor,
-                                              )
-                                            : null)),
-                            title: useExternalDesktopTitleBar
-                                ? null
-                                : (data.searching
-                                      ? searchFieldChild
-                                      : titleChild),
-                            actions: useExternalDesktopTitleBar
-                                ? null
-                                : [
-                                    if (!data.searching &&
-                                        data.viewState.activeTagStat?.tagId !=
-                                            null)
-                                      IconButton(
-                                        tooltip: context
-                                            .t
-                                            .strings
-                                            .legacy
-                                            .msg_edit_tag,
-                                        onPressed: () async => onEditTag(),
-                                        icon: const Icon(Icons.edit),
-                                      ),
-                                    if (data.enableSearch) ...[
-                                      if (!data.searching &&
-                                          data.viewState.query.enableHomeSort &&
-                                          sortButton != null)
-                                        sortButton!,
-                                      if (!data.searching &&
-                                          !data
-                                              .viewState
-                                              .layout
-                                              .useWindowsDesktopHeader)
-                                        IconButton(
-                                          tooltip: context
-                                              .t
-                                              .strings
-                                              .legacy
-                                              .msg_search,
-                                          onPressed: onOpenSearch,
-                                          icon: const Icon(Icons.search),
-                                        ),
-                                      if (data.searching)
-                                        TextButton(
-                                          onPressed: onCloseSearch,
-                                          child: Text(
-                                            context
+                                                    .activeTagStat
+                                                    ?.tagId !=
+                                                null)
+                                          IconButton(
+                                            tooltip: context
                                                 .t
                                                 .strings
                                                 .legacy
-                                                .msg_cancel_2,
-                                            style: TextStyle(
-                                              color: MemoFlowPalette.primary,
-                                              fontWeight: FontWeight.w600,
+                                                .msg_edit_tag,
+                                            onPressed: () async => onEditTag(),
+                                            icon: const Icon(Icons.edit),
+                                          ),
+                                        if (data.enableSearch) ...[
+                                          if (!data.searching &&
+                                              data
+                                                  .viewState
+                                                  .query
+                                                  .enableHomeSort &&
+                                              sortButton != null)
+                                            sortButton!,
+                                          if (!data.searching &&
+                                              !data
+                                                  .viewState
+                                                  .layout
+                                                  .useWindowsDesktopHeader)
+                                            IconButton(
+                                              tooltip: context
+                                                  .t
+                                                  .strings
+                                                  .legacy
+                                                  .msg_search,
+                                              onPressed: onOpenSearch,
+                                              icon: const Icon(Icons.search),
                                             ),
-                                          ),
-                                        ),
-                                    ],
-                                  ],
-                            bottom: useWindowsDesktopHeader && !data.searching
-                                ? null
-                                : data.searching
-                                ? (data.viewState.query.useShortcutFilter
-                                      ? null
-                                      : PreferredSize(
-                                          preferredSize: const Size.fromHeight(
-                                            46,
-                                          ),
-                                          child: Align(
-                                            alignment: Alignment.bottomLeft,
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                    16,
-                                                    0,
-                                                    16,
-                                                    8,
-                                                  ),
-                                              child:
-                                                  MemosListSearchQuickFilterBar(
+                                          if (data.searching)
+                                            TextButton(
+                                              onPressed: onCloseSearch,
+                                              child: Text(
+                                                context
+                                                    .t
+                                                    .strings
+                                                    .legacy
+                                                    .msg_cancel_2,
+                                                style: TextStyle(
+                                                  color:
+                                                      MemoFlowPalette.primary,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ],
+                                bottom:
+                                    useWindowsDesktopHeader && !data.searching
+                                    ? null
+                                    : data.searching
+                                    ? (data.viewState.query.useShortcutFilter
+                                          ? null
+                                          : PreferredSize(
+                                              preferredSize:
+                                                  const Size.fromHeight(46),
+                                              child: Align(
+                                                alignment: Alignment.bottomLeft,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                        16,
+                                                        0,
+                                                        16,
+                                                        8,
+                                                      ),
+                                                  child: MemosListSearchQuickFilterBar(
                                                     selectedKind: data
                                                         .viewState
                                                         .query
@@ -734,244 +748,256 @@ class MemosListScreenBody extends StatelessWidget {
                                                     onSelectKind:
                                                         onToggleQuickSearchKind,
                                                   ),
-                                            ),
-                                          ),
-                                        ))
-                                : (showHeaderPillActionsInScroll &&
-                                          quickActions.isNotEmpty
-                                      ? PreferredSize(
-                                          preferredSize: const Size.fromHeight(
-                                            46,
-                                          ),
-                                          child: Align(
-                                            alignment: Alignment.bottomLeft,
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                    16,
-                                                    0,
-                                                    16,
-                                                    0,
-                                                  ),
-                                              child: MemosListPillRow(
-                                                quickActions: quickActions,
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        )
-                                      : (data.showFilterTagChip &&
-                                                resolvedTagChip != null
-                                            ? PreferredSize(
-                                                preferredSize:
-                                                    const Size.fromHeight(48),
+                                            ))
+                                    : (showHeaderPillActionsInScroll &&
+                                              quickActions.isNotEmpty
+                                          ? PreferredSize(
+                                              preferredSize:
+                                                  const Size.fromHeight(46),
+                                              child: Align(
+                                                alignment: Alignment.bottomLeft,
                                                 child: Padding(
                                                   padding:
                                                       const EdgeInsets.fromLTRB(
                                                         16,
                                                         0,
                                                         16,
-                                                        10,
+                                                        0,
                                                       ),
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    child: resolvedTagChip!,
+                                                  child: MemosListPillRow(
+                                                    quickActions: quickActions,
                                                   ),
                                                 ),
-                                              )
-                                            : null)),
-                          ),
-                          if (data.activeListGuideId != null &&
-                              data.activeListGuideMessage != null)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  10,
-                                  16,
-                                  0,
-                                ),
-                                child: SceneMicroGuideBanner(
-                                  message: data.activeListGuideMessage!,
-                                  onDismiss: onDismissGuide,
-                                ),
+                                              ),
+                                            )
+                                          : (data.showFilterTagChip &&
+                                                    resolvedTagChip != null
+                                                ? PreferredSize(
+                                                    preferredSize:
+                                                        const Size.fromHeight(
+                                                          48,
+                                                        ),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.fromLTRB(
+                                                            16,
+                                                            0,
+                                                            16,
+                                                            10,
+                                                          ),
+                                                      child: Align(
+                                                        alignment: Alignment
+                                                            .centerLeft,
+                                                        child: resolvedTagChip!,
+                                                      ),
+                                                    ),
+                                                  )
+                                                : null)),
                               ),
-                            ),
-                          if (inlineComposeChild != null)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: inlineComposePadding,
-                                child: inlineComposeChild!,
-                              ),
-                            ),
-                          if (tagFilterBarChild != null &&
-                              data.viewState.recommendedTags.isNotEmpty &&
-                              !data.searching)
-                            SliverToBoxAdapter(child: tagFilterBarChild),
-                          if (advancedFilterSliver != null)
-                            advancedFilterSliver!,
-                          if (data.memosLoading && data.visibleMemos.isNotEmpty)
-                            const SliverToBoxAdapter(
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 8),
-                                child: LinearProgressIndicator(minHeight: 2),
-                              ),
-                            ),
-                          if (statusChild != null)
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: AnimatedSwitcher(
-                                duration: statusTransitionDuration,
-                                switchInCurve: AppMotion.standardCurve,
-                                switchOutCurve: AppMotion.exitCurve,
-                                transitionBuilder: (child, animation) {
-                                  if (statusTransitionDuration ==
-                                      Duration.zero) {
-                                    return child;
-                                  }
-                                  final curved = CurvedAnimation(
-                                    parent: animation,
-                                    curve: AppMotion.standardCurve,
-                                    reverseCurve: AppMotion.exitCurve,
-                                  );
-                                  return FadeTransition(
-                                    opacity: curved,
-                                    child: SlideTransition(
-                                      position: Tween<Offset>(
-                                        begin: AppMotion.verticalEntryOffset,
-                                        end: Offset.zero,
-                                      ).animate(curved),
-                                      child: child,
+                              if (data.activeListGuideId != null &&
+                                  data.activeListGuideMessage != null)
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      10,
+                                      16,
+                                      0,
                                     ),
-                                  );
-                                },
-                                child: KeyedSubtree(
-                                  key: ValueKey<String>(statusKey!),
-                                  child: statusChild,
-                                ),
-                              ),
-                            )
-                          else if (data.viewState.query.showSearchLanding)
-                            SliverToBoxAdapter(child: searchLandingChild)
-                          else ...[
-                            if (data.viewState.query.useAiSearch &&
-                                data.visibleMemos.isNotEmpty)
-                              SliverToBoxAdapter(
-                                child: _buildAiResultsLabel(context),
-                              ),
-                            SliverPadding(
-                              padding: EdgeInsets.fromLTRB(
-                                16,
-                                data.viewState.layout.listTopPadding +
-                                    data.viewState.layout.listVisualOffset,
-                                16,
-                                data.showLoadMoreHint ? 20 : 140,
-                              ),
-                              sliver: SliverAnimatedList(
-                                key: listKey,
-                                initialItemCount: data.visibleMemos.length,
-                                itemBuilder: animatedItemBuilder,
-                              ),
-                            ),
-                            if (data.viewState.query.canOfferAiSearch &&
-                                data.visibleMemos.isNotEmpty)
-                              SliverToBoxAdapter(
-                                child: _buildAiSearchBottomAction(context),
-                              ),
-                          ],
-                          if (data.showLoadMoreHint)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  0,
-                                  16,
-                                  140,
-                                ),
-                                child: Center(
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 420,
+                                    child: SceneMicroGuideBanner(
+                                      message: data.activeListGuideMessage!,
+                                      onDismiss: onDismissGuide,
                                     ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                      ),
-                                      child: Text(
-                                        data.loadMoreHintDisplayText,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              letterSpacing: 0.2,
-                                              color: data.loadMoreHintTextColor,
-                                            ),
+                                  ),
+                                ),
+                              if (!desktopPrimaryContentOverridden &&
+                                  inlineComposeChild != null)
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: inlineComposePadding,
+                                    child: inlineComposeChild!,
+                                  ),
+                                ),
+                              if (!desktopPrimaryContentOverridden &&
+                                  tagFilterBarChild != null &&
+                                  data.viewState.recommendedTags.isNotEmpty &&
+                                  !data.searching)
+                                SliverToBoxAdapter(child: tagFilterBarChild),
+                              if (!desktopPrimaryContentOverridden &&
+                                  advancedFilterSliver != null)
+                                advancedFilterSliver!,
+                              if (data.memosLoading &&
+                                  data.visibleMemos.isNotEmpty)
+                                const SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 8),
+                                    child: LinearProgressIndicator(
+                                      minHeight: 2,
+                                    ),
+                                  ),
+                                ),
+                              if (statusChild != null)
+                                SliverFillRemaining(
+                                  hasScrollBody: false,
+                                  child: AnimatedSwitcher(
+                                    duration: statusTransitionDuration,
+                                    switchInCurve: AppMotion.standardCurve,
+                                    switchOutCurve: AppMotion.exitCurve,
+                                    transitionBuilder: (child, animation) {
+                                      if (statusTransitionDuration ==
+                                          Duration.zero) {
+                                        return child;
+                                      }
+                                      final curved = CurvedAnimation(
+                                        parent: animation,
+                                        curve: AppMotion.standardCurve,
+                                        reverseCurve: AppMotion.exitCurve,
+                                      );
+                                      return FadeTransition(
+                                        opacity: curved,
+                                        child: SlideTransition(
+                                          position: Tween<Offset>(
+                                            begin:
+                                                AppMotion.verticalEntryOffset,
+                                            end: Offset.zero,
+                                          ).animate(curved),
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                    child: KeyedSubtree(
+                                      key: ValueKey<String>(statusKey!),
+                                      child: statusChild,
+                                    ),
+                                  ),
+                                )
+                              else if (data.viewState.query.showSearchLanding)
+                                SliverToBoxAdapter(child: searchLandingChild)
+                              else ...[
+                                if (data.viewState.query.useAiSearch &&
+                                    data.visibleMemos.isNotEmpty)
+                                  SliverToBoxAdapter(
+                                    child: _buildAiResultsLabel(context),
+                                  ),
+                                SliverPadding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    16,
+                                    data.viewState.layout.listTopPadding +
+                                        data.viewState.layout.listVisualOffset,
+                                    16,
+                                    data.showLoadMoreHint ? 20 : 140,
+                                  ),
+                                  sliver: SliverAnimatedList(
+                                    key: listKey,
+                                    initialItemCount: data.visibleMemos.length,
+                                    itemBuilder: animatedItemBuilder,
+                                  ),
+                                ),
+                                if (data.viewState.query.canOfferAiSearch &&
+                                    data.visibleMemos.isNotEmpty)
+                                  SliverToBoxAdapter(
+                                    child: _buildAiSearchBottomAction(context),
+                                  ),
+                              ],
+                              if (data.showLoadMoreHint)
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      0,
+                                      16,
+                                      140,
+                                    ),
+                                    child: Center(
+                                      child: ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 420,
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                          child: Text(
+                                            data.loadMoreHintDisplayText,
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w500,
+                                                  letterSpacing: 0.2,
+                                                  color: data
+                                                      .loadMoreHintTextColor,
+                                                ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                        ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                Positioned(
-                  left: _memoListFloatingActionHorizontalInset,
-                  right: _memoListFloatingActionHorizontalInset,
-                  bottom:
-                      data.viewState.layout.backToTopBaseOffset +
-                      data.bottomInset,
-                  child: ValueListenableBuilder<MemosListFloatingCollapseState>(
-                    valueListenable: floatingCollapseListenable,
-                    builder: (context, floatingCollapseState, _) {
-                      return ValueListenableBuilder<bool>(
-                        valueListenable: showBackToTopListenable,
-                        builder: (context, showBackToTop, _) {
-                          return _MemoListFloatingActionSideSpringTransition(
-                            side: floatingActionSide,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment:
-                                  floatingActionSide.crossAxisAlignment,
-                              children: [
-                                MemoFloatingCollapseButton(
-                                  visible: floatingCollapseState.visible,
-                                  scrolling: floatingCollapseState.scrolling,
-                                  label: context.t.strings.legacy.msg_collapse,
-                                  onPressed: onCollapseFloatingMemo,
+                    Positioned(
+                      left: _memoListFloatingActionHorizontalInset,
+                      right: _memoListFloatingActionHorizontalInset,
+                      bottom:
+                          data.viewState.layout.backToTopBaseOffset +
+                          data.bottomInset,
+                      child: ValueListenableBuilder<MemosListFloatingCollapseState>(
+                        valueListenable: floatingCollapseListenable,
+                        builder: (context, floatingCollapseState, _) {
+                          return ValueListenableBuilder<bool>(
+                            valueListenable: showBackToTopListenable,
+                            builder: (context, showBackToTop, _) {
+                              return _MemoListFloatingActionSideSpringTransition(
+                                side: floatingActionSide,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      floatingActionSide.crossAxisAlignment,
+                                  children: [
+                                    MemoFloatingCollapseButton(
+                                      visible: floatingCollapseState.visible,
+                                      scrolling:
+                                          floatingCollapseState.scrolling,
+                                      label:
+                                          context.t.strings.legacy.msg_collapse,
+                                      onPressed: onCollapseFloatingMemo,
+                                    ),
+                                    const SizedBox(
+                                      height: _memoListFloatingActionGap,
+                                    ),
+                                    BackToTopButton(
+                                      visible: showBackToTop,
+                                      hapticsEnabled: data.hapticsEnabled,
+                                      onPressed: onScrollToTop,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(
-                                  height: _memoListFloatingActionGap,
-                                ),
-                                BackToTopButton(
-                                  visible: showBackToTop,
-                                  hapticsEnabled: data.hapticsEnabled,
-                                  onPressed: onScrollToTop,
-                                ),
-                              ],
-                            ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                    if (bootstrapOverlayChild != null)
+                      Positioned.fill(child: bootstrapOverlayChild!),
+                  ],
                 ),
-                if (bootstrapOverlayChild != null)
-                  Positioned.fill(child: bootstrapOverlayChild!),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
-      },
-    );
 
     final isWindowsDesktop =
         Theme.of(context).platform == TargetPlatform.windows;
     final showDesktopPreview =
+        !desktopPrimaryContentOverridden &&
         data.viewState.layout.supportsDesktopPreviewPane &&
         data.desktopPreviewVisible &&
         desktopPreviewPane != null;
@@ -1012,7 +1038,7 @@ class MemosListScreenBody extends StatelessWidget {
         leadingTitle: data.enableTitleMenu
             ? titleChild
             : IgnorePointer(child: titleChild),
-        center: searchFieldChild,
+        center: desktopPrimaryContentOverridden ? null : searchFieldChild,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: windowsDesktopTrailingActions,
@@ -1043,20 +1069,29 @@ class MemosListScreenBody extends StatelessWidget {
             children: [
               MemosListWindowsDesktopTitleBar(
                 isDark: isDark,
-                showPillActions: data.viewState.layout.showHeaderPillActions,
+                showPillActions:
+                    data.viewState.layout.showHeaderPillActions &&
+                    !desktopPrimaryContentOverridden,
                 windowsHeaderSearchExpanded: data.windowsHeaderSearchExpanded,
-                enableHomeSort: data.viewState.query.enableHomeSort,
-                enableSearch: data.enableSearch,
+                enableHomeSort:
+                    data.viewState.query.enableHomeSort &&
+                    !desktopPrimaryContentOverridden,
+                enableSearch:
+                    data.enableSearch && !desktopPrimaryContentOverridden,
                 screenshotModeEnabled: data.screenshotModeEnabled,
                 desktopWindowMaximized: data.desktopWindowMaximized,
                 debugApiVersionText: data.debugApiVersionText,
                 titleChild: data.enableTitleMenu
                     ? titleChild
                     : IgnorePointer(child: titleChild),
-                searchFieldChild: searchFieldChild,
-                sortButton: sortButton,
+                searchFieldChild: desktopPrimaryContentOverridden
+                    ? const SizedBox.shrink()
+                    : searchFieldChild,
+                sortButton: desktopPrimaryContentOverridden ? null : sortButton,
                 onToggleSearch: onToggleWindowsHeaderSearch,
-                quickActions: quickActions,
+                quickActions: desktopPrimaryContentOverridden
+                    ? const <HomeQuickActionChipData>[]
+                    : quickActions,
                 onMinimize: onMinimize,
                 onToggleMaximize: onToggleMaximize,
                 onClose: onClose,
@@ -1076,9 +1111,14 @@ class MemosListScreenBody extends StatelessWidget {
               MemosListMacosDesktopTitleBar(
                 isDark: isDark,
                 searching: data.searching,
-                showPillActions: data.viewState.layout.showHeaderPillActions,
-                enableHomeSort: data.viewState.query.enableHomeSort,
-                enableSearch: data.enableSearch,
+                showPillActions:
+                    data.viewState.layout.showHeaderPillActions &&
+                    !desktopPrimaryContentOverridden,
+                enableHomeSort:
+                    data.viewState.query.enableHomeSort &&
+                    !desktopPrimaryContentOverridden,
+                enableSearch:
+                    data.enableSearch && !desktopPrimaryContentOverridden,
                 showLeadingTitle: shouldRenderDesktopTitlebarLeadingTitle(
                   platform: TargetPlatform.macOS,
                   navigationMode: macosNavigationMode,
@@ -1092,9 +1132,13 @@ class MemosListScreenBody extends StatelessWidget {
                 titleChild: data.enableTitleMenu
                     ? titleChild
                     : IgnorePointer(child: titleChild),
-                searchFieldChild: searchFieldChild,
-                sortButton: sortButton,
-                quickActions: quickActions,
+                searchFieldChild: desktopPrimaryContentOverridden
+                    ? const SizedBox.shrink()
+                    : searchFieldChild,
+                sortButton: desktopPrimaryContentOverridden ? null : sortButton,
+                quickActions: desktopPrimaryContentOverridden
+                    ? const <HomeQuickActionChipData>[]
+                    : quickActions,
                 onOpenSearch: onOpenSearch,
                 onCloseSearch: onCloseSearch,
                 searchTooltip: context.t.strings.legacy.msg_search,
@@ -1121,7 +1165,9 @@ class MemosListScreenBody extends StatelessWidget {
         child: scaffoldBody,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: floatingActionButton,
+      floatingActionButton: desktopPrimaryContentOverridden
+          ? null
+          : floatingActionButton,
     );
   }
 

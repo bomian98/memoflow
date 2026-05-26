@@ -9,7 +9,6 @@ import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memos_list_screen.dart';
-import '../notifications/notifications_screen.dart';
 import '../settings/about_us_screen.dart';
 import '../../i18n/strings.g.dart';
 
@@ -66,12 +65,11 @@ class AboutScreen extends StatelessWidget {
   }
 
   void _openNotifications(BuildContext context) {
-    final host = embeddedNavigationHost;
-    if (host != null) {
-      host.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: embeddedNavigationHost,
+      presentation: presentation,
+    );
   }
 
   @override

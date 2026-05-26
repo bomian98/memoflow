@@ -1,4 +1,4 @@
-﻿// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
@@ -22,6 +22,7 @@ import '../../state/system/notifications_provider.dart';
 import '../../state/system/session_provider.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
+import '../home/desktop/desktop_embedded_utility_surface.dart';
 import '../home/desktop/desktop_shell_host.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
@@ -38,10 +39,16 @@ class NotificationsScreen extends ConsumerWidget {
     super.key,
     this.presentation = HomeScreenPresentation.standalone,
     this.embeddedNavigationHost,
-  });
+    this.onDesktopEmbeddedBack,
+  }) : assert(
+         presentation != HomeScreenPresentation.desktopEmbedded ||
+             onDesktopEmbeddedBack != null,
+         'Desktop embedded notifications require onDesktopEmbeddedBack.',
+       );
 
   final HomeScreenPresentation presentation;
   final HomeEmbeddedNavigationHost? embeddedNavigationHost;
+  final VoidCallback? onDesktopEmbeddedBack;
 
   void _backToHome(BuildContext context) {
     final host = embeddedNavigationHost;
@@ -89,12 +96,11 @@ class NotificationsScreen extends ConsumerWidget {
   }
 
   void _openNotifications(BuildContext context) {
-    final host = embeddedNavigationHost;
-    if (host != null) {
-      host.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: embeddedNavigationHost,
+      presentation: presentation,
+    );
   }
 
   @override
@@ -203,6 +209,14 @@ class NotificationsScreen extends ConsumerWidget {
       error: (e, _) =>
           Center(child: Text(context.t.strings.legacy.msg_failed_load_4(e: e))),
     );
+    if (presentation == HomeScreenPresentation.desktopEmbedded) {
+      return DesktopEmbeddedUtilitySurface(
+        title: Text(context.t.strings.legacy.msg_notifications),
+        onBack: onDesktopEmbeddedBack,
+        backTooltip: context.t.strings.legacy.msg_back,
+        body: pageBody,
+      );
+    }
 
     return PopScope(
       canPop: !shouldInterceptPop,
@@ -224,9 +238,10 @@ class NotificationsScreen extends ConsumerWidget {
               leadingTitle: Text(context.t.strings.legacy.msg_notifications),
               body: pageBody,
             )
-      : PlatformPage(
+          : PlatformPage(
               drawer: useDesktopSidePane ? null : drawerPanel,
               drawerEnableOpenDragGesture: !useEmbeddedBottomNav,
+              desktopWindowChromeSafeArea: true,
               title: Text(context.t.strings.legacy.msg_notifications),
               leading: IconButton(
                 tooltip: context.t.strings.legacy.msg_back,

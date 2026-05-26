@@ -36,7 +36,6 @@ import '../home/app_drawer_menu_button.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memo_detail_screen.dart';
 import '../memos/memos_list_screen.dart';
-import '../notifications/notifications_screen.dart';
 import '../settings/ai_settings_screen.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import '../../state/review/ai_analysis_provider.dart';
@@ -171,12 +170,11 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
   }
 
   void _openNotifications(BuildContext context) {
-    final embeddedNavigationHost = widget.embeddedNavigationHost;
-    if (embeddedNavigationHost != null) {
-      embeddedNavigationHost.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: widget.embeddedNavigationHost,
+      presentation: widget.presentation,
+    );
   }
 
   Future<void> _openAiSettings() async {

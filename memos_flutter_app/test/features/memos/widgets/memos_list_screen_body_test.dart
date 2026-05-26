@@ -107,6 +107,36 @@ void main() {
     },
   );
 
+  testWidgets('desktop primary content override replaces memo list content', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          theme: ThemeData(platform: TargetPlatform.macOS),
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              visibleMemos: <LocalMemo>[_buildMemo('memo-1')],
+              layout: _buildLayout(useMacosDesktopTitleBar: true),
+            ),
+            desktopPrimaryContentOverride: const Center(
+              child: Text('utility-content'),
+            ),
+            animatedItemBuilder: (_, _, _) => const Text('memo-card-content'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('utility-content'), findsOneWidget);
+    expect(find.text('memo-card-content'), findsNothing);
+    expect(find.byType(SliverAnimatedList), findsNothing);
+  });
+
   testWidgets(
     'switches loading and empty placeholders through AnimatedSwitcher',
     (tester) async {
@@ -805,6 +835,7 @@ Widget _buildBodyScreen({
   VoidCallback? onStartAiSearch,
   VoidCallback? onStopAiSearch,
   Widget? desktopPreviewPane,
+  Widget? desktopPrimaryContentOverride,
 }) {
   final resolvedData = data ?? _buildBodyData();
   final resolvedShowBackToTopListenable =
@@ -833,6 +864,7 @@ Widget _buildBodyScreen({
     tagFilterBarChild: null,
     searchLandingChild: null,
     bootstrapOverlayChild: null,
+    desktopPrimaryContentOverride: desktopPrimaryContentOverride,
     desktopPreviewPane: desktopPreviewPane,
     desktopEditorModalSurface: null,
     desktopEditorModalVisible: false,

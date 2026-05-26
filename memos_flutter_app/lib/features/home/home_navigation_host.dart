@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../data/models/home_navigation_preferences.dart';
 import '../home/app_drawer.dart';
 
-enum HomeScreenPresentation { standalone, embeddedBottomNav }
+enum HomeScreenPresentation { standalone, embeddedBottomNav, desktopEmbedded }
+
+enum DesktopHomeUtilityView { none, syncQueue, notifications }
 
 abstract interface class HomeEmbeddedNavigationHost {
   void handleDrawerDestination(

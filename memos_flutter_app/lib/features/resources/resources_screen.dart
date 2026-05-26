@@ -28,7 +28,6 @@ import '../memos/attachment_video_screen.dart';
 import '../memos/memo_detail_screen.dart';
 import '../memos/memos_list_screen.dart';
 import '../memos/memo_video_grid.dart';
-import '../notifications/notifications_screen.dart';
 import '../../platform/platform_route.dart';
 import '../../platform/widgets/platform_action_sheet.dart';
 import '../../platform/widgets/platform_page.dart';
@@ -411,12 +410,11 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
   }
 
   void _openNotifications(BuildContext context) {
-    final embeddedNavigationHost = widget.embeddedNavigationHost;
-    if (embeddedNavigationHost != null) {
-      embeddedNavigationHost.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: widget.embeddedNavigationHost,
+      presentation: widget.presentation,
+    );
   }
 
   String _displayName(Attachment attachment) {

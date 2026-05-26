@@ -12,7 +12,6 @@ import '../home/app_drawer.dart';
 import '../home/app_drawer_destination_builder.dart';
 import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
-import '../notifications/notifications_screen.dart';
 import 'draft_box_screen.dart';
 import 'memo_editor_screen.dart';
 import 'note_input_sheet.dart';
@@ -50,12 +49,11 @@ class _DraftBoxNavigationScreenState
   }
 
   void _openNotifications() {
-    final host = widget.embeddedNavigationHost;
-    if (host != null) {
-      host.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: widget.embeddedNavigationHost,
+      presentation: widget.presentation,
+    );
   }
 
   void _handleBackToHome() {

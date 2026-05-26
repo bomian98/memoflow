@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/drawer_navigation.dart';
+import '../../platform/platform_target.dart';
 import '../../i18n/strings.g.dart';
 import '../about/about_screen.dart';
 import '../collections/collections_screen.dart';
@@ -7,6 +9,7 @@ import '../explore/explore_screen.dart';
 import '../memos/draft_box_navigation_screen.dart';
 import '../memos/memos_list_screen.dart';
 import '../memos/recycle_bin_screen.dart';
+import '../notifications/notifications_screen.dart';
 import '../resources/resources_screen.dart';
 import '../review/ai_summary_screen.dart';
 import '../review/daily_review_screen.dart';
@@ -16,6 +19,73 @@ import '../sync/sync_queue_screen.dart';
 import '../tags/tags_screen.dart';
 import 'app_drawer.dart';
 import 'home_navigation_host.dart';
+
+bool shouldUseDesktopHomeUtilityDestination({
+  required BuildContext context,
+  required HomeScreenPresentation presentation,
+  required HomeEmbeddedNavigationHost? navigationHost,
+}) {
+  if (navigationHost != null ||
+      presentation == HomeScreenPresentation.embeddedBottomNav) {
+    return false;
+  }
+  final target = resolvePlatformTarget(context);
+  return target == PlatformTarget.macOS ||
+      target == PlatformTarget.windows ||
+      target == PlatformTarget.linux;
+}
+
+MemosListScreen buildDesktopHomeUtilityDestination(
+  DesktopHomeUtilityView utility,
+) {
+  return MemosListScreen(
+    title: 'MemoFlow',
+    state: 'NORMAL',
+    showDrawer: true,
+    enableCompose: true,
+    initialDesktopUtilityView: utility,
+  );
+}
+
+bool openDesktopHomeUtilityDestination({
+  required BuildContext context,
+  required DesktopHomeUtilityView utility,
+  HomeScreenPresentation presentation = HomeScreenPresentation.standalone,
+  HomeEmbeddedNavigationHost? navigationHost,
+}) {
+  if (!shouldUseDesktopHomeUtilityDestination(
+    context: context,
+    presentation: presentation,
+    navigationHost: navigationHost,
+  )) {
+    return false;
+  }
+  closeDrawerThenPushReplacement(
+    context,
+    buildDesktopHomeUtilityDestination(utility),
+  );
+  return true;
+}
+
+void openNotificationsDrawerDestination({
+  required BuildContext context,
+  HomeEmbeddedNavigationHost? navigationHost,
+  HomeScreenPresentation presentation = HomeScreenPresentation.standalone,
+}) {
+  if (navigationHost != null) {
+    navigationHost.handleOpenNotifications(context);
+    return;
+  }
+  if (openDesktopHomeUtilityDestination(
+    context: context,
+    utility: DesktopHomeUtilityView.notifications,
+    presentation: presentation,
+    navigationHost: navigationHost,
+  )) {
+    return;
+  }
+  closeDrawerThenPushReplacement(context, const NotificationsScreen());
+}
 
 Widget buildDrawerDestinationScreen({
   required BuildContext context,
@@ -34,9 +104,17 @@ Widget buildDrawerDestinationScreen({
       hidePrimaryComposeFab:
           presentation == HomeScreenPresentation.embeddedBottomNav,
     ),
-    AppDrawerDestination.syncQueue => SyncQueueScreen(
-      embeddedNavigationHost: navigationHost,
-    ),
+    AppDrawerDestination.syncQueue =>
+      shouldUseDesktopHomeUtilityDestination(
+            context: context,
+            presentation: presentation,
+            navigationHost: navigationHost,
+          )
+          ? buildDesktopHomeUtilityDestination(DesktopHomeUtilityView.syncQueue)
+          : SyncQueueScreen(
+              presentation: presentation,
+              embeddedNavigationHost: navigationHost,
+            ),
     AppDrawerDestination.explore => ExploreScreen(
       presentation: presentation,
       embeddedNavigationHost: navigationHost,

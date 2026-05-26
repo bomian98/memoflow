@@ -134,6 +134,57 @@ void main() {
     expect(find.text('bottom-nav-shell'), findsOneWidget);
     expect(find.text('classic-home'), findsNothing);
   });
+
+  testWidgets('desktop embedded notifications render without page app bar', (
+    tester,
+  ) async {
+    var backCount = 0;
+
+    await tester.pumpWidget(
+      _buildApp(
+        overrides: [
+          appSessionProvider.overrideWith(
+            (ref) => _TestSessionController(hasAccount: true),
+          ),
+          devicePreferencesProvider.overrideWith(
+            (ref) => _TestDevicePreferencesController(ref),
+          ),
+          currentWorkspacePreferencesProvider.overrideWith(
+            (ref) => _TestWorkspacePreferencesController(
+              ref,
+              initial: WorkspacePreferences.defaults,
+            ),
+          ),
+          workspacePreferencesLoadedProvider.overrideWith((ref) => true),
+          notificationsProvider.overrideWith(
+            (ref) async => const <AppNotification>[],
+          ),
+          unreadNotificationCountProvider.overrideWith((ref) => 0),
+          syncQueuePendingCountProvider.overrideWith((ref) => Stream.value(0)),
+          syncQueueAttentionCountProvider.overrideWith(
+            (ref) => Stream.value(0),
+          ),
+        ],
+        home: MediaQuery(
+          data: const MediaQueryData(size: Size(900, 700)),
+          child: NotificationsScreen(
+            presentation: HomeScreenPresentation.desktopEmbedded,
+            onDesktopEmbeddedBack: () => backCount++,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(backCount, 1);
+  });
 }
 
 Widget _buildApp({required List<Override> overrides, required Widget home}) {

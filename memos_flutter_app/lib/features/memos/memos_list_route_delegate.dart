@@ -57,6 +57,7 @@ typedef MemosListRouteVoiceRecordOverlayPresenter =
       VoiceRecordOverlayDragSession? dragSession,
       VoiceRecordMode mode,
     });
+typedef MemosListRouteDesktopUtilityOpener = bool Function();
 
 abstract interface class MemosListRouteDesktopAdapter {
   bool get desktopShortcutsEnabled;
@@ -175,6 +176,8 @@ class MemosListRouteDelegate extends ChangeNotifier {
     MemosListRouteNoteInputPresenter? showNoteInputSheet,
     MemosListRouteNoteInputPresenter? showWindowsDesktopNoteInput,
     MemosListRouteVoiceRecordOverlayPresenter? showVoiceRecordOverlay,
+    MemosListRouteDesktopUtilityOpener? openDesktopSyncQueue,
+    MemosListRouteDesktopUtilityOpener? openDesktopNotifications,
   }) : _contextResolver = contextResolver,
        _read = read,
        _scaffoldKey = scaffoldKey,
@@ -206,7 +209,9 @@ class MemosListRouteDelegate extends ChangeNotifier {
        _showNoteInputSheet = showNoteInputSheet ?? _defaultShowNoteInputSheet,
        _showWindowsDesktopNoteInput = showWindowsDesktopNoteInput,
        _showVoiceRecordOverlay =
-           showVoiceRecordOverlay ?? _defaultShowVoiceRecordOverlay;
+           showVoiceRecordOverlay ?? _defaultShowVoiceRecordOverlay,
+       _openDesktopSyncQueue = openDesktopSyncQueue,
+       _openDesktopNotifications = openDesktopNotifications;
 
   final BuildContext Function() _contextResolver;
   final MemosListRouteRead _read;
@@ -236,6 +241,8 @@ class MemosListRouteDelegate extends ChangeNotifier {
   final MemosListRouteNoteInputPresenter _showNoteInputSheet;
   final MemosListRouteNoteInputPresenter? _showWindowsDesktopNoteInput;
   final MemosListRouteVoiceRecordOverlayPresenter _showVoiceRecordOverlay;
+  final MemosListRouteDesktopUtilityOpener? _openDesktopSyncQueue;
+  final MemosListRouteDesktopUtilityOpener? _openDesktopNotifications;
 
   final GlobalKey titleAnchorKey = GlobalKey();
 
@@ -330,6 +337,10 @@ class MemosListRouteDelegate extends ChangeNotifier {
       embeddedNavigationHost.handleDrawerDestination(context, dest);
       return;
     }
+    if (dest == AppDrawerDestination.syncQueue &&
+        (_openDesktopSyncQueue?.call() ?? false)) {
+      return;
+    }
     closeDrawerThenPushReplacement(
       context,
       buildDrawerDestinationScreen(context: context, destination: dest),
@@ -355,6 +366,7 @@ class MemosListRouteDelegate extends ChangeNotifier {
       embeddedNavigationHost.handleOpenNotifications(context);
       return;
     }
+    if (_openDesktopNotifications?.call() ?? false) return;
     closeDrawerThenPushReplacement(context, const NotificationsScreen());
   }
 
@@ -363,6 +375,7 @@ class MemosListRouteDelegate extends ChangeNotifier {
     if (_read(devicePreferencesProvider).hapticsEnabled) {
       HapticFeedback.selectionClick();
     }
+    if (_openDesktopSyncQueue?.call() ?? false) return;
     Navigator.of(context).push(
       buildPlatformPageRoute<void>(
         context: context,

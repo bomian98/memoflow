@@ -44,7 +44,6 @@ import '../memos/memo_location_line.dart';
 import '../memos/memo_markdown.dart';
 import '../memos/memo_video_grid.dart';
 import '../memos/memos_list_screen.dart';
-import '../notifications/notifications_screen.dart';
 import '../memos/widgets/audio_row.dart';
 import 'ai_insight_history_shared.dart';
 import 'random_walk_display.dart';
@@ -216,12 +215,11 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
   }
 
   void _openNotifications() {
-    final embeddedNavigationHost = widget.embeddedNavigationHost;
-    if (embeddedNavigationHost != null) {
-      embeddedNavigationHost.handleOpenNotifications(context);
-      return;
-    }
-    closeDrawerThenPushReplacement(context, const NotificationsScreen());
+    openNotificationsDrawerDestination(
+      context: context,
+      navigationHost: widget.embeddedNavigationHost,
+      presentation: widget.presentation,
+    );
   }
 
   int _nextSampleSeed() => _random.nextInt(0x3fffffff);

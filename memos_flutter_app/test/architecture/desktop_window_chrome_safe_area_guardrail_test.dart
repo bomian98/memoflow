@@ -59,6 +59,12 @@ void main() {
     final memoTitleBar = await File(
       'lib/features/memos/widgets/memos_list_macos_desktop_title_bar.dart',
     ).readAsString();
+    final platformPage = await File(
+      'lib/platform/widgets/platform_page.dart',
+    ).readAsString();
+    final shareTaskWindow = await File(
+      'lib/features/share/desktop_share_task_window_app.dart',
+    ).readAsString();
 
     expect(shell.contains('window_chrome_safe_area.dart'), isTrue);
     expect(
@@ -75,6 +81,45 @@ void main() {
       ),
       isFalse,
     );
+    expect(platformPage.contains('window_chrome_safe_area.dart'), isTrue);
+    expect(
+      platformPage.contains('desktopWindowChromeSafeArea') &&
+          platformPage.contains('resolveDesktopWindowChromeInsets'),
+      isTrue,
+    );
+    expect(
+      shareTaskWindow.contains('desktopWindowChromeSafeArea: true'),
+      isTrue,
+    );
+    expect(
+      shareTaskWindow.contains('kMacosTrafficLightReservedWidth'),
+      isFalse,
+    );
+  });
+
+  test('desktop secondary pages consume shared chrome safe-area seam', () async {
+    final consumers = <String, String>{
+      'stats screen': 'lib/features/stats/stats_screen.dart',
+      'sync queue screen': 'lib/features/sync/sync_queue_screen.dart',
+      'notifications screen':
+          'lib/features/notifications/notifications_screen.dart',
+    };
+
+    for (final entry in consumers.entries) {
+      final source = await File(entry.value).readAsString();
+      expect(
+        source.contains('desktopWindowChromeSafeArea: true'),
+        isTrue,
+        reason:
+            '${entry.key} should opt into the shared desktop chrome safe-area.',
+      );
+      expect(
+        source.contains('kMacosTrafficLightReservedWidth'),
+        isFalse,
+        reason:
+            '${entry.key} must not use page-local macOS traffic-light padding.',
+      );
+    }
   });
 
   test('desktop secondary routes keep app-level back controls visible', () {
