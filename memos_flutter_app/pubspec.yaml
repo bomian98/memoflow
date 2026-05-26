@@ -154,6 +154,7 @@ flutter:
     - assets/splash/splash_screen_light.png
     - assets/splash/splash_logo.png
     - assets/splash/splash_logo_native.png
+    - assets/splash/splash_logo_macos.png
     - assets/ai_providers/
     - assets/location_picker/
     - assets/share/
