@@ -13,9 +13,7 @@ void main() {
     await tester.pumpWidget(_ResizableShellHarness(key: key));
 
     await tester.drag(
-      find.byKey(
-        const ValueKey<String>('desktop-resizable-panel-right'),
-      ),
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-right')),
       const Offset(40, 0),
       warnIfMissed: false,
     );
@@ -33,9 +31,7 @@ void main() {
     await tester.pumpWidget(_ResizableShellHarness(key: key));
 
     await tester.drag(
-      find.byKey(
-        const ValueKey<String>('desktop-resizable-panel-topLeft'),
-      ),
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-topLeft')),
       const Offset(30, 20),
       warnIfMissed: false,
     );
@@ -52,9 +48,7 @@ void main() {
     await tester.pumpWidget(_ResizableShellHarness(key: key));
 
     await tester.drag(
-      find.byKey(
-        const ValueKey<String>('desktop-resizable-panel-left'),
-      ),
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-left')),
       const Offset(24, 0),
       warnIfMissed: false,
     );
@@ -69,9 +63,7 @@ void main() {
     await tester.pumpWidget(_ResizableShellHarness(key: key));
 
     await tester.drag(
-      find.byKey(
-        const ValueKey<String>('desktop-resizable-panel-top'),
-      ),
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-top')),
       const Offset(0, 18),
       warnIfMissed: false,
     );
@@ -86,9 +78,7 @@ void main() {
     await tester.pumpWidget(_ResizableShellHarness(key: key));
 
     await tester.drag(
-      find.byKey(
-        const ValueKey<String>('desktop-resizable-panel-bottomRight'),
-      ),
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-bottomRight')),
       const Offset(400, 400),
       warnIfMissed: false,
     );
@@ -98,9 +88,7 @@ void main() {
     expect(key.currentState!.rect.height, 260);
   });
 
-  testWidgets('corner hit area is transparent with no extra decoration', (
-    tester,
-  ) async {
+  testWidgets('corner hit area is transparent by default', (tester) async {
     final key = GlobalKey<_ResizableShellHarnessState>();
     await tester.pumpWidget(_ResizableShellHarness(key: key));
 
@@ -109,6 +97,34 @@ void main() {
       find.descendant(of: shellFinder, matching: find.byType(DecoratedBox)),
       findsNothing,
     );
+  });
+
+  testWidgets('can show visible resize affordance without blocking drag', (
+    tester,
+  ) async {
+    final key = GlobalKey<_ResizableShellHarnessState>();
+    await tester.pumpWidget(
+      _ResizableShellHarness(key: key, showHandleAffordance: true),
+    );
+
+    expect(
+      find.byKey(
+        const ValueKey<String>(
+          'desktop-resizable-panel-bottomRight-affordance',
+        ),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.drag(
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-bottomRight')),
+      const Offset(32, 28),
+      warnIfMissed: false,
+    );
+    await tester.pumpAndSettle();
+
+    expect(key.currentState!.rect.width, 232);
+    expect(key.currentState!.rect.height, 188);
   });
 
   testWidgets('dragging resize handle does not scroll ancestor viewport', (
@@ -143,9 +159,7 @@ void main() {
     final beforeOffset = scrollController.offset;
 
     await tester.drag(
-      find.byKey(
-        const ValueKey<String>('desktop-resizable-panel-bottomRight'),
-      ),
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-bottomRight')),
       const Offset(0, 36),
       warnIfMissed: false,
     );
@@ -190,9 +204,14 @@ void main() {
 }
 
 class _ResizableShellHarness extends StatefulWidget {
-  const _ResizableShellHarness({super.key, this.enabledHandles});
+  const _ResizableShellHarness({
+    super.key,
+    this.enabledHandles,
+    this.showHandleAffordance = false,
+  });
 
   final Set<DesktopResizeHandle>? enabledHandles;
+  final bool showHandleAffordance;
 
   @override
   State<_ResizableShellHarness> createState() => _ResizableShellHarnessState();
@@ -224,6 +243,7 @@ class _ResizableShellHarnessState extends State<_ResizableShellHarness> {
               maxHeight: 260,
               hitZoneExtent: 8,
               enabledHandles: widget.enabledHandles,
+              showHandleAffordance: widget.showHandleAffordance,
               onChanged: (next) => setState(() => rect = next),
               onChangeEnd: (next) {
                 setState(() {

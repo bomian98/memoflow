@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/data/models/home_navigation_preferences.dart';
+import 'package:memos_flutter_app/features/home/app_drawer_destination_builder.dart';
 import 'package:memos_flutter_app/features/home/home_navigation_host.dart';
 import 'package:memos_flutter_app/features/home/home_root_destination_registry.dart';
 import 'package:memos_flutter_app/features/memos/draft_box_navigation_screen.dart';
@@ -15,6 +16,36 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.windows),
+        home: Builder(
+          builder: (context) {
+            built = buildHomeRootScreen(
+              context: context,
+              destination: HomeRootDestination.memos,
+              presentation: HomeScreenPresentation.standalone,
+              navigationHost: null,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(built, isA<MemosListScreen>());
+    expect(
+      (built! as MemosListScreen).enableDesktopResizableHomeInlineCompose,
+      isTrue,
+    );
+  });
+
+  testWidgets('macOS memos root enables resizable home inline compose', (
+    tester,
+  ) async {
+    Widget? built;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.macOS),
         home: Builder(
           builder: (context) {
             built = buildHomeRootScreen(
@@ -43,6 +74,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.windows),
           home: Builder(
             builder: (context) {
               built = buildHomeRootScreen(
@@ -64,6 +96,100 @@ void main() {
       );
     },
   );
+
+  testWidgets('drawer memos route uses shared resize capability on Windows', (
+    tester,
+  ) async {
+    Widget? built;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.windows),
+        home: Builder(
+          builder: (context) {
+            built = buildDrawerDestinationScreen(
+              context: context,
+              destination: AppDrawerDestination.memos,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(built, isA<MemosListScreen>());
+    expect(
+      (built! as MemosListScreen).enableDesktopResizableHomeInlineCompose,
+      isTrue,
+    );
+  });
+
+  testWidgets('desktop utility route preserves resize capability on Windows', (
+    tester,
+  ) async {
+    MemosListScreen? built;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.windows),
+        home: Builder(
+          builder: (context) {
+            built = buildDesktopHomeUtilityDestination(
+              context: context,
+              utility: DesktopHomeUtilityView.notifications,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(built, isNotNull);
+    expect(built!.enableDesktopResizableHomeInlineCompose, isTrue);
+    expect(
+      built!.initialDesktopUtilityView,
+      DesktopHomeUtilityView.notifications,
+    );
+  });
+
+  testWidgets('Linux desktop memos routes keep resize disabled', (
+    tester,
+  ) async {
+    Widget? rootBuilt;
+    Widget? drawerBuilt;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.linux),
+        home: Builder(
+          builder: (context) {
+            rootBuilt = buildHomeRootScreen(
+              context: context,
+              destination: HomeRootDestination.memos,
+              presentation: HomeScreenPresentation.standalone,
+              navigationHost: null,
+            );
+            drawerBuilt = buildDrawerDestinationScreen(
+              context: context,
+              destination: AppDrawerDestination.memos,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(rootBuilt, isA<MemosListScreen>());
+    expect(drawerBuilt, isA<MemosListScreen>());
+    expect(
+      (rootBuilt! as MemosListScreen).enableDesktopResizableHomeInlineCompose,
+      isFalse,
+    );
+    expect(
+      (drawerBuilt! as MemosListScreen).enableDesktopResizableHomeInlineCompose,
+      isFalse,
+    );
+  });
 
   testWidgets('draft box root has registry metadata and screen builder', (
     tester,

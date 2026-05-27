@@ -1982,6 +1982,83 @@ void main() {
   });
 
   testWidgets(
+    'windows standalone all memos enables resize without entry flag',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      await tester.binding.setSurfaceSize(const Size(1400, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1400, 1200),
+          showDrawer: true,
+          enableCompose: true,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      expect(
+        find.byKey(const ValueKey<String>('desktop-resizable-panel-right')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(
+          const ValueKey<String>(
+            'desktop-resizable-panel-bottomRight-affordance',
+          ),
+        ),
+        findsOneWidget,
+      );
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets('macOS standalone all memos enables resize without entry flag', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    await tester.binding.setSurfaceSize(const Size(1400, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1400, 1200),
+        showDrawer: true,
+        enableCompose: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-right')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        const ValueKey<String>(
+          'desktop-resizable-panel-bottomRight-affordance',
+        ),
+      ),
+      findsOneWidget,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets(
     'windows without home compose flag keeps resize handles disabled',
     (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
@@ -2005,7 +2082,7 @@ void main() {
     },
   );
 
-  testWidgets('non-windows platform keeps desktop resize handles disabled', (
+  testWidgets('non-supported platform keeps desktop resize handles disabled', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -2032,23 +2109,19 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
-  testWidgets('home compose drag persists layout and restores on rebuild', (
+  testWidgets('Linux desktop keeps home resize handles disabled', (
     tester,
   ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
 
     final memosController = StreamController<List<LocalMemo>>.broadcast();
     addTearDown(memosController.close);
-    final devicePrefsRepo = _TestDevicePreferencesRepository(
-      DevicePreferences.defaultsForLanguage(AppLanguage.en),
-    );
 
     await tester.pumpWidget(
       _buildHarness(
         memosStream: memosController.stream,
         enableCompose: true,
         enableDesktopResizableHomeInlineCompose: true,
-        devicePreferencesRepository: devicePrefsRepo,
       ),
     );
     memosController.add(<LocalMemo>[
@@ -2056,40 +2129,29 @@ void main() {
     ]);
     await _pumpScreenFrames(tester);
 
-    final topLeftFinder = find.byKey(
-      const ValueKey<String>('desktop-resizable-panel-topLeft'),
-    );
-    final rightFinder = find.byKey(
-      const ValueKey<String>('desktop-resizable-panel-right'),
-    );
-    final initialTopLeftRect = tester.getRect(topLeftFinder);
-    final shell = tester.widget<DesktopResizablePanelShell>(
-      find.byType(DesktopResizablePanelShell),
-    );
-    final updatedRect = DesktopResizablePanelRect(
-      left: shell.rect.left + 56,
-      top: shell.rect.top + 36,
-      width: shell.rect.width - 56,
-      height: shell.rect.height - 36,
-    );
-
-    shell.onChanged(updatedRect);
-    shell.onChangeEnd(updatedRect);
-    await _pumpScreenFrames(tester);
-
-    final savedLayout = devicePrefsRepo.stored.homeInlineComposePanelLayout;
-    expect(savedLayout, isNotNull);
-    expect(savedLayout!.width, lessThan(620));
-    expect(savedLayout.editorHeight, greaterThan(0));
-    expect(savedLayout.xRatio, greaterThan(0));
-    expect(savedLayout.yRatio, greaterThan(0));
-
-    final draggedTopLeftRect = tester.getRect(topLeftFinder);
-    final draggedRightRect = tester.getRect(rightFinder);
-    expect(draggedTopLeftRect.left, greaterThan(initialTopLeftRect.left));
     expect(
-      draggedTopLeftRect.top,
-      greaterThanOrEqualTo(initialTopLeftRect.top),
+      find.byKey(const ValueKey<String>('desktop-resizable-panel-right')),
+      findsNothing,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('home compose primes saved layout on first loaded frame', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    const savedLayout = HomeInlineComposePanelLayoutPreference(
+      width: 560,
+      editorHeight: 180,
+      xRatio: 0.25,
+      yRatio: 0,
+    );
+    final devicePrefsRepo = _TestDevicePreferencesRepository(
+      DevicePreferences.defaultsForLanguage(
+        AppLanguage.en,
+      ).copyWith(homeInlineComposePanelLayout: savedLayout),
     );
 
     await tester.pumpWidget(
@@ -2097,23 +2159,127 @@ void main() {
         memosStream: Stream.value(<LocalMemo>[
           _buildMemo(uid: 'memo-1', content: 'Memo'),
         ]),
+        screenSize: const Size(1280, 1200),
         enableCompose: true,
         enableDesktopResizableHomeInlineCompose: true,
         devicePreferencesRepository: devicePrefsRepo,
+        seedDevicePreferencesSynchronously: true,
       ),
     );
-    await _pumpScreenFrames(tester);
 
-    final restoredTopLeftRect = tester.getRect(topLeftFinder);
-    final restoredRightRect = tester.getRect(rightFinder);
-    expect(restoredTopLeftRect.left, closeTo(draggedTopLeftRect.left, 2));
-    expect(restoredTopLeftRect.top, closeTo(draggedTopLeftRect.top, 2));
-    expect(restoredRightRect.right, closeTo(draggedRightRect.right, 2));
+    final shell = tester.widget<DesktopResizablePanelShell>(
+      find.byType(DesktopResizablePanelShell),
+    );
+    expect(shell.rect.width, closeTo(savedLayout.width, 0.1));
 
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
+    final editorFinder = find.byKey(
+      const ValueKey<String>('memos-inline-compose-text-field'),
+    );
+    expect(tester.getSize(editorFinder).height, closeTo(180, 1));
+
     debugDefaultTargetPlatformOverride = null;
   });
+
+  testWidgets(
+    'home compose handle drag persists layout and restores on rebuild',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+      const initialLayout = HomeInlineComposePanelLayoutPreference(
+        width: 620,
+        editorHeight: 180,
+        xRatio: 0,
+        yRatio: 0,
+      );
+      final devicePrefsRepo = _TestDevicePreferencesRepository(
+        DevicePreferences.defaultsForLanguage(
+          AppLanguage.en,
+        ).copyWith(homeInlineComposePanelLayout: initialLayout),
+      );
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          enableCompose: true,
+          enableDesktopResizableHomeInlineCompose: true,
+          devicePreferencesRepository: devicePrefsRepo,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      final topLeftFinder = find.byKey(
+        const ValueKey<String>('desktop-resizable-panel-topLeft'),
+      );
+      final rightFinder = find.byKey(
+        const ValueKey<String>('desktop-resizable-panel-right'),
+      );
+      final initialTopLeftRect = tester.getRect(topLeftFinder);
+      final editorFinder = find.byKey(
+        const ValueKey<String>('memos-inline-compose-text-field'),
+      );
+      await tester.tap(editorFinder);
+      await tester.enterText(editorFinder, 'Resize preserves draft');
+      await tester.pump();
+      expect(
+        tester.widget<TextField>(editorFinder).focusNode?.hasFocus,
+        isTrue,
+      );
+
+      await tester.drag(
+        topLeftFinder,
+        const Offset(56, 36),
+        warnIfMissed: false,
+      );
+      await _pumpScreenFrames(tester);
+
+      final savedLayout = devicePrefsRepo.stored.homeInlineComposePanelLayout;
+      expect(savedLayout, isNotNull);
+      expect(savedLayout!.width, lessThan(initialLayout.width));
+      expect(savedLayout.editorHeight, greaterThan(0));
+      expect(savedLayout.editorHeight, lessThan(initialLayout.editorHeight));
+      expect(savedLayout.xRatio, greaterThan(0));
+      expect(savedLayout.yRatio, greaterThan(0));
+
+      final draggedTopLeftRect = tester.getRect(topLeftFinder);
+      final draggedRightRect = tester.getRect(rightFinder);
+      expect(draggedTopLeftRect.left, greaterThan(initialTopLeftRect.left));
+      expect(
+        draggedTopLeftRect.top,
+        greaterThanOrEqualTo(initialTopLeftRect.top),
+      );
+      expect(
+        tester.widget<TextField>(editorFinder).controller?.text,
+        'Resize preserves draft',
+      );
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: Stream.value(<LocalMemo>[
+            _buildMemo(uid: 'memo-1', content: 'Memo'),
+          ]),
+          enableCompose: true,
+          enableDesktopResizableHomeInlineCompose: true,
+          devicePreferencesRepository: devicePrefsRepo,
+        ),
+      );
+      await _pumpScreenFrames(tester);
+
+      final restoredTopLeftRect = tester.getRect(topLeftFinder);
+      final restoredRightRect = tester.getRect(rightFinder);
+      expect(restoredTopLeftRect.left, closeTo(draggedTopLeftRect.left, 2));
+      expect(restoredTopLeftRect.top, closeTo(draggedTopLeftRect.top, 2));
+      expect(restoredRightRect.right, closeTo(draggedRightRect.right, 2));
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
 
   testWidgets('home compose restores saved ratio inside smaller viewport', (
     tester,
@@ -2387,6 +2553,7 @@ Widget _buildHarness({
   HomeScreenPresentation presentation = HomeScreenPresentation.standalone,
   HomeEmbeddedNavigationHost? embeddedNavigationHost,
   bool hidePrimaryComposeFab = false,
+  bool seedDevicePreferencesSynchronously = false,
   MemosListRouteNoteInputPresenter? showNoteInputSheet,
   MemosListRouteVoiceRecordOverlayPresenter? showVoiceRecordOverlay,
   List<Override> overrides = const <Override>[],
@@ -2403,11 +2570,18 @@ Widget _buildHarness({
       appPreferencesProvider.overrideWith(
         (ref) => _TestAppPreferencesController(ref),
       ),
+      if (seedDevicePreferencesSynchronously)
+        devicePreferencesLoadedProvider.overrideWith((ref) => true),
       devicePreferencesProvider.overrideWith(
-        (ref) => _TestDevicePreferencesController(
-          ref,
-          resolvedDevicePreferencesRepository,
-        ),
+        (ref) => seedDevicePreferencesSynchronously
+            ? _SynchronousTestDevicePreferencesController(
+                ref,
+                resolvedDevicePreferencesRepository,
+              )
+            : _TestDevicePreferencesController(
+                ref,
+                resolvedDevicePreferencesRepository,
+              ),
       ),
       locationSettingsProvider.overrideWith(
         (ref) => _TestLocationSettingsController(ref),
@@ -2775,6 +2949,16 @@ class _TestDevicePreferencesController extends DevicePreferencesController {
           ref.read(devicePreferencesLoadedProvider.notifier).state = true;
         },
       );
+}
+
+class _SynchronousTestDevicePreferencesController
+    extends _TestDevicePreferencesController {
+  _SynchronousTestDevicePreferencesController(
+    Ref ref,
+    _TestDevicePreferencesRepository repository,
+  ) : super(ref, repository) {
+    state = repository.stored;
+  }
 }
 
 class _TestLocationSettingsController extends LocationSettingsController {
