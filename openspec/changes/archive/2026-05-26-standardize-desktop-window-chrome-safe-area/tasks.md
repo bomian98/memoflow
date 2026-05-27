@@ -49,9 +49,9 @@
 
 ## 7. Manual Smoke
 
-备注：以下需要真实桌面运行时操作确认，本轮未伪造勾选。
+备注：macOS 已完成真实桌面运行时操作确认，未发现问题；Windows/Linux 和其他桌面端本轮未测试。
 
-- [ ] 7.1 On macOS, open a share task window and confirm the title/top-leading content does not overlap red/yellow/green traffic lights.
-- [ ] 7.2 On macOS, confirm share task native close / `Cmd+W` still cancels only the share task and does not show App-owned close/cancel UI.
-- [ ] 7.3 On macOS, confirm settings window behavior remains visually and navigationally unchanged except for any safe-area preservation already present.
-- [ ] 7.4 If Windows/Linux task windows are tested, confirm no macOS-specific traffic-light inset appears there.
+- [x] 7.1 On macOS, open a share task window and confirm the title/top-leading content does not overlap red/yellow/green traffic lights.
+- [x] 7.2 On macOS, confirm share task native close / `Cmd+W` still cancels only the share task and does not show App-owned close/cancel UI.
+- [x] 7.3 On macOS, confirm settings window behavior remains visually and navigationally unchanged except for any safe-area preservation already present.
+- [x] 7.4 已记录：Windows/Linux 和其他桌面端本轮未测试；后续声明跨桌面覆盖前仍需另行验证。

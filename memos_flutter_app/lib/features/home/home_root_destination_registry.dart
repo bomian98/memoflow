@@ -11,6 +11,7 @@ import '../resources/resources_screen.dart';
 import '../review/ai_summary_screen.dart';
 import '../review/daily_review_screen.dart';
 import '../settings/settings_screen.dart';
+import 'desktop_home_inline_compose_resize_capability.dart';
 import 'home_navigation_host.dart';
 
 typedef DebugHomeRootScreenBuilder =
@@ -152,7 +153,11 @@ Widget buildHomeRootScreen({
         enableCompose: true,
         showFilterTagChip: hasMemosTag,
         enableDesktopResizableHomeInlineCompose:
-            presentation == HomeScreenPresentation.standalone,
+            shouldEnableDesktopHomeInlineComposeResize(
+              platform: Theme.of(context).platform,
+              presentation: presentation,
+              navigationHost: navigationHost,
+            ),
         presentation: presentation,
         embeddedNavigationHost: navigationHost,
         hidePrimaryComposeFab:

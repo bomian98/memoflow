@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/app_motion.dart';
@@ -9,6 +10,7 @@ import '../../i18n/strings.g.dart';
 
 const int startupTypewriterMsPerChar = 160;
 const int startupPostTypewriterHoldMs = 500;
+const String _macosStartupLogoAsset = 'assets/splash/splash_logo_macos.png';
 
 int startupMinimumVisibleMsFor({
   required BuildContext context,
@@ -34,7 +36,6 @@ class _StartupScreenState extends State<StartupScreen>
     with TickerProviderStateMixin {
   static const Color backgroundColor = SplashTokens.backgroundColor;
   static const Color primaryColor = SplashTokens.brandColor;
-  static const String _logoAsset = SplashTokens.logoAsset;
   static const int _typewriterMsPerChar = startupTypewriterMsPerChar;
   static const Duration _liquidLoopDuration = Duration(milliseconds: 2600);
   static const Duration _liquidStartDelay = Duration(milliseconds: 180);
@@ -46,6 +47,12 @@ class _StartupScreenState extends State<StartupScreen>
   int? _lastSloganLength;
   bool _hasRenderedFirstFrame = false;
   bool _isLiquidOverlayEnabled = false;
+
+  bool get _usesMacosStartupLogo =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
+
+  String get _logoAsset =>
+      _usesMacosStartupLogo ? _macosStartupLogoAsset : SplashTokens.logoAsset;
 
   @override
   void initState() {
@@ -175,8 +182,10 @@ class _StartupScreenState extends State<StartupScreen>
         IgnorePointer(
           child: AnimatedBuilder(
             animation: controller,
-            builder: (context, child) =>
-                _StartupLiquidOverlay(progress: controller.value),
+            builder: (context, child) => _StartupLiquidOverlay(
+              progress: controller.value,
+              logoAsset: _logoAsset,
+            ),
           ),
         ),
       ],
@@ -195,7 +204,8 @@ class _StartupScreenState extends State<StartupScreen>
   Widget build(BuildContext context) {
     final shortestSide = MediaQuery.sizeOf(context).shortestSide;
     final scale = (shortestSide / 375).clamp(0.85, 1.1).toDouble();
-    final logoSize = 176 * scale;
+    final logoBaseSize = _usesMacosStartupLogo ? 220.0 : 176.0;
+    final logoSize = logoBaseSize * scale;
     final sloganSize = 14 * scale;
     final memoFlowSize = (sloganSize - (2 * scale)).clamp(10.0, sloganSize);
     final sloganPadding = 48 * scale;
@@ -254,12 +264,15 @@ class _StartupScreenState extends State<StartupScreen>
 }
 
 class _StartupLiquidOverlay extends StatelessWidget {
-  const _StartupLiquidOverlay({required this.progress});
+  const _StartupLiquidOverlay({
+    required this.progress,
+    required this.logoAsset,
+  });
 
   final double progress;
+  final String logoAsset;
 
   static const Color _primaryColor = SplashTokens.brandColor;
-  static const String _logoAsset = SplashTokens.logoAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -332,7 +345,7 @@ class _StartupLiquidOverlay extends StatelessWidget {
         ).createShader(bounds);
       },
       child: Image.asset(
-        _logoAsset,
+        logoAsset,
         fit: BoxFit.contain,
         filterQuality: FilterQuality.high,
       ),

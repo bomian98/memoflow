@@ -34,6 +34,7 @@ import '../../data/models/app_preferences.dart';
 import '../../data/models/compose_draft.dart';
 import '../../data/models/device_preferences.dart';
 import '../../data/models/local_memo.dart';
+import '../../data/models/memo_toolbar_preferences.dart';
 import '../../data/models/shortcut.dart';
 import '../../data/repositories/scene_micro_guide_repository.dart';
 import '../../platform/platform_route.dart';
@@ -67,6 +68,7 @@ import '../../state/system/session_provider.dart';
 import '../../state/tags/tag_color_lookup.dart';
 import '../explore/explore_screen.dart';
 import '../home/app_drawer.dart';
+import '../home/desktop_home_inline_compose_resize_capability.dart';
 import '../home/home_navigation_host.dart';
 import '../notifications/notifications_screen.dart';
 import '../reminders/memo_reminder_editor_screen.dart';
@@ -168,7 +170,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     with WindowListener {
   static const int _initialPageSize = 200;
   static const int _pageStep = 200;
-  static const double _homeInlineComposeHitZoneExtent = 8;
+  static const double _homeInlineComposeHitZoneExtent = 12;
   static const double _homeInlineComposeViewportMargin = 20;
   static const double _homeInlineComposeMinWidth = 420;
   static const double _homeInlineComposeDefaultWidth = 620;
@@ -352,9 +354,17 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       defaultTargetPlatform == TargetPlatform.windows;
 
   bool get _enableResizableHomeInlineCompose =>
-      !kIsWeb &&
-      defaultTargetPlatform == TargetPlatform.windows &&
-      widget.enableDesktopResizableHomeInlineCompose;
+      shouldEnableDesktopHomeInlineComposeResizeForMemosList(
+        platform: Theme.of(context).platform,
+        presentation: widget.presentation,
+        navigationHost: widget.embeddedNavigationHost,
+        explicitlyEnabled: widget.enableDesktopResizableHomeInlineCompose,
+        showDrawer: widget.showDrawer,
+        enableCompose: widget.enableCompose,
+        state: widget.state,
+        tag: widget.tag,
+        dayFilter: widget.dayFilter,
+      );
 
   bool get _isWindowsDesktopTarget =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
@@ -883,6 +893,32 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     return math.min(_homeInlineComposeMaxEditorHeight, availableHeight * 0.5);
   }
 
+  double _estimateHomeInlinePanelChromeHeight(
+    MemoToolbarPreferences toolbarPreferences,
+  ) {
+    final topActions = toolbarPreferences.visibleItemIdsForRow(
+      MemoToolbarRow.top,
+    );
+    final bottomActions = toolbarPreferences.visibleItemIdsForRow(
+      MemoToolbarRow.bottom,
+    );
+    var toolbarActionsHeight = 0.0;
+    if (topActions.isNotEmpty) {
+      toolbarActionsHeight += 32;
+    }
+    if (topActions.isNotEmpty && bottomActions.isNotEmpty) {
+      toolbarActionsHeight += 6;
+    }
+    if (bottomActions.isNotEmpty) {
+      toolbarActionsHeight += 32;
+    }
+    if (toolbarActionsHeight > 0) {
+      toolbarActionsHeight += 4;
+    }
+    final toolbarHeight = math.max(30.0, toolbarActionsHeight);
+    return 12 + 10 + 10 + toolbarHeight + 4;
+  }
+
   double _clampRatio(double value) => value.clamp(0, 1).toDouble();
 
   double _offsetFromRatio(double ratio, double freeSpace) {
@@ -963,21 +999,21 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     });
   }
 
-  void _maybeRestoreHomeInlinePanelLayout({
-    required double availableWidth,
-    required double availableHeight,
-  }) {
-    if (_homeInlinePanelRestored ||
-        !_homeInlinePanelMetricsReady ||
-        availableWidth <= 0 ||
-        availableHeight <= 0) {
-      return;
-    }
-    final saved = ref.read(
+  HomeInlineComposePanelLayoutPreference? _readHomeInlinePanelSavedLayout() {
+    return ref.read(
       devicePreferencesProvider.select(
         (value) => value.homeInlineComposePanelLayout,
       ),
     );
+  }
+
+  void _setHomeInlinePanelLayoutFromPreference({
+    required HomeInlineComposePanelLayoutPreference? saved,
+    required double availableWidth,
+    required double availableHeight,
+    required double chromeHeight,
+    required bool resetUnavailableAxes,
+  }) {
     final maxWidth = _resolveHomeInlineMaxWidth(availableWidth);
     final maxEditorHeight = _resolveHomeInlineMaxEditorHeight(availableHeight);
     final minWidth = math.min(_homeInlineComposeMinWidth, maxWidth);
@@ -994,24 +1030,67 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
                 _homeInlineComposeMinEditorHeight)
             .clamp(minEditorHeight, maxEditorHeight)
             .toDouble();
-    final panelHeight = _homeInlinePanelChromeHeight + restoredEditorHeight;
+    final panelHeight = chromeHeight + restoredEditorHeight;
     final freeWidth = _resolveHomeInlineHorizontalFreeWidth(
       availableWidth,
       restoredWidth,
     );
     final freeHeight = math.max(0, availableHeight - panelHeight);
+    _homeInlinePanelWidth = restoredWidth;
+    _homeInlinePanelEditorHeight = restoredEditorHeight;
+    _homeInlinePanelXRatio = _clampRatio(saved?.xRatio ?? 0);
+    _homeInlinePanelYRatio = _clampRatio(saved?.yRatio ?? 0);
+    if (resetUnavailableAxes && freeWidth <= 0) {
+      _homeInlinePanelXRatio = 0;
+    }
+    if (resetUnavailableAxes && freeHeight <= 0) {
+      _homeInlinePanelYRatio = 0;
+    }
+    _homeInlinePanelRestored = true;
+  }
+
+  void _primeHomeInlinePanelLayout({
+    required bool devicePreferencesLoaded,
+    required double availableWidth,
+    required double availableHeight,
+    required double estimatedChromeHeight,
+  }) {
+    if (_homeInlinePanelRestored ||
+        _homeInlinePanelMetricsReady ||
+        !devicePreferencesLoaded ||
+        availableWidth <= 0 ||
+        availableHeight <= 0) {
+      return;
+    }
+    _homeInlinePanelChromeHeight = estimatedChromeHeight;
+    _homeInlinePanelMetricsReady = true;
+    _setHomeInlinePanelLayoutFromPreference(
+      saved: _readHomeInlinePanelSavedLayout(),
+      availableWidth: availableWidth,
+      availableHeight: availableHeight,
+      chromeHeight: estimatedChromeHeight,
+      resetUnavailableAxes: false,
+    );
+  }
+
+  void _maybeRestoreHomeInlinePanelLayout({
+    required double availableWidth,
+    required double availableHeight,
+  }) {
+    if (_homeInlinePanelRestored ||
+        !_homeInlinePanelMetricsReady ||
+        availableWidth <= 0 ||
+        availableHeight <= 0) {
+      return;
+    }
     _setStateWithDiagnostics('home_inline_restore_layout', () {
-      _homeInlinePanelWidth = restoredWidth;
-      _homeInlinePanelEditorHeight = restoredEditorHeight;
-      _homeInlinePanelXRatio = _clampRatio(saved?.xRatio ?? 0);
-      _homeInlinePanelYRatio = _clampRatio(saved?.yRatio ?? 0);
-      if (freeWidth <= 0) {
-        _homeInlinePanelXRatio = 0;
-      }
-      if (freeHeight <= 0) {
-        _homeInlinePanelYRatio = 0;
-      }
-      _homeInlinePanelRestored = true;
+      _setHomeInlinePanelLayoutFromPreference(
+        saved: _readHomeInlinePanelSavedLayout(),
+        availableWidth: availableWidth,
+        availableHeight: availableHeight,
+        chromeHeight: _homeInlinePanelChromeHeight,
+        resetUnavailableAxes: true,
+      );
     });
   }
 
@@ -3697,6 +3776,15 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
                     final availableHeight = measuredAvailableHeight > 0
                         ? measuredAvailableHeight
                         : _effectiveHomeInlineAvailableHeight(context);
+                    _primeHomeInlinePanelLayout(
+                      devicePreferencesLoaded: devicePreferencesLoaded,
+                      availableWidth: availableWidth,
+                      availableHeight: availableHeight,
+                      estimatedChromeHeight:
+                          _estimateHomeInlinePanelChromeHeight(
+                            toolbarPreferences,
+                          ),
+                    );
                     if (!_homeInlinePanelRestored &&
                         devicePreferencesLoaded &&
                         _homeInlinePanelMetricsReady &&
@@ -3747,6 +3835,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
                         minHeight: minHeight,
                         maxHeight: maxHeight,
                         hitZoneExtent: _homeInlineComposeHitZoneExtent,
+                        showHandleAffordance: true,
                         boundaryInsets: const EdgeInsets.symmetric(
                           horizontal: _homeInlineComposeViewportMargin,
                         ),

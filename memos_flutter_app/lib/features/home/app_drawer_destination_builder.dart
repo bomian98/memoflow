@@ -18,6 +18,7 @@ import '../stats/stats_screen.dart';
 import '../sync/sync_queue_screen.dart';
 import '../tags/tags_screen.dart';
 import 'app_drawer.dart';
+import 'desktop_home_inline_compose_resize_capability.dart';
 import 'home_navigation_host.dart';
 
 bool shouldUseDesktopHomeUtilityDestination({
@@ -35,14 +36,27 @@ bool shouldUseDesktopHomeUtilityDestination({
       target == PlatformTarget.linux;
 }
 
-MemosListScreen buildDesktopHomeUtilityDestination(
-  DesktopHomeUtilityView utility,
-) {
+MemosListScreen buildDesktopHomeUtilityDestination({
+  required BuildContext context,
+  required DesktopHomeUtilityView utility,
+  HomeScreenPresentation presentation = HomeScreenPresentation.standalone,
+  HomeEmbeddedNavigationHost? navigationHost,
+}) {
   return MemosListScreen(
     title: 'MemoFlow',
     state: 'NORMAL',
     showDrawer: true,
     enableCompose: true,
+    presentation: presentation,
+    embeddedNavigationHost: navigationHost,
+    hidePrimaryComposeFab:
+        presentation == HomeScreenPresentation.embeddedBottomNav,
+    enableDesktopResizableHomeInlineCompose:
+        shouldEnableDesktopHomeInlineComposeResize(
+          platform: Theme.of(context).platform,
+          presentation: presentation,
+          navigationHost: navigationHost,
+        ),
     initialDesktopUtilityView: utility,
   );
 }
@@ -62,7 +76,12 @@ bool openDesktopHomeUtilityDestination({
   }
   closeDrawerThenPushReplacement(
     context,
-    buildDesktopHomeUtilityDestination(utility),
+    buildDesktopHomeUtilityDestination(
+      context: context,
+      utility: utility,
+      presentation: presentation,
+      navigationHost: navigationHost,
+    ),
   );
   return true;
 }
@@ -103,6 +122,12 @@ Widget buildDrawerDestinationScreen({
       embeddedNavigationHost: navigationHost,
       hidePrimaryComposeFab:
           presentation == HomeScreenPresentation.embeddedBottomNav,
+      enableDesktopResizableHomeInlineCompose:
+          shouldEnableDesktopHomeInlineComposeResize(
+            platform: Theme.of(context).platform,
+            presentation: presentation,
+            navigationHost: navigationHost,
+          ),
     ),
     AppDrawerDestination.syncQueue =>
       shouldUseDesktopHomeUtilityDestination(
@@ -110,7 +135,12 @@ Widget buildDrawerDestinationScreen({
             presentation: presentation,
             navigationHost: navigationHost,
           )
-          ? buildDesktopHomeUtilityDestination(DesktopHomeUtilityView.syncQueue)
+          ? buildDesktopHomeUtilityDestination(
+              context: context,
+              utility: DesktopHomeUtilityView.syncQueue,
+              presentation: presentation,
+              navigationHost: navigationHost,
+            )
           : SyncQueueScreen(
               presentation: presentation,
               embeddedNavigationHost: navigationHost,

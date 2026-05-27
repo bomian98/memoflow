@@ -56,6 +56,7 @@ class DesktopResizablePanelShell extends StatefulWidget {
     required this.hitZoneExtent,
     this.boundaryInsets = EdgeInsets.zero,
     this.enabledHandles,
+    this.showHandleAffordance = false,
     required this.onChanged,
     required this.onChangeEnd,
     required this.child,
@@ -70,6 +71,7 @@ class DesktopResizablePanelShell extends StatefulWidget {
   final double hitZoneExtent;
   final EdgeInsets boundaryInsets;
   final Set<DesktopResizeHandle>? enabledHandles;
+  final bool showHandleAffordance;
   final ValueChanged<DesktopResizablePanelRect> onChanged;
   final ValueChanged<DesktopResizablePanelRect> onChangeEnd;
   final Widget child;
@@ -92,6 +94,9 @@ class _DesktopResizablePanelShellState
     final rect = widget.rect;
     final hitZoneExtent = widget.hitZoneExtent;
     final cornerExtent = hitZoneExtent * 2;
+    final affordanceColor = Theme.of(context).colorScheme.onSurface.withValues(
+      alpha: Theme.of(context).brightness == Brightness.dark ? 0.16 : 0.08,
+    );
 
     return SizedBox.fromSize(
       size: widget.viewportSize,
@@ -169,7 +174,40 @@ class _DesktopResizablePanelShellState
             width: cornerExtent,
             height: cornerExtent,
           ),
+          if (widget.showHandleAffordance)
+            _buildCornerAffordance(
+              handle: DesktopResizeHandle.bottomRight,
+              color: affordanceColor,
+              left: rect.right - 18,
+              top: rect.bottom - 18,
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCornerAffordance({
+    required DesktopResizeHandle handle,
+    required Color color,
+    required double left,
+    required double top,
+  }) {
+    final enabledHandles = widget.enabledHandles;
+    if (enabledHandles != null && !enabledHandles.contains(handle)) {
+      return const SizedBox.shrink();
+    }
+    return Positioned(
+      left: left,
+      top: top,
+      width: 18,
+      height: 18,
+      child: IgnorePointer(
+        child: CustomPaint(
+          key: const ValueKey<String>(
+            'desktop-resizable-panel-bottomRight-affordance',
+          ),
+          painter: _DesktopResizeCornerAffordancePainter(color: color),
+        ),
       ),
     );
   }
@@ -328,5 +366,34 @@ class _DesktopResizablePanelShellState
       width: (right - left).toDouble(),
       height: (bottom - top).toDouble(),
     );
+  }
+}
+
+class _DesktopResizeCornerAffordancePainter extends CustomPainter {
+  const _DesktopResizeCornerAffordancePainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 3; i += 1) {
+      final inset = 4.0 + i * 4.0;
+      canvas.drawLine(
+        Offset(size.width - inset, size.height - 2),
+        Offset(size.width - 2, size.height - inset),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(
+    covariant _DesktopResizeCornerAffordancePainter oldDelegate,
+  ) {
+    return oldDelegate.color != color;
   }
 }
