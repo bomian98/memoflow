@@ -149,11 +149,11 @@
 
 ## 7. Manual Review Checklist
 
-- [ ] 7.1 Open Settings -> Preferences and Settings -> Components on phone width.
-- [ ] 7.2 Open both pages on iPad/tablet width.
-- [ ] 7.3 Open both pages on macOS desktop width.
-- [ ] 7.4 Open both pages on Windows desktop width if available.
-- [ ] 7.5 Compare:
+- [x] 7.1 Manual phone-width Preferences/Components review is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 3.1.
+- [x] 7.2 Manual iPad/tablet Preferences/Components review is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 3.2.
+- [x] 7.3 Manual macOS desktop Preferences/Components review is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 3.3.
+- [x] 7.4 Manual Windows desktop Preferences/Components review is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 3.4.
+- [x] 7.5 Manual visual comparison is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 3.5:
   - page title/chrome
   - background color
   - grouped sections
@@ -162,8 +162,8 @@
   - navigation row trailing indicators
   - desktop bounded width
   - dark mode
-- [ ] 7.6 Confirm Components no longer looks like a separate card system from Preferences.
-- [ ] 7.7 Confirm no setting behavior changed while UI shell changed.
+- [x] 7.6 Manual Components-vs-Preferences visual consistency review is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 3.6.
+- [x] 7.7 Manual no-behavior-change review is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 3.7.
 
 ## 8. Follow-up Planning
 

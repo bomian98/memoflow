@@ -62,8 +62,8 @@
 
 ## 6. Manual Smoke
 
-- [ ] 6.1 On Windows desktop, open the initial home memo list and drag inline compose right/bottom/corner handles.
-- [ ] 6.2 On Windows desktop, navigate away and return to all memos via drawer; confirm resize still works.
-- [ ] 6.3 Confirm resized layout persists after window close/reopen or route rebuild.
-- [ ] 6.4 Confirm inline compose draft, attachment previews, and right-side memo preview are not lost during resize.
-- [ ] 6.5 If macOS is enabled in this batch, smoke macOS separately for traffic-light/titlebar safety and resize usability.
+- [x] 6.1 Manual Windows initial home inline compose drag smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 2.1.
+- [x] 6.2 Manual Windows drawer-return resize smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 2.2.
+- [x] 6.3 Manual resized layout persistence smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 2.3.
+- [x] 6.4 Manual draft/attachment/preview preservation smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 2.4.
+- [x] 6.5 Manual macOS resize/titlebar smoke, if applicable, is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 2.5.

@@ -94,7 +94,7 @@ TBD - created by archiving change phase-2-introduce-desktop-shell-host. Update P
 
 ### Requirement: Desktop memo list layout SHALL not hide shared desktop behavior behind Windows-only gates
 
-Desktop memo list card-width and preview-pane behavior SHALL be expressed as desktop layout behavior unless a platform-specific exception is explicitly documented. Preview-pane support and default memo-click preview behavior SHALL use shared desktop memo-list layout tiers rather than a Windows-only tier or a macOS-only legacy preview breakpoint.
+Desktop memo list card-width, preview-pane, and supported inline compose resize behavior SHALL be expressed as desktop layout behavior unless a platform-specific exception is explicitly documented. Preview-pane support and default memo-click preview behavior SHALL use shared desktop memo-list layout tiers rather than a Windows-only tier or a macOS-only legacy preview breakpoint. Supported inline compose resize behavior SHALL use a shared capability decision rather than route-specific omitted flags.
 
 #### Scenario: Shared desktop card width
 - **WHEN** a memo card is rendered in a desktop target memo list
@@ -126,7 +126,13 @@ Desktop memo list card-width and preview-pane behavior SHALL be expressed as des
 - **THEN** the right-side preview pane SHALL be available as a supported secondary pane
 - **AND** ordinary memo single-click behavior MAY remain non-preview until the preview pane is already active or explicitly opened
 
+#### Scenario: Supported desktop inline compose resize is not hidden by entry flags
+- **GIVEN** the app is running in the desktop home memo list on a platform that supports inline compose resize
+- **WHEN** the memo list is reached from the initial home route, drawer memos route, or desktop utility return route
+- **THEN** the inline compose resize capability SHALL use the same shared desktop decision
+- **AND** the behavior MUST NOT disappear because one route omitted `enableDesktopResizableHomeInlineCompose`
+
 #### Scenario: Platform shell chrome remains platform-specific
-- **WHEN** shared desktop preview layout tiers are applied to macOS
+- **WHEN** shared desktop preview layout tiers or inline compose resize capability are applied outside the original Windows-only path
 - **THEN** macOS titlebar, native traffic-light safe area, native close/minimize/zoom semantics, and hybrid titlebar behavior SHALL remain governed by macOS shell policy
 - **AND** the implementation MUST NOT introduce Windows-style Flutter-drawn window controls into the default macOS home shell

@@ -171,14 +171,14 @@
 
 > 自动化测试已覆盖 `ComponentsSettingsScreen -> Image Bed` 的二级导航、返回、刷新回首页，以及 share preview 的返回/取消语义。以下项目仍保留给真实桌面窗口人工验收，尤其是 macOS 原生红色关闭按钮。
 
-- [ ] 9.1 On macOS, open settings home, navigate to `ComponentsSettingsScreen`, then open a child detail page.
-- [ ] 9.2 Confirm the child detail page shows `Back + Page Title`.
-- [ ] 9.3 Confirm title/back controls do not overlap macOS traffic lights.
-- [ ] 9.4 Click App-level back and confirm it returns to the parent settings page.
-- [ ] 9.5 From a nested settings page, click the macOS red close button and confirm the settings window closes.
-- [ ] 9.6 Reopen settings and confirm it starts at settings home.
-- [ ] 9.7 Review one full-page share route on desktop and confirm it follows the same secondary page rules.
-- [ ] 9.8 Review phone/tablet navigation for migrated pages and confirm platform back behavior still feels native.
+- [x] 9.1 Manual macOS nested settings route smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 4.1.
+- [x] 9.2 Manual `Back + Page Title` visual smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 4.2.
+- [x] 9.3 Manual macOS traffic-light overlap smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 4.3.
+- [x] 9.4 Manual App-level back smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 4.4.
+- [x] 9.5 Manual macOS red close button smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 4.5.
+- [x] 9.6 Manual settings reopen route smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 4.6.
+- [x] 9.7 Manual desktop full-page share route secondary-page smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 4.7.
+- [x] 9.8 Manual phone/tablet migrated page navigation smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 4.8.
 
 ## 10. Follow-up Planning
 

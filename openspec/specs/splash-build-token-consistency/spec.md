@@ -1,3 +1,7 @@
+## Purpose
+
+确保原生启动页 logo token、提交产物、打包脚本和发布工作流使用同一个 splash token 来源，避免发布包使用陈旧或错误的启动页资源。
+
 ## Requirements
 
 ### Requirement: Native splash logo token

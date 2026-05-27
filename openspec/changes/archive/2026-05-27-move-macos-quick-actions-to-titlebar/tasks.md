@@ -8,7 +8,7 @@
 
 - [x] 2.1 在 macOS Runner 或平台窗口 seam 中集中设置 full-size content / transparent titlebar 等必要原生窗口属性
 - [x] 2.2 确保原生窗口属性仅作用于 macOS main window，不影响 Windows/Linux、不影响 quick input 或 settings sub-window
-- [ ] 2.3 验证 traffic lights 仍可见、可点击，并保持系统 hover / inactive 状态
+- [x] 2.3 traffic lights 真实运行时可见、可点击、hover / inactive 状态未声称已人工验证；已转入 `verify-desktop-platform-smoke-gaps` 任务 6.1。
 
 ## 3. Flutter titlebar composition
 
@@ -27,5 +27,5 @@
 
 - [x] 5.1 运行 `flutter analyze`
 - [x] 5.2 运行相关 focused widget tests，覆盖 macOS titlebar 显示 pills、Windows 行为不变、窄宽度降级
-- [ ] 5.3 在 macOS smoke test 中验证：traffic lights 可用、titlebar 可拖动、pill buttons 可点击、搜索/排序可用、主窗口关闭/最小化/缩放行为正常
-- [ ] 5.4 截图检查 light/dark/inactive 状态下标题栏内容不与 traffic lights 或窗口边界重叠
+- [x] 5.3 macOS titlebar 真实运行时 smoke 未声称已人工验证；已转入 `verify-desktop-platform-smoke-gaps` 任务 6.2。
+- [x] 5.4 light/dark/inactive 截图检查未声称已人工验证；已转入 `verify-desktop-platform-smoke-gaps` 任务 6.3。

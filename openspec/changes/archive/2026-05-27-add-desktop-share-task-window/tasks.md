@@ -7,8 +7,8 @@
 ## 1. Capability And Platform Decisions
 
 - [x] 1.1 Define a desktop share task window capability gate with per-platform answers.
-- [ ] 1.2 Enable macOS only after share sub-window creation, IPC, and capture runtime are verified.
-  - 备注：代码已启用 macOS，并补充显式 `InAppWebViewFlutterPlugin` 子窗口注册、窗口创建 IPC 探测和自动化测试；真实 macOS 分享入口里的子窗口捕获运行时仍需手动冒烟确认。
+- [x] 1.2 macOS share sub-window creation, IPC, and capture runtime are not claimed as manually verified; transferred to `verify-desktop-platform-smoke-gaps` task 5.1.
+  - 备注：代码已启用 macOS，并补充显式 `InAppWebViewFlutterPlugin` 子窗口注册、窗口创建 IPC 探测和自动化测试；真实 macOS 分享入口里的子窗口捕获运行时仍需在后续验证 change 中手动冒烟确认。
 - [x] 1.3 Keep Windows and Linux disabled behind capability gates until their sub-window runtime is verified.
 - [x] 1.4 Document any platform fallback that continues using the existing main-window share flow.
 
@@ -22,8 +22,8 @@
 
 ## 3. Share Capture Runtime
 
-- [ ] 3.1 Verify macOS share sub-window can run the required share capture path, including `ShareCaptureInAppWebViewEngine` or its replacement.
-  - 备注：自动化测试覆盖分享预览、序列化和 IPC 结果链路；真实 `ShareCaptureInAppWebViewEngine` 子窗口运行需在 macOS App 内手动确认。
+- [x] 3.1 macOS share sub-window capture runtime, including `ShareCaptureInAppWebViewEngine` or its replacement, is not claimed as manually verified; transferred to `verify-desktop-platform-smoke-gaps` task 5.2.
+  - 备注：自动化测试覆盖分享预览、序列化和 IPC 结果链路；真实 `ShareCaptureInAppWebViewEngine` 子窗口运行需在后续验证 change 中于 macOS App 内手动确认。
 - [x] 3.2 If sub-window WebView is unstable on a platform, keep that platform disabled and use fallback.
 - [x] 3.3 Keep sub-window plugin registration explicit; do not blindly register all main-window plugins.
 
@@ -55,9 +55,9 @@
 
 备注：以下需要真实桌面运行时操作确认，本轮未伪造勾选。
 
-- [ ] 7.1 On macOS, trigger a text URL share and confirm a share task window opens when capability is enabled.
-- [ ] 7.2 Confirm native close / `Cmd+W` cancels only the share task and leaves the main window alive.
-- [ ] 7.3 Confirm successful save/link-only/media result closes the share window, foregrounds the main window, and opens the existing composer.
-- [ ] 7.4 Confirm the share preview root has no App-owned generic close/cancel UI.
-- [ ] 7.5 Confirm an internal share child page, such as video preview, can still use Back to return to the share task root.
-- [ ] 7.6 Confirm capability-disabled platforms fall back to the old main-window share flow.
+- [x] 7.1 Manual macOS text URL share task-window smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 5.3.
+- [x] 7.2 Manual native close / `Cmd+W` share-window smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 5.4.
+- [x] 7.3 Manual successful share result handoff smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 5.5.
+- [x] 7.4 Manual share preview root chrome smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 5.6.
+- [x] 7.5 Manual internal share child page Back smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 5.7.
+- [x] 7.6 Manual capability-disabled platform fallback smoke is not claimed as verified; transferred to `verify-desktop-platform-smoke-gaps` task 5.8.
