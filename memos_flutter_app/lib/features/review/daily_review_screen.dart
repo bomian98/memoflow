@@ -1768,29 +1768,13 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
                 embedded: embedded,
                 viewMode: viewMode,
               ),
-              leadingTitle: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (widget.presentation !=
-                      HomeScreenPresentation.embeddedBottomNav) ...[
-                    IconButton(
-                      tooltip: context.t.strings.legacy.msg_back,
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: _back,
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                  Flexible(
-                    child: Text(
-                      context.t.strings.legacy.msg_random_review,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ],
+              leadingTitle: Text(
+                context.t.strings.legacy.msg_random_review,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               trailing: IconButton(
                 tooltip: context.t.strings.legacy.msg_filter,

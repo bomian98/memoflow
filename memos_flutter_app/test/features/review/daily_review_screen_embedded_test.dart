@@ -103,6 +103,64 @@ void main() {
     },
   );
 
+  testWidgets('windows standalone daily review omits top-level back button', (
+    tester,
+  ) async {
+    LocaleSettings.setLocale(AppLocale.en);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appSessionProvider.overrideWith(
+            (ref) => _TestSessionController(hasAccount: false),
+          ),
+          memosApiProvider.overrideWith(
+            (ref) => MemosApi.unauthenticated(
+              Uri.parse('https://example.com'),
+              instanceProfile: InstanceProfile.empty(),
+            ),
+          ),
+          currentLocalLibraryProvider.overrideWith((ref) => null),
+          randomWalkDeckProvider.overrideWith(
+            (ref, query) => Stream.value(const <RandomWalkDeckEntry>[]),
+          ),
+          tagStatsProvider.overrideWith(
+            (ref) => Stream.value(const <TagStat>[]),
+          ),
+          tagColorLookupProvider.overrideWith(
+            (ref) => TagColorLookup(const []),
+          ),
+          syncCoordinatorProvider.overrideWith((ref) => _NoopSyncFacade()),
+          unreadNotificationCountProvider.overrideWith((ref) => 0),
+          syncQueuePendingCountProvider.overrideWith((ref) => Stream.value(0)),
+          syncQueueAttentionCountProvider.overrideWith(
+            (ref) => Stream.value(0),
+          ),
+        ],
+        child: TranslationProvider(
+          child: MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.windows),
+            locale: AppLocale.en.flutterLocale,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: const MediaQuery(
+              data: MediaQueryData(size: Size(1400, 900)),
+              child: DailyReviewScreen(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey<String>('windows-desktop-command-bar')),
+      findsOneWidget,
+    );
+    expect(find.byTooltip('Back'), findsNothing);
+    expect(find.byIcon(Icons.arrow_back), findsNothing);
+  });
+
   testWidgets('embedded daily review shows drawer menu button', (tester) async {
     LocaleSettings.setLocale(AppLocale.en);
 
