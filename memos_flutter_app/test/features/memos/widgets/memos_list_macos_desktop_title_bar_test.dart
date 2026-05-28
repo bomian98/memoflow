@@ -81,6 +81,45 @@ void main() {
     expect(find.byIcon(Icons.search), findsOneWidget);
   });
 
+  testWidgets('navigation button stays outside traffic-light area', (
+    tester,
+  ) async {
+    var navigationTapCount = 0;
+
+    await tester.pumpWidget(
+      _buildHarness(
+        width: 520,
+        child: _buildTitleBar(
+          navigationButton: IconButton(
+            key: const ValueKey<String>('macos-titlebar-navigation-button'),
+            tooltip: 'Navigation',
+            onPressed: () => navigationTapCount++,
+            icon: const Icon(Icons.menu_rounded),
+          ),
+        ),
+      ),
+    );
+
+    final navigationLeft = tester
+        .getTopLeft(
+          find.byKey(
+            const ValueKey<String>('macos-titlebar-navigation-button'),
+          ),
+        )
+        .dx;
+    final safeInsetWidth = tester
+        .getSize(find.byKey(kMemosListMacosTrafficSafeInsetKey))
+        .width;
+
+    expect(navigationLeft, greaterThanOrEqualTo(safeInsetWidth));
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('macos-titlebar-navigation-button')),
+    );
+
+    expect(navigationTapCount, 1);
+  });
+
   testWidgets('can omit bottom divider for hidden top-level chrome spacer', (
     tester,
   ) async {
@@ -120,6 +159,7 @@ Widget _buildTitleBar({
   List<HomeQuickActionChipData>? quickActions,
   VoidCallback? onOpenSearch,
   VoidCallback? onCloseSearch,
+  Widget? navigationButton,
 }) {
   return MemosListMacosDesktopTitleBar(
     isDark: false,
@@ -136,6 +176,7 @@ Widget _buildTitleBar({
     onCloseSearch: onCloseSearch ?? () {},
     searchTooltip: 'Search',
     cancelTooltip: 'Cancel',
+    navigationButton: navigationButton,
     sortButton: const Icon(Icons.sort),
   );
 }

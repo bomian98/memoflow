@@ -161,6 +161,63 @@ void main() {
     expect(find.byIcon(Icons.arrow_back), findsNothing);
   });
 
+  testWidgets('macOS expanded sidebar daily review omits duplicate title', (
+    tester,
+  ) async {
+    LocaleSettings.setLocale(AppLocale.en);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appSessionProvider.overrideWith(
+            (ref) => _TestSessionController(hasAccount: false),
+          ),
+          memosApiProvider.overrideWith(
+            (ref) => MemosApi.unauthenticated(
+              Uri.parse('https://example.com'),
+              instanceProfile: InstanceProfile.empty(),
+            ),
+          ),
+          currentLocalLibraryProvider.overrideWith((ref) => null),
+          randomWalkDeckProvider.overrideWith(
+            (ref, query) => Stream.value(const <RandomWalkDeckEntry>[]),
+          ),
+          tagStatsProvider.overrideWith(
+            (ref) => Stream.value(const <TagStat>[]),
+          ),
+          tagColorLookupProvider.overrideWith(
+            (ref) => TagColorLookup(const []),
+          ),
+          syncCoordinatorProvider.overrideWith((ref) => _NoopSyncFacade()),
+          unreadNotificationCountProvider.overrideWith((ref) => 0),
+          syncQueuePendingCountProvider.overrideWith((ref) => Stream.value(0)),
+          syncQueueAttentionCountProvider.overrideWith(
+            (ref) => Stream.value(0),
+          ),
+        ],
+        child: TranslationProvider(
+          child: MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.macOS),
+            locale: AppLocale.en.flutterLocale,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: const MediaQuery(
+              data: MediaQueryData(size: Size(1400, 900)),
+              child: DailyReviewScreen(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey<String>('apple-macos-page-shell')),
+      findsOneWidget,
+    );
+    expect(find.text('Random Review'), findsOneWidget);
+  });
+
   testWidgets('embedded daily review shows drawer menu button', (tester) async {
     LocaleSettings.setLocale(AppLocale.en);
 

@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:memos_flutter_app/core/app_motion_widgets.dart';
+import 'package:memos_flutter_app/core/desktop/window_chrome_safe_area.dart';
 import 'package:memos_flutter_app/core/memoflow_palette.dart';
 import 'package:memos_flutter_app/core/platform_layout.dart';
 import 'package:memos_flutter_app/core/theme_colors.dart';
@@ -104,6 +105,49 @@ void main() {
       expect(find.byIcon(Icons.crop_square_rounded), findsNothing);
       expect(find.byIcon(Icons.filter_none_rounded), findsNothing);
       expect(find.byIcon(Icons.close_rounded), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'macOS drawer memo list uses the shared rail shell on narrow desktop',
+    (tester) async {
+      await tester.pumpWidget(
+        TranslationProvider(
+          child: MaterialApp(
+            locale: AppLocale.en.flutterLocale,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            theme: ThemeData(platform: TargetPlatform.macOS),
+            home: _buildBodyScreen(
+              data: _buildBodyData(
+                visibleMemos: <LocalMemo>[_buildMemo('memo-1')],
+                layout: _buildLayout(
+                  showHeaderPillActions: true,
+                  useMacosDesktopTitleBar: true,
+                ),
+              ),
+              desktopDrawerPanelBuilder: (viewMode, embedded) => Container(
+                key: ValueKey<String>('memo-list-navigation-${viewMode.name}'),
+                color: Colors.blue,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final navigationFinder = find.byKey(
+        const ValueKey<String>('memo-list-navigation-rail'),
+      );
+
+      expect(
+        find.byKey(const ValueKey<String>('apple-macos-page-shell')),
+        findsOneWidget,
+      );
+      expect(find.byType(MemosListMacosDesktopTitleBar), findsOneWidget);
+      expect(navigationFinder, findsOneWidget);
+      expect(tester.getTopLeft(navigationFinder).dy, kMacosTitleBarHeight);
+      expect(find.byKey(const ValueKey('drawer-menu-button')), findsNothing);
     },
   );
 
@@ -836,6 +880,7 @@ Widget _buildBodyScreen({
   VoidCallback? onStopAiSearch,
   Widget? desktopPreviewPane,
   Widget? desktopPrimaryContentOverride,
+  DesktopDrawerPanelBuilder? desktopDrawerPanelBuilder,
 }) {
   final resolvedData = data ?? _buildBodyData();
   final resolvedShowBackToTopListenable =
@@ -887,6 +932,7 @@ Widget _buildBodyScreen({
     onCollapseFloatingMemo: () {},
     onScrollToTop: () {},
     quickActions: _buildQuickActions(),
+    desktopDrawerPanelBuilder: desktopDrawerPanelBuilder,
     onMinimize: () {},
     onToggleMaximize: () {},
     onClose: () {},

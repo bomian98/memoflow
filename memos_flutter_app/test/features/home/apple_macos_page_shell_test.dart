@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/core/desktop/window_chrome_safe_area.dart';
+import 'package:memos_flutter_app/core/platform_layout.dart';
 import 'package:memos_flutter_app/features/home/desktop/apple_macos_page_shell.dart';
 import 'package:memos_flutter_app/features/home/desktop/desktop_shell_host.dart';
 
@@ -26,6 +27,54 @@ void main() {
     );
 
     expect(navigationTop.dy, kMacosTitleBarHeight);
+  });
+
+  testWidgets('expanded sidebar uses memo list desktop drawer width', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_buildHarness(width: 1200));
+
+    final navigationSize = tester.getSize(
+      find.byKey(const ValueKey('nav-expandedSidebar')),
+    );
+
+    expect(navigationSize.width, kMemoFlowDesktopDrawerWidth);
+  });
+
+  testWidgets('toolbar spans full width and matches memo list height', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_buildHarness(width: 1200));
+
+    final toolbarFinder = find.byKey(
+      const ValueKey<String>('apple-macos-toolbar'),
+    );
+    final toolbarTopLeft = tester.getTopLeft(toolbarFinder);
+    final toolbarSize = tester.getSize(toolbarFinder);
+    final shellSize = tester.getSize(
+      find.byKey(const ValueKey<String>('apple-macos-page-shell')),
+    );
+
+    expect(toolbarTopLeft, Offset.zero);
+    expect(toolbarSize.width, shellSize.width);
+    expect(toolbarSize.height, kMacosTitleBarHeight);
+  });
+
+  testWidgets('uses the memo list side pane breakpoint', (tester) async {
+    await tester.pumpWidget(
+      _buildHarness(width: kMemoFlowDesktopSidePaneBreakpoint - 1),
+    );
+
+    expect(find.byKey(const ValueKey('nav-rail')), findsOneWidget);
+    expect(find.byKey(const ValueKey('nav-expandedSidebar')), findsNothing);
+
+    await tester.pumpWidget(
+      _buildHarness(width: kMemoFlowDesktopSidePaneBreakpoint),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('nav-expandedSidebar')), findsOneWidget);
+    expect(find.byKey(const ValueKey('nav-rail')), findsNothing);
   });
 
   testWidgets('expanded sidebar omits redundant top-level title', (

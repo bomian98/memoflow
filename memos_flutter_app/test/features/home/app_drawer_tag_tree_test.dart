@@ -260,6 +260,51 @@ void main() {
     expect(find.byTooltip('Tags'), findsOneWidget);
   });
 
+  testWidgets('drawer rail menu opens labeled destination panel', (
+    tester,
+  ) async {
+    AppDrawerDestination? selectedDestination;
+
+    await tester.pumpWidget(
+      _buildDrawerApp(
+        tagStats: const [
+          TagStat(tag: 'work', path: 'work', count: 1, tagId: 1),
+        ],
+        child: Scaffold(
+          body: AppDrawer(
+            selected: AppDrawerDestination.memos,
+            embedded: true,
+            viewMode: AppDrawerViewMode.rail,
+            onSelect: (destination) => selectedDestination = destination,
+            onSelectTag: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('desktop-navigation-rail-button-menu')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey<String>('desktop-navigation-rail-menu-panel')),
+      findsOneWidget,
+    );
+    expect(find.text('Draft Box'), findsOneWidget);
+    expect(find.text('Archive'), findsOneWidget);
+
+    await tester.tap(find.text('Archive'));
+    await tester.pumpAndSettle();
+
+    expect(selectedDestination, AppDrawerDestination.archived);
+    expect(
+      find.byKey(const ValueKey<String>('desktop-navigation-rail-menu-panel')),
+      findsNothing,
+    );
+  });
+
   testWidgets('drawer rail tags button opens popover and selects tag', (
     tester,
   ) async {
