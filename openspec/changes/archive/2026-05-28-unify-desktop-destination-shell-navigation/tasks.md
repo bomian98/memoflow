@@ -57,9 +57,9 @@
 
 ## 6. Manual Smoke
 
-- [ ] 6.1 On Windows desktop, switch through migrated drawer destinations and confirm top-left back/close buttons only appear where semantically intended.
+- [x] 6.1 Windows 桌面端：依次切换已迁移的抽屉入口页面，检查左上角的返回/关闭按钮。只有需要返回上一层或关闭当前临时页面时才应显示；普通顶层抽屉页面不应显示。
 - [x] 6.2 On macOS desktop expanded sidebar, switch through migrated drawer destinations and confirm duplicate top-leading titles remain suppressed.
 - [x] 6.3 On macOS rail/narrow mode, confirm current destination title remains visible where sidebar labels are not persistently visible.
   - Follow-up note: added a labeled navigation menu entry to rail mode, moved Draft Box onto the unified desktop destination shell, and routed All Notes/Archive through the shared macOS rail shell so their navigation position matches the other destination pages; needs manual retest.
-- [ ] 6.4 Confirm migrated pages still expose their existing actions such as filter, search, create, clear, share, and mode menus.
-- [ ] 6.5 Confirm desktop memo list inline compose resize still works after shell migration, especially when returning from migrated destinations to all memos.
+- [x] 6.4 已迁移页面：逐个打开页面并检查原有操作入口仍然存在且可点击，包括筛选、搜索、新建、清空、分享、模式菜单等；如果某页面原本没有某项操作，不要求新增。
+- [x] 6.5 桌面备忘录列表：从已迁移页面返回“全部备忘录”后，测试内联编辑/撰写区域的拖拽调整大小仍然生效，列表布局不应错位、遮挡或丢失输入区域。
