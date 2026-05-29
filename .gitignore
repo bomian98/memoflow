@@ -1,5 +1,10 @@
 /参考项目
 /memoflow_config
+
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store
+
 # Secrets & signing
 **/key.properties
 **/*.jks
