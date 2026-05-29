@@ -66,9 +66,9 @@
 
 ## 8. 最终手动验证
 
-- [ ] 8.1 Windows 桌面端开启 close-to-tray 后，点击 shell 关闭按钮；通过标准：主窗口隐藏到托盘，应用进程不退出，再次从托盘打开后状态可继续使用。
-- [ ] 8.2 Windows 桌面端关闭 close-to-tray 后，点击 shell 关闭按钮；通过标准：进入完整退出流程，窗口关闭前完成受控清理，没有跳过 `DesktopExitCoordinator` 的直接 native close 行为。
-- [ ] 8.3 Windows 桌面端分别在 narrow、compact、expanded、wide 宽度下切换 drawer destination；通过标准：每个宽度下的页面切换动效、导航模式和当前 destination 高亮都符合对应 desktop layout policy。
-- [ ] 8.4 macOS 桌面端分别在 rail 和 expanded-sidebar 宽度下切换 drawer destination；通过标准：页面切换后 titlebar、traffic-light 安全区、toolbar/chrome 显示不重叠、不丢失，并符合 macOS shell 策略。
-- [ ] 8.5 Windows 和 macOS 桌面端分别打开、关闭 preview pane、modal compose surface 和 editor surface；通过标准：每个平台的宽度、遮罩、动效、关闭方式和 fallback 行为与已记录的 desktop surface policy 一致。
-- [ ] 8.6 Windows 和 macOS 桌面端从桌面工具视图返回 memo list 后，依次验证搜索快捷键/入口、文本 compose、语音结果 compose、点击 memo 打开 preview、inline compose resize；通过标准：每个入口都可触发目标行为，返回后状态不丢失，resize 后尺寸保持可见且不破坏列表布局。
+- [ ] 8.1 Windows：打开“关闭时留在托盘”后，点击窗口右上角关闭按钮。通过标准：窗口从屏幕和任务栏消失；托盘里还有应用图标；应用仍在运行；从托盘重新打开后，原来的页面和可编辑内容还在。
+- [ ] 8.2 Windows：关闭“关闭时留在托盘”后，点击窗口右上角关闭按钮。通过标准：应用按正常退出流程关闭；需要保存或确认时会正常提示；确认退出后窗口和托盘图标消失，任务管理器里不再保留应用进程；没有闪退或卡住。
+- [ ] 8.3 Windows：把窗口宽度依次调成很窄、较窄、正常、很宽，每次都从侧边导航切换页面。通过标准：切换动画自然；导航栏的位置和宽度符合当前窗口大小；当前页面高亮正确；内容没有挤压、遮挡或空白错位。
+- [x] 8.4 macOS：把窗口分别调到只显示窄侧栏和显示展开侧栏的宽度，再从侧边导航切换页面。通过标准：顶部栏、左上角红黄绿按钮区域、工具栏和页面标题互不遮挡；切换后当前页面高亮正确；返回或再次切换仍正常。
+- [ ] 8.5 Windows 和 macOS：分别打开并关闭右侧预览、写 memo 窗口和编辑窗口。通过标准：打开位置和宽度合理；背景变暗或不可点击的效果符合预期；关闭按钮、Esc 或点击空白处等关闭方式可用；窗口大小变化后主要内容仍清楚可见；没有打不开、关不掉、严重重叠或页面变空。
+- [ ] 8.6 Windows 和 macOS：从桌面工具页回到 memo 列表后，依次检查搜索快捷键和搜索入口、新建文字 memo、语音结果转成 memo、点击 memo 打开预览、拖动调整写 memo 区域大小。通过标准：每个入口都能打开对应功能；回到列表后刚才的页面状态还在；调整大小后输入区仍可见，列表没有被挤坏或遮挡。
