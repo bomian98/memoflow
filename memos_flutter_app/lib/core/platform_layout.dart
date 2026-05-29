@@ -1,30 +1,38 @@
 import 'package:flutter/foundation.dart';
 
-const double kMemoFlowDesktopSidePaneBreakpoint = 1100;
-const double kMemoFlowDesktopDrawerWidth = 320;
-const double kMemoFlowDesktopContentMaxWidth = 980;
-const double kMemoFlowDesktopMemoCardMaxWidth = 760;
-const double kMemoFlowDesktopPreviewPaneBreakpoint = 1440;
-const double kMemoFlowDesktopPreviewPaneWidth = 460;
-const double kMemoFlowDesktopPreviewListMinWidth = 560;
-const double kMemoFlowInlineComposeBreakpoint = 760;
-const double kWindowsDesktopNarrowBreakpoint = 960;
-const double kWindowsDesktopExpandedBreakpoint = 1200;
-const double kWindowsDesktopWideBreakpoint = 1360;
-const double kDesktopMemoListExpandedBreakpoint =
-    kWindowsDesktopExpandedBreakpoint;
-const double kDesktopMemoListWideBreakpoint = kWindowsDesktopWideBreakpoint;
-const double kWindowsDesktopSidebarWidth = 280;
-const double kWindowsDesktopRailWidth = 72;
-const double kWindowsDesktopSecondaryPaneDefaultWidth = 420;
-const double kWindowsDesktopSecondaryPaneMinWidth = 360;
-const double kWindowsDesktopSecondaryPaneMaxWidth = 560;
+import 'desktop/desktop_layout_policy.dart';
+export 'desktop/desktop_layout_policy.dart'
+    show
+        DesktopLayoutSpec,
+        DesktopLayoutTier,
+        DesktopNavigationMode,
+        kDesktopMemoListExpandedBreakpoint,
+        kDesktopMemoListWideBreakpoint,
+        kMemoFlowDesktopContentMaxWidth,
+        kMemoFlowDesktopDrawerWidth,
+        kMemoFlowDesktopMemoCardMaxWidth,
+        kMemoFlowDesktopPreviewListMinWidth,
+        kMemoFlowDesktopPreviewPaneBreakpoint,
+        kMemoFlowDesktopPreviewPaneWidth,
+        kMemoFlowDesktopSidePaneBreakpoint,
+        kMemoFlowInlineComposeBreakpoint,
+        kWindowsDesktopExpandedBreakpoint,
+        kWindowsDesktopNarrowBreakpoint,
+        kWindowsDesktopRailWidth,
+        kWindowsDesktopSecondaryPaneDefaultWidth,
+        kWindowsDesktopSecondaryPaneMaxWidth,
+        kWindowsDesktopSecondaryPaneMinWidth,
+        kWindowsDesktopSidebarWidth,
+        kWindowsDesktopWideBreakpoint,
+        resolveDesktopLayoutPolicy;
 
-enum WindowsDesktopLayoutTier { narrow, compact, expanded, wide }
+typedef WindowsDesktopLayoutTier = DesktopLayoutTier;
 
 enum DesktopMemoListLayoutTier { narrow, compact, expanded, wide }
 
-enum WindowsDesktopNavMode { overlay, rail, expanded }
+typedef WindowsDesktopNavMode = DesktopNavigationMode;
+
+typedef WindowsDesktopLayoutSpec = DesktopLayoutSpec;
 
 class DesktopMemoListLayoutSpec {
   const DesktopMemoListLayoutSpec({
@@ -36,22 +44,6 @@ class DesktopMemoListLayoutSpec {
   final DesktopMemoListLayoutTier tier;
   final bool supportsPreviewPane;
   final bool defaultMemoClickOpensPreview;
-}
-
-class WindowsDesktopLayoutSpec {
-  const WindowsDesktopLayoutSpec({
-    required this.tier,
-    required this.navMode,
-    required this.supportsSecondaryPane,
-    required this.defaultSecondaryPaneVisible,
-    required this.defaultSecondaryPaneWidth,
-  });
-
-  final WindowsDesktopLayoutTier tier;
-  final WindowsDesktopNavMode navMode;
-  final bool supportsSecondaryPane;
-  final bool defaultSecondaryPaneVisible;
-  final double defaultSecondaryPaneWidth;
 }
 
 bool isDesktopTargetPlatform([TargetPlatform? platform]) {
@@ -115,52 +107,9 @@ WindowsDesktopLayoutSpec resolveWindowsDesktopLayout(
 }) {
   final resolvedPlatform = platform ?? defaultTargetPlatform;
   if (resolvedPlatform != TargetPlatform.windows) {
-    return const WindowsDesktopLayoutSpec(
-      tier: WindowsDesktopLayoutTier.narrow,
-      navMode: WindowsDesktopNavMode.overlay,
-      supportsSecondaryPane: false,
-      defaultSecondaryPaneVisible: false,
-      defaultSecondaryPaneWidth: kWindowsDesktopSecondaryPaneDefaultWidth,
-    );
+    return resolveDesktopLayoutPolicy(width, platform: TargetPlatform.linux);
   }
-
-  if (width < kWindowsDesktopNarrowBreakpoint) {
-    return const WindowsDesktopLayoutSpec(
-      tier: WindowsDesktopLayoutTier.narrow,
-      navMode: WindowsDesktopNavMode.overlay,
-      supportsSecondaryPane: false,
-      defaultSecondaryPaneVisible: false,
-      defaultSecondaryPaneWidth: kWindowsDesktopSecondaryPaneDefaultWidth,
-    );
-  }
-
-  if (width < kWindowsDesktopExpandedBreakpoint) {
-    return const WindowsDesktopLayoutSpec(
-      tier: WindowsDesktopLayoutTier.compact,
-      navMode: WindowsDesktopNavMode.rail,
-      supportsSecondaryPane: false,
-      defaultSecondaryPaneVisible: false,
-      defaultSecondaryPaneWidth: kWindowsDesktopSecondaryPaneDefaultWidth,
-    );
-  }
-
-  if (width < kWindowsDesktopWideBreakpoint) {
-    return const WindowsDesktopLayoutSpec(
-      tier: WindowsDesktopLayoutTier.expanded,
-      navMode: WindowsDesktopNavMode.expanded,
-      supportsSecondaryPane: true,
-      defaultSecondaryPaneVisible: false,
-      defaultSecondaryPaneWidth: kWindowsDesktopSecondaryPaneDefaultWidth,
-    );
-  }
-
-  return const WindowsDesktopLayoutSpec(
-    tier: WindowsDesktopLayoutTier.wide,
-    navMode: WindowsDesktopNavMode.expanded,
-    supportsSecondaryPane: true,
-    defaultSecondaryPaneVisible: true,
-    defaultSecondaryPaneWidth: kWindowsDesktopSecondaryPaneDefaultWidth,
-  );
+  return resolveDesktopLayoutPolicy(width, platform: TargetPlatform.windows);
 }
 
 bool shouldUseWindowsOverlayNav(double width, {TargetPlatform? platform}) {
