@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:memos_flutter_app/core/desktop/window_chrome_safe_area.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
 import 'package:memos_flutter_app/data/db/app_database.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
@@ -39,6 +41,10 @@ void main() {
 
   setUp(() {
     LocaleSettings.setLocale(AppLocale.en);
+  });
+
+  tearDown(() {
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('detail screen opens reader directly and supports search', (
@@ -380,6 +386,59 @@ void main() {
       keepAwakeCalls.where((value) => value).length,
       greaterThan(initialEnableCount),
     );
+  });
+
+  testWidgets('macOS reader content avoids native traffic lights', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    final collection = MemoCollection.createSmart(
+      id: 'collection-macos-reader-chrome',
+      title: 'Reading shelf',
+      description: 'Collected reading notes',
+      rules: const CollectionRuleSet(
+        tagPaths: <String>['reading'],
+        tagMatchMode: CollectionTagMatchMode.any,
+        includeDescendants: true,
+        visibility: CollectionVisibilityScope.all,
+        dateRule: CollectionDateRule.defaults,
+        attachmentRule: CollectionAttachmentRule.any,
+        pinnedOnly: false,
+      ),
+    );
+    final memos = <LocalMemo>[
+      _memo(
+        uid: 'memo-macos-reader-chrome',
+        content: 'Top line should stay readable under macOS controls.',
+        tags: const <String>['reading'],
+        createTime: DateTime(2024, 2, 10, 8),
+      ),
+    ];
+    final readerPreferences = DevicePreferences.defaults.copyWith(
+      collectionReaderPreferences: DevicePreferences
+          .defaults
+          .collectionReaderPreferences
+          .copyWith(pagePadding: EdgeInsets.zero),
+    );
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        collection: collection,
+        memos: memos,
+        devicePreferences: readerPreferences,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final contentFinder = _findRichTextExactly(
+      'Top line should stay readable under macOS controls.',
+    );
+    expect(contentFinder, findsOneWidget);
+    expect(
+      tester.getTopLeft(contentFinder).dy,
+      greaterThanOrEqualTo(kMacosTitleBarHeight),
+    );
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('empty collection shows simplified empty state', (tester) async {
@@ -1118,6 +1177,15 @@ Finder _findRichTextContaining(String text) {
   return find.byWidgetPredicate((widget) {
     if (widget is RichText) {
       return widget.text.toPlainText().contains(text);
+    }
+    return false;
+  });
+}
+
+Finder _findRichTextExactly(String text) {
+  return find.byWidgetPredicate((widget) {
+    if (widget is RichText) {
+      return widget.text.toPlainText() == text;
     }
     return false;
   });

@@ -173,6 +173,26 @@ void main() {
     }
   });
 
+  test('collection reader overlay uses shared chrome safe-area seam', () async {
+    final overlay = await File(
+      'lib/features/collections/collection_reader_overlay.dart',
+    ).readAsString();
+
+    expect(overlay.contains('window_chrome_safe_area.dart'), isTrue);
+    expect(overlay.contains('DesktopWindowChromeSafeArea'), isTrue);
+    expect(
+      overlay.contains('contentExtendsIntoTitleBar: true'),
+      isTrue,
+      reason:
+          'reader overlay top controls should avoid macOS traffic lights through the shared seam.',
+    );
+    expect(
+      overlay.contains('kMacosTrafficLightReservedWidth'),
+      isFalse,
+      reason: 'reader overlay must not hardcode traffic-light padding.',
+    );
+  });
+
   test('desktop secondary routes keep app-level back controls visible', () {
     for (final platform in <TargetPlatform>[
       TargetPlatform.macOS,

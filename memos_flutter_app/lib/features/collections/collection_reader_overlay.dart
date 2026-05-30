@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../core/desktop/window_chrome_safe_area.dart';
 import '../../data/models/collection_reader.dart';
 import '../../i18n/strings.g.dart';
 import 'collection_reader_tokens.dart';
@@ -446,114 +447,120 @@ class _OverlayTopBar extends StatelessWidget {
     final itemMeta = headerData.currentItemMeta.trim();
     return Material(
       color: backgroundColor,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 6, 6, 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            IconButton(
-              onPressed: onBack,
-              iconSize: CollectionReaderTokens.topBarIconSize,
-              constraints: const BoxConstraints.tightFor(
-                width: CollectionReaderTokens.topBarActionSize,
-                height: CollectionReaderTokens.topBarActionSize,
+      child: DesktopWindowChromeSafeArea(
+        contentExtendsIntoTitleBar: true,
+        includeTop: true,
+        includeTrailing: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 6, 6, 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                onPressed: onBack,
+                iconSize: CollectionReaderTokens.topBarIconSize,
+                constraints: const BoxConstraints.tightFor(
+                  width: CollectionReaderTokens.topBarActionSize,
+                  height: CollectionReaderTokens.topBarActionSize,
+                ),
+                padding: EdgeInsets.zero,
+                color: foregroundColor,
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
               ),
-              padding: EdgeInsets.zero,
-              color: foregroundColor,
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 6, right: 10, top: 2),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (showAddition && collectionLabel.isNotEmpty)
-                      Text(
-                        collectionLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              color: mutedForegroundColor,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.2,
-                            ),
-                      ),
-                    Text(
-                      resolvedPrimaryTitle,
-                      maxLines: showAddition ? 2 : 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: foregroundColor,
-                        fontWeight: FontWeight.w700,
-                        height: 1.18,
-                      ),
-                    ),
-                    if (showAddition && itemMeta.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          itemMeta,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 6, right: 10, top: 2),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (showAddition && collectionLabel.isNotEmpty)
+                        Text(
+                          collectionLabel,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
+                          style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
                                 color: mutedForegroundColor,
-                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
                               ),
                         ),
+                      Text(
+                        resolvedPrimaryTitle,
+                        maxLines: showAddition ? 2 : 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: foregroundColor,
+                              fontWeight: FontWeight.w700,
+                              height: 1.18,
+                            ),
                       ),
-                  ],
+                      if (showAddition && itemMeta.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            itemMeta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: mutedForegroundColor,
+                                  fontSize: 12.5,
+                                ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (headerData.positionLabel.trim().isNotEmpty)
-              _OverlayProgressChip(
-                label: headerData.positionLabel.trim(),
-                accentColor: accentColor,
-                foregroundColor: foregroundColor,
-                onTap: onProgressTap,
-              ),
-            PopupMenuButton<CollectionReaderMoreAction>(
-              color: backgroundColor,
-              tooltip: collectionsStrings.collectionActions,
-              onSelected: onMoreSelected,
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: CollectionReaderMoreAction.editCollection,
-                  child: Text(collectionsStrings.editCollection),
+              if (headerData.positionLabel.trim().isNotEmpty)
+                _OverlayProgressChip(
+                  label: headerData.positionLabel.trim(),
+                  accentColor: accentColor,
+                  foregroundColor: foregroundColor,
+                  onTap: onProgressTap,
                 ),
-                if (showManageCollectionItems)
+              PopupMenuButton<CollectionReaderMoreAction>(
+                color: backgroundColor,
+                tooltip: collectionsStrings.collectionActions,
+                onSelected: onMoreSelected,
+                itemBuilder: (context) => [
                   PopupMenuItem(
-                    value: CollectionReaderMoreAction.manageCollectionItems,
-                    child: Text(
-                      collectionsStrings.reader.manageCollectionItems,
+                    value: CollectionReaderMoreAction.editCollection,
+                    child: Text(collectionsStrings.editCollection),
+                  ),
+                  if (showManageCollectionItems)
+                    PopupMenuItem(
+                      value: CollectionReaderMoreAction.manageCollectionItems,
+                      child: Text(
+                        collectionsStrings.reader.manageCollectionItems,
+                      ),
                     ),
+                  PopupMenuItem(
+                    value: CollectionReaderMoreAction.currentMemoActions,
+                    child: Text(collectionsStrings.reader.currentItemActions),
                   ),
-                PopupMenuItem(
-                  value: CollectionReaderMoreAction.currentMemoActions,
-                  child: Text(collectionsStrings.reader.currentItemActions),
+                  if (showRssSourceActions)
+                    PopupMenuItem(
+                      value: CollectionReaderMoreAction.addRssSource,
+                      child: Text(collectionsStrings.rss.addFeed),
+                    ),
+                  if (showRssSourceActions)
+                    PopupMenuItem(
+                      value: CollectionReaderMoreAction.refreshRssSources,
+                      child: Text(collectionsStrings.rss.refreshFeeds),
+                    ),
+                ],
+                icon: Icon(
+                  Icons.more_horiz_rounded,
+                  color: foregroundColor,
+                  size: 24,
                 ),
-                if (showRssSourceActions)
-                  PopupMenuItem(
-                    value: CollectionReaderMoreAction.addRssSource,
-                    child: Text(collectionsStrings.rss.addFeed),
-                  ),
-                if (showRssSourceActions)
-                  PopupMenuItem(
-                    value: CollectionReaderMoreAction.refreshRssSources,
-                    child: Text(collectionsStrings.rss.refreshFeeds),
-                  ),
-              ],
-              icon: Icon(
-                Icons.more_horiz_rounded,
-                color: foregroundColor,
-                size: 24,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

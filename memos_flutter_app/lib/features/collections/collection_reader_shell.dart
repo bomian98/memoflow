@@ -9,6 +9,7 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../core/desktop/window_chrome_safe_area.dart';
 import '../../data/models/collection_reader.dart';
 import '../../data/models/collection_readable_item.dart';
 import '../../data/models/device_preferences.dart';
@@ -1861,7 +1862,15 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     _queueBrightnessSync(preferences);
     final readerBody = LayoutBuilder(
       builder: (context, constraints) {
-        _viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
+        final windowChromeInsets = resolveDesktopWindowChromeInsets(
+          platform: defaultTargetPlatform,
+          contentExtendsIntoTitleBar: true,
+        );
+        final readableViewportSize = Size(
+          constraints.maxWidth,
+          math.max(0, constraints.maxHeight - windowChromeInsets.top),
+        );
+        _viewportSize = readableViewportSize;
         final palette = resolveReaderBackgroundPalette(preferences);
         final baseTheme = Theme.of(context);
         _queueReaderEnvironmentSync(preferences, palette, baseTheme.brightness);
@@ -2082,57 +2091,64 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                           ),
                   ),
                   child: preferences.mode == CollectionReaderMode.vertical
-                      ? CollectionReaderVerticalView(
-                          viewportKey: _verticalViewportKey,
-                          scrollController: _verticalController,
-                          items: widget.items,
-                          itemKeys: _verticalItemKeys,
-                          highlightQuery: _highlightQuery,
-                          highlightMemoUid: _highlightMemoUid,
-                          pagePadding: preferences.pagePadding,
-                          contentTextStyle: bodyTextStyle,
-                          metaTextStyle: metaTextStyle,
-                          allowTextSelection:
-                              preferences.displayConfig.allowTextSelection,
-                          previewImageOnTap:
-                              preferences.displayConfig.previewImageOnTap,
-                          onSaveRssItemAsMemo: _saveRssItemAsMemo,
-                          onFetchRssItemFullContent: _fetchRssItemFullContent,
-                          onCenterTap: _toggleOverlay,
-                          onChapterMeasured: (index, height) {
-                            _memoHeights[index] = height;
-                          },
-                          onUserScrollStart: _stopAutoPage,
+                      ? Padding(
+                          padding: EdgeInsets.only(top: windowChromeInsets.top),
+                          child: CollectionReaderVerticalView(
+                            viewportKey: _verticalViewportKey,
+                            scrollController: _verticalController,
+                            items: widget.items,
+                            itemKeys: _verticalItemKeys,
+                            highlightQuery: _highlightQuery,
+                            highlightMemoUid: _highlightMemoUid,
+                            pagePadding: preferences.pagePadding,
+                            contentTextStyle: bodyTextStyle,
+                            metaTextStyle: metaTextStyle,
+                            allowTextSelection:
+                                preferences.displayConfig.allowTextSelection,
+                            previewImageOnTap:
+                                preferences.displayConfig.previewImageOnTap,
+                            onSaveRssItemAsMemo: _saveRssItemAsMemo,
+                            onFetchRssItemFullContent: _fetchRssItemFullContent,
+                            onCenterTap: _toggleOverlay,
+                            onChapterMeasured: (index, height) {
+                              _memoHeights[index] = height;
+                            },
+                            onUserScrollStart: _stopAutoPage,
+                          ),
                         )
-                      : CollectionReaderPagedView(
-                          currentPage: currentPage,
-                          previousPage: previousPage,
-                          nextPage: nextPage,
-                          canGoPrevious: previousPage != null,
-                          canGoNext: nextPage != null,
-                          preferences: preferences,
-                          turnDirection: _turnDirection,
-                          highlightQuery: _highlightQuery,
-                          highlightMemoUid: _highlightMemoUid,
-                          collectionTitle: widget.collectionTitle,
-                          currentGlobalPageIndex: currentGlobalPageIndex,
-                          totalPages: pagedTotalPages,
-                          previewImageOnTap:
-                              preferences.displayConfig.previewImageOnTap,
-                          onShowSearch: () => _showSearchSheet(preferences),
-                          onShowToc: _showTocSheet,
-                          onPrevChapter: jumpToPreviousChapter,
-                          onNextChapter: jumpToNextChapter,
-                          onCenterTap: _toggleOverlay,
-                          onPrevPage: () {
-                            _stopAutoPage();
-                            _goToAdjacentPage(-1);
-                          },
-                          onNextPage: () {
-                            _stopAutoPage();
-                            _goToAdjacentPage(1);
-                          },
-                          onUserInteraction: _stopAutoPage,
+                      : Padding(
+                          padding: EdgeInsets.only(top: windowChromeInsets.top),
+                          child: CollectionReaderPagedView(
+                            currentPage: currentPage,
+                            previousPage: previousPage,
+                            nextPage: nextPage,
+                            canGoPrevious: previousPage != null,
+                            canGoNext: nextPage != null,
+                            preferences: preferences,
+                            turnDirection: _turnDirection,
+                            highlightQuery: _highlightQuery,
+                            highlightMemoUid: _highlightMemoUid,
+                            collectionTitle: widget.collectionTitle,
+                            currentGlobalPageIndex: currentGlobalPageIndex,
+                            totalPages: pagedTotalPages,
+                            viewportSize: readableViewportSize,
+                            previewImageOnTap:
+                                preferences.displayConfig.previewImageOnTap,
+                            onShowSearch: () => _showSearchSheet(preferences),
+                            onShowToc: _showTocSheet,
+                            onPrevChapter: jumpToPreviousChapter,
+                            onNextChapter: jumpToNextChapter,
+                            onCenterTap: _toggleOverlay,
+                            onPrevPage: () {
+                              _stopAutoPage();
+                              _goToAdjacentPage(-1);
+                            },
+                            onNextPage: () {
+                              _stopAutoPage();
+                              _goToAdjacentPage(1);
+                            },
+                            onUserInteraction: _stopAutoPage,
+                          ),
                         ),
                 ),
               ),

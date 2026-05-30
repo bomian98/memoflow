@@ -58,6 +58,7 @@ void main() {
               collectionTitle: 'Collection A',
               currentGlobalPageIndex: 0,
               totalPages: 1,
+              viewportSize: Size(800, 600),
               previewImageOnTap: true,
               onShowSearch: _noop,
               onShowToc: _noop,

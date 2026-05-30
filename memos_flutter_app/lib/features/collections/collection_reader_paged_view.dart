@@ -40,6 +40,7 @@ class CollectionReaderPagedView extends StatefulWidget {
     required this.collectionTitle,
     required this.currentGlobalPageIndex,
     required this.totalPages,
+    required this.viewportSize,
     required this.previewImageOnTap,
     required this.onShowSearch,
     required this.onShowToc,
@@ -63,6 +64,7 @@ class CollectionReaderPagedView extends StatefulWidget {
   final String collectionTitle;
   final int currentGlobalPageIndex;
   final int totalPages;
+  final Size viewportSize;
   final bool previewImageOnTap;
   final VoidCallback onShowSearch;
   final VoidCallback onShowToc;
@@ -413,7 +415,7 @@ class _CollectionReaderPagedViewState extends State<CollectionReaderPagedView>
     final delegate = resolveCollectionReaderAnimationDelegate(
       widget.preferences.pageAnimation,
     );
-    final viewportSize = MediaQuery.sizeOf(context);
+    final viewportSize = widget.viewportSize;
     final page = widget.currentPage;
     final previousGlobalPageIndex = math.max(
       0,
