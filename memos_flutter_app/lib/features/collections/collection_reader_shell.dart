@@ -9,7 +9,6 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-import '../../core/desktop/window_chrome_safe_area.dart';
 import '../../data/models/collection_reader.dart';
 import '../../data/models/collection_readable_item.dart';
 import '../../data/models/device_preferences.dart';
@@ -30,6 +29,7 @@ import 'collection_reader_animation_delegate.dart';
 import 'collection_reader_auto_page_sheet.dart';
 import 'collection_reader_click_actions_sheet.dart';
 import 'collection_editor_screen.dart';
+import 'collection_reader_layout_policy.dart';
 import 'collection_reader_menu_logic.dart';
 import 'collection_reader_overlay.dart';
 import 'collection_reader_page_engine.dart';
@@ -884,6 +884,10 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
             onBrightnessModeChanged: notifier.setCollectionReaderBrightnessMode,
             onBrightnessChanged: notifier.setCollectionReaderBrightness,
             onPageAnimationChanged: notifier.setCollectionReaderPageAnimation,
+            onContentWidthModeChanged: (value) {
+              _pageEngine.clear();
+              notifier.setCollectionReaderContentWidthMode(value);
+            },
             onTextScaleChanged: (value) {
               _pageEngine.clear();
               notifier.setCollectionReaderTextScale(value);
@@ -1862,15 +1866,12 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
     _queueBrightnessSync(preferences);
     final readerBody = LayoutBuilder(
       builder: (context, constraints) {
-        final windowChromeInsets = resolveDesktopWindowChromeInsets(
+        final readerLayout = resolveCollectionReaderLayout(
           platform: defaultTargetPlatform,
-          contentExtendsIntoTitleBar: true,
+          viewportSize: Size(constraints.maxWidth, constraints.maxHeight),
+          contentWidthMode: preferences.displayConfig.contentWidthMode,
         );
-        final readableViewportSize = Size(
-          constraints.maxWidth,
-          math.max(0, constraints.maxHeight - windowChromeInsets.top),
-        );
-        _viewportSize = readableViewportSize;
+        _viewportSize = readerLayout.readableViewportSize;
         final palette = resolveReaderBackgroundPalette(preferences);
         final baseTheme = Theme.of(context);
         _queueReaderEnvironmentSync(preferences, palette, baseTheme.brightness);
@@ -2092,7 +2093,9 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                   ),
                   child: preferences.mode == CollectionReaderMode.vertical
                       ? Padding(
-                          padding: EdgeInsets.only(top: windowChromeInsets.top),
+                          padding: EdgeInsets.only(
+                            top: readerLayout.topChromeInset,
+                          ),
                           child: CollectionReaderVerticalView(
                             viewportKey: _verticalViewportKey,
                             scrollController: _verticalController,
@@ -2101,6 +2104,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                             highlightQuery: _highlightQuery,
                             highlightMemoUid: _highlightMemoUid,
                             pagePadding: preferences.pagePadding,
+                            contentWidth: readerLayout.contentWidth,
                             contentTextStyle: bodyTextStyle,
                             metaTextStyle: metaTextStyle,
                             allowTextSelection:
@@ -2117,37 +2121,45 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                           ),
                         )
                       : Padding(
-                          padding: EdgeInsets.only(top: windowChromeInsets.top),
-                          child: CollectionReaderPagedView(
-                            currentPage: currentPage,
-                            previousPage: previousPage,
-                            nextPage: nextPage,
-                            canGoPrevious: previousPage != null,
-                            canGoNext: nextPage != null,
-                            preferences: preferences,
-                            turnDirection: _turnDirection,
-                            highlightQuery: _highlightQuery,
-                            highlightMemoUid: _highlightMemoUid,
-                            collectionTitle: widget.collectionTitle,
-                            currentGlobalPageIndex: currentGlobalPageIndex,
-                            totalPages: pagedTotalPages,
-                            viewportSize: readableViewportSize,
-                            previewImageOnTap:
-                                preferences.displayConfig.previewImageOnTap,
-                            onShowSearch: () => _showSearchSheet(preferences),
-                            onShowToc: _showTocSheet,
-                            onPrevChapter: jumpToPreviousChapter,
-                            onNextChapter: jumpToNextChapter,
-                            onCenterTap: _toggleOverlay,
-                            onPrevPage: () {
-                              _stopAutoPage();
-                              _goToAdjacentPage(-1);
-                            },
-                            onNextPage: () {
-                              _stopAutoPage();
-                              _goToAdjacentPage(1);
-                            },
-                            onUserInteraction: _stopAutoPage,
+                          padding: EdgeInsets.only(
+                            top: readerLayout.topChromeInset,
+                          ),
+                          child: Center(
+                            child: SizedBox(
+                              width: readerLayout.contentWidth,
+                              child: CollectionReaderPagedView(
+                                currentPage: currentPage,
+                                previousPage: previousPage,
+                                nextPage: nextPage,
+                                canGoPrevious: previousPage != null,
+                                canGoNext: nextPage != null,
+                                preferences: preferences,
+                                turnDirection: _turnDirection,
+                                highlightQuery: _highlightQuery,
+                                highlightMemoUid: _highlightMemoUid,
+                                collectionTitle: widget.collectionTitle,
+                                currentGlobalPageIndex: currentGlobalPageIndex,
+                                totalPages: pagedTotalPages,
+                                viewportSize: readerLayout.readableViewportSize,
+                                previewImageOnTap:
+                                    preferences.displayConfig.previewImageOnTap,
+                                onShowSearch: () =>
+                                    _showSearchSheet(preferences),
+                                onShowToc: _showTocSheet,
+                                onPrevChapter: jumpToPreviousChapter,
+                                onNextChapter: jumpToNextChapter,
+                                onCenterTap: _toggleOverlay,
+                                onPrevPage: () {
+                                  _stopAutoPage();
+                                  _goToAdjacentPage(-1);
+                                },
+                                onNextPage: () {
+                                  _stopAutoPage();
+                                  _goToAdjacentPage(1);
+                                },
+                                onUserInteraction: _stopAutoPage,
+                              ),
+                            ),
                           ),
                         ),
                 ),
@@ -2192,6 +2204,7 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
                 currentProgressText: progressText,
                 sliderValue: sliderValue,
                 sliderMax: sliderMax,
+                controlMaxWidth: readerLayout.controlMaxWidth,
                 autoPaging: _autoPaging,
                 showManageCollectionItems: currentCollection?.isManual == true,
                 showRssSourceActions: currentCollection?.isRss == true,

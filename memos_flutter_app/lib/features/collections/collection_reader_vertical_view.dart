@@ -20,6 +20,7 @@ class CollectionReaderVerticalView extends StatelessWidget {
     required this.highlightQuery,
     required this.highlightMemoUid,
     required this.pagePadding,
+    required this.contentWidth,
     required this.contentTextStyle,
     required this.metaTextStyle,
     required this.allowTextSelection,
@@ -38,6 +39,7 @@ class CollectionReaderVerticalView extends StatelessWidget {
   final String? highlightQuery;
   final String? highlightMemoUid;
   final EdgeInsets pagePadding;
+  final double contentWidth;
   final TextStyle contentTextStyle;
   final TextStyle metaTextStyle;
   final bool allowTextSelection;
@@ -94,36 +96,42 @@ class CollectionReaderVerticalView extends StatelessWidget {
                   return _MeasuredChapter(
                     key: key,
                     onMeasured: (height) => onChapterMeasured(index, height),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: pagePadding.left,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (index > 0)
-                            Divider(
-                              height: 32,
-                              thickness: 1,
-                              color: Theme.of(
-                                context,
-                              ).dividerColor.withValues(alpha: 0.18),
-                            ),
-                          _ReadableItemContent(
-                            item: memo,
-                            highlightQuery: highlightMemoUid == memo.uid
-                                ? highlightQuery
-                                : null,
-                            contentTextStyle: contentTextStyle,
-                            metaTextStyle: metaTextStyle,
-                            allowTextSelection: allowTextSelection,
-                            previewImageOnTap: previewImageOnTap,
-                            onSaveRssItemAsMemo: onSaveRssItemAsMemo,
-                            onFetchRssItemFullContent:
-                                onFetchRssItemFullContent,
+                    child: Center(
+                      child: SizedBox(
+                        width: contentWidth,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: pagePadding.left,
+                            right: pagePadding.right,
                           ),
-                          const SizedBox(height: 16),
-                        ],
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (index > 0)
+                                Divider(
+                                  height: 32,
+                                  thickness: 1,
+                                  color: Theme.of(
+                                    context,
+                                  ).dividerColor.withValues(alpha: 0.18),
+                                ),
+                              _ReadableItemContent(
+                                item: memo,
+                                highlightQuery: highlightMemoUid == memo.uid
+                                    ? highlightQuery
+                                    : null,
+                                contentTextStyle: contentTextStyle,
+                                metaTextStyle: metaTextStyle,
+                                allowTextSelection: allowTextSelection,
+                                previewImageOnTap: previewImageOnTap,
+                                onSaveRssItemAsMemo: onSaveRssItemAsMemo,
+                                onFetchRssItemFullContent:
+                                    onFetchRssItemFullContent,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   );

@@ -12,6 +12,8 @@ enum CollectionReaderFontWeightMode { normal, medium, bold }
 
 enum CollectionReaderTitleMode { left, center, hidden }
 
+enum CollectionReaderContentWidthMode { narrow, standard, wide, full }
+
 enum CollectionReaderTipSlot {
   none,
   collectionTitle,
@@ -435,6 +437,7 @@ class CollectionReaderDisplayConfig {
     required this.keepScreenAwakeInReader,
     required this.allowTextSelection,
     required this.previewImageOnTap,
+    required this.contentWidthMode,
   });
 
   static const defaults = CollectionReaderDisplayConfig(
@@ -447,6 +450,7 @@ class CollectionReaderDisplayConfig {
     keepScreenAwakeInReader: false,
     allowTextSelection: false,
     previewImageOnTap: true,
+    contentWidthMode: CollectionReaderContentWidthMode.standard,
   );
 
   final bool hideStatusBar;
@@ -458,6 +462,7 @@ class CollectionReaderDisplayConfig {
   final bool keepScreenAwakeInReader;
   final bool allowTextSelection;
   final bool previewImageOnTap;
+  final CollectionReaderContentWidthMode contentWidthMode;
 
   Map<String, Object?> toJson() => <String, Object?>{
     'hideStatusBar': hideStatusBar,
@@ -469,6 +474,7 @@ class CollectionReaderDisplayConfig {
     'keepScreenAwakeInReader': keepScreenAwakeInReader,
     'allowTextSelection': allowTextSelection,
     'previewImageOnTap': previewImageOnTap,
+    'contentWidthMode': contentWidthMode.name,
   };
 
   factory CollectionReaderDisplayConfig.fromJson(Map<String, dynamic> json) {
@@ -506,6 +512,11 @@ class CollectionReaderDisplayConfig {
         json['previewImageOnTap'],
         defaults.previewImageOnTap,
       ),
+      contentWidthMode: _readEnum(
+        json['contentWidthMode'],
+        CollectionReaderContentWidthMode.values,
+        defaults.contentWidthMode,
+      ),
     );
   }
 
@@ -519,6 +530,7 @@ class CollectionReaderDisplayConfig {
     bool? keepScreenAwakeInReader,
     bool? allowTextSelection,
     bool? previewImageOnTap,
+    CollectionReaderContentWidthMode? contentWidthMode,
   }) {
     return CollectionReaderDisplayConfig(
       hideStatusBar: hideStatusBar ?? this.hideStatusBar,
@@ -534,6 +546,7 @@ class CollectionReaderDisplayConfig {
           keepScreenAwakeInReader ?? this.keepScreenAwakeInReader,
       allowTextSelection: allowTextSelection ?? this.allowTextSelection,
       previewImageOnTap: previewImageOnTap ?? this.previewImageOnTap,
+      contentWidthMode: contentWidthMode ?? this.contentWidthMode,
     );
   }
 }

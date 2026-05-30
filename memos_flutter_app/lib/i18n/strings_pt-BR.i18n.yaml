@@ -1852,6 +1852,11 @@ collections:
     textScale: Escala de texto
     lineSpacing: Espaçamento entre linhas
     pagePadding: Preenchimento de página
+    contentWidth: Largura do conteúdo
+    contentWidthNarrow: Estreita
+    contentWidthStandard: Padrão
+    contentWidthWide: Ampla
+    contentWidthFull: Seguir janela
     autoPageTitle: Página automática
     autoPageStart: Iniciar
     autoPageStop: Parar

@@ -1872,6 +1872,11 @@ collections:
     textScale: 텍스트 규모
     lineSpacing: 줄 간격
     pagePadding: 페이지 패딩
+    contentWidth: 콘텐츠 너비
+    contentWidthNarrow: 좁게
+    contentWidthStandard: 표준
+    contentWidthWide: 넓게
+    contentWidthFull: 창에 맞춤
     autoPageTitle: 자동 페이지
     autoPageStart: 시작
     autoPageStop: 멈추다

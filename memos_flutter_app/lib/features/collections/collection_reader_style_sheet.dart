@@ -19,6 +19,7 @@ class CollectionReaderStyleSheet extends ConsumerStatefulWidget {
     required this.onBrightnessModeChanged,
     required this.onBrightnessChanged,
     required this.onPageAnimationChanged,
+    required this.onContentWidthModeChanged,
     required this.onTextScaleChanged,
     required this.onLineSpacingChanged,
     required this.onFontFamilyChanged,
@@ -38,6 +39,8 @@ class CollectionReaderStyleSheet extends ConsumerStatefulWidget {
   final ValueChanged<CollectionReaderBrightnessMode> onBrightnessModeChanged;
   final ValueChanged<double> onBrightnessChanged;
   final ValueChanged<CollectionReaderPageAnimation> onPageAnimationChanged;
+  final ValueChanged<CollectionReaderContentWidthMode>
+  onContentWidthModeChanged;
   final ValueChanged<double> onTextScaleChanged;
   final ValueChanged<double> onLineSpacingChanged;
   final void Function({String? family, String? filePath}) onFontFamilyChanged;
@@ -66,6 +69,7 @@ class _CollectionReaderStyleSheetState
   late int _paragraphIndentChars;
   late CollectionReaderFontWeightMode _fontWeightMode;
   late CollectionReaderPageAnimation _pageAnimation;
+  late CollectionReaderContentWidthMode _contentWidthMode;
   late CollectionReaderBackgroundConfig _backgroundConfig;
   late String? _selectedFontFamily;
   late List<CollectionReaderStyleCard> _savedStyleCards;
@@ -84,6 +88,7 @@ class _CollectionReaderStyleSheetState
     _paragraphIndentChars = preferences.paragraphIndentChars;
     _fontWeightMode = preferences.fontWeightMode;
     _pageAnimation = preferences.pageAnimation;
+    _contentWidthMode = preferences.displayConfig.contentWidthMode;
     _backgroundConfig = preferences.backgroundConfig;
     _selectedFontFamily = preferences.readerFontFamily;
     _savedStyleCards = List<CollectionReaderStyleCard>.from(
@@ -116,6 +121,14 @@ class _CollectionReaderStyleSheetState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    readerStrings.contentWidth,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 CollectionReaderHorizontalScroller(
                   child: SegmentedButton<CollectionReaderBackgroundType>(
                     segments: [
@@ -239,6 +252,27 @@ class _CollectionReaderStyleSheetState
           CollectionReaderPanelCard(
             child: Column(
               children: [
+                CollectionReaderHorizontalScroller(
+                  child: SegmentedButton<CollectionReaderContentWidthMode>(
+                    segments: CollectionReaderContentWidthMode.values
+                        .map(
+                          (value) => ButtonSegment(
+                            value: value,
+                            label: Text(_contentWidthLabel(context, value)),
+                          ),
+                        )
+                        .toList(growable: false),
+                    selected: <CollectionReaderContentWidthMode>{
+                      _contentWidthMode,
+                    },
+                    onSelectionChanged: (selection) {
+                      final value = selection.first;
+                      setState(() => _contentWidthMode = value);
+                      widget.onContentWidthModeChanged(value);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
                 _LabeledSlider(
                   label: readerStrings.textScale,
                   value: _textScale,
@@ -798,6 +832,21 @@ class _CollectionReaderStyleSheetState
       CollectionReaderPageAnimation.slide => readerStrings.pageAnimationSlide,
       CollectionReaderPageAnimation.simulation =>
         readerStrings.pageAnimationSimulation,
+    };
+  }
+
+  String _contentWidthLabel(
+    BuildContext context,
+    CollectionReaderContentWidthMode value,
+  ) {
+    final readerStrings = context.t.strings.collections.reader;
+    return switch (value) {
+      CollectionReaderContentWidthMode.narrow =>
+        readerStrings.contentWidthNarrow,
+      CollectionReaderContentWidthMode.standard =>
+        readerStrings.contentWidthStandard,
+      CollectionReaderContentWidthMode.wide => readerStrings.contentWidthWide,
+      CollectionReaderContentWidthMode.full => readerStrings.contentWidthFull,
     };
   }
 

@@ -943,6 +943,7 @@ class CollectionReaderPageEngine {
       viewportSize.height.round(),
       preferences.mode.name,
       preferences.pageAnimation.name,
+      preferences.displayConfig.contentWidthMode.name,
       preferences.textScale.toStringAsFixed(3),
       preferences.lineSpacing.toStringAsFixed(3),
       preferences.readerFontFamily ?? '',

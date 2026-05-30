@@ -4,9 +4,9 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 7
-/// Strings: 14582 (2083 per locale)
+/// Strings: 14617 (2088 per locale)
 ///
-/// Built on 2026-05-16 at 02:42 UTC
+/// Built on 2026-05-30 at 09:32 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -2434,6 +2434,11 @@ class _StringsStringsCollectionsReaderEn {
 	String get textScale => 'Text scale';
 	String get lineSpacing => 'Line spacing';
 	String get pagePadding => 'Page padding';
+	String get contentWidth => 'Content width';
+	String get contentWidthNarrow => 'Narrow';
+	String get contentWidthStandard => 'Standard';
+	String get contentWidthWide => 'Wide';
+	String get contentWidthFull => 'Follow window';
 	String get autoPageTitle => 'Auto page';
 	String get autoPageStart => 'Start';
 	String get autoPageStop => 'Stop';
@@ -5036,6 +5041,11 @@ class _StringsStringsCollectionsReaderDe extends _StringsStringsCollectionsReade
 	@override String get textScale => 'Schriftgröße';
 	@override String get lineSpacing => 'Zeilenabstand';
 	@override String get pagePadding => 'Seitenrand';
+	@override String get contentWidth => 'Inhaltsbreite';
+	@override String get contentWidthNarrow => 'Schmal';
+	@override String get contentWidthStandard => 'Standard';
+	@override String get contentWidthWide => 'Breit';
+	@override String get contentWidthFull => 'Fensterbreite';
 	@override String get autoPageTitle => 'Automatisches Blättern';
 	@override String get autoPageStart => 'Starten';
 	@override String get autoPageStop => 'Stoppen';
@@ -7638,6 +7648,11 @@ class _StringsStringsCollectionsReaderJa extends _StringsStringsCollectionsReade
 	@override String get textScale => '文字サイズ';
 	@override String get lineSpacing => '行間';
 	@override String get pagePadding => 'ページ余白';
+	@override String get contentWidth => 'コンテンツ幅';
+	@override String get contentWidthNarrow => '狭い';
+	@override String get contentWidthStandard => '標準';
+	@override String get contentWidthWide => '広い';
+	@override String get contentWidthFull => 'ウィンドウに合わせる';
 	@override String get autoPageTitle => '自動ページ送り';
 	@override String get autoPageStart => '開始';
 	@override String get autoPageStop => '停止';
@@ -10356,6 +10371,11 @@ class _StringsStringsCollectionsReaderKo extends _StringsStringsCollectionsReade
 	@override String get textScale => '텍스트 규모';
 	@override String get lineSpacing => '줄 간격';
 	@override String get pagePadding => '페이지 패딩';
+	@override String get contentWidth => '콘텐츠 너비';
+	@override String get contentWidthNarrow => '좁게';
+	@override String get contentWidthStandard => '표준';
+	@override String get contentWidthWide => '넓게';
+	@override String get contentWidthFull => '창에 맞춤';
 	@override String get autoPageTitle => '자동 페이지';
 	@override String get autoPageStart => '시작';
 	@override String get autoPageStop => '멈추다';
@@ -13074,6 +13094,11 @@ class _StringsStringsCollectionsReaderPtBr extends _StringsStringsCollectionsRea
 	@override String get textScale => 'Escala de texto';
 	@override String get lineSpacing => 'Espaçamento entre linhas';
 	@override String get pagePadding => 'Preenchimento de página';
+	@override String get contentWidth => 'Largura do conteúdo';
+	@override String get contentWidthNarrow => 'Estreita';
+	@override String get contentWidthStandard => 'Padrão';
+	@override String get contentWidthWide => 'Ampla';
+	@override String get contentWidthFull => 'Seguir janela';
 	@override String get autoPageTitle => 'Página automática';
 	@override String get autoPageStart => 'Iniciar';
 	@override String get autoPageStop => 'Parar';
@@ -15792,6 +15817,11 @@ class _StringsStringsCollectionsReaderZhHans extends _StringsStringsCollectionsR
 	@override String get textScale => '字号';
 	@override String get lineSpacing => '行距';
 	@override String get pagePadding => '页边距';
+	@override String get contentWidth => '内容宽度';
+	@override String get contentWidthNarrow => '窄';
+	@override String get contentWidthStandard => '标准';
+	@override String get contentWidthWide => '宽';
+	@override String get contentWidthFull => '跟随窗口';
 	@override String get autoPageTitle => '自动翻页';
 	@override String get autoPageStart => '开始';
 	@override String get autoPageStop => '停止';
@@ -18454,6 +18484,11 @@ class _StringsStringsCollectionsReaderZhHantTw extends _StringsStringsCollection
 	@override String get textScale => '字體大小';
 	@override String get lineSpacing => '行距';
 	@override String get pagePadding => '頁邊距';
+	@override String get contentWidth => '內容寬度';
+	@override String get contentWidthNarrow => '窄';
+	@override String get contentWidthStandard => '標準';
+	@override String get contentWidthWide => '寬';
+	@override String get contentWidthFull => '跟隨視窗';
 	@override String get autoPageTitle => '自動翻頁';
 	@override String get autoPageStart => '開始';
 	@override String get autoPageStop => '停止';
@@ -20671,6 +20706,11 @@ extension on Translations {
 			case 'strings.collections.reader.textScale': return 'Text scale';
 			case 'strings.collections.reader.lineSpacing': return 'Line spacing';
 			case 'strings.collections.reader.pagePadding': return 'Page padding';
+			case 'strings.collections.reader.contentWidth': return 'Content width';
+			case 'strings.collections.reader.contentWidthNarrow': return 'Narrow';
+			case 'strings.collections.reader.contentWidthStandard': return 'Standard';
+			case 'strings.collections.reader.contentWidthWide': return 'Wide';
+			case 'strings.collections.reader.contentWidthFull': return 'Follow window';
 			case 'strings.collections.reader.autoPageTitle': return 'Auto page';
 			case 'strings.collections.reader.autoPageStart': return 'Start';
 			case 'strings.collections.reader.autoPageStop': return 'Stop';
@@ -22693,6 +22733,11 @@ extension on _StringsDe {
 			case 'strings.collections.reader.textScale': return 'Schriftgröße';
 			case 'strings.collections.reader.lineSpacing': return 'Zeilenabstand';
 			case 'strings.collections.reader.pagePadding': return 'Seitenrand';
+			case 'strings.collections.reader.contentWidth': return 'Inhaltsbreite';
+			case 'strings.collections.reader.contentWidthNarrow': return 'Schmal';
+			case 'strings.collections.reader.contentWidthStandard': return 'Standard';
+			case 'strings.collections.reader.contentWidthWide': return 'Breit';
+			case 'strings.collections.reader.contentWidthFull': return 'Fensterbreite';
 			case 'strings.collections.reader.autoPageTitle': return 'Automatisches Blättern';
 			case 'strings.collections.reader.autoPageStart': return 'Starten';
 			case 'strings.collections.reader.autoPageStop': return 'Stoppen';
@@ -24715,6 +24760,11 @@ extension on _StringsJa {
 			case 'strings.collections.reader.textScale': return '文字サイズ';
 			case 'strings.collections.reader.lineSpacing': return '行間';
 			case 'strings.collections.reader.pagePadding': return 'ページ余白';
+			case 'strings.collections.reader.contentWidth': return 'コンテンツ幅';
+			case 'strings.collections.reader.contentWidthNarrow': return '狭い';
+			case 'strings.collections.reader.contentWidthStandard': return '標準';
+			case 'strings.collections.reader.contentWidthWide': return '広い';
+			case 'strings.collections.reader.contentWidthFull': return 'ウィンドウに合わせる';
 			case 'strings.collections.reader.autoPageTitle': return '自動ページ送り';
 			case 'strings.collections.reader.autoPageStart': return '開始';
 			case 'strings.collections.reader.autoPageStop': return '停止';
@@ -26843,6 +26893,11 @@ extension on _StringsKo {
 			case 'strings.collections.reader.textScale': return '텍스트 규모';
 			case 'strings.collections.reader.lineSpacing': return '줄 간격';
 			case 'strings.collections.reader.pagePadding': return '페이지 패딩';
+			case 'strings.collections.reader.contentWidth': return '콘텐츠 너비';
+			case 'strings.collections.reader.contentWidthNarrow': return '좁게';
+			case 'strings.collections.reader.contentWidthStandard': return '표준';
+			case 'strings.collections.reader.contentWidthWide': return '넓게';
+			case 'strings.collections.reader.contentWidthFull': return '창에 맞춤';
 			case 'strings.collections.reader.autoPageTitle': return '자동 페이지';
 			case 'strings.collections.reader.autoPageStart': return '시작';
 			case 'strings.collections.reader.autoPageStop': return '멈추다';
@@ -28971,6 +29026,11 @@ extension on _StringsPtBr {
 			case 'strings.collections.reader.textScale': return 'Escala de texto';
 			case 'strings.collections.reader.lineSpacing': return 'Espaçamento entre linhas';
 			case 'strings.collections.reader.pagePadding': return 'Preenchimento de página';
+			case 'strings.collections.reader.contentWidth': return 'Largura do conteúdo';
+			case 'strings.collections.reader.contentWidthNarrow': return 'Estreita';
+			case 'strings.collections.reader.contentWidthStandard': return 'Padrão';
+			case 'strings.collections.reader.contentWidthWide': return 'Ampla';
+			case 'strings.collections.reader.contentWidthFull': return 'Seguir janela';
 			case 'strings.collections.reader.autoPageTitle': return 'Página automática';
 			case 'strings.collections.reader.autoPageStart': return 'Iniciar';
 			case 'strings.collections.reader.autoPageStop': return 'Parar';
@@ -31099,6 +31159,11 @@ extension on _StringsZhHans {
 			case 'strings.collections.reader.textScale': return '字号';
 			case 'strings.collections.reader.lineSpacing': return '行距';
 			case 'strings.collections.reader.pagePadding': return '页边距';
+			case 'strings.collections.reader.contentWidth': return '内容宽度';
+			case 'strings.collections.reader.contentWidthNarrow': return '窄';
+			case 'strings.collections.reader.contentWidthStandard': return '标准';
+			case 'strings.collections.reader.contentWidthWide': return '宽';
+			case 'strings.collections.reader.contentWidthFull': return '跟随窗口';
 			case 'strings.collections.reader.autoPageTitle': return '自动翻页';
 			case 'strings.collections.reader.autoPageStart': return '开始';
 			case 'strings.collections.reader.autoPageStop': return '停止';
@@ -33181,6 +33246,11 @@ extension on _StringsZhHantTw {
 			case 'strings.collections.reader.textScale': return '字體大小';
 			case 'strings.collections.reader.lineSpacing': return '行距';
 			case 'strings.collections.reader.pagePadding': return '頁邊距';
+			case 'strings.collections.reader.contentWidth': return '內容寬度';
+			case 'strings.collections.reader.contentWidthNarrow': return '窄';
+			case 'strings.collections.reader.contentWidthStandard': return '標準';
+			case 'strings.collections.reader.contentWidthWide': return '寬';
+			case 'strings.collections.reader.contentWidthFull': return '跟隨視窗';
 			case 'strings.collections.reader.autoPageTitle': return '自動翻頁';
 			case 'strings.collections.reader.autoPageStart': return '開始';
 			case 'strings.collections.reader.autoPageStop': return '停止';

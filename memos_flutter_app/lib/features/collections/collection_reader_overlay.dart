@@ -42,6 +42,7 @@ class CollectionReaderOverlay extends StatelessWidget {
     required this.currentProgressText,
     required this.sliderValue,
     required this.sliderMax,
+    required this.controlMaxWidth,
     required this.autoPaging,
     required this.showManageCollectionItems,
     required this.showRssSourceActions,
@@ -86,6 +87,7 @@ class CollectionReaderOverlay extends StatelessWidget {
   final String currentProgressText;
   final double sliderValue;
   final double sliderMax;
+  final double controlMaxWidth;
   final bool autoPaging;
   final bool showManageCollectionItems;
   final bool showRssSourceActions;
@@ -162,6 +164,7 @@ class CollectionReaderOverlay extends StatelessWidget {
                 foregroundColor: pageForegroundColor,
                 mutedForegroundColor: mutedForeground,
                 accentColor: accentColor,
+                maxWidth: controlMaxWidth,
                 headerData: headerData,
                 showManageCollectionItems: showManageCollectionItems,
                 showRssSourceActions: showRssSourceActions,
@@ -338,6 +341,7 @@ class CollectionReaderOverlay extends StatelessWidget {
                 foregroundColor: pageForegroundColor,
                 mutedForegroundColor: mutedForeground,
                 accentColor: accentColor,
+                maxWidth: controlMaxWidth,
                 currentProgressText: currentProgressText,
                 sliderValue: sliderValue,
                 sliderMax: sliderMax,
@@ -415,6 +419,7 @@ class _OverlayTopBar extends StatelessWidget {
     required this.foregroundColor,
     required this.mutedForegroundColor,
     required this.accentColor,
+    required this.maxWidth,
     required this.headerData,
     required this.showManageCollectionItems,
     required this.showRssSourceActions,
@@ -427,6 +432,7 @@ class _OverlayTopBar extends StatelessWidget {
   final Color foregroundColor;
   final Color mutedForegroundColor;
   final Color accentColor;
+  final double maxWidth;
   final CollectionReaderHeaderData headerData;
   final bool showManageCollectionItems;
   final bool showRssSourceActions;
@@ -451,115 +457,127 @@ class _OverlayTopBar extends StatelessWidget {
         contentExtendsIntoTitleBar: true,
         includeTop: true,
         includeTrailing: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 6, 6, 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              IconButton(
-                onPressed: onBack,
-                iconSize: CollectionReaderTokens.topBarIconSize,
-                constraints: const BoxConstraints.tightFor(
-                  width: CollectionReaderTokens.topBarActionSize,
-                  height: CollectionReaderTokens.topBarActionSize,
-                ),
-                padding: EdgeInsets.zero,
-                color: foregroundColor,
-                icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 6, right: 10, top: 2),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (showAddition && collectionLabel.isNotEmpty)
-                        Text(
-                          collectionLabel,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(
-                                color: mutedForegroundColor,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.2,
-                              ),
-                        ),
-                      Text(
-                        resolvedPrimaryTitle,
-                        maxLines: showAddition ? 2 : 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: foregroundColor,
-                              fontWeight: FontWeight.w700,
-                              height: 1.18,
-                            ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 6, 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: onBack,
+                    iconSize: CollectionReaderTokens.topBarIconSize,
+                    constraints: const BoxConstraints.tightFor(
+                      width: CollectionReaderTokens.topBarActionSize,
+                      height: CollectionReaderTokens.topBarActionSize,
+                    ),
+                    padding: EdgeInsets.zero,
+                    color: foregroundColor,
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        left: 6,
+                        right: 10,
+                        top: 2,
                       ),
-                      if (showAddition && itemMeta.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            itemMeta,
-                            maxLines: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (showAddition && collectionLabel.isNotEmpty)
+                            Text(
+                              collectionLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    color: mutedForegroundColor,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.2,
+                                  ),
+                            ),
+                          Text(
+                            resolvedPrimaryTitle,
+                            maxLines: showAddition ? 2 : 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
-                                  color: mutedForegroundColor,
-                                  fontSize: 12.5,
+                                  color: foregroundColor,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.18,
                                 ),
                           ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              if (headerData.positionLabel.trim().isNotEmpty)
-                _OverlayProgressChip(
-                  label: headerData.positionLabel.trim(),
-                  accentColor: accentColor,
-                  foregroundColor: foregroundColor,
-                  onTap: onProgressTap,
-                ),
-              PopupMenuButton<CollectionReaderMoreAction>(
-                color: backgroundColor,
-                tooltip: collectionsStrings.collectionActions,
-                onSelected: onMoreSelected,
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: CollectionReaderMoreAction.editCollection,
-                    child: Text(collectionsStrings.editCollection),
-                  ),
-                  if (showManageCollectionItems)
-                    PopupMenuItem(
-                      value: CollectionReaderMoreAction.manageCollectionItems,
-                      child: Text(
-                        collectionsStrings.reader.manageCollectionItems,
+                          if (showAddition && itemMeta.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                itemMeta,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: mutedForegroundColor,
+                                      fontSize: 12.5,
+                                    ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                  PopupMenuItem(
-                    value: CollectionReaderMoreAction.currentMemoActions,
-                    child: Text(collectionsStrings.reader.currentItemActions),
                   ),
-                  if (showRssSourceActions)
-                    PopupMenuItem(
-                      value: CollectionReaderMoreAction.addRssSource,
-                      child: Text(collectionsStrings.rss.addFeed),
+                  if (headerData.positionLabel.trim().isNotEmpty)
+                    _OverlayProgressChip(
+                      label: headerData.positionLabel.trim(),
+                      accentColor: accentColor,
+                      foregroundColor: foregroundColor,
+                      onTap: onProgressTap,
                     ),
-                  if (showRssSourceActions)
-                    PopupMenuItem(
-                      value: CollectionReaderMoreAction.refreshRssSources,
-                      child: Text(collectionsStrings.rss.refreshFeeds),
+                  PopupMenuButton<CollectionReaderMoreAction>(
+                    color: backgroundColor,
+                    tooltip: collectionsStrings.collectionActions,
+                    onSelected: onMoreSelected,
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: CollectionReaderMoreAction.editCollection,
+                        child: Text(collectionsStrings.editCollection),
+                      ),
+                      if (showManageCollectionItems)
+                        PopupMenuItem(
+                          value:
+                              CollectionReaderMoreAction.manageCollectionItems,
+                          child: Text(
+                            collectionsStrings.reader.manageCollectionItems,
+                          ),
+                        ),
+                      PopupMenuItem(
+                        value: CollectionReaderMoreAction.currentMemoActions,
+                        child: Text(
+                          collectionsStrings.reader.currentItemActions,
+                        ),
+                      ),
+                      if (showRssSourceActions)
+                        PopupMenuItem(
+                          value: CollectionReaderMoreAction.addRssSource,
+                          child: Text(collectionsStrings.rss.addFeed),
+                        ),
+                      if (showRssSourceActions)
+                        PopupMenuItem(
+                          value: CollectionReaderMoreAction.refreshRssSources,
+                          child: Text(collectionsStrings.rss.refreshFeeds),
+                        ),
+                    ],
+                    icon: Icon(
+                      Icons.more_horiz_rounded,
+                      color: foregroundColor,
+                      size: 24,
                     ),
+                  ),
                 ],
-                icon: Icon(
-                  Icons.more_horiz_rounded,
-                  color: foregroundColor,
-                  size: 24,
-                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -709,6 +727,7 @@ class _OverlayBottomPanel extends StatelessWidget {
     required this.foregroundColor,
     required this.mutedForegroundColor,
     required this.accentColor,
+    required this.maxWidth,
     required this.currentProgressText,
     required this.sliderValue,
     required this.sliderMax,
@@ -725,6 +744,7 @@ class _OverlayBottomPanel extends StatelessWidget {
   final Color foregroundColor;
   final Color mutedForegroundColor;
   final Color accentColor;
+  final double maxWidth;
   final String currentProgressText;
   final double sliderValue;
   final double sliderMax;
@@ -741,87 +761,96 @@ class _OverlayBottomPanel extends StatelessWidget {
     final readerStrings = context.t.strings.collections.reader;
     return Material(
       color: backgroundColor,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              currentProgressText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: mutedForegroundColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Row(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _OverlayChapterButton(
-                  label: readerStrings.tapActionPrevChapter,
-                  enabled: canPrevChapter,
-                  color: foregroundColor,
-                  disabledColor: mutedForegroundColor.withValues(alpha: 0.55),
-                  onTap: onPrevChapter,
-                ),
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 2.4,
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 7,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 13,
-                      ),
-                      activeTrackColor: accentColor,
-                      inactiveTrackColor: foregroundColor.withValues(
-                        alpha: 0.28,
-                      ),
-                      thumbColor: accentColor,
-                      overlayColor: accentColor.withValues(alpha: 0.18),
-                    ),
-                    child: Slider(
-                      value: sliderValue.clamp(0, math.max(0, sliderMax)),
-                      min: 0,
-                      max: math.max(0, sliderMax),
-                      divisions: sliderMax <= 0
-                          ? null
-                          : math.max(1, sliderMax.round()),
-                      onChanged: onSliderChanged,
-                      onChangeEnd: onSliderChangeEnd,
-                    ),
+                Text(
+                  currentProgressText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: mutedForegroundColor,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                _OverlayChapterButton(
-                  label: readerStrings.tapActionNextChapter,
-                  enabled: canNextChapter,
-                  color: foregroundColor,
-                  disabledColor: mutedForegroundColor.withValues(alpha: 0.55),
-                  onTap: onNextChapter,
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    _OverlayChapterButton(
+                      label: readerStrings.tapActionPrevChapter,
+                      enabled: canPrevChapter,
+                      color: foregroundColor,
+                      disabledColor: mutedForegroundColor.withValues(
+                        alpha: 0.55,
+                      ),
+                      onTap: onPrevChapter,
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 2.4,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 7,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 13,
+                          ),
+                          activeTrackColor: accentColor,
+                          inactiveTrackColor: foregroundColor.withValues(
+                            alpha: 0.28,
+                          ),
+                          thumbColor: accentColor,
+                          overlayColor: accentColor.withValues(alpha: 0.18),
+                        ),
+                        child: Slider(
+                          value: sliderValue.clamp(0, math.max(0, sliderMax)),
+                          min: 0,
+                          max: math.max(0, sliderMax),
+                          divisions: sliderMax <= 0
+                              ? null
+                              : math.max(1, sliderMax.round()),
+                          onChanged: onSliderChanged,
+                          onChangeEnd: onSliderChangeEnd,
+                        ),
+                      ),
+                    ),
+                    _OverlayChapterButton(
+                      label: readerStrings.tapActionNextChapter,
+                      enabled: canNextChapter,
+                      color: foregroundColor,
+                      disabledColor: mutedForegroundColor.withValues(
+                        alpha: 0.55,
+                      ),
+                      onTap: onNextChapter,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: bottomActions
+                      .map(
+                        (action) => Expanded(
+                          child: _OverlayBottomAction(
+                            icon: action.icon,
+                            label: action.label,
+                            selected: action.selected,
+                            foregroundColor: foregroundColor,
+                            accentColor: accentColor,
+                            onTap: action.onTap,
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: bottomActions
-                  .map(
-                    (action) => Expanded(
-                      child: _OverlayBottomAction(
-                        icon: action.icon,
-                        label: action.label,
-                        selected: action.selected,
-                        foregroundColor: foregroundColor,
-                        accentColor: accentColor,
-                        onTap: action.onTap,
-                      ),
-                    ),
-                  )
-                  .toList(growable: false),
-            ),
-          ],
+          ),
         ),
       ),
     );

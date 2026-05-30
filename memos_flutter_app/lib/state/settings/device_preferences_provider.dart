@@ -326,6 +326,23 @@ class DevicePreferencesController extends StateNotifier<DevicePreferences> {
     );
   }
 
+  void setCollectionReaderContentWidthMode(
+    CollectionReaderContentWidthMode value,
+  ) {
+    _setAndPersist(
+      _queuedState.copyWith(
+        collectionReaderPreferences: _queuedState.collectionReaderPreferences
+            .copyWith(
+              displayConfig: _queuedState
+                  .collectionReaderPreferences
+                  .displayConfig
+                  .copyWith(contentWidthMode: value),
+            ),
+      ),
+      triggerSync: false,
+    );
+  }
+
   void setCollectionReaderAutoPageSeconds(int value) {
     _setAndPersist(
       _queuedState.copyWith(
