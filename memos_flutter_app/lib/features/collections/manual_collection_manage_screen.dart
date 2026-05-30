@@ -6,14 +6,42 @@ import '../../data/models/local_memo.dart';
 import '../../data/models/memo_collection.dart';
 import '../../data/repositories/collections_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_secondary_task_surface.dart';
 import '../../state/collections/collection_resolver.dart';
 import '../../state/collections/collections_provider.dart';
 import 'collection_ui.dart';
 
+Future<void> openManualCollectionManage(
+  BuildContext context, {
+  required String collectionId,
+}) {
+  final screen = ManualCollectionManageScreen(
+    collectionId: collectionId,
+    embeddedTaskSurface: shouldUsePlatformSecondaryTaskSurface(context),
+  );
+  if (shouldUsePlatformSecondaryTaskSurface(context)) {
+    return showPlatformSecondaryTaskSurface<void>(
+      context: context,
+      size: PlatformSecondaryTaskSurfaceSize.large,
+      maxWidth: 760,
+      builder: (_) => screen,
+    );
+  }
+  return Navigator.of(context).push<void>(
+    buildPlatformPageRoute<void>(context: context, builder: (_) => screen),
+  );
+}
+
 class ManualCollectionManageScreen extends ConsumerStatefulWidget {
-  const ManualCollectionManageScreen({super.key, required this.collectionId});
+  const ManualCollectionManageScreen({
+    super.key,
+    required this.collectionId,
+    this.embeddedTaskSurface = false,
+  });
 
   final String collectionId;
+  final bool embeddedTaskSurface;
 
   @override
   ConsumerState<ManualCollectionManageScreen> createState() =>
@@ -65,6 +93,61 @@ class _ManualCollectionManageScreenState
       collectionManualItemUidsProvider(widget.collectionId),
     );
     final candidateMemosAsync = ref.watch(collectionCandidateMemosProvider);
+    final title = collectionAsync.when(
+      data: (collection) => Text(collection?.title ?? collections.manageItems),
+      error: (_, _) => Text(collections.manageItems),
+      loading: () => Text(collections.manageItems),
+    );
+    final actions = [
+      IconButton(
+        tooltip: collections.addMemos,
+        onPressed: _openAddSheet,
+        icon: const Icon(Icons.playlist_add_rounded),
+      ),
+    ];
+    final body = switch ((
+      collectionAsync,
+      manualItemUidsAsync,
+      candidateMemosAsync,
+    )) {
+      (
+        AsyncData<MemoCollection?> collectionValue,
+        AsyncData<List<String>> manualItemUidsValue,
+        AsyncData<List<LocalMemo>> candidateMemosValue,
+      ) =>
+        _buildLoaded(
+          collectionValue.value,
+          resolveManualCollectionItemsInStoredOrder(
+            candidateMemosValue.value,
+            manualItemUidsValue.value,
+          ),
+        ),
+      (AsyncError(error: final error, stackTrace: _), _, _) =>
+        CollectionErrorView(
+          title: collections.unableToLoadCollection,
+          message: '$error',
+        ),
+      (_, AsyncError(error: final error, stackTrace: _), _) =>
+        CollectionErrorView(
+          title: collections.unableToLoadCollectionItems,
+          message: '$error',
+        ),
+      (_, _, AsyncError(error: final error, stackTrace: _)) =>
+        CollectionErrorView(
+          title: collections.unableToLoadCollectionItems,
+          message: '$error',
+        ),
+      _ => CollectionLoadingView(label: collections.loadingCollection),
+    };
+
+    if (widget.embeddedTaskSurface) {
+      return PlatformSecondaryTaskFrame(
+        title: title,
+        actions: actions,
+        closeTooltip: context.t.strings.legacy.msg_close,
+        body: body,
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -72,54 +155,10 @@ class _ManualCollectionManageScreenState
           context: context,
           automaticallyImplyLeading: true,
         ),
-        title: collectionAsync.when(
-          data: (collection) =>
-              Text(collection?.title ?? collections.manageItems),
-          error: (_, _) => Text(collections.manageItems),
-          loading: () => Text(collections.manageItems),
-        ),
-        actions: [
-          IconButton(
-            tooltip: collections.addMemos,
-            onPressed: _openAddSheet,
-            icon: const Icon(Icons.playlist_add_rounded),
-          ),
-        ],
+        title: title,
+        actions: actions,
       ),
-      body: switch ((
-        collectionAsync,
-        manualItemUidsAsync,
-        candidateMemosAsync,
-      )) {
-        (
-          AsyncData<MemoCollection?> collectionValue,
-          AsyncData<List<String>> manualItemUidsValue,
-          AsyncData<List<LocalMemo>> candidateMemosValue,
-        ) =>
-          _buildLoaded(
-            collectionValue.value,
-            resolveManualCollectionItemsInStoredOrder(
-              candidateMemosValue.value,
-              manualItemUidsValue.value,
-            ),
-          ),
-        (AsyncError(error: final error, stackTrace: _), _, _) =>
-          CollectionErrorView(
-            title: collections.unableToLoadCollection,
-            message: '$error',
-          ),
-        (_, AsyncError(error: final error, stackTrace: _), _) =>
-          CollectionErrorView(
-            title: collections.unableToLoadCollectionItems,
-            message: '$error',
-          ),
-        (_, _, AsyncError(error: final error, stackTrace: _)) =>
-          CollectionErrorView(
-            title: collections.unableToLoadCollectionItems,
-            message: '$error',
-          ),
-        _ => CollectionLoadingView(label: collections.loadingCollection),
-      },
+      body: body,
     );
   }
 

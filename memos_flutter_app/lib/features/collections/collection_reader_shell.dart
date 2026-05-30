@@ -1224,39 +1224,23 @@ class _CollectionReaderShellState extends ConsumerState<CollectionReaderShell>
         if (collection == null || !mounted) {
           return;
         }
-        await Navigator.of(context).push(
-          buildPlatformPageRoute<void>(
-            context: context,
-            builder: (_) =>
-                CollectionEditorScreen(initialCollection: collection),
-          ),
-        );
+        await openCollectionEditor(context, initialCollection: collection);
         return;
       case CollectionReaderMoreAction.manageCollectionItems:
         if (!mounted) {
           return;
         }
         if (collection?.isManual == true) {
-          await Navigator.of(context).push(
-            buildPlatformPageRoute<void>(
-              context: context,
-              builder: (_) => ManualCollectionManageScreen(
-                collectionId: widget.collectionId,
-              ),
-            ),
+          await openManualCollectionManage(
+            context,
+            collectionId: widget.collectionId,
           );
           return;
         }
         if (collection == null) {
           return;
         }
-        await Navigator.of(context).push(
-          buildPlatformPageRoute<void>(
-            context: context,
-            builder: (_) =>
-                CollectionEditorScreen(initialCollection: collection),
-          ),
-        );
+        await openCollectionEditor(context, initialCollection: collection);
         return;
       case CollectionReaderMoreAction.currentMemoActions:
         if (currentItem == null) {

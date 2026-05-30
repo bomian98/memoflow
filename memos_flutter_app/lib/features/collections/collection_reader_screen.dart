@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/collection_readable_item.dart';
 import '../../data/models/memo_collection.dart';
 import '../../i18n/strings.g.dart';
-import '../../platform/platform_route.dart';
 import '../../platform/widgets/platform_action_sheet.dart';
 import '../../platform/widgets/platform_page.dart';
 import '../../state/collections/collections_provider.dart';
@@ -36,9 +35,7 @@ class CollectionReaderScreen extends ConsumerWidget {
       );
     }
     if (itemsAsync.hasError) {
-      return PlatformPage(
-        body: Center(child: Text('${itemsAsync.error}')),
-      );
+      return PlatformPage(body: Center(child: Text('${itemsAsync.error}')));
     }
     final collection =
         collectionAsync.valueOrNull ??
@@ -87,13 +84,9 @@ class CollectionReaderScreen extends ConsumerWidget {
                   )
                 else
                   FilledButton.icon(
-                    onPressed: () => Navigator.of(context).push(
-                      buildPlatformPageRoute<void>(
-                        context: context,
-                        builder: (_) => CollectionEditorScreen(
-                          initialCollection: collection,
-                        ),
-                      ),
+                    onPressed: () => openCollectionEditor(
+                      context,
+                      initialCollection: collection,
                     ),
                     icon: const Icon(Icons.edit_rounded),
                     label: Text(collectionsStrings.editCollection),

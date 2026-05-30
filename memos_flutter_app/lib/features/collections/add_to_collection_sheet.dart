@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_localization.dart';
-import '../../core/windows_adaptive_surface.dart';
 import '../../core/top_toast.dart';
 import '../../data/models/local_memo.dart';
 import '../../data/models/memo_collection.dart';
 import '../../data/repositories/collections_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_secondary_task_surface.dart';
 import '../../state/collections/collections_provider.dart';
 import 'collection_ui.dart';
 import 'collection_editor_screen.dart';
@@ -18,10 +18,10 @@ Future<void> showAddMemoToCollectionSheet({
   required LocalMemo memo,
 }) async {
   final _AddToCollectionAction? action;
-  if (shouldUseWindowsAdaptiveSurface(context)) {
-    action = await showWindowsAdaptiveSurface<_AddToCollectionAction>(
+  if (shouldUsePlatformSecondaryTaskSurface(context)) {
+    action = await showPlatformSecondaryTaskSurface<_AddToCollectionAction>(
       context: context,
-      kind: WindowsAdaptiveSurfaceKind.largeDialog,
+      size: PlatformSecondaryTaskSurfaceSize.large,
       maxWidth: 820,
       builder: (_) => _AddMemoToCollectionSheet(memo: memo),
     );
@@ -42,13 +42,10 @@ Future<void> showAddMemoToCollectionSheet({
     return;
   }
 
-  await Navigator.of(context).push(
-    MaterialPageRoute<MemoCollection>(
-      builder: (_) => CollectionEditorScreen(
-        initialType: MemoCollectionType.manual,
-        initialManualMemoUids: <String>[memo.uid],
-      ),
-    ),
+  await openCollectionEditor(
+    context,
+    initialType: MemoCollectionType.manual,
+    initialManualMemoUids: <String>[memo.uid],
   );
 }
 

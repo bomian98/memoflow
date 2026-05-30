@@ -9,6 +9,7 @@ import 'package:memos_flutter_app/data/models/local_memo.dart';
 import 'package:memos_flutter_app/data/repositories/collections_repository.dart';
 import 'package:memos_flutter_app/features/collections/collection_editor_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
+import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/collections/collections_provider.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/tags/tag_color_lookup.dart';
@@ -19,6 +20,11 @@ void main() {
 
   setUp(() {
     LocaleSettings.setLocale(AppLocale.en);
+    debugPlatformTargetOverride = null;
+  });
+
+  tearDown(() {
+    debugPlatformTargetOverride = null;
   });
 
   testWidgets('prefills a smart collection from the selected tag', (
@@ -303,6 +309,131 @@ void main() {
       'memo-1',
       'memo-2',
     ]);
+  });
+
+  testWidgets('desktop openCollectionEditor uses task surface chrome', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+
+    await tester.binding.setSurfaceSize(const Size(1200, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        child: Builder(
+          builder: (context) {
+            return Scaffold(
+              body: Center(
+                child: FilledButton(
+                  onPressed: () => openCollectionEditor(
+                    context,
+                    initialType: MemoCollectionType.manual,
+                    initialManualMemoUids: const <String>['memo-1'],
+                  ),
+                  child: const Text('Open editor'),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open editor'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.text('Create collection'), findsOneWidget);
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+    expect(find.byType(CollectionEditorScreen), findsOneWidget);
+  });
+
+  testWidgets('desktop task surface returns saved collection result', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    final repository = _MemoryCollectionsRepository();
+    MemoCollection? result;
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        repository: repository,
+        child: Builder(
+          builder: (context) {
+            return Scaffold(
+              body: Center(
+                child: FilledButton(
+                  onPressed: () async {
+                    result = await openCollectionEditor(
+                      context,
+                      initialType: MemoCollectionType.manual,
+                      initialManualMemoUids: const <String>['memo-1'],
+                    );
+                  },
+                  child: const Text('Open editor'),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open editor'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Desktop shelf');
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Create and add 1 memo'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dialog), findsNothing);
+    expect(result, isNotNull);
+    expect(result?.title, 'Desktop shelf');
+    expect((await repository.readAll()).single.title, 'Desktop shelf');
+  });
+
+  testWidgets('desktop task surface still confirms unsaved close', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        child: Builder(
+          builder: (context) {
+            return Scaffold(
+              body: Center(
+                child: FilledButton(
+                  onPressed: () => openCollectionEditor(context),
+                  child: const Text('Open editor'),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open editor'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Unsaved smart');
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard unsaved changes?'), findsOneWidget);
+    expect(find.byType(CollectionEditorScreen), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard unsaved changes?'), findsNothing);
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(CollectionEditorScreen), findsOneWidget);
   });
 
   testWidgets('saves display preferences', (tester) async {

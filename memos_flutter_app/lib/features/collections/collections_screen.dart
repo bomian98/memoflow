@@ -133,12 +133,7 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
   }
 
   Future<void> _openEditor(BuildContext context, {MemoCollection? initial}) {
-    return Navigator.of(context).push(
-      buildPlatformPageRoute<void>(
-        context: context,
-        builder: (_) => CollectionEditorScreen(initialCollection: initial),
-      ),
-    );
+    return openCollectionEditor(context, initialCollection: initial);
   }
 
   void _expandSearch() {

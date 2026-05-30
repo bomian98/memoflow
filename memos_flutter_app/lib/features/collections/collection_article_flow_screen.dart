@@ -954,11 +954,9 @@ class _ArticleFlowEmptyState extends StatelessWidget {
               )
             else
               FilledButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        CollectionEditorScreen(initialCollection: collection),
-                  ),
+                onPressed: () => openCollectionEditor(
+                  context,
+                  initialCollection: collection,
                 ),
                 icon: const Icon(Icons.edit_rounded),
                 label: Text(collectionsStrings.editCollection),

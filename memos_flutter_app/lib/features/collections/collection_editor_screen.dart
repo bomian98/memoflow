@@ -18,6 +18,8 @@ import '../../data/models/rss_feed_preview.dart';
 import '../../data/repositories/collections_repository.dart';
 import '../../data/repositories/rss_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_secondary_task_surface.dart';
 import '../../state/collections/collection_rss_providers.dart';
 import '../../state/collections/collection_resolver.dart';
 import '../../state/collections/collections_provider.dart';
@@ -26,6 +28,35 @@ import '../../state/tags/tag_color_lookup.dart';
 import 'collection_rss_subscription_sheet.dart';
 import 'collection_ui.dart';
 
+Future<MemoCollection?> openCollectionEditor(
+  BuildContext context, {
+  MemoCollection? initialCollection,
+  MemoCollectionType? initialType,
+  List<String> initialSelectedTags = const <String>[],
+  List<String> initialManualMemoUids = const <String>[],
+}) {
+  final editor = CollectionEditorScreen(
+    initialCollection: initialCollection,
+    initialType: initialType,
+    initialSelectedTags: initialSelectedTags,
+    initialManualMemoUids: initialManualMemoUids,
+    embeddedTaskSurface: shouldUsePlatformSecondaryTaskSurface(context),
+  );
+  if (shouldUsePlatformSecondaryTaskSurface(context)) {
+    return showPlatformSecondaryTaskSurface<MemoCollection>(
+      context: context,
+      size: PlatformSecondaryTaskSurfaceSize.large,
+      builder: (_) => editor,
+    );
+  }
+  return Navigator.of(context).push<MemoCollection>(
+    buildPlatformPageRoute<MemoCollection>(
+      context: context,
+      builder: (_) => editor,
+    ),
+  );
+}
+
 class CollectionEditorScreen extends ConsumerStatefulWidget {
   const CollectionEditorScreen({
     super.key,
@@ -33,12 +64,14 @@ class CollectionEditorScreen extends ConsumerStatefulWidget {
     this.initialType,
     this.initialSelectedTags = const <String>[],
     this.initialManualMemoUids = const <String>[],
+    this.embeddedTaskSurface = false,
   });
 
   final MemoCollection? initialCollection;
   final MemoCollectionType? initialType;
   final List<String> initialSelectedTags;
   final List<String> initialManualMemoUids;
+  final bool embeddedTaskSurface;
 
   @override
   ConsumerState<CollectionEditorScreen> createState() =>
@@ -588,119 +621,132 @@ class _CollectionEditorScreenState
       persistedManualMemoUids: persistedManualMemoUids,
     );
 
+    final titleText = _isEditing
+        ? collections.editCollection
+        : collections.createCollection;
+    final bottomBar = _buildBottomBar(
+      context: context,
+      colors: colors,
+      preview: preview,
+      existingManualItems: existingManualItems,
+      persistedManualMemoUids: persistedManualMemoUids,
+      persistedRssSources: persistedRssSources,
+    );
+    final body = ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(20, 8, 20, _bottomBarHeight + 96),
+      children: [
+        _buildBasicsSection(context, colors: colors),
+        _buildSectionDivider(colors),
+        AnimatedSize(
+          duration: sectionMotionDuration,
+          curve: AppMotion.standardCurve,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: sectionMotionDuration,
+            switchInCurve: AppMotion.standardCurve,
+            switchOutCurve: AppMotion.exitCurve,
+            transitionBuilder: (child, animation) {
+              if (sectionMotionDuration == Duration.zero) {
+                return child;
+              }
+              final curved = CurvedAnimation(
+                parent: animation,
+                curve: AppMotion.standardCurve,
+                reverseCurve: AppMotion.exitCurve,
+              );
+              return FadeTransition(
+                opacity: curved,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: AppMotion.verticalEntryOffset,
+                    end: Offset.zero,
+                  ).animate(curved),
+                  child: child,
+                ),
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey<String>('source-${_type.name}'),
+              child: _type == MemoCollectionType.smart
+                  ? _buildSmartSourceSection(
+                      context,
+                      colors: colors,
+                      tagsAsync: tagsAsync,
+                    )
+                  : _type == MemoCollectionType.manual
+                  ? _buildManualSourceSection(
+                      context,
+                      colors: colors,
+                      persistedManualMemoUids: persistedManualMemoUids,
+                      previewItems: previewItems,
+                    )
+                  : _buildRssSourceSection(
+                      context,
+                      colors: colors,
+                      persistedRssSourcesAsync: persistedRssSourcesAsync,
+                    ),
+            ),
+          ),
+        ),
+        if (_isEditing) ...[
+          _buildSectionDivider(colors),
+          _buildPreviewSection(context, colors: colors, preview: preview),
+        ],
+        _buildSectionDivider(colors),
+        _buildAdvancedSection(
+          context,
+          colors: colors,
+          coverAttachmentOptions: coverAttachmentOptions,
+          selectedCoverOptionKey: selectedCoverOptionKey,
+        ),
+      ],
+    );
+
     return PopScope(
       canPop: !hasUnsavedChanges,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop || !hasUnsavedChanges) return;
         await _requestClose(persistedManualMemoUids: persistedManualMemoUids);
       },
-      child: Scaffold(
-        backgroundColor: colors.background,
-        appBar: AppBar(
-          backgroundColor: colors.background,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading:
-              resolveDesktopRouteAutomaticallyImplyLeading(
-                context: context,
-                automaticallyImplyLeading: true,
-              ),
-          leading: resolveDesktopRouteDismissalLeading(
-            context: context,
-            leading: IconButton(
-              tooltip: context.t.strings.legacy.msg_back,
-              icon: const Icon(Icons.arrow_back_rounded),
-              onPressed: () => _requestClose(
+      child: widget.embeddedTaskSurface
+          ? PlatformSecondaryTaskFrame(
+              title: Text(titleText),
+              closeTooltip: context.t.strings.legacy.msg_close,
+              onClose: () => _requestClose(
                 persistedManualMemoUids: persistedManualMemoUids,
               ),
-            ),
-          ),
-          title: Text(
-            _isEditing
-                ? collections.editCollection
-                : collections.createCollection,
-          ),
-        ),
-        bottomNavigationBar: _buildBottomBar(
-          context: context,
-          colors: colors,
-          preview: preview,
-          existingManualItems: existingManualItems,
-          persistedManualMemoUids: persistedManualMemoUids,
-          persistedRssSources: persistedRssSources,
-        ),
-        body: ListView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: EdgeInsets.fromLTRB(20, 8, 20, _bottomBarHeight + 96),
-          children: [
-            _buildBasicsSection(context, colors: colors),
-            _buildSectionDivider(colors),
-            AnimatedSize(
-              duration: sectionMotionDuration,
-              curve: AppMotion.standardCurve,
-              alignment: Alignment.topCenter,
-              child: AnimatedSwitcher(
-                duration: sectionMotionDuration,
-                switchInCurve: AppMotion.standardCurve,
-                switchOutCurve: AppMotion.exitCurve,
-                transitionBuilder: (child, animation) {
-                  if (sectionMotionDuration == Duration.zero) {
-                    return child;
-                  }
-                  final curved = CurvedAnimation(
-                    parent: animation,
-                    curve: AppMotion.standardCurve,
-                    reverseCurve: AppMotion.exitCurve,
-                  );
-                  return FadeTransition(
-                    opacity: curved,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: AppMotion.verticalEntryOffset,
-                        end: Offset.zero,
-                      ).animate(curved),
-                      child: child,
+              backgroundColor: colors.background,
+              bottomBar: bottomBar,
+              body: ColoredBox(color: colors.background, child: body),
+            )
+          : Scaffold(
+              backgroundColor: colors.background,
+              appBar: AppBar(
+                backgroundColor: colors.background,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                surfaceTintColor: Colors.transparent,
+                automaticallyImplyLeading:
+                    resolveDesktopRouteAutomaticallyImplyLeading(
+                      context: context,
+                      automaticallyImplyLeading: true,
                     ),
-                  );
-                },
-                child: KeyedSubtree(
-                  key: ValueKey<String>('source-${_type.name}'),
-                  child: _type == MemoCollectionType.smart
-                      ? _buildSmartSourceSection(
-                          context,
-                          colors: colors,
-                          tagsAsync: tagsAsync,
-                        )
-                      : _type == MemoCollectionType.manual
-                      ? _buildManualSourceSection(
-                          context,
-                          colors: colors,
-                          persistedManualMemoUids: persistedManualMemoUids,
-                          previewItems: previewItems,
-                        )
-                      : _buildRssSourceSection(
-                          context,
-                          colors: colors,
-                          persistedRssSourcesAsync: persistedRssSourcesAsync,
-                        ),
+                leading: resolveDesktopRouteDismissalLeading(
+                  context: context,
+                  leading: IconButton(
+                    tooltip: context.t.strings.legacy.msg_back,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    onPressed: () => _requestClose(
+                      persistedManualMemoUids: persistedManualMemoUids,
+                    ),
+                  ),
                 ),
+                title: Text(titleText),
               ),
+              bottomNavigationBar: bottomBar,
+              body: body,
             ),
-            if (_isEditing) ...[
-              _buildSectionDivider(colors),
-              _buildPreviewSection(context, colors: colors, preview: preview),
-            ],
-            _buildSectionDivider(colors),
-            _buildAdvancedSection(
-              context,
-              colors: colors,
-              coverAttachmentOptions: coverAttachmentOptions,
-              selectedCoverOptionKey: selectedCoverOptionKey,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -2003,22 +2049,37 @@ class _CollectionEditorScreenState
   Future<void> _openManualMemoPicker(
     List<String> persistedManualMemoUids,
   ) async {
-    final selected = await Navigator.of(context).push<List<String>>(
-      MaterialPageRoute<List<String>>(
-        fullscreenDialog: true,
-        builder: (_) => _ManualMemoPickerScreen(
-          initialSelectedMemoUids: _effectiveManualMemoUidsFromPersisted(
-            persistedManualMemoUids,
-          ),
-        ),
+    final useTaskSurface = shouldUsePlatformSecondaryTaskSurface(context);
+    final picker = _ManualMemoPickerScreen(
+      initialSelectedMemoUids: _effectiveManualMemoUidsFromPersisted(
+        persistedManualMemoUids,
       ),
+      embeddedTaskSurface: useTaskSurface,
     );
+    final List<String>? selected;
+    if (useTaskSurface) {
+      selected = await showPlatformSecondaryTaskSurface<List<String>>(
+        context: context,
+        size: PlatformSecondaryTaskSurfaceSize.large,
+        maxWidth: 760,
+        builder: (_) => picker,
+      );
+    } else {
+      selected = await Navigator.of(context).push<List<String>>(
+        MaterialPageRoute<List<String>>(
+          fullscreenDialog: true,
+          builder: (_) => picker,
+        ),
+      );
+    }
     if (selected == null) return;
+    if (!mounted) return;
+    final selectedMemoUids = selected;
     _updateState(() {
       _hasExplicitManualMemoSelection = true;
       _manualMemoUids
         ..clear()
-        ..addAll(selected);
+        ..addAll(selectedMemoUids);
     });
   }
 
@@ -2980,9 +3041,13 @@ class _PresetChip extends StatelessWidget {
 }
 
 class _ManualMemoPickerScreen extends ConsumerStatefulWidget {
-  const _ManualMemoPickerScreen({required this.initialSelectedMemoUids});
+  const _ManualMemoPickerScreen({
+    required this.initialSelectedMemoUids,
+    this.embeddedTaskSurface = false,
+  });
 
   final List<String> initialSelectedMemoUids;
+  final bool embeddedTaskSurface;
 
   @override
   ConsumerState<_ManualMemoPickerScreen> createState() =>
@@ -3020,6 +3085,184 @@ class _ManualMemoPickerScreenState
     final colors = _CollectionEditorColors.fromTheme(context);
     final candidatesAsync = ref.watch(collectionCandidateMemosProvider);
     final query = _searchController.text.trim().toLowerCase();
+    final title = Text(context.tr(zh: '选择 memo', en: 'Select memos'));
+    final bottomBar = SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                context.tr(
+                  zh: '已选 ${_selectedMemoUids.length} 条',
+                  en: '${_selectedMemoUids.length} selected',
+                ),
+                style: TextStyle(color: colors.textMuted),
+              ),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(
+                context,
+              ).pop(List<String>.from(_selectedMemoUids)),
+              style: FilledButton.styleFrom(
+                backgroundColor: MemoFlowPalette.primary,
+              ),
+              child: Text(
+                collections.addSelected(count: _selectedMemoUids.length),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    final body = Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _buildSelectedSummary(candidatesAsync.valueOrNull ?? const []),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: colors.textMuted),
+          ),
+          const SizedBox(height: 10),
+          _EditorFieldShell(
+            label: collections.searchMemos,
+            colors: colors,
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                isCollapsed: true,
+                hintText: collections.searchMemos,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                selected: _onlyImages,
+                label: Text(collections.attachmentImagesOnly),
+                onSelected: (_) => setState(() => _onlyImages = !_onlyImages),
+              ),
+              ChoiceChip(
+                selected: _recentOnly,
+                label: Text(collections.last30Days),
+                onSelected: (_) => setState(() => _recentOnly = !_recentOnly),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: candidatesAsync.when(
+              data: (candidates) {
+                final cutoff = DateTime.now().subtract(
+                  const Duration(days: 30),
+                );
+                final filtered = candidates
+                    .where((memo) {
+                      if (_onlyImages &&
+                          !memo.attachments.any((item) => item.isImage)) {
+                        return false;
+                      }
+                      if (_recentOnly &&
+                          memo.effectiveDisplayTime.isBefore(cutoff)) {
+                        return false;
+                      }
+                      if (query.isEmpty) return true;
+                      if (memo.content.toLowerCase().contains(query)) {
+                        return true;
+                      }
+                      for (final tag in memo.tags) {
+                        if (tag.toLowerCase().contains(query)) return true;
+                      }
+                      return false;
+                    })
+                    .toList(growable: false);
+
+                if (filtered.isEmpty) {
+                  return CollectionStatusView(
+                    icon: Icons.search_off_rounded,
+                    title: context.tr(zh: '没有可添加的 memo', en: 'No memos found'),
+                    description: context.tr(
+                      zh: '试试换个关键词或放宽筛选条件。',
+                      en: 'Try another keyword or relax the filters.',
+                    ),
+                    centered: false,
+                    compact: true,
+                  );
+                }
+
+                return ListView.separated(
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, _) =>
+                      Divider(height: 1, color: colors.divider),
+                  itemBuilder: (context, index) {
+                    final memo = filtered[index];
+                    final selected = _selectedMemoUids.contains(memo.uid);
+                    final content = memo.content
+                        .replaceAll(RegExp(r'\s+'), ' ')
+                        .trim();
+                    final preview = content.isEmpty
+                        ? context.t.strings.legacy.msg_empty_content
+                        : content;
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        selected
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        color: selected
+                            ? MemoFlowPalette.primary
+                            : colors.textMuted,
+                      ),
+                      title: Text(
+                        preview,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        memo.tags.take(3).map((tag) => '#$tag').join('  '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () => _toggleMemo(memo),
+                    );
+                  },
+                );
+              },
+              error: (error, _) => CollectionErrorView(
+                title: collections.unableToLoadMemos,
+                message: '$error',
+                centered: false,
+                compact: true,
+              ),
+              loading: () => CollectionLoadingView(
+                label: collections.loadingMemos,
+                centered: false,
+                compact: true,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (widget.embeddedTaskSurface) {
+      return PlatformSecondaryTaskFrame(
+        title: title,
+        closeTooltip: context.t.strings.legacy.msg_close,
+        backgroundColor: colors.background,
+        bottomBar: bottomBar,
+        body: ColoredBox(color: colors.background, child: body),
+      );
+    }
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -3032,178 +3275,10 @@ class _ManualMemoPickerScreenState
           context: context,
           automaticallyImplyLeading: true,
         ),
-        title: Text(context.tr(zh: '选择 memo', en: 'Select memos')),
+        title: title,
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  context.tr(
-                    zh: '已选 ${_selectedMemoUids.length} 条',
-                    en: '${_selectedMemoUids.length} selected',
-                  ),
-                  style: TextStyle(color: colors.textMuted),
-                ),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(
-                  context,
-                ).pop(List<String>.from(_selectedMemoUids)),
-                style: FilledButton.styleFrom(
-                  backgroundColor: MemoFlowPalette.primary,
-                ),
-                child: Text(
-                  collections.addSelected(count: _selectedMemoUids.length),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _buildSelectedSummary(candidatesAsync.valueOrNull ?? const []),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: colors.textMuted),
-            ),
-            const SizedBox(height: 10),
-            _EditorFieldShell(
-              label: collections.searchMemos,
-              colors: colors,
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  isCollapsed: true,
-                  hintText: collections.searchMemos,
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ChoiceChip(
-                  selected: _onlyImages,
-                  label: Text(collections.attachmentImagesOnly),
-                  onSelected: (_) => setState(() => _onlyImages = !_onlyImages),
-                ),
-                ChoiceChip(
-                  selected: _recentOnly,
-                  label: Text(collections.last30Days),
-                  onSelected: (_) => setState(() => _recentOnly = !_recentOnly),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: candidatesAsync.when(
-                data: (candidates) {
-                  final cutoff = DateTime.now().subtract(
-                    const Duration(days: 30),
-                  );
-                  final filtered = candidates
-                      .where((memo) {
-                        if (_onlyImages &&
-                            !memo.attachments.any((item) => item.isImage)) {
-                          return false;
-                        }
-                        if (_recentOnly &&
-                            memo.effectiveDisplayTime.isBefore(cutoff)) {
-                          return false;
-                        }
-                        if (query.isEmpty) return true;
-                        if (memo.content.toLowerCase().contains(query)) {
-                          return true;
-                        }
-                        for (final tag in memo.tags) {
-                          if (tag.toLowerCase().contains(query)) return true;
-                        }
-                        return false;
-                      })
-                      .toList(growable: false);
-
-                  if (filtered.isEmpty) {
-                    return CollectionStatusView(
-                      icon: Icons.search_off_rounded,
-                      title: context.tr(
-                        zh: '没有可添加的 memo',
-                        en: 'No memos found',
-                      ),
-                      description: context.tr(
-                        zh: '试试换个关键词或放宽筛选条件。',
-                        en: 'Try another keyword or relax the filters.',
-                      ),
-                      centered: false,
-                      compact: true,
-                    );
-                  }
-
-                  return ListView.separated(
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, _) =>
-                        Divider(height: 1, color: colors.divider),
-                    itemBuilder: (context, index) {
-                      final memo = filtered[index];
-                      final selected = _selectedMemoUids.contains(memo.uid);
-                      final content = memo.content
-                          .replaceAll(RegExp(r'\s+'), ' ')
-                          .trim();
-                      final preview = content.isEmpty
-                          ? context.t.strings.legacy.msg_empty_content
-                          : content;
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          selected
-                              ? Icons.check_circle_rounded
-                              : Icons.radio_button_unchecked_rounded,
-                          color: selected
-                              ? MemoFlowPalette.primary
-                              : colors.textMuted,
-                        ),
-                        title: Text(
-                          preview,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          memo.tags.take(3).map((tag) => '#$tag').join('  '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onTap: () => _toggleMemo(memo),
-                      );
-                    },
-                  );
-                },
-                error: (error, _) => CollectionErrorView(
-                  title: collections.unableToLoadMemos,
-                  message: '$error',
-                  centered: false,
-                  compact: true,
-                ),
-                loading: () => CollectionLoadingView(
-                  label: collections.loadingMemos,
-                  centered: false,
-                  compact: true,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      bottomNavigationBar: bottomBar,
+      body: body,
     );
   }
 

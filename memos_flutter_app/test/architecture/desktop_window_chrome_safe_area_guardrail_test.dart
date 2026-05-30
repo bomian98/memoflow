@@ -49,6 +49,57 @@ void main() {
     );
   });
 
+  test('desktop secondary task surface seam stays lower-layer safe', () async {
+    final helper = File(
+      'lib/platform/widgets/platform_secondary_task_surface.dart',
+    );
+    expect(helper.existsSync(), isTrue);
+
+    final contents = await helper.readAsString();
+    const forbiddenImports = <String>[
+      'package:memos_flutter_app/features/',
+      'package:memos_flutter_app/state/',
+      'package:memos_flutter_app/application/',
+      'package:memos_flutter_app/data/',
+      '../../features/',
+      '../../state/',
+      '../../application/',
+      '../../data/',
+      '../features/',
+      '../state/',
+      '../application/',
+      '../data/',
+    ];
+
+    final violations = <String>[];
+    for (final line in contents.split('\n')) {
+      final trimmed = line.trim();
+      if (!trimmed.startsWith('import ')) continue;
+      final match = RegExp(
+        r"""^import ['"]([^'"]+)['"];$""",
+      ).firstMatch(trimmed);
+      if (match == null) continue;
+      final importPath = match.group(1)!;
+      if (forbiddenImports.any(importPath.startsWith)) {
+        violations.add(importPath);
+      }
+    }
+
+    expect(
+      violations,
+      isEmpty,
+      reason: violations.isEmpty
+          ? null
+          : 'secondary task surface seam must not import higher layers:\n'
+                '${violations.join('\n')}',
+    );
+    expect(
+      contents.contains('kMacosTrafficLightReservedWidth'),
+      isFalse,
+      reason: 'task surfaces should use dialog geometry, not magic padding.',
+    );
+  });
+
   test('macOS shell and settings window reuse chrome safe-area seam', () async {
     final shell = await File(
       'lib/features/home/desktop/apple_macos_page_shell.dart',
@@ -136,6 +187,67 @@ void main() {
         'visible',
       );
     }
+  });
+
+  test('migrated collections task flows use shared task surface helpers', () async {
+    final collectionEditor = await File(
+      'lib/features/collections/collection_editor_screen.dart',
+    ).readAsString();
+    final manualManage = await File(
+      'lib/features/collections/manual_collection_manage_screen.dart',
+    ).readAsString();
+
+    expect(collectionEditor.contains('openCollectionEditor'), isTrue);
+    expect(collectionEditor.contains('PlatformSecondaryTaskFrame'), isTrue);
+    expect(
+      collectionEditor.contains('showPlatformSecondaryTaskSurface'),
+      isTrue,
+    );
+    expect(
+      collectionEditor.contains('kMacosTrafficLightReservedWidth'),
+      isFalse,
+    );
+    expect(manualManage.contains('openManualCollectionManage'), isTrue);
+    expect(manualManage.contains('PlatformSecondaryTaskFrame'), isTrue);
+    expect(manualManage.contains('kMacosTrafficLightReservedWidth'), isFalse);
+
+    final migratedEntries = <String, String>{
+      'collections screen': 'lib/features/collections/collections_screen.dart',
+      'add to collection sheet':
+          'lib/features/collections/add_to_collection_sheet.dart',
+      'collection reader screen':
+          'lib/features/collections/collection_reader_screen.dart',
+      'collection reader shell':
+          'lib/features/collections/collection_reader_shell.dart',
+      'collection article flow':
+          'lib/features/collections/collection_article_flow_screen.dart',
+    };
+
+    for (final entry in migratedEntries.entries) {
+      final source = await File(entry.value).readAsString();
+      expect(
+        source.contains('openCollectionEditor'),
+        isTrue,
+        reason: '${entry.key} should use the shared editor presenter.',
+      );
+      expect(
+        source.contains('CollectionEditorScreen('),
+        isFalse,
+        reason:
+            '${entry.key} must not directly push the editor as a page-local AppBar flow.',
+      );
+    }
+
+    final shell = await File(
+      'lib/features/collections/collection_reader_shell.dart',
+    ).readAsString();
+    expect(shell.contains('openManualCollectionManage'), isTrue);
+    expect(
+      shell.contains('ManualCollectionManageScreen('),
+      isFalse,
+      reason:
+          'reader shell must not directly push manual collection management as a page-local AppBar flow.',
+    );
   });
 
   test('desktop settings app-owned close stays platform gated', () async {
