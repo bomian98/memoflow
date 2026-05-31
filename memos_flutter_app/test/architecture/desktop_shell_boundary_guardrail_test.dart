@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:memos_flutter_app/core/desktop/desktop_window_policy.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -139,6 +140,44 @@ void main() {
                   'command. Direct windowManager.close calls are reserved for '
                   'approved lifecycle termination or documented subwindow '
                   'fallbacks:\n${violations.join('\n')}',
+      );
+    },
+  );
+
+  test(
+    'main window minimum-size policy is applied in Dart and native runners',
+    () async {
+      final mainDart = await File('lib/main.dart').readAsString();
+      final windowsRunner = await File(
+        'windows/runner/main.cpp',
+      ).readAsString();
+      final macosRunner = await File(
+        'macos/Runner/MainFlutterWindow.swift',
+      ).readAsString();
+      final initialWidth = kMemoFlowDesktopMainWindowInitialSize.width.toInt();
+      final initialHeight = kMemoFlowDesktopMainWindowInitialSize.height
+          .toInt();
+      final minimumWidth = kMemoFlowDesktopMainWindowMinimumSize.width.toInt();
+      final minimumHeight = kMemoFlowDesktopMainWindowMinimumSize.height
+          .toInt();
+
+      expect(mainDart, contains('resolveDesktopMainWindowPolicy('));
+      expect(mainDart, contains('minimumSize: mainWindowPolicy.minimumSize'));
+      expect(
+        windowsRunner,
+        contains('Win32Window::Size size($initialWidth, $initialHeight)'),
+      );
+      expect(
+        windowsRunner,
+        contains('Win32Window::Size($minimumWidth, $minimumHeight)'),
+      );
+      expect(
+        macosRunner,
+        contains('NSSize(width: $initialWidth, height: $initialHeight)'),
+      );
+      expect(
+        macosRunner,
+        contains('NSSize(width: $minimumWidth, height: $minimumHeight)'),
       );
     },
   );

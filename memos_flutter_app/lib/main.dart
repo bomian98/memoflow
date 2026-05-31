@@ -21,6 +21,7 @@ import 'application/desktop/desktop_runtime_capabilities.dart';
 import 'application/desktop/desktop_tray_controller.dart';
 import 'application/desktop/single_instance_coordinator.dart';
 import 'core/app_channel.dart';
+import 'core/desktop/desktop_window_policy.dart';
 import 'core/desktop_runtime_role.dart';
 import 'core/debug_ephemeral_storage.dart';
 import 'core/startup_timing.dart';
@@ -223,8 +224,12 @@ void main(List<String> args) {
       }
       if (supportsWindowsShellRuntime) {
         await windowManager.ensureInitialized();
-        const options = WindowOptions(
-          size: Size(1360, 860),
+        final mainWindowPolicy = resolveDesktopMainWindowPolicy(
+          platform: defaultTargetPlatform,
+        );
+        final options = WindowOptions(
+          size: mainWindowPolicy.initialSize,
+          minimumSize: mainWindowPolicy.minimumSize,
           center: true,
           backgroundColor: Color(0x00000000),
         );
