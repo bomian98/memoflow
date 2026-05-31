@@ -267,7 +267,7 @@ Subwindow exceptions
   Settings subwindow: Dart-owned frameless setup, size comes from desktop_settings_window route config
 ```
 
-后续 `DesktopWindowPolicy` 可以在 Dart 侧暴露同名常量和 tests，用于 shell/subwindow 决策；但 Windows C++ runner 和 macOS Swift runner 仍必须保存 native startup/min-size 约束，因为这些约束在 Flutter Dart 初始化之前生效。该例外需要由 source inventory / smoke verification 保护，避免 Dart 和 native 常量无意漂移。
+当前 Dart 侧通过 `DesktopWindowPolicy` 暴露同名常量和 tests，用于主窗口 `WindowOptions.minimumSize` 与 shell/subwindow 决策；Windows C++ runner 和 macOS Swift runner 仍必须保存 native startup/min-size 约束，因为这些约束在 Flutter Dart 初始化之前生效。该例外由 source inventory / guardrail verification 保护，避免 Dart 和 native 常量无意漂移。
 
 1. Pin current divergences with source inventory and tests:
    - route motion
