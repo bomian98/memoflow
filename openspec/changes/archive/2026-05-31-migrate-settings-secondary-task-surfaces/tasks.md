@@ -32,4 +32,4 @@
 - [x] 5.2 运行相关 architecture guardrail tests。
 - [x] 5.3 运行 `flutter analyze`。
 - [x] 5.4 运行 `openspec validate migrate-settings-secondary-task-surfaces --strict`。
-- [ ] 5.5 在桌面端手动验证快捷方式编辑和 AI 服务新增向导：标题、关闭/取消、完成结果、代理设置入口和移动端导航行为都符合预期。
+- [x] 5.5 在桌面端手动验证快捷方式编辑和 AI 服务新增向导：标题、关闭/取消、完成结果、代理设置入口和移动端导航行为都符合预期。

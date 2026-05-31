@@ -18,6 +18,17 @@
 - **THEN** it SHALL consume the shared task surface seam
 - **AND** it SHALL NOT duplicate macOS traffic-light width, Windows caption-control spacing, or page-local desktop chrome offsets
 
+#### Scenario: AI service detail opens on desktop
+- **WHEN** the user opens AI service details or Manage Service from desktop AI settings
+- **THEN** the service detail flow SHALL be presented in a shared desktop task surface
+- **AND** the surface SHALL provide visible title, close/cancel affordance, and save action
+- **AND** mobile and tablet layouts SHALL preserve the existing route-based service detail behavior
+
+#### Scenario: AI proxy settings remain out of scope
+- **WHEN** the user opens proxy settings from within a migrated AI service detail task surface
+- **THEN** the proxy settings entry MAY keep its current nested page behavior
+- **AND** the system SHALL NOT require `AiProxySettingsScreen` to be migrated as part of the AI service detail task surface change
+
 ### Requirement: Desktop task surfaces SHALL preserve task completion and cancellation semantics
 
 桌面任务表面 SHALL 明确区分保存/完成、取消/关闭和系统窗口关闭。关闭任务表面 SHALL 返回到父页面或父任务，不得关闭整个主窗口；保存成功 SHALL 将结果传回调用方。
@@ -33,6 +44,17 @@
 - **THEN** the task SHALL apply the same save/discard/cancel confirmation policy as explicit route dismissal
 - **AND** the task SHALL NOT silently discard edits
 - **AND** the task SHALL NOT close the whole desktop window
+
+#### Scenario: User closes AI service detail with unsaved changes
+- **WHEN** the user edits AI service detail fields and then requests close, cancel, or back before saving
+- **THEN** the system SHALL show an unsaved-change confirmation
+- **AND** the user SHALL be able to save and close, discard changes, or continue editing
+- **AND** a failed save SHALL keep the service detail task open
+
+#### Scenario: Connection check does not create dirty state
+- **WHEN** the user runs an AI service connection check
+- **THEN** validation status, validation message, or last checked timestamp changes SHALL NOT by themselves be treated as unsaved user edits
+- **AND** closing the detail surface after only a connection check SHALL NOT require a discard-changes confirmation
 
 ### Requirement: Desktop task surfaces SHALL be bounded and responsive
 
@@ -61,6 +83,11 @@
 - **WHEN** a feature page provides content for the shared task surface
 - **THEN** the feature MAY provide semantic title, content, action widgets, callbacks, and result handling
 - **AND** platform-specific task surface layout SHALL remain owned by the shared seam
+
+#### Scenario: AI service detail entry points are guarded
+- **WHEN** AI service detail entry points are migrated to desktop task surfaces
+- **THEN** guardrail coverage SHALL prevent production entry points from directly pushing page-local `AiServiceDetailScreen` flows again
+- **AND** the guarded files SHALL use semantic presenter helpers rather than duplicating desktop platform checks
 
 ### Requirement: Secondary page inventory SHALL guide task surface migration
 
