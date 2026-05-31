@@ -17,6 +17,7 @@ import '../../core/app_theme.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/desktop_quick_input_channel.dart';
 import '../../core/top_toast.dart';
+import '../../application/desktop/desktop_settings_window.dart';
 import '../../application/sync/desktop_remote_sync_facade.dart';
 import '../../application/sync/sync_coordinator.dart';
 import '../../application/desktop/desktop_workspace_snapshot.dart';
@@ -58,9 +59,14 @@ final desktopSettingsWorkspaceSnapshotProvider =
     StateProvider<DesktopWorkspaceSnapshot?>((ref) => null);
 
 class DesktopSettingsWindowApp extends ConsumerWidget {
-  const DesktopSettingsWindowApp({super.key, required this.windowId});
+  const DesktopSettingsWindowApp({
+    super.key,
+    required this.windowId,
+    this.initialTarget,
+  });
 
   final int windowId;
+  final DesktopSettingsWindowTarget? initialTarget;
 
   static AppLocale _appLocaleFor(AppLanguage language) {
     return appLocaleForLanguage(language);
@@ -170,7 +176,10 @@ class DesktopSettingsWindowApp extends ConsumerWidget {
             ),
           );
         },
-        home: DesktopSettingsWindowScreen(windowId: windowId),
+        home: DesktopSettingsWindowScreen(
+          windowId: windowId,
+          initialTarget: initialTarget,
+        ),
       ),
     );
   }
@@ -204,9 +213,14 @@ class _DesktopSettingsWindowFrame extends StatelessWidget {
 }
 
 class DesktopSettingsWindowScreen extends StatefulWidget {
-  const DesktopSettingsWindowScreen({super.key, required this.windowId});
+  const DesktopSettingsWindowScreen({
+    super.key,
+    required this.windowId,
+    this.initialTarget,
+  });
 
   final int windowId;
+  final DesktopSettingsWindowTarget? initialTarget;
 
   @override
   State<DesktopSettingsWindowScreen> createState() =>
@@ -223,15 +237,21 @@ class _DesktopSettingsWindowScreenState
   ProviderSubscription<WorkspacePreferences>? _workspacePreferencesSub;
   Timer? _aiSettingsReloadDebounce;
   Timer? _preferencesReloadDebounce;
+  DesktopSettingsWindowTarget? _settingsTargetRequest;
   bool _workspaceListenersBound = false;
   bool _workspaceSnapshotLoading = true;
   bool _windowVisible = true;
   int _settingsRootResetToken = 0;
+  int _settingsTargetRequestToken = 0;
   String? _workspaceSnapshotError;
 
   @override
   void initState() {
     super.initState();
+    _settingsTargetRequest = widget.initialTarget;
+    if (_settingsTargetRequest != null) {
+      _settingsTargetRequestToken = 1;
+    }
     DesktopMultiWindow.setMethodHandler(_handleMethodCall);
     unawaited(_initializeWindowManager());
     unawaited(_notifyMainWindowVisibility(true));
@@ -480,6 +500,17 @@ class _DesktopSettingsWindowScreenState
   Future<dynamic> _handleMethodCall(MethodCall call, int _) async {
     if (call.method == desktopSettingsFocusMethod) {
       await _bringWindowToFront();
+      return true;
+    }
+    if (call.method == desktopSettingsOpenTargetMethod) {
+      final target = DesktopSettingsWindowTarget.fromPayload(call.arguments);
+      if (target == null) return false;
+      if (mounted) {
+        setState(() {
+          _settingsTargetRequest = target;
+          _settingsTargetRequestToken += 1;
+        });
+      }
       return true;
     }
     if (call.method == desktopDbChangedMethod) {
@@ -790,6 +821,8 @@ class _DesktopSettingsWindowScreenState
     }
     return _DesktopSettingsWorkbench(
       rootResetToken: _settingsRootResetToken,
+      targetRequest: _settingsTargetRequest,
+      targetRequestToken: _settingsTargetRequestToken,
       onRequestClose: () => unawaited(_closeWindow()),
     );
   }
@@ -870,10 +903,14 @@ enum _DesktopSettingsPane {
 class _DesktopSettingsWorkbench extends StatefulWidget {
   const _DesktopSettingsWorkbench({
     required this.rootResetToken,
+    required this.targetRequest,
+    required this.targetRequestToken,
     required this.onRequestClose,
   });
 
   final int rootResetToken;
+  final DesktopSettingsWindowTarget? targetRequest;
+  final int targetRequestToken;
   final VoidCallback onRequestClose;
 
   @override
@@ -884,6 +921,13 @@ class _DesktopSettingsWorkbench extends StatefulWidget {
 class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
   var _pane = _DesktopSettingsPane.account;
   GlobalKey<NavigatorState> _paneNavigatorKey = GlobalKey<NavigatorState>();
+  var _appliedTargetRequestToken = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _applyTargetRequestIfNeeded();
+  }
 
   @override
   void didUpdateWidget(covariant _DesktopSettingsWorkbench oldWidget) {
@@ -891,6 +935,19 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
     if (oldWidget.rootResetToken != widget.rootResetToken) {
       _pane = _DesktopSettingsPane.account;
       _paneNavigatorKey = GlobalKey<NavigatorState>();
+    }
+    _applyTargetRequestIfNeeded();
+  }
+
+  void _applyTargetRequestIfNeeded() {
+    if (_appliedTargetRequestToken == widget.targetRequestToken) return;
+    final target = widget.targetRequest;
+    if (target == null) return;
+    _appliedTargetRequestToken = widget.targetRequestToken;
+    switch (target) {
+      case DesktopSettingsWindowTarget.ai:
+        _pane = _DesktopSettingsPane.ai;
+        _paneNavigatorKey = GlobalKey<NavigatorState>();
     }
   }
 

@@ -10,6 +10,41 @@ import '../../core/top_toast.dart';
 
 abstract interface class DesktopSettingsWindowRouteIntent {}
 
+enum DesktopSettingsWindowTarget {
+  ai;
+
+  static const String payloadKey = 'desktop_settings_target';
+
+  String get payloadValue {
+    return switch (this) {
+      DesktopSettingsWindowTarget.ai => 'ai',
+    };
+  }
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{payloadKey: payloadValue};
+  }
+
+  static DesktopSettingsWindowTarget? fromPayload(Object? payload) {
+    final value = switch (payload) {
+      String raw => raw,
+      Map<Object?, Object?> raw => raw[payloadKey],
+      _ => null,
+    };
+    if (value is! String) return null;
+    return switch (value) {
+      'ai' => DesktopSettingsWindowTarget.ai,
+      _ => null,
+    };
+  }
+
+  static DesktopSettingsWindowTarget? fromLaunchArgs(
+    Map<String, dynamic> args,
+  ) {
+    return fromPayload(args[payloadKey]);
+  }
+}
+
 typedef DesktopSettingsWindowVisibilityListener =
     void Function({required int windowId, required bool visible});
 
@@ -72,14 +107,25 @@ bool supportsDesktopSettingsWindow() {
 
 Future<DesktopSettingsWindowOpenResult> openDesktopSettingsWindow({
   BuildContext? feedbackContext,
+  DesktopSettingsWindowTarget? target,
 }) {
   if (!supportsDesktopSettingsWindow()) {
     return Future.value(const DesktopSettingsWindowOpenResult.unsupported());
   }
   final pending = _desktopSettingsWindowOpenTask;
-  if (pending != null) return pending;
+  if (pending != null) {
+    if (target == null) return pending;
+    return _routeDesktopSettingsTargetAfterOpen(
+      pending,
+      target: target,
+      feedbackContext: feedbackContext,
+    );
+  }
 
-  final task = _openDesktopSettingsWindow(feedbackContext: feedbackContext);
+  final task = _openDesktopSettingsWindow(
+    feedbackContext: feedbackContext,
+    target: target,
+  );
   _desktopSettingsWindowOpenTask = task;
   return task.whenComplete(() {
     if (identical(_desktopSettingsWindowOpenTask, task)) {
@@ -90,11 +136,12 @@ Future<DesktopSettingsWindowOpenResult> openDesktopSettingsWindow({
 
 Future<DesktopSettingsWindowOpenResult> _openDesktopSettingsWindow({
   BuildContext? feedbackContext,
+  DesktopSettingsWindowTarget? target,
 }) async {
   try {
-    var window = await _ensureDesktopSettingsWindowReady();
+    var window = await _ensureDesktopSettingsWindowReady(target: target);
     try {
-      return await _showAndVerifyDesktopSettingsWindow(window);
+      return await _showAndVerifyDesktopSettingsWindow(window, target: target);
     } catch (_) {
       _notifyDesktopSettingsWindowVisibility(
         windowId: window.windowId,
@@ -102,8 +149,8 @@ Future<DesktopSettingsWindowOpenResult> _openDesktopSettingsWindow({
       );
       _desktopSettingsWindow = null;
       _desktopSettingsWindowId = null;
-      window = await _ensureDesktopSettingsWindowReady();
-      return await _showAndVerifyDesktopSettingsWindow(window);
+      window = await _ensureDesktopSettingsWindowReady(target: target);
+      return await _showAndVerifyDesktopSettingsWindow(window, target: target);
     }
   } catch (error) {
     final context = feedbackContext;
@@ -115,23 +162,30 @@ Future<DesktopSettingsWindowOpenResult> _openDesktopSettingsWindow({
 }
 
 Future<DesktopSettingsWindowOpenResult> _showAndVerifyDesktopSettingsWindow(
-  WindowController window,
-) async {
+  WindowController window, {
+  DesktopSettingsWindowTarget? target,
+}) async {
   await _withSettingsWindowTimeout(window.show());
   _notifyDesktopSettingsWindowVisibility(
     windowId: window.windowId,
     visible: true,
   );
-  await _refreshDesktopSettingsWindowSession(window.windowId);
   await _focusDesktopSettingsWindow(window.windowId);
   final responsive = await _isDesktopSettingsWindowResponsive(window.windowId);
   if (!responsive) {
     throw StateError('Desktop settings window is unresponsive');
   }
+  await _refreshDesktopSettingsWindowSession(window.windowId);
+  final targetToOpen = target;
+  if (targetToOpen != null) {
+    await _routeDesktopSettingsWindowTarget(window.windowId, targetToOpen);
+  }
   return const DesktopSettingsWindowOpenResult.opened();
 }
 
-Future<WindowController> _ensureDesktopSettingsWindowReady() async {
+Future<WindowController> _ensureDesktopSettingsWindowReady({
+  DesktopSettingsWindowTarget? target,
+}) async {
   await _refreshDesktopSettingsWindowReference();
   final existing = _desktopSettingsWindow;
   if (existing != null) return existing;
@@ -154,6 +208,7 @@ Future<WindowController> _ensureDesktopSettingsWindowReady() async {
     final window = await DesktopMultiWindow.createWindow(
       jsonEncode(<String, dynamic>{
         desktopWindowTypeKey: desktopWindowTypeSettings,
+        if (target != null) ...target.toJson(),
       }),
     );
     _desktopSettingsWindow = window;
@@ -171,6 +226,54 @@ Future<WindowController> _ensureDesktopSettingsWindowReady() async {
     if (identical(_desktopSettingsWindowPrepareTask, completer.future)) {
       _desktopSettingsWindowPrepareTask = null;
     }
+  }
+}
+
+Future<DesktopSettingsWindowOpenResult> _routeDesktopSettingsTargetAfterOpen(
+  Future<DesktopSettingsWindowOpenResult> pending, {
+  required DesktopSettingsWindowTarget target,
+  BuildContext? feedbackContext,
+}) async {
+  final result = await pending;
+  if (!result.opened) return result;
+  final windowId = _desktopSettingsWindowId;
+  if (windowId == null) {
+    final error = StateError(
+      'Desktop settings window target requested without a window id',
+    );
+    final context = feedbackContext;
+    if (context != null && context.mounted) {
+      showTopToast(context, 'Failed to open settings: $error');
+    }
+    return DesktopSettingsWindowOpenResult.failed(error);
+  }
+  try {
+    await _routeDesktopSettingsWindowTarget(windowId, target);
+    return result;
+  } catch (error) {
+    final context = feedbackContext;
+    if (context != null && context.mounted) {
+      showTopToast(context, 'Failed to open settings: $error');
+    }
+    return DesktopSettingsWindowOpenResult.failed(error);
+  }
+}
+
+Future<void> _routeDesktopSettingsWindowTarget(
+  int windowId,
+  DesktopSettingsWindowTarget target,
+) async {
+  final result = await _withSettingsWindowTimeout(
+    DesktopMultiWindow.invokeMethod(
+      windowId,
+      desktopSettingsOpenTargetMethod,
+      target.toJson(),
+    ),
+  );
+  if (result != true) {
+    throw StateError(
+      'Desktop settings window target was not accepted: ${target.payloadValue}',
+    );
   }
 }
 

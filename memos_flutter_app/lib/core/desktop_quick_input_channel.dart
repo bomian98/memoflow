@@ -14,6 +14,7 @@ const String desktopQuickInputPickLinkMemoMethod =
 const String desktopQuickInputListTagsMethod = 'desktop.quickInput.listTags';
 
 const String desktopSettingsFocusMethod = 'desktop.settings.focus';
+const String desktopSettingsOpenTargetMethod = 'desktop.settings.openTarget';
 const String desktopSettingsRefreshSessionMethod =
     'desktop.settings.refreshSession';
 const String desktopSettingsPingMethod = 'desktop.settings.ping';

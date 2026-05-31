@@ -435,7 +435,10 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
         await _pushMacosMenuRoute(const QuickPromptEditorScreen());
         return;
       case macosMenuCommandAiSettings:
-        await _pushMacosMenuRoute(const AiSettingsScreen());
+        await _openMacosSettingsWindow(
+          target: DesktopSettingsWindowTarget.ai,
+          fallback: const AiSettingsScreen(),
+        );
         return;
       case macosMenuCommandAiProvider:
         await _pushMacosMenuRoute(const AiProviderSettingsScreen());
@@ -473,12 +476,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
         await _pushMacosMenuRoute(const ExportLogsScreen());
         return;
       case macosMenuCommandOpenSettingsWindow:
-        final result = await openDesktopSettingsWindow(
-          feedbackContext: _navigatorKey.currentContext,
-        );
-        if (result.shouldFallback) {
-          await _pushMacosMenuRoute(const SettingsScreen());
-        }
+        await _openMacosSettingsWindow(fallback: const SettingsScreen());
         return;
       case macosMenuCommandHelpCenter:
         await _openExternalUrl('https://memoflow.hzc073.com/help/');
@@ -500,6 +498,18 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
     final navigator = _navigatorKey.currentState;
     if (navigator == null) return;
     await navigator.push(MaterialPageRoute<void>(builder: (_) => route));
+  }
+
+  Future<void> _openMacosSettingsWindow({
+    DesktopSettingsWindowTarget? target,
+    Widget? fallback,
+  }) async {
+    final result = await openDesktopSettingsWindow(
+      feedbackContext: _navigatorKey.currentContext,
+      target: target,
+    );
+    if (result.opened || fallback == null) return;
+    await _pushMacosMenuRoute(fallback);
   }
 
   Future<bool> _closeMacosMainWindowSecondaryRoute() async {

@@ -16,6 +16,7 @@ import 'package:video_player_media_kit/video_player_media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
+import 'application/desktop/desktop_settings_window.dart';
 import 'application/desktop/desktop_runtime_capabilities.dart';
 import 'application/desktop/desktop_tray_controller.dart';
 import 'application/desktop/single_instance_coordinator.dart';
@@ -174,6 +175,9 @@ void main(List<String> args) {
         if (type == desktopWindowTypeSettings) {
           _initializeDesktopDatabaseFactory();
           StartupTiming.markRunApp(target: 'desktop_settings');
+          final initialTarget = DesktopSettingsWindowTarget.fromLaunchArgs(
+            launchArgs,
+          );
           runApp(
             ProviderScope(
               overrides: [
@@ -182,7 +186,10 @@ void main(List<String> args) {
                 ),
                 desktopWindowIdProvider.overrideWith((ref) => windowId),
               ],
-              child: DesktopSettingsWindowApp(windowId: windowId),
+              child: DesktopSettingsWindowApp(
+                windowId: windowId,
+                initialTarget: initialTarget,
+              ),
             ),
           );
           _schedulePostFirstFrameInit();

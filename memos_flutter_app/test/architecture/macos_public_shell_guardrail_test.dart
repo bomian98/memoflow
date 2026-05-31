@@ -95,6 +95,26 @@ void main() {
       );
       expect(app.contains('macosMenuCommandChannelName'), isTrue);
       expect(app.contains('macosMenuCommandOpenSettingsWindow'), isTrue);
+      final aiSettingsCaseStart = app.indexOf(
+        'case macosMenuCommandAiSettings:',
+      );
+      final aiSettingsCaseEnd = app.indexOf(
+        'case macosMenuCommandAiProvider:',
+        aiSettingsCaseStart,
+      );
+      expect(aiSettingsCaseStart, isNonNegative);
+      expect(aiSettingsCaseEnd, greaterThan(aiSettingsCaseStart));
+      final aiSettingsCase = app.substring(
+        aiSettingsCaseStart,
+        aiSettingsCaseEnd,
+      );
+      expect(aiSettingsCase.contains('DesktopSettingsWindowTarget.ai'), isTrue);
+      expect(
+        aiSettingsCase.contains(
+          '_pushMacosMenuRoute(const AiSettingsScreen())',
+        ),
+        isFalse,
+      );
 
       expect(menuStrings.contains('"window.close" = "Close";'), isTrue);
       expect(

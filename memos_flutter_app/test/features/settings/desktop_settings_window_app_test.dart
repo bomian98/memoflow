@@ -15,6 +15,7 @@ import 'package:memos_flutter_app/core/desktop_quick_input_channel.dart';
 import 'package:memos_flutter_app/core/desktop_runtime_role.dart';
 import 'package:memos_flutter_app/core/desktop_sync_channel.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
+import 'package:memos_flutter_app/application/desktop/desktop_settings_window.dart';
 import 'package:memos_flutter_app/application/sync/desktop_remote_sync_facade.dart';
 import 'package:memos_flutter_app/application/sync/sync_coordinator.dart';
 import 'package:memos_flutter_app/application/sync/sync_error.dart';
@@ -32,8 +33,11 @@ import 'package:memos_flutter_app/data/models/webdav_backup.dart';
 import 'package:memos_flutter_app/data/models/webdav_export_status.dart';
 import 'package:memos_flutter_app/data/models/webdav_settings.dart';
 import 'package:memos_flutter_app/data/models/webdav_sync_meta.dart';
+import 'package:memos_flutter_app/data/repositories/ai_settings_repository.dart';
 import 'package:memos_flutter_app/data/repositories/local_library_repository.dart';
+import 'package:memos_flutter_app/features/settings/ai_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/desktop_settings_window_app.dart';
+import 'package:memos_flutter_app/state/settings/ai_settings_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
 import 'package:memos_flutter_app/state/sync/sync_coordinator_provider.dart';
 import 'package:memos_flutter_app/state/system/database_provider.dart';
@@ -183,6 +187,23 @@ class _TestLocalLibraryRepository extends LocalLibraryRepository {
   @override
   Future<void> clear() async {
     _state = const LocalLibraryState(libraries: []);
+  }
+}
+
+class _MemoryAiSettingsRepository extends AiSettingsRepository {
+  _MemoryAiSettingsRepository(this._value)
+    : super(const FlutterSecureStorage(), accountKey: 'test-account');
+
+  AiSettings _value;
+
+  @override
+  Future<AiSettings> read({AppLanguage language = AppLanguage.en}) async {
+    return _value;
+  }
+
+  @override
+  Future<void> write(AiSettings settings) async {
+    _value = settings;
   }
 }
 
@@ -443,6 +464,113 @@ void main() {
 
       expect(titleLeft, greaterThan(kMacosTrafficLightReservedWidth));
       expect(find.byIcon(Icons.close), findsNothing);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('initial AI target opens the AI settings pane', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    try {
+      final sessionController = _TestSessionController();
+      final aiRepo = _MemoryAiSettingsRepository(
+        AiSettings.defaultsFor(AppLanguage.en),
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_multiWindowEventChannel, (call) async {
+            switch (call.method) {
+              case 'desktop.quickInput.ping':
+              case 'desktop.settings.ping':
+              case 'desktop.subWindow.visibility':
+                return true;
+              case 'desktop.main.getWorkspaceSnapshot':
+                return <String, dynamic>{
+                  'currentKey': null,
+                  'hasCurrentAccount': false,
+                  'hasLocalLibrary': false,
+                };
+            }
+            return true;
+          });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appSessionProvider.overrideWith((ref) => sessionController),
+            appPreferencesProvider.overrideWith(
+              (ref) => _TestAppPreferencesController(ref),
+            ),
+            aiSettingsRepositoryProvider.overrideWith((ref) => aiRepo),
+          ],
+          child: const DesktopSettingsWindowApp(
+            windowId: 7,
+            initialTarget: DesktopSettingsWindowTarget.ai,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(AiSettingsScreen), findsOneWidget);
+      expect(find.text('AI Settings'), findsWidgets);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('runtime AI target switches an existing settings window pane', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    try {
+      final sessionController = _TestSessionController();
+      final aiRepo = _MemoryAiSettingsRepository(
+        AiSettings.defaultsFor(AppLanguage.en),
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_multiWindowEventChannel, (call) async {
+            switch (call.method) {
+              case 'desktop.quickInput.ping':
+              case 'desktop.settings.ping':
+              case 'desktop.subWindow.visibility':
+                return true;
+              case 'desktop.main.getWorkspaceSnapshot':
+                return <String, dynamic>{
+                  'currentKey': null,
+                  'hasCurrentAccount': false,
+                  'hasLocalLibrary': false,
+                };
+            }
+            return true;
+          });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appSessionProvider.overrideWith((ref) => sessionController),
+            appPreferencesProvider.overrideWith(
+              (ref) => _TestAppPreferencesController(ref),
+            ),
+            aiSettingsRepositoryProvider.overrideWith((ref) => aiRepo),
+          ],
+          child: const DesktopSettingsWindowApp(windowId: 7),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(AiSettingsScreen), findsNothing);
+      expect(find.text('Account & Security'), findsWidgets);
+
+      final accepted = await _dispatchIncomingMultiWindowMethod(
+        desktopSettingsOpenTargetMethod,
+        arguments: DesktopSettingsWindowTarget.ai.toJson(),
+      );
+      await tester.pumpAndSettle();
+
+      expect(accepted, isTrue);
+      expect(find.byType(AiSettingsScreen), findsOneWidget);
+      expect(find.text('AI Settings'), findsWidgets);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
