@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
 import 'package:memos_flutter_app/access_boundary/app_capability.dart';
 import 'package:memos_flutter_app/access_boundary/app_capability_provider.dart';
+import 'package:memos_flutter_app/application/desktop/desktop_settings_window.dart';
+import 'package:memos_flutter_app/core/desktop_quick_input_channel.dart';
 import 'package:memos_flutter_app/data/ai/ai_analysis_models.dart';
 import 'package:memos_flutter_app/data/ai/ai_analysis_repository.dart';
 import 'package:memos_flutter_app/data/db/app_database.dart';
@@ -23,6 +26,7 @@ import 'package:memos_flutter_app/data/models/notification_item.dart';
 import 'package:memos_flutter_app/data/models/user.dart';
 import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/data/repositories/ai_settings_repository.dart';
+import 'package:memos_flutter_app/data/repositories/local_library_repository.dart';
 import 'package:memos_flutter_app/features/home/app_drawer.dart';
 import 'package:memos_flutter_app/features/home/home_bottom_nav_shell.dart';
 import 'package:memos_flutter_app/features/home/home_navigation_host.dart';
@@ -32,6 +36,7 @@ import 'package:memos_flutter_app/features/review/ai_insight_history_shared.dart
 import 'package:memos_flutter_app/features/review/ai_insight_models.dart';
 import 'package:memos_flutter_app/features/review/ai_insight_settings_sheet.dart';
 import 'package:memos_flutter_app/features/review/ai_summary_screen.dart';
+import 'package:memos_flutter_app/features/settings/ai_settings_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/memos/sync_queue_provider.dart';
@@ -42,12 +47,19 @@ import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_migration_service.dart';
 import 'package:memos_flutter_app/state/settings/workspace_preferences_provider.dart';
 import 'package:memos_flutter_app/state/system/database_provider.dart';
+import 'package:memos_flutter_app/state/system/local_library_provider.dart';
 import 'package:memos_flutter_app/state/system/notifications_provider.dart';
 import 'package:memos_flutter_app/state/system/session_provider.dart';
 
 import '../../test_support.dart';
 
 const MethodChannel _windowManagerChannel = MethodChannel('window_manager');
+const MethodChannel _multiWindowChannel = MethodChannel(
+  'mixin.one/flutter_multi_window',
+);
+const MethodChannel _windowEventChannel = MethodChannel(
+  'mixin.one/flutter_multi_window_channel',
+);
 
 class _MemoryAiSettingsRepository extends AiSettingsRepository {
   _MemoryAiSettingsRepository(this._value)
@@ -121,6 +133,26 @@ class _MemoryDevicePreferencesRepository extends DevicePreferencesRepository {
   Future<void> write(DevicePreferences prefs) async {
     _prefs = prefs;
   }
+}
+
+class _MemoryLocalLibraryRepository extends LocalLibraryRepository {
+  _MemoryLocalLibraryRepository() : super(const FlutterSecureStorage());
+
+  @override
+  Future<StorageReadResult<LocalLibraryState>> readWithStatus() async {
+    return StorageReadResult.empty();
+  }
+
+  @override
+  Future<LocalLibraryState> read() async {
+    return const LocalLibraryState(libraries: []);
+  }
+
+  @override
+  Future<void> write(LocalLibraryState state) async {}
+
+  @override
+  Future<void> clear() async {}
 }
 
 class _MemoryWorkspacePreferencesRepository
@@ -497,8 +529,13 @@ Future<void> main() async {
   });
 
   tearDown(() {
+    debugDefaultTargetPlatformOverride = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_windowManagerChannel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_multiWindowChannel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_windowEventChannel, null);
     debugHomeRootScreenBuilderOverride = null;
   });
 
@@ -622,6 +659,147 @@ Future<void> main() async {
       find.widgetWithText(FilledButton, 'Start Analysis'),
     );
     expect(startButton.onPressed, isNull);
+  });
+
+  testWidgets('AI setup CTA opens desktop settings AI target on desktop', (
+    tester,
+  ) async {
+    final previousPlatformOverride = debugDefaultTargetPlatformOverride;
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    const settingsWindowId = 42;
+    final eventCalls = <MethodCall>[];
+    try {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_multiWindowChannel, (call) async {
+            switch (call.method) {
+              case 'createWindow':
+                return settingsWindowId;
+              case 'getAllSubWindowIds':
+                return <int>[settingsWindowId];
+              case 'setTitle':
+              case 'setFrame':
+              case 'center':
+              case 'show':
+                return null;
+              default:
+                return null;
+            }
+          });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_windowEventChannel, (call) async {
+            eventCalls.add(call);
+            switch (call.method) {
+              case desktopSettingsFocusMethod:
+              case desktopSettingsRefreshSessionMethod:
+              case desktopSettingsPingMethod:
+              case desktopSettingsOpenTargetMethod:
+                return true;
+              default:
+                return null;
+            }
+          });
+
+      final aiRepository = _MemoryAiSettingsRepository(
+        AiSettings.defaultsFor(AppLanguage.en),
+      );
+      final aiAnalysisRepository = _FakeAiAnalysisRepository(
+        historyEntries: const [],
+      );
+      final localLibraryRepository = _MemoryLocalLibraryRepository();
+      final prefsRepository = _MemoryAppPreferencesRepository(
+        AppPreferences.defaultsForLanguage(AppLanguage.en),
+      );
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          child: const AiSummaryScreen(),
+          platform: TargetPlatform.macOS,
+          screenSize: const Size(390, 844),
+          overrides: [
+            appSessionProvider.overrideWith((ref) => _TestSessionController()),
+            aiAnalysisRepositoryProvider.overrideWithValue(
+              aiAnalysisRepository,
+            ),
+            aiSettingsProvider.overrideWith(
+              (ref) => _TestAiSettingsController(ref, aiRepository),
+            ),
+            localLibraryRepositoryProvider.overrideWithValue(
+              localLibraryRepository,
+            ),
+            appPreferencesProvider.overrideWith(
+              (ref) => _TestAppPreferencesController(ref, prefsRepository),
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      final targetCalls = eventCalls
+          .where((call) => call.method == desktopSettingsOpenTargetMethod)
+          .toList();
+      expect(targetCalls, hasLength(1));
+      final args = targetCalls.single.arguments as Map<Object?, Object?>;
+      expect(args['targetWindowId'], settingsWindowId);
+      expect(args['arguments'], DesktopSettingsWindowTarget.ai.toJson());
+      expect(find.byType(AiSettingsScreen), findsNothing);
+    } finally {
+      debugDefaultTargetPlatformOverride = previousPlatformOverride;
+    }
+  });
+
+  testWidgets('AI setup CTA falls back to AI settings route when unsupported', (
+    tester,
+  ) async {
+    final previousPlatformOverride = debugDefaultTargetPlatformOverride;
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      final aiRepository = _MemoryAiSettingsRepository(
+        AiSettings.defaultsFor(AppLanguage.en),
+      );
+      final aiAnalysisRepository = _FakeAiAnalysisRepository(
+        historyEntries: const [],
+      );
+      final localLibraryRepository = _MemoryLocalLibraryRepository();
+      final prefsRepository = _MemoryAppPreferencesRepository(
+        AppPreferences.defaultsForLanguage(AppLanguage.en),
+      );
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          child: const AiSummaryScreen(),
+          platform: TargetPlatform.android,
+          screenSize: const Size(390, 844),
+          overrides: [
+            appSessionProvider.overrideWith((ref) => _TestSessionController()),
+            aiAnalysisRepositoryProvider.overrideWithValue(
+              aiAnalysisRepository,
+            ),
+            aiSettingsProvider.overrideWith(
+              (ref) => _TestAiSettingsController(ref, aiRepository),
+            ),
+            localLibraryRepositoryProvider.overrideWithValue(
+              localLibraryRepository,
+            ),
+            appPreferencesProvider.overrideWith(
+              (ref) => _TestAppPreferencesController(ref, prefsRepository),
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(AiSettingsScreen), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = previousPlatformOverride;
+    }
   });
 
   testWidgets(

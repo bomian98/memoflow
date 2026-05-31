@@ -13,6 +13,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../access_boundary/app_capability.dart';
 import '../../access_boundary/app_capability_provider.dart';
+import '../../application/desktop/desktop_settings_window.dart';
 import '../../core/app_localization.dart';
 import '../../core/desktop_window_controls.dart';
 import '../../core/drawer_navigation.dart';
@@ -179,6 +180,16 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
 
   Future<void> _openAiSettings() async {
     _logEvent('open_ai_settings');
+    final result = await openDesktopSettingsWindow(
+      feedbackContext: context,
+      target: DesktopSettingsWindowTarget.ai,
+    );
+    if (!mounted) return;
+    if (result.opened) {
+      _logEvent('open_ai_settings_window');
+      setState(() {});
+      return;
+    }
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => const AiSettingsScreen()),
     );
