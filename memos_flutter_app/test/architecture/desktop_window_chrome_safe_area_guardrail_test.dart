@@ -398,7 +398,9 @@ void main() {
     final aiWizard = await File(
       'lib/features/settings/ai_service_wizard_screen.dart',
     ).readAsString();
-
+    final aiDetail = await File(
+      'lib/features/settings/ai_service_detail_screen.dart',
+    ).readAsString();
     expect(shortcutEditor.contains('openShortcutEditor'), isTrue);
     expect(shortcutEditor.contains('PlatformSecondaryTaskFrame'), isTrue);
     expect(shortcutEditor.contains('showPlatformSecondaryTaskSurface'), isTrue);
@@ -413,6 +415,17 @@ void main() {
       isTrue,
       reason:
           'The wizard proxy settings route is intentionally outside this migration.',
+    );
+
+    expect(aiDetail.contains('openAiServiceDetail'), isTrue);
+    expect(aiDetail.contains('PlatformSecondaryTaskFrame'), isTrue);
+    expect(aiDetail.contains('showPlatformSecondaryTaskSurface'), isTrue);
+    expect(aiDetail.contains('kMacosTrafficLightReservedWidth'), isFalse);
+    expect(
+      aiDetail.contains('AiProxySettingsScreen'),
+      isTrue,
+      reason:
+          'The detail proxy settings route is intentionally outside this migration.',
     );
 
     final migratedEntries =
@@ -431,6 +444,11 @@ void main() {
             path: 'lib/features/settings/ai_settings_screen.dart',
             helper: 'openAiServiceWizard',
             direct: 'AiServiceWizardScreen(',
+          ),
+          'AI service detail settings': (
+            path: 'lib/features/settings/ai_settings_screen.dart',
+            helper: 'openAiServiceDetail',
+            direct: 'AiServiceDetailScreen(',
           ),
         };
 
@@ -460,8 +478,12 @@ void main() {
             source.contains(
               'features/settings/ai_service_wizard_screen.dart',
             ) ||
+            source.contains(
+              'features/settings/ai_service_detail_screen.dart',
+            ) ||
             source.contains('openShortcutEditor(') ||
-            source.contains('openAiServiceWizard(')) {
+            source.contains('openAiServiceWizard(') ||
+            source.contains('openAiServiceDetail(')) {
           lowerLayerViolations.add(entity.path);
         }
       }

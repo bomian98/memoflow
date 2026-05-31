@@ -204,12 +204,7 @@ class _ServiceCard extends ConsumerWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) =>
-                  AiServiceDetailScreen(serviceId: service.serviceId),
-            ),
-          );
+          openAiServiceDetail(context, serviceId: service.serviceId);
         },
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -303,12 +298,9 @@ class _ServiceCard extends ConsumerWidget {
                   ),
                   TextButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => AiServiceDetailScreen(
-                            serviceId: service.serviceId,
-                          ),
-                        ),
+                      openAiServiceDetail(
+                        context,
+                        serviceId: service.serviceId,
                       );
                     },
                     icon: const Icon(Icons.tune_rounded),

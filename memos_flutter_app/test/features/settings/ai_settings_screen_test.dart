@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
 import 'package:memos_flutter_app/data/repositories/ai_settings_repository.dart';
 import 'package:memos_flutter_app/features/settings/ai_settings_screen.dart';
+import 'package:memos_flutter_app/features/settings/ai_proxy_settings_screen.dart';
+import 'package:memos_flutter_app/features/settings/ai_service_detail_screen.dart';
 import 'package:memos_flutter_app/features/settings/ai_service_wizard_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/platform/platform_target.dart';
@@ -71,6 +73,112 @@ class _TestAppPreferencesController extends AppPreferencesController {
   }
 
   final _MemoryAppPreferencesRepository _repository;
+}
+
+const _openAiService = AiServiceInstance(
+  serviceId: 'svc_openai',
+  templateId: aiTemplateOpenAi,
+  adapterKind: AiProviderAdapterKind.openAiCompatible,
+  displayName: 'OpenAI Main',
+  enabled: true,
+  baseUrl: 'https://api.openai.com',
+  apiKey: 'sk-test',
+  customHeaders: <String, String>{},
+  models: <AiModelEntry>[
+    AiModelEntry(
+      modelId: 'mdl_openai',
+      displayName: 'gpt-4o-mini',
+      modelKey: 'gpt-4o-mini',
+      capabilities: <AiCapability>[AiCapability.chat],
+      source: AiModelSource.manual,
+      enabled: true,
+    ),
+    AiModelEntry(
+      modelId: 'mdl_embedding',
+      displayName: 'text-embedding-3-small',
+      modelKey: 'text-embedding-3-small',
+      capabilities: <AiCapability>[AiCapability.embedding],
+      source: AiModelSource.manual,
+      enabled: true,
+    ),
+  ],
+  lastValidatedAt: null,
+  lastValidationStatus: AiValidationStatus.success,
+  lastValidationMessage: null,
+);
+
+AiSettings _settingsWithOpenAiService({
+  AiServiceInstance service = _openAiService,
+  AiProxySettings proxySettings = AiProxySettings.defaults,
+  List<AiTaskRouteBinding> taskRouteBindings = const <AiTaskRouteBinding>[],
+}) {
+  return AiSettings.defaultsFor(AppLanguage.en).copyWith(
+    proxySettings: proxySettings,
+    services: <AiServiceInstance>[service],
+    taskRouteBindings: taskRouteBindings,
+  );
+}
+
+Widget _buildAiSettingsTestApp({
+  required _MemoryAppPreferencesRepository prefsRepository,
+  required _MemoryAiSettingsRepository aiRepository,
+  bool showBackButton = false,
+  List<Override> overrides = const <Override>[],
+}) {
+  return ProviderScope(
+    overrides: [
+      appPreferencesProvider.overrideWith(
+        (ref) => _TestAppPreferencesController(ref, prefsRepository),
+      ),
+      aiSettingsProvider.overrideWith(
+        (ref) => _TestAiSettingsController(ref, aiRepository),
+      ),
+      ...overrides,
+    ],
+    child: TranslationProvider(
+      child: MaterialApp(
+        locale: AppLocale.en.flutterLocale,
+        supportedLocales: AppLocaleUtils.supportedLocales,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        home: AiSettingsScreen(showBackButton: showBackButton),
+      ),
+    ),
+  );
+}
+
+class _SuccessValidationAdapter implements AiProviderAdapter {
+  const _SuccessValidationAdapter();
+
+  @override
+  Future<AiServiceValidationResult> validateConfig(
+    AiServiceInstance service, {
+    AiProxySettings? proxySettings,
+  }) async {
+    return const AiServiceValidationResult(
+      status: AiValidationStatus.success,
+      message: 'ok',
+    );
+  }
+
+  @override
+  Future<List<AiDiscoveredModel>> listModels(
+    AiServiceInstance service, {
+    AiProxySettings? proxySettings,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<AiChatCompletionResult> chatCompletion(
+    AiChatCompletionRequest request,
+  ) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<double>> embed(AiEmbeddingRequest request) {
+    throw UnimplementedError();
+  }
 }
 
 void main() {
@@ -284,6 +392,271 @@ void main() {
     expect(find.byType(AiServiceWizardScreen), findsOneWidget);
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
     expect(find.text('Add Service'), findsWidgets);
+  });
+
+  testWidgets('desktop service detail opens in task surface', (tester) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    addTearDown(() => debugPlatformTargetOverride = null);
+    await tester.binding.setSurfaceSize(const Size(1200, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final prefsRepository = _MemoryAppPreferencesRepository(
+      AppPreferences.defaultsForLanguage(AppLanguage.en),
+    );
+    final aiRepository = _MemoryAiSettingsRepository(
+      _settingsWithOpenAiService(),
+    );
+
+    await tester.pumpWidget(
+      _buildAiSettingsTestApp(
+        prefsRepository: prefsRepository,
+        aiRepository: aiRepository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('OpenAI Main'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(
+      find.byKey(
+        const ValueKey<String>('platform-secondary-task-surface-dialog'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(AiServiceDetailScreen), findsOneWidget);
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Save'), findsOneWidget);
+  });
+
+  testWidgets('mobile service detail keeps route presentation', (tester) async {
+    debugPlatformTargetOverride = TargetPlatform.android;
+    addTearDown(() => debugPlatformTargetOverride = null);
+
+    final prefsRepository = _MemoryAppPreferencesRepository(
+      AppPreferences.defaultsForLanguage(AppLanguage.en),
+    );
+    final aiRepository = _MemoryAiSettingsRepository(
+      _settingsWithOpenAiService(),
+    );
+
+    await tester.pumpWidget(
+      _buildAiSettingsTestApp(
+        prefsRepository: prefsRepository,
+        aiRepository: aiRepository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('OpenAI Main'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.byType(AiServiceDetailScreen), findsOneWidget);
+    expect(find.text('Service Details'), findsOneWidget);
+  });
+
+  testWidgets('service detail confirms unsaved close and saves from prompt', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    addTearDown(() => debugPlatformTargetOverride = null);
+    await tester.binding.setSurfaceSize(const Size(1200, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final prefsRepository = _MemoryAppPreferencesRepository(
+      AppPreferences.defaultsForLanguage(AppLanguage.en),
+    );
+    final aiRepository = _MemoryAiSettingsRepository(
+      _settingsWithOpenAiService(),
+    );
+
+    await tester.pumpWidget(
+      _buildAiSettingsTestApp(
+        prefsRepository: prefsRepository,
+        aiRepository: aiRepository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('OpenAI Main'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'OpenAI Updated');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Save changes?'), findsOneWidget);
+
+    await tester.tap(find.text('Continue editing'));
+    await tester.pumpAndSettle();
+    expect(find.text('Save changes?'), findsNothing);
+    expect(find.byType(AiServiceDetailScreen), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save and close'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AiServiceDetailScreen), findsNothing);
+    expect(find.text('OpenAI Updated'), findsOneWidget);
+    final saved = await aiRepository.read();
+    expect(saved.services.single.displayName, 'OpenAI Updated');
+  });
+
+  testWidgets('service detail connection check does not create dirty state', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    addTearDown(() => debugPlatformTargetOverride = null);
+    await tester.binding.setSurfaceSize(const Size(1200, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final prefsRepository = _MemoryAppPreferencesRepository(
+      AppPreferences.defaultsForLanguage(AppLanguage.en),
+    );
+    final aiRepository = _MemoryAiSettingsRepository(
+      _settingsWithOpenAiService(),
+    );
+
+    await tester.pumpWidget(
+      _buildAiSettingsTestApp(
+        prefsRepository: prefsRepository,
+        aiRepository: aiRepository,
+        overrides: [
+          aiProviderRegistryProvider.overrideWith(
+            (ref) => AiProviderRegistry(
+              adapters: const <AiProviderAdapterKind, AiProviderAdapter>{
+                AiProviderAdapterKind.openAiCompatible:
+                    _SuccessValidationAdapter(),
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('OpenAI Main'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Check'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Connection check succeeded.'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Save changes?'), findsNothing);
+    expect(find.byType(AiServiceDetailScreen), findsNothing);
+    final saved = await aiRepository.read();
+    expect(saved.services.single.lastValidationMessage, 'ok');
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('service detail delete closes task and removes service', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    addTearDown(() => debugPlatformTargetOverride = null);
+    await tester.binding.setSurfaceSize(const Size(1200, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final prefsRepository = _MemoryAppPreferencesRepository(
+      AppPreferences.defaultsForLanguage(AppLanguage.en),
+    );
+    final aiRepository = _MemoryAiSettingsRepository(
+      _settingsWithOpenAiService(),
+    );
+
+    await tester.pumpWidget(
+      _buildAiSettingsTestApp(
+        prefsRepository: prefsRepository,
+        aiRepository: aiRepository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('OpenAI Main'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Delete Service'),
+      420,
+      scrollable: find
+          .descendant(
+            of: find.byKey(
+              const ValueKey<String>('ai-service-detail-scroll-view'),
+            ),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+      maxScrolls: 8,
+    );
+    await tester.tap(find.text('Delete Service'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AiServiceDetailScreen), findsNothing);
+    expect(find.text('OpenAI Main'), findsNothing);
+    final saved = await aiRepository.read();
+    expect(saved.services, isEmpty);
+  });
+
+  testWidgets('service detail proxy entry keeps existing nested route', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+    addTearDown(() => debugPlatformTargetOverride = null);
+    await tester.binding.setSurfaceSize(const Size(1200, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final prefsRepository = _MemoryAppPreferencesRepository(
+      AppPreferences.defaultsForLanguage(AppLanguage.en),
+    );
+    final aiRepository = _MemoryAiSettingsRepository(
+      _settingsWithOpenAiService(),
+    );
+
+    await tester.pumpWidget(
+      _buildAiSettingsTestApp(
+        prefsRepository: prefsRepository,
+        aiRepository: aiRepository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('OpenAI Main'));
+    await tester.pumpAndSettle();
+    final sharedProxySwitch = tester.widget<SwitchListTile>(
+      find.widgetWithText(SwitchListTile, 'Use shared proxy'),
+    );
+    sharedProxySwitch.onChanged!(true);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'This service has proxy enabled, but shared proxy settings are incomplete.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Open proxy settings'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Open proxy settings'));
+    final openProxyButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Open proxy settings'),
+    );
+    openProxyButton.onPressed!();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AiProxySettingsScreen), findsOneWidget);
+    expect(
+      find.byType(AiServiceDetailScreen, skipOffstage: false),
+      findsOneWidget,
+    );
   });
 
   testWidgets('mobile add service keeps route presentation', (tester) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/app_localization.dart';
 import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../core/memoflow_palette.dart';
 import '../../data/ai/adapters/_ai_provider_http.dart';
@@ -10,19 +11,120 @@ import '../../data/logs/log_manager.dart';
 import '../../core/top_toast.dart';
 import '../../data/repositories/ai_settings_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_secondary_task_surface.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import 'ai_provider_logo.dart';
 import 'ai_proxy_settings_screen.dart';
 import 'ai_service_model_screen.dart';
 
+Future<void> openAiServiceDetail(
+  BuildContext context, {
+  required String serviceId,
+}) {
+  final useTaskSurface = shouldUsePlatformSecondaryTaskSurface(context);
+  final detail = AiServiceDetailScreen(
+    serviceId: serviceId,
+    embeddedTaskSurface: useTaskSurface,
+  );
+  if (useTaskSurface) {
+    return showPlatformSecondaryTaskSurface<void>(
+      context: context,
+      size: PlatformSecondaryTaskSurfaceSize.large,
+      maxWidth: 960,
+      builder: (_) => detail,
+    );
+  }
+  return Navigator.of(context).push<void>(
+    buildPlatformPageRoute<void>(context: context, builder: (_) => detail),
+  );
+}
+
 class AiServiceDetailScreen extends ConsumerStatefulWidget {
-  const AiServiceDetailScreen({super.key, required this.serviceId});
+  const AiServiceDetailScreen({
+    super.key,
+    required this.serviceId,
+    this.embeddedTaskSurface = false,
+  });
 
   final String serviceId;
+  final bool embeddedTaskSurface;
 
   @override
   ConsumerState<AiServiceDetailScreen> createState() =>
       _AiServiceDetailScreenState();
+}
+
+enum _AiServiceUnsavedCloseAction { save, discard, continueEditing }
+
+class _AiServiceEditableSnapshot {
+  const _AiServiceEditableSnapshot({
+    required this.displayName,
+    required this.baseUrl,
+    required this.apiKey,
+    required this.customHeaders,
+    required this.enabled,
+    required this.usesSharedProxy,
+  });
+
+  factory _AiServiceEditableSnapshot.fromService(
+    AiServiceInstance service, {
+    AiProviderTemplate? template,
+  }) {
+    return _AiServiceEditableSnapshot(
+      displayName: service.displayName,
+      baseUrl: service.baseUrl,
+      apiKey: service.apiKey,
+      customHeaders: Map<String, String>.unmodifiable(<String, String>{
+        ...?template?.defaultHeaders,
+        ...service.customHeaders,
+      }),
+      enabled: service.enabled,
+      usesSharedProxy: service.usesSharedProxy,
+    );
+  }
+
+  final String displayName;
+  final String baseUrl;
+  final String apiKey;
+  final Map<String, String> customHeaders;
+  final bool enabled;
+  final bool usesSharedProxy;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _AiServiceEditableSnapshot &&
+        displayName == other.displayName &&
+        baseUrl == other.baseUrl &&
+        apiKey == other.apiKey &&
+        enabled == other.enabled &&
+        usesSharedProxy == other.usesSharedProxy &&
+        _mapsEqual(customHeaders, other.customHeaders);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    displayName,
+    baseUrl,
+    apiKey,
+    Object.hashAll(
+      customHeaders.entries
+          .map((entry) => '${entry.key}\u0000${entry.value}')
+          .toList()
+        ..sort(),
+    ),
+    enabled,
+    usesSharedProxy,
+  );
+
+  static bool _mapsEqual(Map<String, String> a, Map<String, String> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
 }
 
 class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
@@ -35,6 +137,9 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
   bool _usesSharedProxy = false;
   bool _obscureApiKey = true;
   bool _isCheckingConnection = false;
+  bool _isSaving = false;
+  bool _isHandlingCloseRequest = false;
+  _AiServiceEditableSnapshot? _baselineSnapshot;
 
   @override
   void initState() {
@@ -43,18 +148,40 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
         .read(aiSettingsProvider)
         .services
         .firstById(widget.serviceId);
+    final template = service == null
+        ? null
+        : findAiProviderTemplate(service.templateId);
     _nameController = TextEditingController(text: service?.displayName ?? '');
     _baseUrlController = TextEditingController(text: service?.baseUrl ?? '');
     _apiKeyController = TextEditingController(text: service?.apiKey ?? '');
     _headersController = TextEditingController(
       text: _encodeHeaders(service?.customHeaders ?? const <String, String>{}),
     );
+    for (final controller in <TextEditingController>[
+      _nameController,
+      _baseUrlController,
+      _apiKeyController,
+      _headersController,
+    ]) {
+      controller.addListener(_handleEditableChanged);
+    }
     _enabled = service?.enabled ?? true;
     _usesSharedProxy = service?.usesSharedProxy ?? false;
+    if (service != null) {
+      _resetBaseline(service, template);
+    }
   }
 
   @override
   void dispose() {
+    for (final controller in <TextEditingController>[
+      _nameController,
+      _baseUrlController,
+      _apiKeyController,
+      _headersController,
+    ]) {
+      controller.removeListener(_handleEditableChanged);
+    }
     _nameController.dispose();
     _baseUrlController.dispose();
     _apiKeyController.dispose();
@@ -78,21 +205,31 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
     final textMuted = textMain.withValues(alpha: isDark ? 0.58 : 0.62);
 
     if (service == null) {
-      return Scaffold(
+      final missingContent = Scaffold(
         backgroundColor: bg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading:
-              resolveDesktopRouteAutomaticallyImplyLeading(
-                context: context,
-                automaticallyImplyLeading: true,
+        appBar: widget.embeddedTaskSurface
+            ? null
+            : AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                surfaceTintColor: Colors.transparent,
+                automaticallyImplyLeading:
+                    resolveDesktopRouteAutomaticallyImplyLeading(
+                      context: context,
+                      automaticallyImplyLeading: true,
+                    ),
+                title: Text(isZh ? '服务详情' : 'Service Details'),
               ),
-          title: Text(isZh ? '服务详情' : 'Service Details'),
-        ),
         body: Center(child: Text(isZh ? '服务不存在。' : 'Service not found.')),
+      );
+      if (!widget.embeddedTaskSurface) return missingContent;
+      return PlatformSecondaryTaskFrame(
+        title: Text(isZh ? '服务详情' : 'Service Details'),
+        closeTooltip: context.t.strings.legacy.msg_close,
+        onClose: () => context.safePop(),
+        backgroundColor: bg,
+        body: missingContent,
       );
     }
 
@@ -103,168 +240,109 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
         .toList(growable: false);
     final proxyConfigured = settings.proxySettings.isConfigured;
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        title: Text(isZh ? '服务详情' : 'Service Details'),
-        actions: [
-          TextButton(
-            onPressed: () => _save(showSavedToast: true),
-            child: Text(isZh ? '保存' : 'Save'),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          _SectionCard(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      AiProviderLogo(
-                        template: template,
-                        size: 48,
-                        iconSize: 26,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              service.displayName,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: textMain,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              template == null
-                                  ? service.templateId
-                                  : localizedAiProviderTemplateDisplayName(
-                                      template,
-                                      isZh: isZh,
-                                    ),
-                              style: TextStyle(color: textMuted),
-                            ),
-                          ],
-                        ),
-                      ),
-                      _StatusBadge(
-                        label: _validationLabel(
-                          service.lastValidationStatus,
-                          isZh,
-                        ),
-                        status: service.lastValidationStatus,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: isZh ? '服务名称' : 'Service Name',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _baseUrlController,
-                    decoration: InputDecoration(
-                      labelText: 'Base URL',
-                      helperText: _endpointPreview(service),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (template?.requiresApiKey ?? true)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _apiKeyController,
-                            obscureText: _obscureApiKey,
-                            decoration: InputDecoration(
-                              labelText: 'API Key',
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _ValidationIcon(
-                                    status: service.lastValidationStatus,
-                                    checking: _isCheckingConnection,
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscureApiKey = !_obscureApiKey;
-                                      });
-                                    },
-                                    icon: Icon(
-                                      _obscureApiKey
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.visibility_outlined,
-                                    ),
-                                  ),
-                                ],
-                              ),
+    final titleText = isZh ? '服务详情' : 'Service Details';
+    final body = ListView(
+      key: const ValueKey<String>('ai-service-detail-scroll-view'),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        _SectionCard(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    AiProviderLogo(template: template, size: 48, iconSize: 26),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            service.displayName,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: textMain,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: FilledButton.tonalIcon(
-                            onPressed: _isCheckingConnection
-                                ? null
-                                : _checkConnection,
-                            icon: _isCheckingConnection
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Icon(
-                                    service.lastValidationStatus ==
-                                            AiValidationStatus.success
-                                        ? Icons.check_circle_outline_rounded
-                                        : Icons.bolt_rounded,
+                          const SizedBox(height: 4),
+                          Text(
+                            template == null
+                                ? service.templateId
+                                : localizedAiProviderTemplateDisplayName(
+                                    template,
+                                    isZh: isZh,
                                   ),
-                            label: Text(
-                              _isCheckingConnection
-                                  ? (isZh ? '检查中' : 'Checking')
-                                  : (isZh ? '检查' : 'Check'),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            isZh
-                                ? '该服务通常不需要 API Key。'
-                                : 'This service usually does not require an API key.',
                             style: TextStyle(color: textMuted),
                           ),
+                        ],
+                      ),
+                    ),
+                    _StatusBadge(
+                      label: _validationLabel(
+                        service.lastValidationStatus,
+                        isZh,
+                      ),
+                      status: service.lastValidationStatus,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: isZh ? '服务名称' : 'Service Name',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _baseUrlController,
+                  decoration: InputDecoration(
+                    labelText: 'Base URL',
+                    helperText: _endpointPreview(service),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (template?.requiresApiKey ?? true)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _apiKeyController,
+                          obscureText: _obscureApiKey,
+                          decoration: InputDecoration(
+                            labelText: 'API Key',
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _ValidationIcon(
+                                  status: service.lastValidationStatus,
+                                  checking: _isCheckingConnection,
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscureApiKey = !_obscureApiKey;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    _obscureApiKey
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        FilledButton.tonalIcon(
+                      ),
+                      const SizedBox(width: 12),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: FilledButton.tonalIcon(
                           onPressed: _isCheckingConnection
                               ? null
                               : _checkConnection,
@@ -282,146 +360,235 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
                                       ? Icons.check_circle_outline_rounded
                                       : Icons.bolt_rounded,
                                 ),
-                          label: Text(isZh ? '检查连接' : 'Check Connection'),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _headersController,
-                    minLines: 3,
-                    maxLines: 6,
-                    decoration: InputDecoration(
-                      labelText: isZh ? '额外 Headers' : 'Extra Headers',
-                      helperText: isZh
-                          ? '\u6bcf\u884c\u4e00\u4e2a\uff0c\u683c\u5f0f key:value\uff0c\u9ed8\u8ba4\u4e3a\u7a7a\u53ef\u4e0d\u586b\u5199'
-                          : 'One header per line, formatted as key:value. Optional; leave empty if unused.',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: _enabled,
-                    onChanged: (value) => setState(() => _enabled = value),
-                    title: Text(isZh ? '启用服务' : 'Enable Service'),
-                  ),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: _usesSharedProxy,
-                    onChanged: (value) {
-                      setState(() => _usesSharedProxy = value);
-                    },
-                    title: Text(context.t.strings.aiProxy.useSharedProxy),
-                    subtitle: Text(
-                      context.t.strings.aiProxy.useSharedProxyDescription,
-                    ),
-                  ),
-                  if (_usesSharedProxy && !proxyConfigured) ...[
-                    const SizedBox(height: 8),
-                    _ProxyWarningCard(
-                      message: context.t.strings.aiProxy.incompleteWarning,
-                      actionLabel: context.t.strings.aiProxy.openSettings,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const AiProxySettingsScreen(),
+                          label: Text(
+                            _isCheckingConnection
+                                ? (isZh ? '检查中' : 'Checking')
+                                : (isZh ? '检查' : 'Check'),
                           ),
-                        );
-                      },
-                    ),
-                  ],
-                  if (template?.docsUrl.trim().isNotEmpty ?? false) ...[
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: () => _openDocs(template!.docsUrl),
-                        icon: const Icon(Icons.open_in_new_rounded),
-                        label: Text(isZh ? '打开官方文档' : 'Open documentation'),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const SizedBox.shrink(),
-          Offstage(
-            offstage: true,
-            child: _SectionCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isZh ? '连接状态' : 'Connection Status',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: textMain,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _ValidationIcon(
-                        status: service.lastValidationStatus,
-                        checking: _isCheckingConnection,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          service.lastValidationMessage?.trim().isNotEmpty ==
-                                  true
-                              ? service.lastValidationMessage!.trim()
-                              : _validationDescription(
-                                  service.lastValidationStatus,
-                                  isZh,
-                                ),
-                          style: TextStyle(color: textMain),
                         ),
                       ),
                     ],
+                  )
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          isZh
+                              ? '该服务通常不需要 API Key。'
+                              : 'This service usually does not require an API key.',
+                          style: TextStyle(color: textMuted),
+                        ),
+                      ),
+                      FilledButton.tonalIcon(
+                        onPressed: _isCheckingConnection
+                            ? null
+                            : _checkConnection,
+                        icon: _isCheckingConnection
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                service.lastValidationStatus ==
+                                        AiValidationStatus.success
+                                    ? Icons.check_circle_outline_rounded
+                                    : Icons.bolt_rounded,
+                              ),
+                        label: Text(isZh ? '检查连接' : 'Check Connection'),
+                      ),
+                    ],
                   ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _headersController,
+                  minLines: 3,
+                  maxLines: 6,
+                  decoration: InputDecoration(
+                    labelText: isZh ? '额外 Headers' : 'Extra Headers',
+                    helperText: isZh
+                        ? '\u6bcf\u884c\u4e00\u4e2a\uff0c\u683c\u5f0f key:value\uff0c\u9ed8\u8ba4\u4e3a\u7a7a\u53ef\u4e0d\u586b\u5199'
+                        : 'One header per line, formatted as key:value. Optional; leave empty if unused.',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  value: _enabled,
+                  onChanged: (value) => setState(() => _enabled = value),
+                  title: Text(isZh ? '启用服务' : 'Enable Service'),
+                ),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  value: _usesSharedProxy,
+                  onChanged: (value) {
+                    setState(() => _usesSharedProxy = value);
+                  },
+                  title: Text(context.t.strings.aiProxy.useSharedProxy),
+                  subtitle: Text(
+                    context.t.strings.aiProxy.useSharedProxyDescription,
+                  ),
+                ),
+                if (_usesSharedProxy && !proxyConfigured) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    service.lastValidatedAt == null
-                        ? (isZh ? '最近校验：从未检查' : 'Last checked: never')
-                        : '${isZh ? '最近校验' : 'Last checked'}: ${service.lastValidatedAt}',
-                    style: TextStyle(fontSize: 12, color: textMuted),
+                  _ProxyWarningCard(
+                    message: context.t.strings.aiProxy.incompleteWarning,
+                    actionLabel: context.t.strings.aiProxy.openSettings,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AiProxySettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
-              ),
+                if (template?.docsUrl.trim().isNotEmpty ?? false) ...[
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => _openDocs(template!.docsUrl),
+                      icon: const Icon(Icons.open_in_new_rounded),
+                      label: Text(isZh ? '打开官方文档' : 'Open documentation'),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          AiServiceModelScreen(serviceId: service.serviceId, embedded: true),
-          const SizedBox(height: 12),
-          _ActionTile(
-            title: isZh ? '复制服务' : 'Duplicate Service',
-            subtitle: isZh
-                ? '复制配置和模型，不会改动默认用途绑定。'
-                : 'Copy the service and models without changing route bindings.',
-            onTap: () async {
-              await ref
-                  .read(aiSettingsProvider.notifier)
-                  .duplicateService(service.serviceId);
-              if (!context.mounted) return;
-              showTopToast(context, isZh ? '服务已复制。' : 'Service duplicated.');
-            },
+        ),
+        const SizedBox.shrink(),
+        Offstage(
+          offstage: true,
+          child: _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isZh ? '连接状态' : 'Connection Status',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: textMain,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _ValidationIcon(
+                      status: service.lastValidationStatus,
+                      checking: _isCheckingConnection,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        service.lastValidationMessage?.trim().isNotEmpty == true
+                            ? service.lastValidationMessage!.trim()
+                            : _validationDescription(
+                                service.lastValidationStatus,
+                                isZh,
+                              ),
+                        style: TextStyle(color: textMain),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  service.lastValidatedAt == null
+                      ? (isZh ? '最近校验：从未检查' : 'Last checked: never')
+                      : '${isZh ? '最近校验' : 'Last checked'}: ${service.lastValidatedAt}',
+                  style: TextStyle(fontSize: 12, color: textMuted),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          _ActionTile(
-            title: isZh ? '删除服务' : 'Delete Service',
-            subtitle: impactedRoutes.isEmpty
-                ? (isZh ? '此操作不可撤销。' : 'This cannot be undone.')
-                : (isZh
-                      ? '会影响：${impactedRoutes.join('、')}'
-                      : 'Impacts: ${impactedRoutes.join(', ')}'),
-            destructive: true,
-            onTap: _delete,
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        AiServiceModelScreen(serviceId: service.serviceId, embedded: true),
+        const SizedBox(height: 12),
+        _ActionTile(
+          title: isZh ? '复制服务' : 'Duplicate Service',
+          subtitle: isZh
+              ? '复制配置和模型，不会改动默认用途绑定。'
+              : 'Copy the service and models without changing route bindings.',
+          onTap: () async {
+            await ref
+                .read(aiSettingsProvider.notifier)
+                .duplicateService(service.serviceId);
+            if (!context.mounted) return;
+            showTopToast(context, isZh ? '服务已复制。' : 'Service duplicated.');
+          },
+        ),
+        const SizedBox(height: 12),
+        _ActionTile(
+          title: isZh ? '删除服务' : 'Delete Service',
+          subtitle: impactedRoutes.isEmpty
+              ? (isZh ? '此操作不可撤销。' : 'This cannot be undone.')
+              : (isZh
+                    ? '会影响：${impactedRoutes.join('、')}'
+                    : 'Impacts: ${impactedRoutes.join(', ')}'),
+          destructive: true,
+          onTap: _delete,
+        ),
+      ],
+    );
+
+    final content = Scaffold(
+      backgroundColor: bg,
+      appBar: widget.embeddedTaskSurface
+          ? null
+          : AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              surfaceTintColor: Colors.transparent,
+              automaticallyImplyLeading:
+                  resolveDesktopRouteAutomaticallyImplyLeading(
+                    context: context,
+                    automaticallyImplyLeading: true,
+                  ),
+              title: Text(titleText),
+              actions: [
+                TextButton(
+                  onPressed: _isSaving
+                      ? null
+                      : () => _save(showSavedToast: true),
+                  child: Text(isZh ? '保存' : 'Save'),
+                ),
+              ],
+            ),
+      body: body,
+    );
+
+    final hasUnsavedChanges = _hasUnsavedChanges();
+    return PopScope(
+      canPop: !hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop || !hasUnsavedChanges) return;
+        await _requestClose();
+      },
+      child: widget.embeddedTaskSurface
+          ? PlatformSecondaryTaskFrame(
+              title: Text(titleText),
+              closeTooltip: context.t.strings.legacy.msg_close,
+              onClose: _requestClose,
+              backgroundColor: bg,
+              actions: [
+                TextButton(
+                  onPressed: _isSaving
+                      ? null
+                      : () => _save(showSavedToast: true),
+                  child: Text(isZh ? '保存' : 'Save'),
+                ),
+              ],
+              body: content,
+            )
+          : content,
     );
   }
 
@@ -473,6 +640,103 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
     );
   }
 
+  void _handleEditableChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  void _resetBaseline(AiServiceInstance service, AiProviderTemplate? template) {
+    _baselineSnapshot = _AiServiceEditableSnapshot.fromService(
+      service,
+      template: template,
+    );
+  }
+
+  _AiServiceEditableSnapshot? _currentEditableSnapshot() {
+    final service = ref
+        .read(aiSettingsProvider)
+        .services
+        .firstById(widget.serviceId);
+    final template = service == null
+        ? null
+        : findAiProviderTemplate(service.templateId);
+    final draft = _buildDraftService(service, template);
+    if (draft == null) return null;
+    return _AiServiceEditableSnapshot.fromService(draft, template: template);
+  }
+
+  bool _hasUnsavedChanges() {
+    final baseline = _baselineSnapshot;
+    final current = _currentEditableSnapshot();
+    if (baseline == null || current == null) return false;
+    return current != baseline;
+  }
+
+  Future<void> _requestClose() async {
+    if (_isHandlingCloseRequest) return;
+    if (!_hasUnsavedChanges()) {
+      if (!mounted) return;
+      context.safePop();
+      return;
+    }
+
+    _isHandlingCloseRequest = true;
+    try {
+      final action = await _confirmUnsavedClose();
+      if (!mounted || action == null) return;
+      switch (action) {
+        case _AiServiceUnsavedCloseAction.continueEditing:
+          return;
+        case _AiServiceUnsavedCloseAction.discard:
+          context.safePop();
+          return;
+        case _AiServiceUnsavedCloseAction.save:
+          final saved = await _save(showSavedToast: false);
+          if (!mounted || !saved) return;
+          context.safePop();
+          return;
+      }
+    } finally {
+      _isHandlingCloseRequest = false;
+    }
+  }
+
+  Future<_AiServiceUnsavedCloseAction?> _confirmUnsavedClose() {
+    final isZh =
+        Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
+    return showDialog<_AiServiceUnsavedCloseAction>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(isZh ? '保存更改？' : 'Save changes?'),
+        content: Text(
+          isZh
+              ? '此 AI 服务有未保存的修改。你可以保存后关闭、放弃修改，或继续编辑。'
+              : 'This AI service has unsaved changes. Save before closing, discard them, or continue editing.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(
+              dialogContext,
+            ).pop(_AiServiceUnsavedCloseAction.continueEditing),
+            child: Text(isZh ? '继续编辑' : 'Continue editing'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(
+              dialogContext,
+            ).pop(_AiServiceUnsavedCloseAction.discard),
+            child: Text(isZh ? '放弃修改' : 'Discard'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(
+              dialogContext,
+            ).pop(_AiServiceUnsavedCloseAction.save),
+            child: Text(isZh ? '保存并关闭' : 'Save and close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _checkConnection() async {
     final current = ref
         .read(aiSettingsProvider)
@@ -508,6 +772,7 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
               lastValidationMessage: result.message,
             ),
           );
+      _resetBaseline(draft, template);
       LogManager.instance.info(
         'AI settings connection check finished',
         context: <String, Object?>{
@@ -558,8 +823,8 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
     }
   }
 
-  Future<void> _save({required bool showSavedToast}) async {
-    if (!(_formKey.currentState?.validate() ?? true)) return;
+  Future<bool> _save({required bool showSavedToast}) async {
+    if (!(_formKey.currentState?.validate() ?? true)) return false;
     final service = ref
         .read(aiSettingsProvider)
         .services
@@ -568,12 +833,33 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
         ? null
         : findAiProviderTemplate(service.templateId);
     final draft = _buildDraftService(service, template);
-    if (draft == null) return;
-    await ref.read(aiSettingsProvider.notifier).upsertService(draft);
-    if (!mounted || !showSavedToast) return;
+    if (draft == null) return false;
+    if (mounted) setState(() => _isSaving = true);
+    try {
+      await ref.read(aiSettingsProvider.notifier).upsertService(draft);
+      _resetBaseline(draft, template);
+    } catch (error, stackTrace) {
+      LogManager.instance.warn(
+        'AI settings save failed',
+        error: error,
+        stackTrace: stackTrace,
+        context: buildAiServiceLogContext(draft, template: template),
+      );
+      if (mounted) {
+        final isZh =
+            Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
+        showTopToast(context, isZh ? '服务保存失败。' : 'Failed to save service.');
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+    if (!mounted) return true;
+    if (!showSavedToast) return true;
     final isZh =
         Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
     showTopToast(context, isZh ? '服务已保存。' : 'Service saved.');
+    return true;
   }
 
   Future<void> _delete() async {
@@ -615,7 +901,7 @@ class _AiServiceDetailScreenState extends ConsumerState<AiServiceDetailScreen> {
     if (confirmed != true) return;
     await ref.read(aiSettingsProvider.notifier).deleteService(widget.serviceId);
     if (!mounted) return;
-    Navigator.of(context).maybePop();
+    context.safePop();
   }
 
   String _routeLabel(AiTaskRouteId routeId, bool isZh) {
