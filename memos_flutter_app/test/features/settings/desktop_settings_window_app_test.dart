@@ -40,6 +40,8 @@ import 'package:memos_flutter_app/data/repositories/local_library_repository.dar
 import 'package:memos_flutter_app/features/review/ai_insight_prompt_editor_screen.dart';
 import 'package:memos_flutter_app/features/settings/ai_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/desktop_shortcuts_overview_screen.dart';
+import 'package:memos_flutter_app/features/settings/desktop_shortcuts_settings_screen.dart';
+import 'package:memos_flutter_app/features/settings/desktop_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/desktop_settings_window_app.dart';
 import 'package:memos_flutter_app/features/settings/feedback_screen.dart';
 import 'package:memos_flutter_app/features/settings/location_settings_screen.dart';
@@ -472,6 +474,105 @@ void main() {
 
       expect(titleLeft, greaterThan(kMacosTrafficLightReservedWidth));
       expect(find.byIcon(Icons.close), findsNothing);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('macOS settings window exposes desktop pane and shared route', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    try {
+      final sessionController = _TestSessionController();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_multiWindowEventChannel, (call) async {
+            switch (call.method) {
+              case 'desktop.quickInput.ping':
+              case 'desktop.settings.ping':
+              case 'desktop.subWindow.visibility':
+                return true;
+              case 'desktop.main.getWorkspaceSnapshot':
+                return <String, dynamic>{
+                  'currentKey': null,
+                  'hasCurrentAccount': false,
+                  'hasLocalLibrary': false,
+                };
+            }
+            return true;
+          });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appSessionProvider.overrideWith((ref) => sessionController),
+            appPreferencesProvider.overrideWith(
+              (ref) => _TestAppPreferencesController(ref),
+            ),
+          ],
+          child: const DesktopSettingsWindowApp(windowId: 7),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byIcon(Icons.devices_outlined), findsOneWidget);
+      expect(find.text('Desktop settings'), findsOneWidget);
+
+      await tester.tap(find.text('Desktop settings'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DesktopSettingsScreen), findsOneWidget);
+      expect(find.text('Shortcut settings'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('Linux settings window hides desktop pane and shortcut target', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+    try {
+      final sessionController = _TestSessionController();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_multiWindowEventChannel, (call) async {
+            switch (call.method) {
+              case 'desktop.quickInput.ping':
+              case 'desktop.settings.ping':
+              case 'desktop.subWindow.visibility':
+                return true;
+              case 'desktop.main.getWorkspaceSnapshot':
+                return <String, dynamic>{
+                  'currentKey': null,
+                  'hasCurrentAccount': false,
+                  'hasLocalLibrary': false,
+                };
+            }
+            return true;
+          });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appSessionProvider.overrideWith((ref) => sessionController),
+            appPreferencesProvider.overrideWith(
+              (ref) => _TestAppPreferencesController(ref),
+            ),
+          ],
+          child: const DesktopSettingsWindowApp(
+            windowId: 7,
+            initialTarget: DesktopSettingsWindowTarget.desktopShortcuts,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byIcon(Icons.devices_outlined), findsNothing);
+      expect(find.text('Desktop settings'), findsNothing);
+      expect(find.byType(DesktopSettingsScreen), findsNothing);
+      expect(find.byType(DesktopShortcutsSettingsScreen), findsNothing);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }

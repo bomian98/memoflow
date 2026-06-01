@@ -4,9 +4,9 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 7
-/// Strings: 14617 (2088 per locale)
+/// Strings: 14623 (2089 per locale)
 ///
-/// Built on 2026-05-30 at 09:32 UTC
+/// Built on 2026-06-01 at 00:50 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -1611,12 +1611,14 @@ class _StringsStringsLegacyEn {
 	String get msg_enter_repository_name_prompt => 'Please enter a repository name.';
 	String get msg_enter_and_confirm_password => 'Please enter and confirm the password.';
 	String get msg_encrypt_save_placeholder => 'Encrypted save (placeholder)';
-	String get msg_windows_related_settings => 'Windows related settings';
+	String get msg_desktop_settings => 'Desktop settings';
 	String get msg_only_windows_desktop_supports_this_setting => 'Only Windows desktop supports this setting.';
 	String get msg_shortcut_settings => 'Shortcut settings';
-	String get msg_configure_windows_desktop_shortcuts => 'Configure Windows desktop shortcuts';
+	String get msg_configure_desktop_shortcuts => 'Configure desktop shortcuts';
 	String get msg_close_window_minimize_to_tray => 'Minimize to tray when closing window';
 	String get msg_close_window_minimize_to_tray_desc => 'When enabled, clicking the top-right close button will not exit the app. You can restore the window from the system tray.';
+	String get msg_close_window_keep_in_menu_bar => 'Keep running in menu bar when closing window';
+	String get msg_close_window_keep_in_menu_bar_desc => 'When enabled, closing the main window hides it and keeps MemoFlow available from the menu bar. Use Quit to exit the app.';
 	String get msg_local_storage_unavailable => 'Local storage is unavailable';
 	String get msg_check_system_permissions_or_retry_later => 'Please check system permissions or try again later.';
 	String msg_source_value({required Object source}) => 'Source: ${source}';
@@ -1633,12 +1635,12 @@ class _StringsStringsLegacyEn {
 	String get msg_cut => 'Cut';
 	String get msg_previous_page => 'Previous page';
 	String get msg_next_page => 'Next page';
-	String get msg_shift_enter_supported => 'Also supports Shift + Enter';
+	String msg_shift_enter_supported({required Object binding}) => 'Also supports ${binding}';
 	String get msg_shortcuts_supported_windows_macos => 'Only Windows and macOS support shortcut settings.';
 	String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding} is already used by “${action}”.';
 	String get msg_windows_paging_note => 'Windows paging: PageUp previous page, PageDown next page.';
 	String get msg_system_edit_shortcuts_note => 'Copy / paste / cut use the system default shortcuts.';
-	String get msg_shortcut_requires_modifier => 'Include at least one modifier key (Ctrl/Cmd/Shift/Alt).';
+	String msg_shortcut_requires_modifier({required Object modifiers}) => 'Include at least one modifier key (${modifiers}).';
 	String msg_current_shortcut({required Object binding}) => 'Current: ${binding}';
 	String get msg_press_new_shortcut => 'Press the new shortcut...';
 	String get msg_quick_record => 'Quick record';
@@ -4232,7 +4234,7 @@ class _StringsStringsLegacyDe extends _StringsStringsLegacyEn {
 	@override String get msg_close_window_minimize_to_tray_desc => 'Wenn diese Option aktiviert ist, wird die App durch Klicken auf die Schaltfläche zum Schließen oben rechts nicht beendet. Sie können das Fenster über die Taskleiste wiederherstellen.';
 	@override String get msg_code_block => 'Codeblock';
 	@override String get msg_common_writing_time => 'Gemeinsame Schreibzeit';
-	@override String get msg_configure_windows_desktop_shortcuts => 'Konfigurieren Sie Windows-Desktop-Verknüpfungen';
+	@override String get msg_configure_desktop_shortcuts => 'Desktop-Verknüpfungen konfigurieren';
 	@override String get msg_copy_diagnostics => 'Diagnose kopieren';
 	@override String msg_copy_last_lines({required Object lines}) => 'Kopieren Sie die letzten ${lines}-Zeilen';
 	@override String get msg_current_date => 'Aktuelles Datum';
@@ -4350,9 +4352,9 @@ class _StringsStringsLegacyDe extends _StringsStringsLegacyEn {
 	@override String get msg_screenshot_mode_detail => 'Blenden Sie Status-/Navigationsleisten für saubere Aufnahmen aus';
 	@override String get msg_select_file_save_location => 'Bitte wählen Sie einen Speicherort für die Datei aus.';
 	@override String get msg_select_location => 'Standort auswählen';
-	@override String get msg_shift_enter_supported => 'Unterstützt auch Umschalt + Eingabetaste';
+	@override String msg_shift_enter_supported({required Object binding}) => 'Unterstützt auch ${binding}';
 	@override String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding} wird bereits von „${action}“ verwendet.';
-	@override String get msg_shortcut_requires_modifier => 'Fügen Sie mindestens eine Zusatztaste ein (Strg/Befehl/Umschalt/Alt).';
+	@override String msg_shortcut_requires_modifier({required Object modifiers}) => 'Fügen Sie mindestens eine Zusatztaste ein (${modifiers}).';
 	@override String get msg_shortcut_settings => 'Verknüpfungseinstellungen';
 	@override String get msg_shortcuts_overview => 'Übersicht über die Verknüpfungen';
 	@override String get msg_shortcuts_overview_opened => 'Geöffnete Verknüpfungsübersicht.';
@@ -4433,7 +4435,7 @@ class _StringsStringsLegacyDe extends _StringsStringsLegacyEn {
 	@override String get msg_wind_power => 'Windstärke';
 	@override String msg_windows_enable_location_access({required Object message}) => '${message}. Aktivieren Sie den Standortzugriff in den Windows-Einstellungen.';
 	@override String get msg_windows_paging_note => 'Windows-Paging: PageUp vorherige Seite, PageDown nächste Seite.';
-	@override String get msg_windows_related_settings => 'Windows-bezogene Einstellungen';
+	@override String get msg_desktop_settings => 'Desktop-Einstellungen';
 	@override String get msg_write_current_thought => 'Schreiben Sie auf, was Sie denken ...';
 	@override String get msg_yearly_character_trend => 'Jährlicher Charaktertrend';
 	@override String get msg_advanced_search => 'Advanced search';
@@ -6838,7 +6840,7 @@ class _StringsStringsLegacyJa extends _StringsStringsLegacyEn {
 	@override String get msg_close_window_minimize_to_tray_desc => '有効にすると、右上の閉じるボタンをクリックしてもアプリは終了しません。システム トレイからウィンドウを復元できます。';
 	@override String get msg_code_block => 'コードブロック';
 	@override String get msg_common_writing_time => '一般的な執筆時間';
-	@override String get msg_configure_windows_desktop_shortcuts => 'Windows デスクトップのショートカットを構成する';
+	@override String get msg_configure_desktop_shortcuts => 'デスクトップのショートカットを設定する';
 	@override String get msg_copy_diagnostics => 'コピー診断';
 	@override String msg_copy_last_lines({required Object lines}) => '最後の${lines}行をコピー';
 	@override String get msg_current_date => '現在の日付';
@@ -6957,9 +6959,9 @@ class _StringsStringsLegacyJa extends _StringsStringsLegacyEn {
 	@override String get msg_screenshot_mode_detail => 'クリーンなキャプチャのためにステータス/ナビゲーション バーを非表示にする';
 	@override String get msg_select_file_save_location => 'ファイルの保存場所を選択してください。';
 	@override String get msg_select_location => '場所を選択してください';
-	@override String get msg_shift_enter_supported => 'Shift + Enterもサポート';
+	@override String msg_shift_enter_supported({required Object binding}) => '${binding}もサポート';
 	@override String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding} はすでに「${action}」によって使用されています。';
-	@override String get msg_shortcut_requires_modifier => '少なくとも 1 つの修飾キー (Ctrl/Cmd/Shift/Alt) を含めます。';
+	@override String msg_shortcut_requires_modifier({required Object modifiers}) => '少なくとも 1 つの修飾キー (${modifiers}) を含めます。';
 	@override String get msg_shortcut_settings => 'ショートカット設定';
 	@override String get msg_shortcuts_overview => 'ショートカットの概要';
 	@override String get msg_shortcuts_overview_opened => '開いたショートカットの概要。';
@@ -7040,7 +7042,7 @@ class _StringsStringsLegacyJa extends _StringsStringsLegacyEn {
 	@override String get msg_wind_power => '風力';
 	@override String msg_windows_enable_location_access({required Object message}) => '${message}。 Windows 設定で位置情報アクセスを有効にします。';
 	@override String get msg_windows_paging_note => 'Windows ページング: PageUp 前のページ、PageDown 次のページ。';
-	@override String get msg_windows_related_settings => 'Windows関連の設定';
+	@override String get msg_desktop_settings => 'デスクトップ設定';
 	@override String get msg_write_current_thought => '考えていることを書き留めてください...';
 	@override String get msg_yearly_character_trend => '年間キャラクタートレンド';
 	@override String get msg_advanced_search => 'Advanced search';
@@ -9548,10 +9550,10 @@ class _StringsStringsLegacyKo extends _StringsStringsLegacyEn {
 	@override String get msg_enter_repository_name_prompt => '저장소 이름을 입력하세요.';
 	@override String get msg_enter_and_confirm_password => '비밀번호를 입력하고 확인해 주세요.';
 	@override String get msg_encrypt_save_placeholder => '암호화된 저장(자리 표시자)';
-	@override String get msg_windows_related_settings => 'Windows 관련 설정';
+	@override String get msg_desktop_settings => '데스크톱 설정';
 	@override String get msg_only_windows_desktop_supports_this_setting => 'Windows 데스크톱만 이 설정을 지원합니다.';
 	@override String get msg_shortcut_settings => '바로가기 설정';
-	@override String get msg_configure_windows_desktop_shortcuts => 'Windows 바탕 화면 바로 가기 구성';
+	@override String get msg_configure_desktop_shortcuts => '데스크톱 바로 가기 구성';
 	@override String get msg_close_window_minimize_to_tray => '창을 닫을 때 트레이로 최소화';
 	@override String get msg_close_window_minimize_to_tray_desc => '활성화되면 오른쪽 상단 닫기 버튼을 클릭해도 앱이 종료되지 않습니다. 시스템 트레이에서 창을 복원할 수 있습니다.';
 	@override String get msg_local_storage_unavailable => '로컬 저장소를 사용할 수 없습니다';
@@ -9570,12 +9572,12 @@ class _StringsStringsLegacyKo extends _StringsStringsLegacyEn {
 	@override String get msg_cut => '자르다';
 	@override String get msg_previous_page => '이전 페이지';
 	@override String get msg_next_page => '다음 페이지';
-	@override String get msg_shift_enter_supported => 'Shift + Enter도 지원합니다.';
+	@override String msg_shift_enter_supported({required Object binding}) => '${binding}도 지원합니다.';
 	@override String get msg_shortcuts_supported_windows_macos => 'Windows 및 macOS만 바로가기 설정을 지원합니다.';
 	@override String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding}는 이미 "${action}"에서 사용되고 있습니다.';
 	@override String get msg_windows_paging_note => 'Windows 페이징: PageUp 이전 페이지, PageDown 다음 페이지.';
 	@override String get msg_system_edit_shortcuts_note => '복사/붙여넣기/잘라내기는 시스템 기본 단축키를 사용합니다.';
-	@override String get msg_shortcut_requires_modifier => '최소한 하나의 수정자 키(Ctrl/Cmd/Shift/Alt)를 포함하세요.';
+	@override String msg_shortcut_requires_modifier({required Object modifiers}) => '최소한 하나의 수정자 키(${modifiers})를 포함하세요.';
 	@override String msg_current_shortcut({required Object binding}) => '현재: ${binding}';
 	@override String get msg_press_new_shortcut => '새 단축키를 누르세요...';
 	@override String get msg_quick_record => '빠른 기록';
@@ -12271,10 +12273,10 @@ class _StringsStringsLegacyPtBr extends _StringsStringsLegacyEn {
 	@override String get msg_enter_repository_name_prompt => 'Insira um nome de repositório.';
 	@override String get msg_enter_and_confirm_password => 'Por favor insira e confirme a senha.';
 	@override String get msg_encrypt_save_placeholder => 'Salvamento criptografado (espaço reservado)';
-	@override String get msg_windows_related_settings => 'Configurações relacionadas ao Windows';
+	@override String get msg_desktop_settings => 'Configurações da área de trabalho';
 	@override String get msg_only_windows_desktop_supports_this_setting => 'Somente o desktop Windows suporta esta configuração.';
 	@override String get msg_shortcut_settings => 'Configurações de atalho';
-	@override String get msg_configure_windows_desktop_shortcuts => 'Configurar atalhos da área de trabalho Windows';
+	@override String get msg_configure_desktop_shortcuts => 'Configurar atalhos da área de trabalho';
 	@override String get msg_close_window_minimize_to_tray => 'Minimizar para a bandeja ao fechar a janela';
 	@override String get msg_close_window_minimize_to_tray_desc => 'Quando ativado, clicar no botão Fechar no canto superior direito não sairá do aplicativo. Você pode restaurar a janela da bandeja do sistema.';
 	@override String get msg_local_storage_unavailable => 'O armazenamento local não está disponível';
@@ -12293,12 +12295,12 @@ class _StringsStringsLegacyPtBr extends _StringsStringsLegacyEn {
 	@override String get msg_cut => 'Corte';
 	@override String get msg_previous_page => 'Página anterior';
 	@override String get msg_next_page => 'Próxima página';
-	@override String get msg_shift_enter_supported => 'Também suporta Shift + Enter';
+	@override String msg_shift_enter_supported({required Object binding}) => 'Também suporta ${binding}';
 	@override String get msg_shortcuts_supported_windows_macos => 'Somente Windows e macOS suportam configurações de atalho.';
 	@override String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding} já é usado por “${action}”.';
 	@override String get msg_windows_paging_note => 'Paginação Windows: página anterior PageUp, página seguinte PageDown.';
 	@override String get msg_system_edit_shortcuts_note => 'Copiar/colar/cortar use os atalhos padrão do sistema.';
-	@override String get msg_shortcut_requires_modifier => 'Inclui pelo menos uma tecla modificadora (Ctrl/Cmd/Shift/Alt).';
+	@override String msg_shortcut_requires_modifier({required Object modifiers}) => 'Inclui pelo menos uma tecla modificadora (${modifiers}).';
 	@override String msg_current_shortcut({required Object binding}) => 'Atual: ${binding}';
 	@override String get msg_press_new_shortcut => 'Pressione o novo atalho...';
 	@override String get msg_quick_record => 'Registro rápido';
@@ -14991,12 +14993,14 @@ class _StringsStringsLegacyZhHans extends _StringsStringsLegacyEn {
 	@override String get msg_enter_repository_name_prompt => '请输入仓库名称。';
 	@override String get msg_enter_and_confirm_password => '请输入并确认密码。';
 	@override String get msg_encrypt_save_placeholder => '加密保存（占位）';
-	@override String get msg_windows_related_settings => 'Windows 相关设置';
+	@override String get msg_desktop_settings => '桌面设置';
 	@override String get msg_only_windows_desktop_supports_this_setting => '仅 Windows 桌面端支持此设置。';
 	@override String get msg_shortcut_settings => '快捷键设置';
-	@override String get msg_configure_windows_desktop_shortcuts => '配置 Windows 桌面快捷键';
+	@override String get msg_configure_desktop_shortcuts => '配置桌面快捷键';
 	@override String get msg_close_window_minimize_to_tray => '关闭窗口时最小化到托盘';
 	@override String get msg_close_window_minimize_to_tray_desc => '开启后，点击右上角关闭按钮不会退出应用，可从系统托盘恢复窗口。';
+	@override String get msg_close_window_keep_in_menu_bar => '关闭窗口时保留在菜单栏';
+	@override String get msg_close_window_keep_in_menu_bar_desc => '开启后，关闭主窗口不会退出应用，可从右上角菜单栏图标恢复。需要退出时请使用“退出”。';
 	@override String get msg_local_storage_unavailable => '本地存储不可用';
 	@override String get msg_check_system_permissions_or_retry_later => '请检查系统权限，或稍后重试。';
 	@override String msg_source_value({required Object source}) => '来源：${source}';
@@ -15013,12 +15017,12 @@ class _StringsStringsLegacyZhHans extends _StringsStringsLegacyEn {
 	@override String get msg_cut => '剪切';
 	@override String get msg_previous_page => '上一页';
 	@override String get msg_next_page => '下一页';
-	@override String get msg_shift_enter_supported => '也支持 Shift + Enter';
+	@override String msg_shift_enter_supported({required Object binding}) => '也支持 ${binding}';
 	@override String get msg_shortcuts_supported_windows_macos => '仅 Windows 和 macOS 支持快捷键设置。';
 	@override String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding} 已被“${action}”占用。';
 	@override String get msg_windows_paging_note => 'Windows 翻页：PageUp 上一页，PageDown 下一页。';
 	@override String get msg_system_edit_shortcuts_note => '复制 / 粘贴 / 剪切使用系统默认快捷键。';
-	@override String get msg_shortcut_requires_modifier => '请至少包含一个修饰键（Ctrl/Cmd/Shift/Alt）。';
+	@override String msg_shortcut_requires_modifier({required Object modifiers}) => '请至少包含一个修饰键（${modifiers}）。';
 	@override String msg_current_shortcut({required Object binding}) => '当前：${binding}';
 	@override String get msg_press_new_shortcut => '请按下新的快捷键...';
 	@override String get msg_quick_record => '快速输入';
@@ -17712,12 +17716,14 @@ class _StringsStringsLegacyZhHantTw extends _StringsStringsLegacyEn {
 	@override String get msg_enter_repository_name_prompt => '請輸入儲存庫名稱。';
 	@override String get msg_enter_and_confirm_password => '請輸入並確認密碼。';
 	@override String get msg_encrypt_save_placeholder => '加密儲存（占位）';
-	@override String get msg_windows_related_settings => 'Windows 相關設定';
+	@override String get msg_desktop_settings => '桌面設定';
 	@override String get msg_only_windows_desktop_supports_this_setting => '仅 Windows 桌面端支援此設定。';
 	@override String get msg_shortcut_settings => '快捷鍵設定';
-	@override String get msg_configure_windows_desktop_shortcuts => '設定 Windows 桌面快捷鍵';
+	@override String get msg_configure_desktop_shortcuts => '設定桌面快捷鍵';
 	@override String get msg_close_window_minimize_to_tray => '關閉視窗時最小化到系統匣';
 	@override String get msg_close_window_minimize_to_tray_desc => '開啟後，點擊右上角關閉按鈕不會退出應用，可從系統匣恢復視窗。';
+	@override String get msg_close_window_keep_in_menu_bar => '關閉視窗時保留在選單列';
+	@override String get msg_close_window_keep_in_menu_bar_desc => '開啟後，關閉主視窗不會退出應用，可從右上角選單列圖示恢復。需要退出時請使用「退出」。';
 	@override String get msg_local_storage_unavailable => '本地儲存不可用';
 	@override String get msg_check_system_permissions_or_retry_later => '請檢查系統權限，或稍後再試。';
 	@override String msg_source_value({required Object source}) => '來源：${source}';
@@ -17734,12 +17740,12 @@ class _StringsStringsLegacyZhHantTw extends _StringsStringsLegacyEn {
 	@override String get msg_cut => '剪下';
 	@override String get msg_previous_page => '上一頁';
 	@override String get msg_next_page => '下一頁';
-	@override String get msg_shift_enter_supported => '也支援 Shift + Enter';
+	@override String msg_shift_enter_supported({required Object binding}) => '也支援 ${binding}';
 	@override String get msg_shortcuts_supported_windows_macos => '僅 Windows 與 macOS 支援快捷鍵設定。';
 	@override String msg_shortcut_binding_in_use({required Object binding, required Object action}) => '${binding} 已被「${action}」佔用。';
 	@override String get msg_windows_paging_note => 'Windows 翻頁：PageUp 上一頁，PageDown 下一頁。';
 	@override String get msg_system_edit_shortcuts_note => '複製 / 貼上 / 剪下使用系統預設快捷鍵。';
-	@override String get msg_shortcut_requires_modifier => '請至少包含一個修飾鍵（Ctrl/Cmd/Shift/Alt）。';
+	@override String msg_shortcut_requires_modifier({required Object modifiers}) => '請至少包含一個修飾鍵（${modifiers}）。';
 	@override String msg_current_shortcut({required Object binding}) => '目前：${binding}';
 	@override String get msg_press_new_shortcut => '請按下新的快捷鍵...';
 	@override String get msg_quick_record => '快速輸入';
@@ -20451,12 +20457,14 @@ extension on Translations {
 			case 'strings.legacy.msg_enter_repository_name_prompt': return 'Please enter a repository name.';
 			case 'strings.legacy.msg_enter_and_confirm_password': return 'Please enter and confirm the password.';
 			case 'strings.legacy.msg_encrypt_save_placeholder': return 'Encrypted save (placeholder)';
-			case 'strings.legacy.msg_windows_related_settings': return 'Windows related settings';
+			case 'strings.legacy.msg_desktop_settings': return 'Desktop settings';
 			case 'strings.legacy.msg_only_windows_desktop_supports_this_setting': return 'Only Windows desktop supports this setting.';
 			case 'strings.legacy.msg_shortcut_settings': return 'Shortcut settings';
-			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return 'Configure Windows desktop shortcuts';
+			case 'strings.legacy.msg_configure_desktop_shortcuts': return 'Configure desktop shortcuts';
 			case 'strings.legacy.msg_close_window_minimize_to_tray': return 'Minimize to tray when closing window';
 			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return 'When enabled, clicking the top-right close button will not exit the app. You can restore the window from the system tray.';
+			case 'strings.legacy.msg_close_window_keep_in_menu_bar': return 'Keep running in menu bar when closing window';
+			case 'strings.legacy.msg_close_window_keep_in_menu_bar_desc': return 'When enabled, closing the main window hides it and keeps MemoFlow available from the menu bar. Use Quit to exit the app.';
 			case 'strings.legacy.msg_local_storage_unavailable': return 'Local storage is unavailable';
 			case 'strings.legacy.msg_check_system_permissions_or_retry_later': return 'Please check system permissions or try again later.';
 			case 'strings.legacy.msg_source_value': return ({required Object source}) => 'Source: ${source}';
@@ -20473,12 +20481,12 @@ extension on Translations {
 			case 'strings.legacy.msg_cut': return 'Cut';
 			case 'strings.legacy.msg_previous_page': return 'Previous page';
 			case 'strings.legacy.msg_next_page': return 'Next page';
-			case 'strings.legacy.msg_shift_enter_supported': return 'Also supports Shift + Enter';
+			case 'strings.legacy.msg_shift_enter_supported': return ({required Object binding}) => 'Also supports ${binding}';
 			case 'strings.legacy.msg_shortcuts_supported_windows_macos': return 'Only Windows and macOS support shortcut settings.';
 			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding} is already used by “${action}”.';
 			case 'strings.legacy.msg_windows_paging_note': return 'Windows paging: PageUp previous page, PageDown next page.';
 			case 'strings.legacy.msg_system_edit_shortcuts_note': return 'Copy / paste / cut use the system default shortcuts.';
-			case 'strings.legacy.msg_shortcut_requires_modifier': return 'Include at least one modifier key (Ctrl/Cmd/Shift/Alt).';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return ({required Object modifiers}) => 'Include at least one modifier key (${modifiers}).';
 			case 'strings.legacy.msg_current_shortcut': return ({required Object binding}) => 'Current: ${binding}';
 			case 'strings.legacy.msg_press_new_shortcut': return 'Press the new shortcut...';
 			case 'strings.legacy.msg_quick_record': return 'Quick record';
@@ -22480,7 +22488,7 @@ extension on _StringsDe {
 			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return 'Wenn diese Option aktiviert ist, wird die App durch Klicken auf die Schaltfläche zum Schließen oben rechts nicht beendet. Sie können das Fenster über die Taskleiste wiederherstellen.';
 			case 'strings.legacy.msg_code_block': return 'Codeblock';
 			case 'strings.legacy.msg_common_writing_time': return 'Gemeinsame Schreibzeit';
-			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return 'Konfigurieren Sie Windows-Desktop-Verknüpfungen';
+			case 'strings.legacy.msg_configure_desktop_shortcuts': return 'Desktop-Verknüpfungen konfigurieren';
 			case 'strings.legacy.msg_copy_diagnostics': return 'Diagnose kopieren';
 			case 'strings.legacy.msg_copy_last_lines': return ({required Object lines}) => 'Kopieren Sie die letzten ${lines}-Zeilen';
 			case 'strings.legacy.msg_current_date': return 'Aktuelles Datum';
@@ -22598,9 +22606,9 @@ extension on _StringsDe {
 			case 'strings.legacy.msg_screenshot_mode_detail': return 'Blenden Sie Status-/Navigationsleisten für saubere Aufnahmen aus';
 			case 'strings.legacy.msg_select_file_save_location': return 'Bitte wählen Sie einen Speicherort für die Datei aus.';
 			case 'strings.legacy.msg_select_location': return 'Standort auswählen';
-			case 'strings.legacy.msg_shift_enter_supported': return 'Unterstützt auch Umschalt + Eingabetaste';
+			case 'strings.legacy.msg_shift_enter_supported': return ({required Object binding}) => 'Unterstützt auch ${binding}';
 			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding} wird bereits von „${action}“ verwendet.';
-			case 'strings.legacy.msg_shortcut_requires_modifier': return 'Fügen Sie mindestens eine Zusatztaste ein (Strg/Befehl/Umschalt/Alt).';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return ({required Object modifiers}) => 'Fügen Sie mindestens eine Zusatztaste ein (${modifiers}).';
 			case 'strings.legacy.msg_shortcut_settings': return 'Verknüpfungseinstellungen';
 			case 'strings.legacy.msg_shortcuts_overview': return 'Übersicht über die Verknüpfungen';
 			case 'strings.legacy.msg_shortcuts_overview_opened': return 'Geöffnete Verknüpfungsübersicht.';
@@ -22681,7 +22689,7 @@ extension on _StringsDe {
 			case 'strings.legacy.msg_wind_power': return 'Windstärke';
 			case 'strings.legacy.msg_windows_enable_location_access': return ({required Object message}) => '${message}. Aktivieren Sie den Standortzugriff in den Windows-Einstellungen.';
 			case 'strings.legacy.msg_windows_paging_note': return 'Windows-Paging: PageUp vorherige Seite, PageDown nächste Seite.';
-			case 'strings.legacy.msg_windows_related_settings': return 'Windows-bezogene Einstellungen';
+			case 'strings.legacy.msg_desktop_settings': return 'Desktop-Einstellungen';
 			case 'strings.legacy.msg_write_current_thought': return 'Schreiben Sie auf, was Sie denken ...';
 			case 'strings.legacy.msg_yearly_character_trend': return 'Jährlicher Charaktertrend';
 			case 'strings.legacy.msg_advanced_search': return 'Advanced search';
@@ -24506,7 +24514,7 @@ extension on _StringsJa {
 			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return '有効にすると、右上の閉じるボタンをクリックしてもアプリは終了しません。システム トレイからウィンドウを復元できます。';
 			case 'strings.legacy.msg_code_block': return 'コードブロック';
 			case 'strings.legacy.msg_common_writing_time': return '一般的な執筆時間';
-			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return 'Windows デスクトップのショートカットを構成する';
+			case 'strings.legacy.msg_configure_desktop_shortcuts': return 'デスクトップのショートカットを設定する';
 			case 'strings.legacy.msg_copy_diagnostics': return 'コピー診断';
 			case 'strings.legacy.msg_copy_last_lines': return ({required Object lines}) => '最後の${lines}行をコピー';
 			case 'strings.legacy.msg_current_date': return '現在の日付';
@@ -24625,9 +24633,9 @@ extension on _StringsJa {
 			case 'strings.legacy.msg_screenshot_mode_detail': return 'クリーンなキャプチャのためにステータス/ナビゲーション バーを非表示にする';
 			case 'strings.legacy.msg_select_file_save_location': return 'ファイルの保存場所を選択してください。';
 			case 'strings.legacy.msg_select_location': return '場所を選択してください';
-			case 'strings.legacy.msg_shift_enter_supported': return 'Shift + Enterもサポート';
+			case 'strings.legacy.msg_shift_enter_supported': return ({required Object binding}) => '${binding}もサポート';
 			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding} はすでに「${action}」によって使用されています。';
-			case 'strings.legacy.msg_shortcut_requires_modifier': return '少なくとも 1 つの修飾キー (Ctrl/Cmd/Shift/Alt) を含めます。';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return ({required Object modifiers}) => '少なくとも 1 つの修飾キー (${modifiers}) を含めます。';
 			case 'strings.legacy.msg_shortcut_settings': return 'ショートカット設定';
 			case 'strings.legacy.msg_shortcuts_overview': return 'ショートカットの概要';
 			case 'strings.legacy.msg_shortcuts_overview_opened': return '開いたショートカットの概要。';
@@ -24708,7 +24716,7 @@ extension on _StringsJa {
 			case 'strings.legacy.msg_wind_power': return '風力';
 			case 'strings.legacy.msg_windows_enable_location_access': return ({required Object message}) => '${message}。 Windows 設定で位置情報アクセスを有効にします。';
 			case 'strings.legacy.msg_windows_paging_note': return 'Windows ページング: PageUp 前のページ、PageDown 次のページ。';
-			case 'strings.legacy.msg_windows_related_settings': return 'Windows関連の設定';
+			case 'strings.legacy.msg_desktop_settings': return 'デスクトップ設定';
 			case 'strings.legacy.msg_write_current_thought': return '考えていることを書き留めてください...';
 			case 'strings.legacy.msg_yearly_character_trend': return '年間キャラクタートレンド';
 			case 'strings.legacy.msg_advanced_search': return 'Advanced search';
@@ -26638,10 +26646,10 @@ extension on _StringsKo {
 			case 'strings.legacy.msg_enter_repository_name_prompt': return '저장소 이름을 입력하세요.';
 			case 'strings.legacy.msg_enter_and_confirm_password': return '비밀번호를 입력하고 확인해 주세요.';
 			case 'strings.legacy.msg_encrypt_save_placeholder': return '암호화된 저장(자리 표시자)';
-			case 'strings.legacy.msg_windows_related_settings': return 'Windows 관련 설정';
+			case 'strings.legacy.msg_desktop_settings': return '데스크톱 설정';
 			case 'strings.legacy.msg_only_windows_desktop_supports_this_setting': return 'Windows 데스크톱만 이 설정을 지원합니다.';
 			case 'strings.legacy.msg_shortcut_settings': return '바로가기 설정';
-			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return 'Windows 바탕 화면 바로 가기 구성';
+			case 'strings.legacy.msg_configure_desktop_shortcuts': return '데스크톱 바로 가기 구성';
 			case 'strings.legacy.msg_close_window_minimize_to_tray': return '창을 닫을 때 트레이로 최소화';
 			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return '활성화되면 오른쪽 상단 닫기 버튼을 클릭해도 앱이 종료되지 않습니다. 시스템 트레이에서 창을 복원할 수 있습니다.';
 			case 'strings.legacy.msg_local_storage_unavailable': return '로컬 저장소를 사용할 수 없습니다';
@@ -26660,12 +26668,12 @@ extension on _StringsKo {
 			case 'strings.legacy.msg_cut': return '자르다';
 			case 'strings.legacy.msg_previous_page': return '이전 페이지';
 			case 'strings.legacy.msg_next_page': return '다음 페이지';
-			case 'strings.legacy.msg_shift_enter_supported': return 'Shift + Enter도 지원합니다.';
+			case 'strings.legacy.msg_shift_enter_supported': return ({required Object binding}) => '${binding}도 지원합니다.';
 			case 'strings.legacy.msg_shortcuts_supported_windows_macos': return 'Windows 및 macOS만 바로가기 설정을 지원합니다.';
 			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding}는 이미 "${action}"에서 사용되고 있습니다.';
 			case 'strings.legacy.msg_windows_paging_note': return 'Windows 페이징: PageUp 이전 페이지, PageDown 다음 페이지.';
 			case 'strings.legacy.msg_system_edit_shortcuts_note': return '복사/붙여넣기/잘라내기는 시스템 기본 단축키를 사용합니다.';
-			case 'strings.legacy.msg_shortcut_requires_modifier': return '최소한 하나의 수정자 키(Ctrl/Cmd/Shift/Alt)를 포함하세요.';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return ({required Object modifiers}) => '최소한 하나의 수정자 키(${modifiers})를 포함하세요.';
 			case 'strings.legacy.msg_current_shortcut': return ({required Object binding}) => '현재: ${binding}';
 			case 'strings.legacy.msg_press_new_shortcut': return '새 단축키를 누르세요...';
 			case 'strings.legacy.msg_quick_record': return '빠른 기록';
@@ -28771,10 +28779,10 @@ extension on _StringsPtBr {
 			case 'strings.legacy.msg_enter_repository_name_prompt': return 'Insira um nome de repositório.';
 			case 'strings.legacy.msg_enter_and_confirm_password': return 'Por favor insira e confirme a senha.';
 			case 'strings.legacy.msg_encrypt_save_placeholder': return 'Salvamento criptografado (espaço reservado)';
-			case 'strings.legacy.msg_windows_related_settings': return 'Configurações relacionadas ao Windows';
+			case 'strings.legacy.msg_desktop_settings': return 'Configurações da área de trabalho';
 			case 'strings.legacy.msg_only_windows_desktop_supports_this_setting': return 'Somente o desktop Windows suporta esta configuração.';
 			case 'strings.legacy.msg_shortcut_settings': return 'Configurações de atalho';
-			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return 'Configurar atalhos da área de trabalho Windows';
+			case 'strings.legacy.msg_configure_desktop_shortcuts': return 'Configurar atalhos da área de trabalho';
 			case 'strings.legacy.msg_close_window_minimize_to_tray': return 'Minimizar para a bandeja ao fechar a janela';
 			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return 'Quando ativado, clicar no botão Fechar no canto superior direito não sairá do aplicativo. Você pode restaurar a janela da bandeja do sistema.';
 			case 'strings.legacy.msg_local_storage_unavailable': return 'O armazenamento local não está disponível';
@@ -28793,12 +28801,12 @@ extension on _StringsPtBr {
 			case 'strings.legacy.msg_cut': return 'Corte';
 			case 'strings.legacy.msg_previous_page': return 'Página anterior';
 			case 'strings.legacy.msg_next_page': return 'Próxima página';
-			case 'strings.legacy.msg_shift_enter_supported': return 'Também suporta Shift + Enter';
+			case 'strings.legacy.msg_shift_enter_supported': return ({required Object binding}) => 'Também suporta ${binding}';
 			case 'strings.legacy.msg_shortcuts_supported_windows_macos': return 'Somente Windows e macOS suportam configurações de atalho.';
 			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding} já é usado por “${action}”.';
 			case 'strings.legacy.msg_windows_paging_note': return 'Paginação Windows: página anterior PageUp, página seguinte PageDown.';
 			case 'strings.legacy.msg_system_edit_shortcuts_note': return 'Copiar/colar/cortar use os atalhos padrão do sistema.';
-			case 'strings.legacy.msg_shortcut_requires_modifier': return 'Inclui pelo menos uma tecla modificadora (Ctrl/Cmd/Shift/Alt).';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return ({required Object modifiers}) => 'Inclui pelo menos uma tecla modificadora (${modifiers}).';
 			case 'strings.legacy.msg_current_shortcut': return ({required Object binding}) => 'Atual: ${binding}';
 			case 'strings.legacy.msg_press_new_shortcut': return 'Pressione o novo atalho...';
 			case 'strings.legacy.msg_quick_record': return 'Registro rápido';
@@ -30901,12 +30909,14 @@ extension on _StringsZhHans {
 			case 'strings.legacy.msg_enter_repository_name_prompt': return '请输入仓库名称。';
 			case 'strings.legacy.msg_enter_and_confirm_password': return '请输入并确认密码。';
 			case 'strings.legacy.msg_encrypt_save_placeholder': return '加密保存（占位）';
-			case 'strings.legacy.msg_windows_related_settings': return 'Windows 相关设置';
+			case 'strings.legacy.msg_desktop_settings': return '桌面设置';
 			case 'strings.legacy.msg_only_windows_desktop_supports_this_setting': return '仅 Windows 桌面端支持此设置。';
 			case 'strings.legacy.msg_shortcut_settings': return '快捷键设置';
-			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return '配置 Windows 桌面快捷键';
+			case 'strings.legacy.msg_configure_desktop_shortcuts': return '配置桌面快捷键';
 			case 'strings.legacy.msg_close_window_minimize_to_tray': return '关闭窗口时最小化到托盘';
 			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return '开启后，点击右上角关闭按钮不会退出应用，可从系统托盘恢复窗口。';
+			case 'strings.legacy.msg_close_window_keep_in_menu_bar': return '关闭窗口时保留在菜单栏';
+			case 'strings.legacy.msg_close_window_keep_in_menu_bar_desc': return '开启后，关闭主窗口不会退出应用，可从右上角菜单栏图标恢复。需要退出时请使用“退出”。';
 			case 'strings.legacy.msg_local_storage_unavailable': return '本地存储不可用';
 			case 'strings.legacy.msg_check_system_permissions_or_retry_later': return '请检查系统权限，或稍后重试。';
 			case 'strings.legacy.msg_source_value': return ({required Object source}) => '来源：${source}';
@@ -30923,12 +30933,12 @@ extension on _StringsZhHans {
 			case 'strings.legacy.msg_cut': return '剪切';
 			case 'strings.legacy.msg_previous_page': return '上一页';
 			case 'strings.legacy.msg_next_page': return '下一页';
-			case 'strings.legacy.msg_shift_enter_supported': return '也支持 Shift + Enter';
+			case 'strings.legacy.msg_shift_enter_supported': return ({required Object binding}) => '也支持 ${binding}';
 			case 'strings.legacy.msg_shortcuts_supported_windows_macos': return '仅 Windows 和 macOS 支持快捷键设置。';
 			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding} 已被“${action}”占用。';
 			case 'strings.legacy.msg_windows_paging_note': return 'Windows 翻页：PageUp 上一页，PageDown 下一页。';
 			case 'strings.legacy.msg_system_edit_shortcuts_note': return '复制 / 粘贴 / 剪切使用系统默认快捷键。';
-			case 'strings.legacy.msg_shortcut_requires_modifier': return '请至少包含一个修饰键（Ctrl/Cmd/Shift/Alt）。';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return ({required Object modifiers}) => '请至少包含一个修饰键（${modifiers}）。';
 			case 'strings.legacy.msg_current_shortcut': return ({required Object binding}) => '当前：${binding}';
 			case 'strings.legacy.msg_press_new_shortcut': return '请按下新的快捷键...';
 			case 'strings.legacy.msg_quick_record': return '快速输入';
@@ -33017,12 +33027,14 @@ extension on _StringsZhHantTw {
 			case 'strings.legacy.msg_enter_repository_name_prompt': return '請輸入儲存庫名稱。';
 			case 'strings.legacy.msg_enter_and_confirm_password': return '請輸入並確認密碼。';
 			case 'strings.legacy.msg_encrypt_save_placeholder': return '加密儲存（占位）';
-			case 'strings.legacy.msg_windows_related_settings': return 'Windows 相關設定';
+			case 'strings.legacy.msg_desktop_settings': return '桌面設定';
 			case 'strings.legacy.msg_only_windows_desktop_supports_this_setting': return '仅 Windows 桌面端支援此設定。';
 			case 'strings.legacy.msg_shortcut_settings': return '快捷鍵設定';
-			case 'strings.legacy.msg_configure_windows_desktop_shortcuts': return '設定 Windows 桌面快捷鍵';
+			case 'strings.legacy.msg_configure_desktop_shortcuts': return '設定桌面快捷鍵';
 			case 'strings.legacy.msg_close_window_minimize_to_tray': return '關閉視窗時最小化到系統匣';
 			case 'strings.legacy.msg_close_window_minimize_to_tray_desc': return '開啟後，點擊右上角關閉按鈕不會退出應用，可從系統匣恢復視窗。';
+			case 'strings.legacy.msg_close_window_keep_in_menu_bar': return '關閉視窗時保留在選單列';
+			case 'strings.legacy.msg_close_window_keep_in_menu_bar_desc': return '開啟後，關閉主視窗不會退出應用，可從右上角選單列圖示恢復。需要退出時請使用「退出」。';
 			case 'strings.legacy.msg_local_storage_unavailable': return '本地儲存不可用';
 			case 'strings.legacy.msg_check_system_permissions_or_retry_later': return '請檢查系統權限，或稍後再試。';
 			case 'strings.legacy.msg_source_value': return ({required Object source}) => '來源：${source}';
@@ -33039,12 +33051,12 @@ extension on _StringsZhHantTw {
 			case 'strings.legacy.msg_cut': return '剪下';
 			case 'strings.legacy.msg_previous_page': return '上一頁';
 			case 'strings.legacy.msg_next_page': return '下一頁';
-			case 'strings.legacy.msg_shift_enter_supported': return '也支援 Shift + Enter';
+			case 'strings.legacy.msg_shift_enter_supported': return ({required Object binding}) => '也支援 ${binding}';
 			case 'strings.legacy.msg_shortcuts_supported_windows_macos': return '僅 Windows 與 macOS 支援快捷鍵設定。';
 			case 'strings.legacy.msg_shortcut_binding_in_use': return ({required Object binding, required Object action}) => '${binding} 已被「${action}」佔用。';
 			case 'strings.legacy.msg_windows_paging_note': return 'Windows 翻頁：PageUp 上一頁，PageDown 下一頁。';
 			case 'strings.legacy.msg_system_edit_shortcuts_note': return '複製 / 貼上 / 剪下使用系統預設快捷鍵。';
-			case 'strings.legacy.msg_shortcut_requires_modifier': return '請至少包含一個修飾鍵（Ctrl/Cmd/Shift/Alt）。';
+			case 'strings.legacy.msg_shortcut_requires_modifier': return ({required Object modifiers}) => '請至少包含一個修飾鍵（${modifiers}）。';
 			case 'strings.legacy.msg_current_shortcut': return ({required Object binding}) => '目前：${binding}';
 			case 'strings.legacy.msg_press_new_shortcut': return '請按下新的快捷鍵...';
 			case 'strings.legacy.msg_quick_record': return '快速輸入';

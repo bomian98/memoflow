@@ -33,8 +33,41 @@ bool isAltModifierPressed(Set<LogicalKeyboardKey> pressedKeys) {
       pressedKeys.contains(LogicalKeyboardKey.altRight);
 }
 
-String desktopPrimaryShortcutLabel() {
-  return defaultTargetPlatform == TargetPlatform.macOS ? 'Cmd' : 'Ctrl';
+String desktopPrimaryShortcutLabel([TargetPlatform? platform]) {
+  return _shortcutLabelPlatform(platform) == TargetPlatform.macOS
+      ? '⌘'
+      : 'Ctrl';
+}
+
+String desktopShiftShortcutLabel([TargetPlatform? platform]) {
+  return _shortcutLabelPlatform(platform) == TargetPlatform.macOS
+      ? '⇧'
+      : 'Shift';
+}
+
+String desktopAltShortcutLabel([TargetPlatform? platform]) {
+  return _shortcutLabelPlatform(platform) == TargetPlatform.macOS ? '⌥' : 'Alt';
+}
+
+String desktopEnterShortcutLabel([TargetPlatform? platform]) {
+  return _shortcutLabelPlatform(platform) == TargetPlatform.macOS
+      ? 'Return'
+      : 'Enter';
+}
+
+List<String> desktopShortcutModifierLabels([TargetPlatform? platform]) {
+  return <String>[
+    desktopPrimaryShortcutLabel(platform),
+    desktopShiftShortcutLabel(platform),
+    desktopAltShortcutLabel(platform),
+  ];
+}
+
+String desktopShiftEnterShortcutLabel([TargetPlatform? platform]) {
+  return [
+    desktopShiftShortcutLabel(platform),
+    desktopEnterShortcutLabel(platform),
+  ].join(' + ');
 }
 
 enum DesktopShortcutAction {
@@ -458,37 +491,50 @@ bool desktopShortcutActionAllowsPlainBinding(
   }
 }
 
-String desktopShortcutBindingLabel(DesktopShortcutBinding binding) {
+String desktopShortcutBindingLabel(
+  DesktopShortcutBinding binding, [
+  TargetPlatform? platform,
+]) {
   final segments = <String>[];
   if (binding.primary) {
-    segments.add(desktopPrimaryShortcutLabel());
+    segments.add(desktopPrimaryShortcutLabel(platform));
   }
   if (binding.shift) {
-    segments.add('Shift');
+    segments.add(desktopShiftShortcutLabel(platform));
   }
   if (binding.alt) {
-    segments.add('Alt');
+    segments.add(desktopAltShortcutLabel(platform));
   }
-  segments.add(_desktopShortcutKeyLabel(binding.logicalKey));
+  segments.add(_desktopShortcutKeyLabel(binding.logicalKey, platform));
   return segments.join(' + ');
 }
 
 String desktopShortcutGuideBindingLabel(
   Map<DesktopShortcutAction, DesktopShortcutBinding> bindings,
-  DesktopShortcutAction action,
-) {
+  DesktopShortcutAction action, [
+  TargetPlatform? platform,
+]) {
   final resolved = normalizeDesktopShortcutBindings(bindings);
   final binding = resolved[action];
   if (binding == null) return '';
-  final label = desktopShortcutBindingLabel(binding);
+  final label = desktopShortcutBindingLabel(binding, platform);
   if (action == DesktopShortcutAction.shortcutOverview && label != 'F1') {
     return '$label / F1';
   }
   return label;
 }
 
-String _desktopShortcutKeyLabel(LogicalKeyboardKey key) {
-  if (key == LogicalKeyboardKey.enter) return 'Enter';
+TargetPlatform _shortcutLabelPlatform(TargetPlatform? platform) {
+  return platform ?? defaultTargetPlatform;
+}
+
+String _desktopShortcutKeyLabel(
+  LogicalKeyboardKey key, [
+  TargetPlatform? platform,
+]) {
+  if (key == LogicalKeyboardKey.enter) {
+    return desktopEnterShortcutLabel(platform);
+  }
   if (key == LogicalKeyboardKey.pageUp) return 'PageUp';
   if (key == LogicalKeyboardKey.pageDown) return 'PageDown';
   if (key == LogicalKeyboardKey.slash) return '/';

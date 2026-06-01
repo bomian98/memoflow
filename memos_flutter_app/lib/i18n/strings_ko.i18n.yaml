@@ -1601,10 +1601,10 @@ legacy:
   msg_enter_repository_name_prompt: 저장소 이름을 입력하세요.
   msg_enter_and_confirm_password: 비밀번호를 입력하고 확인해 주세요.
   msg_encrypt_save_placeholder: 암호화된 저장(자리 표시자)
-  msg_windows_related_settings: Windows 관련 설정
+  msg_desktop_settings: 데스크톱 설정
   msg_only_windows_desktop_supports_this_setting: Windows 데스크톱만 이 설정을 지원합니다.
   msg_shortcut_settings: 바로가기 설정
-  msg_configure_windows_desktop_shortcuts: Windows 바탕 화면 바로 가기 구성
+  msg_configure_desktop_shortcuts: 데스크톱 바로 가기 구성
   msg_close_window_minimize_to_tray: 창을 닫을 때 트레이로 최소화
   msg_close_window_minimize_to_tray_desc: 활성화되면 오른쪽 상단 닫기 버튼을 클릭해도 앱이 종료되지 않습니다. 시스템 트레이에서 창을 복원할 수 있습니다.
   msg_local_storage_unavailable: 로컬 저장소를 사용할 수 없습니다
@@ -1623,12 +1623,12 @@ legacy:
   msg_cut: 자르다
   msg_previous_page: 이전 페이지
   msg_next_page: 다음 페이지
-  msg_shift_enter_supported: Shift + Enter도 지원합니다.
+  msg_shift_enter_supported: $binding도 지원합니다.
   msg_shortcuts_supported_windows_macos: Windows 및 macOS만 바로가기 설정을 지원합니다.
   msg_shortcut_binding_in_use: $binding는 이미 "$action"에서 사용되고 있습니다.
   msg_windows_paging_note: 'Windows 페이징: PageUp 이전 페이지, PageDown 다음 페이지.'
   msg_system_edit_shortcuts_note: 복사/붙여넣기/잘라내기는 시스템 기본 단축키를 사용합니다.
-  msg_shortcut_requires_modifier: 최소한 하나의 수정자 키(Ctrl/Cmd/Shift/Alt)를 포함하세요.
+  msg_shortcut_requires_modifier: 최소한 하나의 수정자 키($modifiers)를 포함하세요.
   msg_current_shortcut: '현재: $binding'
   msg_press_new_shortcut: 새 단축키를 누르세요...
   msg_quick_record: 빠른 기록

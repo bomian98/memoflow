@@ -11,13 +11,13 @@
 **Goals:**
 - 把用户可见入口和页面标题统一为“桌面设置”。
 - 让主设置页和独立桌面设置窗口使用同一个 desktop settings 语义入口。
-- 按平台分段展示共享桌面项和平台专属项：Windows/macOS 可见共享桌面快捷键，Windows 可见 close-to-tray，Linux 明确处于未适配或 fallback 状态。
-- 用 `SettingsPage` / `SettingsSection` / row seams 替换页面本地视觉实现，并收紧 guardrail。
+- 按平台分段展示共享桌面项和平台专属项：Windows/macOS 可见共享桌面快捷键，Windows 可见 close-to-tray；Linux 默认隐藏桌面设置入口。
+- 用 `SettingsPage` / `SettingsSection` / row seams 替换桌面设置页和桌面快捷键设置页的页面本地视觉实现，并收紧 guardrail。
 - 保持 `windowsCloseToTray` 的 Windows 专属语义和现有 persistence owner。
 
 **Non-Goals:**
 - 不迁移所有其他设置项 UI；后续由独立 change 覆盖。
-- 不完成 Linux 桌面端适配，只提供清晰 fallback。
+- 不完成 Linux 桌面端适配，也不为 Linux 展示桌面设置 fallback 页面。
 - 不新增桌面设置业务模型、repository 或跨层 state owner。
 - 不改变 Windows close-to-tray 生命周期语义。
 - 不引入任何商业、订阅、StoreKit、entitlement 或 private overlay 行为。
@@ -26,7 +26,7 @@
 
 ### 1. 用 `DesktopSettingsScreen` 语义替代 Windows 命名
 
-实现时应将页面概念重命名为 `DesktopSettingsScreen` 或等价公开 widget。旧 `WindowsRelatedSettingsScreen` 可以删除；如果短期仍有路由、测试或外部引用需要稳定，可保留薄 wrapper，但 wrapper 只能委托到新页面，不能继续承载 Windows-only 逻辑。
+实现时应将页面概念重命名为 `DesktopSettingsScreen` 或等价公开 widget。旧 `WindowsRelatedSettingsScreen` 默认删除，不保留旧概念或兼容 wrapper；如果实现时发现非预期外部引用，应先清理引用而不是继续让 Windows-only 页面名存活。
 
 Alternatives considered:
 - 只把标题改成“桌面设置”：实现成本最低，但类名、文件名、入口 gate 和独立窗口 pane 仍然会继续表达 Windows 专属抽象。
@@ -42,15 +42,15 @@ Alternatives considered:
 
 ### 3. 共享桌面能力与平台专属能力分段
 
-共享桌面分段承载 Windows/macOS 都支持的桌面能力，当前最明确的是桌面快捷键设置。Windows 分段保留 `windowsCloseToTray`。macOS 分段只显示已经真实支持且与桌面设置相关的配置；如果当前没有 macOS 专属配置，不展示空功能或虚构开关。Linux 分段显示“暂未适配/当前无可用桌面设置”的 fallback，直到后续 Linux change 明确支持范围。
+共享桌面分段承载 Windows/macOS 都支持的桌面能力，当前最明确的是桌面快捷键设置；macOS 必须能从“桌面设置”进入桌面快捷键设置。Windows 分段保留 `windowsCloseToTray`。macOS 分段只显示当前平台真实支持的 macOS 专属配置；如果当前没有 macOS 专属配置，不展示空分段或虚构开关。Linux 默认隐藏桌面设置入口和独立设置窗口中的桌面设置 pane，直到后续 Linux change 明确支持范围。
 
 Alternatives considered:
 - 在 macOS 上隐藏整个桌面设置入口：会继续把共享桌面快捷键能力误认为 Windows-only。
-- 对 Linux 直接显示完整桌面设置：当前用户明确说明 Linux 桌面端未适配，这会扩大承诺。
+- 对 Linux 显示 fallback：可见性更高，但用户已确认默认隐藏，且当前 Linux 桌面端未适配，显示入口会扩大产品承诺。
 
 ### 4. 入口一致性由 SettingsScreen 和 DesktopSettingsWindowApp 共同遵守
 
-主设置页应从 `isWindowsDesktop` gate 改为 desktop target gate（Windows/macOS；Linux 根据 fallback 策略可显示或隐藏，但如果显示必须明确未适配）。独立桌面设置窗口应把 pane enum/label/route 从 Windows 语义改为 desktop settings 语义，并渲染同一个页面。
+主设置页应从 `isWindowsDesktop` gate 改为 Windows/macOS desktop target gate，Linux 默认不显示该入口。独立桌面设置窗口应把 pane enum/label/route 从 Windows 语义改为 desktop settings 语义，并在 Windows/macOS 渲染同一个页面；Linux 不显示该桌面设置 pane。
 
 Alternatives considered:
 - 只改主设置页：macOS 独立 settings window 仍会出现 Windows settings pane。
@@ -58,7 +58,7 @@ Alternatives considered:
 
 ### 5. Guardrail 作为本次 evolve_modularity 改善
 
-本变更触及 settings hotspot，模块化改善应落在两个地方：迁移桌面设置页到 settings UI seams，并把迁移后的页面加入 `migratedFiles`、移出 legacy allowlist；必要时增加覆盖平台分段的 widget tests。这样可以防止新桌面设置页重新引入 page-local Scaffold、palette、bare Switch 或私有 row/card UI。
+本变更触及 settings hotspot，模块化改善应落在两个地方：迁移桌面设置页和 `DesktopShortcutsSettingsScreen` 到 settings UI seams，并把迁移后的页面加入 `migratedFiles`、移出 legacy allowlist；必要时增加覆盖平台分段和快捷键页的 widget tests。这样可以防止新桌面设置页和共享桌面能力页面重新引入 page-local Scaffold、palette、bare Switch 或私有 row/card UI。
 
 Alternatives considered:
 - 只靠人工 review：无法在后续设置页面继续迁移时防止漂移。
@@ -67,21 +67,22 @@ Alternatives considered:
 
 - [Risk] 重命名文件或类会遗漏引用，导致 settings window pane 或 pushed route 仍指向旧页面。→ Mitigation: 使用 `rg WindowsRelatedSettingsScreen|windows_related|msg_windows_related_settings` 做引用清理，并保留短期 wrapper 时添加测试覆盖。
 - [Risk] i18n key 替换过宽，误改 Windows 系统权限类文案。→ Mitigation: 只替换桌面设置入口和桌面快捷键泛化文案；`msg_windows_enable_location_access`、`msg_windows_paging_note` 等真实 Windows 行为文案保留。
-- [Risk] Linux fallback 与入口可见性不一致。→ Mitigation: 在 spec 和 tests 中明确 Linux 当前不是完整支持平台；如果显示入口，页面必须显示未适配 fallback。
-- [Risk] `desktop_shortcuts_settings_screen.dart` 本身仍含 Windows 命名文案。→ Mitigation: 本 change 只泛化桌面设置入口和共享桌面快捷键描述；如果快捷键页面内部仍有 Windows-only 假设，任务中单独检查并最小修正文案或 gating。
-- [Risk] 收紧 guardrail 可能暴露更多 legacy settings drift。→ Mitigation: 本 change 只要求迁移桌面设置页；其他 settings 文件继续由后续 change 处理。
+- [Risk] Linux 入口隐藏可能让 Linux 用户找不到未来桌面能力。→ Mitigation: 本 change 明确 Linux 未适配，后续 Linux change 可重新打开入口并补 spec/tests。
+- [Risk] `desktop_shortcuts_settings_screen.dart` 一起迁移会扩大 scope。→ Mitigation: 只迁移页面结构到 settings UI seams，保留现有快捷键数据、编辑 dialog、校验和 platform shortcut 行为。
+- [Risk] 收紧 guardrail 可能暴露更多 legacy settings drift。→ Mitigation: 本 change 只要求迁移桌面设置页和桌面快捷键设置页；其他 settings 文件继续由后续 change 处理。
 
 ## Migration Plan
 
 1. 新建或重命名桌面设置页，并用 settings UI seams 重写页面结构。
-2. 更新主设置页和独立桌面设置窗口的 pane label、icon、route 和 platform gate。
-3. 更新 i18n key 与生成文件。
-4. 补充平台分段 widget tests 和 settings UI drift guardrail。
-5. 运行 focused tests、`flutter analyze`，并按需要执行 settings 相关 widget tests。
+2. 将 `DesktopShortcutsSettingsScreen` 一起迁移到 settings UI seams，保留快捷键业务行为。
+3. 更新主设置页和独立桌面设置窗口的 pane enum、label、icon、route 和 platform gate；图标使用中性的 `Icons.devices_outlined`。
+4. 更新 i18n key 与生成文件；en / zh-Hans 精准，其他语言保守替换为 desktop settings 近义。
+5. 补充平台分段、快捷键页、入口一致性 widget tests 和 settings UI drift guardrail。
+6. 运行 focused tests、`flutter analyze`，并按需要执行 settings 相关 widget tests。
 
-Rollback strategy: 如果平台分段行为出现回归，可以保留 `DesktopSettingsScreen` 名称和 i18n，同时临时把 macOS/Linux 入口隐藏；Windows close-to-tray 和快捷键入口仍可通过同一页面继续工作。
+Rollback strategy: 如果平台分段行为出现回归，可以保留 `DesktopSettingsScreen` 名称和 i18n，同时临时隐藏 macOS 入口；Windows close-to-tray 和快捷键入口仍可通过同一页面继续工作。Linux 已默认隐藏，不需要 fallback 回滚路径。
 
 ## Open Questions
 
-- macOS 当前是否已有除桌面快捷键以外的桌面设置项需要归入 macOS 分段？若没有，实施时不应创建空的 macOS 专属开关。
-- Linux 入口最终选择隐藏还是显示 fallback，需要实现时结合现有产品入口习惯决定；无论选择哪种，都不能把 Linux 标记为完整适配。
+- macOS 当前没有确认的专属桌面设置项；实施时不应创建空的 macOS 专属分段。
+- Linux 入口已决策为默认隐藏；后续如要支持 Linux，应另开 change 补能力范围、入口和验证。

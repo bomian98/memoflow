@@ -4,7 +4,7 @@
 系统 SHALL 将原 Windows 相关设置入口呈现为桌面端设置入口，并在所有桌面设置入口点使用一致的用户可见命名。
 
 #### Scenario: Main settings shows desktop settings on supported desktop targets
-- **GIVEN** the app is running on a desktop target where the desktop settings surface is available
+- **GIVEN** the app is running on Windows or macOS where the desktop settings surface is available
 - **WHEN** the user opens the main settings page
 - **THEN** the settings list SHALL show a “桌面设置” / desktop settings entry
 - **AND** the entry label SHALL NOT use “Windows related settings” or an equivalent Windows-only label
@@ -20,6 +20,12 @@
 - **WHEN** the user opens the settings page
 - **THEN** the app SHALL NOT expose desktop-only settings rows as ordinary mobile settings
 
+#### Scenario: Linux does not expose desktop settings by default
+- **GIVEN** the app is running on Linux desktop
+- **WHEN** the user opens the main settings page or the independent desktop settings window pane list
+- **THEN** the app SHALL NOT show the desktop settings entry or pane by default
+- **AND** the app SHALL NOT present Linux as a fully adapted desktop settings platform
+
 ### Requirement: Desktop settings content SHALL be segmented by platform support
 The desktop settings surface SHALL group shared desktop settings and platform-specific settings into explicit sections based on the current desktop platform and supported capability.
 
@@ -34,13 +40,8 @@ The desktop settings surface SHALL group shared desktop settings and platform-sp
 - **WHEN** the user opens desktop settings
 - **THEN** the page SHALL show shared desktop settings that apply to macOS
 - **AND** the page SHALL only show macOS-specific settings that are actually supported
+- **AND** the page SHALL NOT show an empty macOS-specific section when no macOS-specific setting is available
 - **AND** the page SHALL NOT show Windows-only settings such as close-to-tray
-
-#### Scenario: Linux desktop remains explicitly unsupported or fallback-only
-- **GIVEN** the app is running on Linux desktop
-- **WHEN** the desktop settings entry is hidden or opened
-- **THEN** the app SHALL NOT present Linux as a fully adapted desktop settings platform
-- **AND** if a desktop settings surface is shown, it SHALL display a clear unsupported or fallback state for Linux-specific content
 
 ### Requirement: Shared desktop shortcut settings SHALL not be hidden behind Windows-only copy
 Desktop shortcut configuration SHALL be treated as a shared desktop setting for every desktop platform where the shortcut feature is supported.
@@ -54,8 +55,13 @@ Desktop shortcut configuration SHALL be treated as a shared desktop setting for 
 #### Scenario: macOS can open desktop shortcut settings
 - **GIVEN** the app is running on macOS desktop
 - **WHEN** the user opens desktop settings
-- **THEN** the shared desktop section SHALL include a navigation row for desktop shortcut settings if the existing shortcut settings screen supports macOS bindings
+- **THEN** the shared desktop section SHALL include a navigation row for desktop shortcut settings
 - **AND** the row SHALL NOT require a Windows-only settings page gate
+
+#### Scenario: Desktop shortcut settings page uses settings UI seams
+- **WHEN** `DesktopShortcutsSettingsScreen` is implemented or changed
+- **THEN** it SHALL use `SettingsPage`, `SettingsSection`, `SettingsNavigationRow`, `SettingsValueRow`, or equivalent settings UI seams for standard page layout and rows
+- **AND** it SHALL preserve existing shortcut capture, reset, duplicate detection, and platform-specific shortcut action behavior
 
 ### Requirement: Windows-only lifecycle preferences SHALL remain Windows-scoped
 Windows desktop lifecycle preferences SHALL remain visible and mutable only on Windows desktop.
@@ -82,8 +88,8 @@ The desktop settings page SHALL use existing settings UI seams and guardrails in
 
 #### Scenario: Settings UI drift guardrail covers desktop settings
 - **WHEN** settings architecture guardrails are executed
-- **THEN** the migrated desktop settings page SHALL be covered as a migrated settings file
-- **AND** the legacy allowlist SHALL NOT keep the migrated desktop settings page exempt from settings UI seam rules
+- **THEN** the migrated desktop settings page and desktop shortcut settings page SHALL be covered as migrated settings files
+- **AND** the legacy allowlist SHALL NOT keep either migrated page exempt from settings UI seam rules
 
 ### Requirement: Desktop settings SHALL preserve public and modular boundaries
 Desktop settings work SHALL keep platform UI composition inside appropriate UI seams and SHALL NOT introduce commercial or lower-layer feature dependencies.

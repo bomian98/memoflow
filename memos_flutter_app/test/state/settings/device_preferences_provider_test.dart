@@ -185,6 +185,29 @@ void main() {
       DesktopHomeNavPreference.rail,
     );
   });
+
+  test('setMacosCloseToMenuBar updates state and persists', () async {
+    final repo = _TestDevicePreferencesRepository(
+      DevicePreferences.defaultsForLanguage(
+        AppLanguage.en,
+      ).copyWith(windowsCloseToTray: true),
+    );
+
+    final container = _buildContainer(repo);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(devicePreferencesProvider.notifier);
+    await notifier.reloadFromStorage();
+
+    notifier.setMacosCloseToMenuBar(false);
+    await notifier.waitForPendingWrites();
+
+    final prefs = container.read(devicePreferencesProvider);
+    expect(prefs.macosCloseToMenuBar, isFalse);
+    expect(prefs.windowsCloseToTray, isTrue);
+    expect(repo.stored.macosCloseToMenuBar, isFalse);
+    expect(repo.stored.windowsCloseToTray, isTrue);
+  });
 }
 
 ProviderContainer _buildContainer(_TestDevicePreferencesRepository repo) {

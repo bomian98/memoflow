@@ -13,6 +13,7 @@ import 'package:memos_flutter_app/data/models/device_preferences.dart';
 import 'package:memos_flutter_app/data/models/instance_profile.dart';
 import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/features/settings/preferences_settings_screen.dart';
+import 'package:memos_flutter_app/features/settings/desktop_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/settings_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/platform/platform_target.dart';
@@ -64,6 +65,86 @@ void main() {
       isTrue,
     );
   });
+
+  testWidgets('desktop settings shows shared and Windows sections on Windows', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(1200, 900));
+    debugPlatformTargetOverride = TargetPlatform.windows;
+
+    await tester.pumpWidget(_buildApp(child: const DesktopSettingsScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Desktop settings'), findsWidgets);
+    expect(find.text('Shortcut settings'), findsOneWidget);
+    expect(find.text('Configure desktop shortcuts'), findsOneWidget);
+    expect(find.text('Windows'), findsOneWidget);
+    expect(find.text('Minimize to tray when closing window'), findsOneWidget);
+    expect(find.text('macOS'), findsNothing);
+    expect(
+      find.text('Keep running in menu bar when closing window'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('desktop settings shows shared and macOS sections on macOS', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(1200, 900));
+    debugPlatformTargetOverride = TargetPlatform.macOS;
+
+    await tester.pumpWidget(_buildApp(child: const DesktopSettingsScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shortcut settings'), findsOneWidget);
+    expect(find.text('Configure desktop shortcuts'), findsOneWidget);
+    expect(find.text('Windows'), findsNothing);
+    expect(find.text('Minimize to tray when closing window'), findsNothing);
+    expect(find.text('macOS'), findsOneWidget);
+    expect(
+      find.text('Keep running in menu bar when closing window'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Use Quit to exit the app'), findsOneWidget);
+  });
+
+  testWidgets('desktop settings hides platform lifecycle rows on mobile', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(390, 844));
+    debugPlatformTargetOverride = TargetPlatform.iOS;
+
+    await tester.pumpWidget(_buildApp(child: const DesktopSettingsScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shortcut settings'), findsNothing);
+    expect(find.text('Windows'), findsNothing);
+    expect(find.text('macOS'), findsNothing);
+    expect(find.text('Minimize to tray when closing window'), findsNothing);
+    expect(
+      find.text('Keep running in menu bar when closing window'),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+    'main settings shows desktop entry on macOS and hides it on Linux',
+    (tester) async {
+      await _setViewport(tester, const Size(1200, 900));
+      debugPlatformTargetOverride = TargetPlatform.macOS;
+
+      await tester.pumpWidget(_buildApp(child: const SettingsScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Desktop settings'), findsOneWidget);
+
+      debugPlatformTargetOverride = TargetPlatform.linux;
+      await tester.pumpWidget(_buildApp(child: const SettingsScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Desktop settings'), findsNothing);
+    },
+  );
 
   testWidgets('preferences uses apple grouped list rows on iPhone', (
     tester,

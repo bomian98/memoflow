@@ -19,6 +19,7 @@ void main() {
       expect(prefs.language, DevicePreferences.defaults.language);
       expect(prefs.themeMode, DevicePreferences.defaults.themeMode);
       expect(prefs.launchAction, DevicePreferences.defaults.launchAction);
+      expect(prefs.macosCloseToMenuBar, isTrue);
     });
 
     test('round-trips json and preserves nullable fields via copyWith', () {
@@ -43,6 +44,7 @@ void main() {
         quickInputAutoFocus: false,
         thirdPartyShareEnabled: true,
         windowsCloseToTray: false,
+        macosCloseToMenuBar: false,
         lastSeenAppVersion: '1.2.3',
         skippedUpdateVersion: '1.2.4',
         lastSeenAnnouncementVersion: '5',
@@ -61,6 +63,26 @@ void main() {
       expect(cleared.onboardingMode, isNull);
       expect(cleared.fontFamily, isNull);
       expect(cleared.fontFile, isNull);
+    });
+
+    test('keeps macOS close-to-menu-bar independent from Windows tray', () {
+      final prefs = DevicePreferences.fromJson(<String, dynamic>{
+        ...DevicePreferences.defaults.toJson(),
+        'windowsCloseToTray': false,
+      });
+
+      expect(prefs.windowsCloseToTray, isFalse);
+      expect(prefs.macosCloseToMenuBar, isTrue);
+
+      final disabled = DevicePreferences.fromJson(<String, dynamic>{
+        ...DevicePreferences.defaults.toJson(),
+        'windowsCloseToTray': true,
+        'macosCloseToMenuBar': false,
+      });
+
+      expect(disabled.windowsCloseToTray, isTrue);
+      expect(disabled.macosCloseToMenuBar, isFalse);
+      expect(disabled.toJson()['macosCloseToMenuBar'], isFalse);
     });
   });
 

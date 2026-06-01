@@ -1491,7 +1491,7 @@ legacy:
   msg_close_window_minimize_to_tray_desc: 有効にすると、右上の閉じるボタンをクリックしてもアプリは終了しません。システム トレイからウィンドウを復元できます。
   msg_code_block: コードブロック
   msg_common_writing_time: 一般的な執筆時間
-  msg_configure_windows_desktop_shortcuts: Windows デスクトップのショートカットを構成する
+  msg_configure_desktop_shortcuts: デスクトップのショートカットを設定する
   msg_copy_diagnostics: コピー診断
   msg_copy_last_lines: 最後の$lines行をコピー
   msg_current_date: 現在の日付
@@ -1616,9 +1616,9 @@ legacy:
   msg_screenshot_mode_detail: クリーンなキャプチャのためにステータス/ナビゲーション バーを非表示にする
   msg_select_file_save_location: ファイルの保存場所を選択してください。
   msg_select_location: 場所を選択してください
-  msg_shift_enter_supported: Shift + Enterもサポート
+  msg_shift_enter_supported: $bindingもサポート
   msg_shortcut_binding_in_use: $binding はすでに「$action」によって使用されています。
-  msg_shortcut_requires_modifier: 少なくとも 1 つの修飾キー (Ctrl/Cmd/Shift/Alt) を含めます。
+  msg_shortcut_requires_modifier: 少なくとも 1 つの修飾キー ($modifiers) を含めます。
   msg_shortcut_settings: ショートカット設定
   msg_shortcuts_overview: ショートカットの概要
   msg_shortcuts_overview_opened: 開いたショートカットの概要。
@@ -1703,7 +1703,7 @@ legacy:
   msg_wind_power: 風力
   msg_windows_enable_location_access: $message。 Windows 設定で位置情報アクセスを有効にします。
   msg_windows_paging_note: 'Windows ページング: PageUp 前のページ、PageDown 次のページ。'
-  msg_windows_related_settings: Windows関連の設定
+  msg_desktop_settings: デスクトップ設定
   msg_write_current_thought: 考えていることを書き留めてください...
   msg_yearly_character_trend: 年間キャラクタートレンド
 

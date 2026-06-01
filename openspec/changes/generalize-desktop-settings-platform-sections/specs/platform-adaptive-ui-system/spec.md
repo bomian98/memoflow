@@ -14,6 +14,12 @@ The platform adaptive UI system SHALL require migrated settings pages to express
 - **THEN** row visibility SHALL be based on the platform target and the row's supported capability
 - **AND** unsupported platforms SHALL receive an explicit fallback or no entry rather than a misleading platform-specific control
 
+#### Scenario: Linux desktop settings can remain hidden until supported
+- **GIVEN** a migrated desktop settings entry is only validated for Windows and macOS
+- **WHEN** the app runs on Linux desktop
+- **THEN** the adaptive settings composition MAY hide that entry and related pane entirely
+- **AND** it SHALL NOT show Linux-specific desktop controls unless their behavior is specified and tested
+
 #### Scenario: Settings migration keeps adaptive UI seam ownership
 - **WHEN** a settings page is migrated as part of platform adaptive UI work
 - **THEN** scaffold, list/form row presentation, switch styling, desktop width, and platform visual behavior SHALL be provided by `settings_ui.dart`, `platform/` widgets, `DesktopShellHost`, or equivalent adaptive seams

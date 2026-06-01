@@ -25,7 +25,6 @@ void main() {
       'lib/features/settings/customize_home_shortcuts_screen.dart',
       'lib/features/settings/desktop_settings_window_app.dart',
       'lib/features/settings/desktop_shortcuts_overview_screen.dart',
-      'lib/features/settings/desktop_shortcuts_settings_screen.dart',
       'lib/features/settings/donation_dialog.dart',
       'lib/features/settings/export_logs_screen.dart',
       'lib/features/settings/export_memos_screen.dart',
@@ -61,11 +60,12 @@ void main() {
       'lib/features/settings/webdav_sync_screen.dart',
       'lib/features/settings/webhooks_settings_screen.dart',
       'lib/features/settings/widgets_screen.dart',
-      'lib/features/settings/windows_related_settings_screen.dart',
     };
 
     const migratedFiles = <String>{
       'lib/features/settings/components_settings_screen.dart',
+      'lib/features/settings/desktop_settings_screen.dart',
+      'lib/features/settings/desktop_shortcuts_settings_screen.dart',
       'lib/features/settings/preferences_settings_screen.dart',
       'lib/features/settings/settings_ui.dart',
     };

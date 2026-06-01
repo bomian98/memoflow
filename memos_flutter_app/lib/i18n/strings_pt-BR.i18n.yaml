@@ -1589,10 +1589,10 @@ legacy:
   msg_enter_repository_name_prompt: Insira um nome de repositório.
   msg_enter_and_confirm_password: Por favor insira e confirme a senha.
   msg_encrypt_save_placeholder: Salvamento criptografado (espaço reservado)
-  msg_windows_related_settings: Configurações relacionadas ao Windows
+  msg_desktop_settings: Configurações da área de trabalho
   msg_only_windows_desktop_supports_this_setting: Somente o desktop Windows suporta esta configuração.
   msg_shortcut_settings: Configurações de atalho
-  msg_configure_windows_desktop_shortcuts: Configurar atalhos da área de trabalho Windows
+  msg_configure_desktop_shortcuts: Configurar atalhos da área de trabalho
   msg_close_window_minimize_to_tray: Minimizar para a bandeja ao fechar a janela
   msg_close_window_minimize_to_tray_desc: Quando ativado, clicar no botão Fechar no canto superior direito não sairá do aplicativo. Você pode restaurar a janela da bandeja do sistema.
   msg_local_storage_unavailable: O armazenamento local não está disponível
@@ -1611,12 +1611,12 @@ legacy:
   msg_cut: Corte
   msg_previous_page: Página anterior
   msg_next_page: Próxima página
-  msg_shift_enter_supported: Também suporta Shift + Enter
+  msg_shift_enter_supported: Também suporta $binding
   msg_shortcuts_supported_windows_macos: Somente Windows e macOS suportam configurações de atalho.
   msg_shortcut_binding_in_use: $binding já é usado por “$action”.
   msg_windows_paging_note: 'Paginação Windows: página anterior PageUp, página seguinte PageDown.'
   msg_system_edit_shortcuts_note: Copiar/colar/cortar use os atalhos padrão do sistema.
-  msg_shortcut_requires_modifier: Inclui pelo menos uma tecla modificadora (Ctrl/Cmd/Shift/Alt).
+  msg_shortcut_requires_modifier: Inclui pelo menos uma tecla modificadora ($modifiers).
   msg_current_shortcut: 'Atual: $binding'
   msg_press_new_shortcut: Pressione o novo atalho...
   msg_quick_record: Registro rápido

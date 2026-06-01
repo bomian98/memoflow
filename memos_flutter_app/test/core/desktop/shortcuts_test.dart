@@ -91,6 +91,25 @@ void main() {
     );
   });
 
+  test('shortcut labels use platform key names', () {
+    final binding = DesktopShortcutBinding(
+      keyId: LogicalKeyboardKey.enter.keyId,
+      primary: true,
+      shift: true,
+      alt: true,
+    );
+
+    expect(
+      desktopShortcutBindingLabel(binding, TargetPlatform.windows),
+      'Ctrl + Shift + Alt + Enter',
+    );
+    expect(
+      desktopShortcutBindingLabel(binding, TargetPlatform.macOS),
+      '⌘ + ⇧ + ⌥ + Return',
+    );
+    expect(desktopShiftEnterShortcutLabel(TargetPlatform.macOS), '⇧ + Return');
+  });
+
   test('guide binding label uses the active search shortcut', () {
     expect(
       desktopShortcutGuideBindingLabel(
@@ -108,6 +127,14 @@ void main() {
         DesktopShortcutAction.shortcutOverview,
       ),
       'Shift + / / F1',
+    );
+    expect(
+      desktopShortcutGuideBindingLabel(
+        desktopShortcutDefaultBindings,
+        DesktopShortcutAction.shortcutOverview,
+        TargetPlatform.macOS,
+      ),
+      '⇧ + / / F1',
     );
   });
 }

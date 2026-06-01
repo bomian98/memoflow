@@ -97,7 +97,8 @@ class DesktopShortcutsOverviewScreen extends StatelessWidget {
         (
           action: _desktopShortcutActionLabel(context, action),
           key: action == DesktopShortcutAction.publishMemo
-              ? '${desktopShortcutBindingLabel(resolved[action]!)} / ${context.t.strings.legacy.msg_shift_enter_supported}'
+              ? '${desktopShortcutBindingLabel(resolved[action]!)} / '
+                    '${context.t.strings.legacy.msg_shift_enter_supported(binding: desktopShiftEnterShortcutLabel())}'
               : desktopShortcutBindingLabel(resolved[action]!),
         ),
     ];

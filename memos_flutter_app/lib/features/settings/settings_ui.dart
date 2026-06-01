@@ -46,6 +46,7 @@ class SettingsPage extends StatelessWidget {
     super.key,
     required this.title,
     required this.children,
+    this.actions,
     this.showBackButton = true,
     this.contentKey,
     this.desktopMaxWidth = 760,
@@ -55,6 +56,7 @@ class SettingsPage extends StatelessWidget {
 
   final Widget title;
   final List<Widget> children;
+  final List<Widget>? actions;
   final bool showBackButton;
   final Key? contentKey;
   final double desktopMaxWidth;
@@ -74,6 +76,7 @@ class SettingsPage extends StatelessWidget {
             )
           : null,
       title: title,
+      actions: actions,
       body: Stack(
         children: [
           if (tokens.isDark)
@@ -113,13 +116,25 @@ class SettingsPage extends StatelessWidget {
 }
 
 class SettingsSection extends StatelessWidget {
-  const SettingsSection({super.key, required this.children});
+  const SettingsSection({
+    super.key,
+    required this.children,
+    this.header,
+    this.footer,
+  });
 
   final List<Widget> children;
+  final Widget? header;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
-    return PlatformListSection(padding: EdgeInsets.zero, children: children);
+    return PlatformListSection(
+      padding: EdgeInsets.zero,
+      header: header,
+      footer: footer,
+      children: children,
+    );
   }
 }
 
@@ -152,12 +167,14 @@ class SettingsValueRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.icon = Icons.chevron_right,
+    this.description,
     required this.onTap,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final String? description;
   final VoidCallback onTap;
 
   @override
@@ -185,6 +202,10 @@ class SettingsValueRow extends StatelessWidget {
         ],
       ),
       onTap: onTap,
+      subtitle: description == null
+          ? null
+          : SettingsRowDescription(description!),
+      denseOnDesktop: description == null,
     );
   }
 }
@@ -194,12 +215,14 @@ class SettingsNavigationRow extends StatelessWidget {
     super.key,
     required this.label,
     this.value,
+    this.description,
     this.leading,
     this.onTap,
   });
 
   final String label;
   final String? value;
+  final String? description;
   final Widget? leading;
   final VoidCallback? onTap;
 
@@ -209,6 +232,9 @@ class SettingsNavigationRow extends StatelessWidget {
     return PlatformListSectionRow(
       leading: leading,
       title: SettingsRowTitle(label),
+      subtitle: description == null
+          ? null
+          : SettingsRowDescription(description!),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -229,6 +255,21 @@ class SettingsNavigationRow extends StatelessWidget {
         ],
       ),
       onTap: onTap,
+      denseOnDesktop: description == null,
+    );
+  }
+}
+
+class SettingsInfoRow extends StatelessWidget {
+  const SettingsInfoRow({super.key, required this.description});
+
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return PlatformListSectionRow(
+      title: SettingsRowDescription(description),
+      denseOnDesktop: false,
     );
   }
 }

@@ -10,18 +10,18 @@
 - 在桌面设置页内按平台分段展示内容：
   - 共享桌面分段：承载 Windows/macOS 都适用的桌面能力，例如桌面快捷键设置。
   - Windows 分段：保留 `windowsCloseToTray` 等 Windows 专属行为。
-  - macOS 分段：仅展示已支持的 macOS 桌面设置；没有可配置项时不伪造功能。
-  - Linux 分段：保持当前未适配状态，展示受支持范围或暂未适配提示，不把 Linux 当成完整支持平台。
+  - macOS：纳入共享桌面快捷键能力；只有存在已支持的 macOS 专属配置时才显示 macOS 专属分段，不创建空分段或伪造功能。
+  - Linux：默认隐藏桌面设置入口，不展示 fallback 页面，也不把 Linux 呈现为已完整适配的平台。
 - 主设置页和独立桌面设置窗口都使用同一个桌面设置语义入口和一致命名，不再硬编码 `Windows related settings` / `Windows settings`。
-- 桌面设置页迁移到现有 `SettingsPage`、`SettingsSection`、`SettingsNavigationRow`、`SettingsToggleRow` 等 settings UI seams，移除页面本地 Scaffold、palette、group row 和 switch 样式漂移。
+- 桌面设置页和 `DesktopShortcutsSettingsScreen` 迁移到现有 `SettingsPage`、`SettingsSection`、`SettingsNavigationRow`、`SettingsToggleRow` 等 settings UI seams，移除页面本地 Scaffold、palette、group row、shortcut row 和 switch 样式漂移。
 - 更新 i18n 文案：新增或替换桌面设置相关 key；保留确实描述 Windows 系统权限或 Windows 行为的既有 Windows 文案。
-- 收紧 settings UI drift guardrail，让迁移后的桌面设置页不再留在 legacy allowlist。
+- 收紧 settings UI drift guardrail，让迁移后的桌面设置页和桌面快捷键设置页不再留在 legacy allowlist。
 - 不在本 change 中整改其他未迁移设置项；其他设置项 UI/样式整改单独创建后续 change。
 
 ## Capabilities
 
 ### New Capabilities
-- `desktop-settings-platform-sections`: 定义“桌面设置”入口、平台分段、跨入口一致性、Linux 未适配 fallback，以及 settings UI seam 使用要求。
+- `desktop-settings-platform-sections`: 定义“桌面设置”入口、平台分段、跨入口一致性、Linux 入口隐藏，以及 settings UI seam 使用要求。
 
 ### Modified Capabilities
 - `platform-adaptive-ui-system`: 补充设置页迁移时的桌面平台分段和 platform capability gating 规则，要求跨桌面意图通过共享 settings/adaptive seams 表达，而不是散落在 Windows-only 页面树中。

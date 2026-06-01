@@ -1492,7 +1492,7 @@ legacy:
   msg_close_window_minimize_to_tray_desc: Wenn diese Option aktiviert ist, wird die App durch Klicken auf die Schaltfläche zum Schließen oben rechts nicht beendet. Sie können das Fenster über die Taskleiste wiederherstellen.
   msg_code_block: Codeblock
   msg_common_writing_time: Gemeinsame Schreibzeit
-  msg_configure_windows_desktop_shortcuts: Konfigurieren Sie Windows-Desktop-Verknüpfungen
+  msg_configure_desktop_shortcuts: Desktop-Verknüpfungen konfigurieren
   msg_copy_diagnostics: Diagnose kopieren
   msg_copy_last_lines: Kopieren Sie die letzten $lines-Zeilen
   msg_current_date: Aktuelles Datum
@@ -1616,9 +1616,9 @@ legacy:
   msg_screenshot_mode_detail: Blenden Sie Status-/Navigationsleisten für saubere Aufnahmen aus
   msg_select_file_save_location: Bitte wählen Sie einen Speicherort für die Datei aus.
   msg_select_location: Standort auswählen
-  msg_shift_enter_supported: Unterstützt auch Umschalt + Eingabetaste
+  msg_shift_enter_supported: Unterstützt auch $binding
   msg_shortcut_binding_in_use: $binding wird bereits von „$action“ verwendet.
-  msg_shortcut_requires_modifier: Fügen Sie mindestens eine Zusatztaste ein (Strg/Befehl/Umschalt/Alt).
+  msg_shortcut_requires_modifier: Fügen Sie mindestens eine Zusatztaste ein ($modifiers).
   msg_shortcut_settings: Verknüpfungseinstellungen
   msg_shortcuts_overview: Übersicht über die Verknüpfungen
   msg_shortcuts_overview_opened: Geöffnete Verknüpfungsübersicht.
@@ -1703,7 +1703,7 @@ legacy:
   msg_wind_power: Windstärke
   msg_windows_enable_location_access: $message. Aktivieren Sie den Standortzugriff in den Windows-Einstellungen.
   msg_windows_paging_note: 'Windows-Paging: PageUp vorherige Seite, PageDown nächste Seite.'
-  msg_windows_related_settings: Windows-bezogene Einstellungen
+  msg_desktop_settings: Desktop-Einstellungen
   msg_write_current_thought: Schreiben Sie auf, was Sie denken ...
   msg_yearly_character_trend: Jährlicher Charaktertrend
 

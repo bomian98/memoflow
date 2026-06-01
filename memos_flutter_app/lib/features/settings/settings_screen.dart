@@ -36,6 +36,7 @@ import 'account_security_screen.dart';
 import 'ai_settings_screen.dart';
 import 'api_plugins_screen.dart';
 import 'components_settings_screen.dart';
+import 'desktop_settings_screen.dart';
 import 'donation_dialog.dart';
 import 'feedback_screen.dart';
 import 'import_export_screen.dart';
@@ -43,7 +44,6 @@ import 'laboratory_screen.dart';
 import 'password_lock_screen.dart';
 import 'preferences_settings_screen.dart';
 import 'user_guide_screen.dart';
-import 'windows_related_settings_screen.dart';
 import 'widgets_screen.dart';
 import '../../i18n/strings.g.dart';
 
@@ -143,10 +143,11 @@ class SettingsScreen extends ConsumerWidget
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final enableWindowsDragToMove =
         Theme.of(context).platform == TargetPlatform.windows;
-    final isWindowsDesktop =
-        Theme.of(context).platform == TargetPlatform.windows;
     final enableAppBarDragToMove = enableDragToMove || enableWindowsDragToMove;
     final platformTarget = resolvePlatformTarget(context);
+    final showDesktopSettings = isDesktopSettingsSupportedTarget(
+      platformTarget,
+    );
     final closeIcon =
         platformTarget == PlatformTarget.iPhone ||
             platformTarget == PlatformTarget.iPad
@@ -339,20 +340,16 @@ class SettingsScreen extends ConsumerWidget
                           );
                         },
                       ),
-                      if (isWindowsDesktop)
+                      if (showDesktopSettings)
                         _SettingRow(
-                          icon: Icons.desktop_windows_outlined,
-                          label: context
-                              .t
-                              .strings
-                              .legacy
-                              .msg_windows_related_settings,
+                          icon: Icons.devices_outlined,
+                          label: context.t.strings.legacy.msg_desktop_settings,
                           textMain: textMain,
                           textMuted: textMuted,
                           onTap: () {
                             haptic();
                             pushSettingsPage(
-                              (_) => const WindowsRelatedSettingsScreen(),
+                              (_) => const DesktopSettingsScreen(),
                             );
                           },
                         ),

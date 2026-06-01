@@ -125,6 +125,7 @@ class DevicePreferences {
     quickInputAutoFocus: true,
     thirdPartyShareEnabled: false,
     windowsCloseToTray: true,
+    macosCloseToMenuBar: true,
     desktopShortcutBindings: desktopShortcutDefaultBindings,
     lastSeenAppVersion: '',
     acceptedLegalDocumentsHash: '',
@@ -166,6 +167,7 @@ class DevicePreferences {
     required this.quickInputAutoFocus,
     required this.thirdPartyShareEnabled,
     required this.windowsCloseToTray,
+    required this.macosCloseToMenuBar,
     required this.desktopShortcutBindings,
     required this.lastSeenAppVersion,
     required this.acceptedLegalDocumentsHash,
@@ -198,6 +200,7 @@ class DevicePreferences {
   final bool quickInputAutoFocus;
   final bool thirdPartyShareEnabled;
   final bool windowsCloseToTray;
+  final bool macosCloseToMenuBar;
   final Map<DesktopShortcutAction, DesktopShortcutBinding>
   desktopShortcutBindings;
   final String lastSeenAppVersion;
@@ -234,6 +237,7 @@ class DevicePreferences {
     'quickInputAutoFocus': quickInputAutoFocus,
     'thirdPartyShareEnabled': thirdPartyShareEnabled,
     'windowsCloseToTray': windowsCloseToTray,
+    'macosCloseToMenuBar': macosCloseToMenuBar,
     'desktopShortcutBindings': {
       for (final entry in desktopShortcutBindings.entries)
         entry.key.name: entry.value.toJson(),
@@ -286,7 +290,11 @@ class DevicePreferences {
     final layoutRaw = json['homeInlineComposePanelLayout'];
     final readerPreferencesRaw = json['collectionReaderPreferences'];
     final readerModeRaw = json['collectionReaderMode'];
+    final macosCloseToMenuBar = json['macosCloseToMenuBar'];
     return DevicePreferences.fromLegacy(legacy).copyWith(
+      macosCloseToMenuBar: macosCloseToMenuBar is bool
+          ? macosCloseToMenuBar
+          : DevicePreferences.defaults.macosCloseToMenuBar,
       desktopHomeLayoutPreference: desktopHomeLayoutRaw is Map
           ? DesktopHomeLayoutPreference.fromJson(
               desktopHomeLayoutRaw.cast<String, dynamic>(),
@@ -334,6 +342,7 @@ class DevicePreferences {
       quickInputAutoFocus: legacy.quickInputAutoFocus,
       thirdPartyShareEnabled: legacy.thirdPartyShareEnabled,
       windowsCloseToTray: legacy.windowsCloseToTray,
+      macosCloseToMenuBar: DevicePreferences.defaults.macosCloseToMenuBar,
       desktopShortcutBindings: legacy.desktopShortcutBindings,
       lastSeenAppVersion: legacy.lastSeenAppVersion,
       acceptedLegalDocumentsHash: legacy.acceptedLegalDocumentsHash,
@@ -401,6 +410,7 @@ class DevicePreferences {
     bool? quickInputAutoFocus,
     bool? thirdPartyShareEnabled,
     bool? windowsCloseToTray,
+    bool? macosCloseToMenuBar,
     Map<DesktopShortcutAction, DesktopShortcutBinding>? desktopShortcutBindings,
     String? lastSeenAppVersion,
     String? acceptedLegalDocumentsHash,
@@ -443,6 +453,7 @@ class DevicePreferences {
       thirdPartyShareEnabled:
           thirdPartyShareEnabled ?? this.thirdPartyShareEnabled,
       windowsCloseToTray: windowsCloseToTray ?? this.windowsCloseToTray,
+      macosCloseToMenuBar: macosCloseToMenuBar ?? this.macosCloseToMenuBar,
       desktopShortcutBindings:
           desktopShortcutBindings ?? this.desktopShortcutBindings,
       lastSeenAppVersion: lastSeenAppVersion ?? this.lastSeenAppVersion,

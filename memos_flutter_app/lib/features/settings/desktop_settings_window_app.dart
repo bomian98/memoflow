@@ -28,6 +28,7 @@ import '../../data/models/device_preferences.dart';
 import '../../data/models/workspace_preferences.dart';
 import '../../data/repositories/ai_settings_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_target.dart';
 import '../../state/system/logging_provider.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import '../../state/settings/device_preferences_provider.dart';
@@ -49,6 +50,7 @@ import 'ai_provider_settings_screen.dart';
 import 'ai_settings_screen.dart';
 import 'api_plugins_screen.dart';
 import 'components_settings_screen.dart';
+import 'desktop_settings_screen.dart';
 import 'desktop_shortcuts_settings_screen.dart';
 import 'export_logs_screen.dart';
 import 'export_memos_screen.dart';
@@ -68,7 +70,6 @@ import 'template_settings_screen.dart';
 import 'user_guide_screen.dart';
 import 'webdav_sync_screen.dart';
 import 'widgets_screen.dart';
-import 'windows_related_settings_screen.dart';
 
 final desktopSettingsWorkspaceSnapshotProvider =
     StateProvider<DesktopWorkspaceSnapshot?>((ref) => null);
@@ -901,7 +902,7 @@ class _DesktopSettingsWindowErrorState extends StatelessWidget {
 enum _DesktopSettingsPane {
   account,
   preferences,
-  windowsRelated,
+  desktop,
   ai,
   appLock,
   laboratory,
@@ -939,6 +940,12 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
   var _appliedTargetRequestToken = 0;
   WidgetBuilder? _pendingTargetRouteBuilder;
 
+  bool get _currentRuntimeSupportsDesktopSettings {
+    final platform = defaultTargetPlatform;
+    return platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -975,7 +982,13 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
         _pendingTargetRouteBuilder = (_) =>
             const AiInsightPromptEditorScreen.custom();
       case DesktopSettingsWindowTarget.desktopShortcuts:
-        _pane = _DesktopSettingsPane.windowsRelated;
+        if (!_currentRuntimeSupportsDesktopSettings) {
+          _pane = _DesktopSettingsPane.account;
+          _paneNavigatorKey = GlobalKey<NavigatorState>();
+          _pendingTargetRouteBuilder = null;
+          break;
+        }
+        _pane = _DesktopSettingsPane.desktop;
         _paneNavigatorKey = GlobalKey<NavigatorState>();
         _pendingTargetRouteBuilder = (_) =>
             const DesktopShortcutsSettingsScreen();
@@ -1017,7 +1030,13 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
         _paneNavigatorKey = GlobalKey<NavigatorState>();
         _pendingTargetRouteBuilder = (_) => const LocalNetworkMigrationScreen();
       case DesktopSettingsWindowTarget.desktopShortcutsOverview:
-        _pane = _DesktopSettingsPane.windowsRelated;
+        if (!_currentRuntimeSupportsDesktopSettings) {
+          _pane = _DesktopSettingsPane.account;
+          _paneNavigatorKey = GlobalKey<NavigatorState>();
+          _pendingTargetRouteBuilder = null;
+          break;
+        }
+        _pane = _DesktopSettingsPane.desktop;
         _paneNavigatorKey = GlobalKey<NavigatorState>();
         _pendingTargetRouteBuilder = _buildDesktopShortcutsOverviewTarget;
       case DesktopSettingsWindowTarget.selfRepair:
@@ -1140,6 +1159,18 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
       platform: Theme.of(context).platform,
       contentExtendsIntoTitleBar: true,
     );
+    final showDesktopSettingsPane = isDesktopSettingsSupportedTarget(
+      resolvePlatformTarget(context),
+    );
+    final effectivePane =
+        !showDesktopSettingsPane && _pane == _DesktopSettingsPane.desktop
+        ? _DesktopSettingsPane.account
+        : _pane;
+    if (!showDesktopSettingsPane &&
+        _pane == _DesktopSettingsPane.desktop &&
+        _pendingTargetRouteBuilder != null) {
+      _pendingTargetRouteBuilder = null;
+    }
     final items = <_DesktopPaneItem>[
       _DesktopPaneItem(
         pane: _DesktopSettingsPane.account,
@@ -1151,11 +1182,12 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
         icon: Icons.tune,
         label: context.t.strings.legacy.msg_preferences,
       ),
-      _DesktopPaneItem(
-        pane: _DesktopSettingsPane.windowsRelated,
-        icon: Icons.desktop_windows_outlined,
-        label: context.tr(zh: 'Windows相关设置', en: 'Windows settings'),
-      ),
+      if (showDesktopSettingsPane)
+        _DesktopPaneItem(
+          pane: _DesktopSettingsPane.desktop,
+          icon: Icons.devices_outlined,
+          label: context.t.strings.legacy.msg_desktop_settings,
+        ),
       _DesktopPaneItem(
         pane: _DesktopSettingsPane.ai,
         icon: Icons.smart_toy_outlined,
@@ -1254,7 +1286,7 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
                           _DesktopPaneNavTile(
                             icon: item.icon,
                             label: item.label,
-                            selected: _pane == item.pane,
+                            selected: effectivePane == item.pane,
                             onTap: () => _selectPane(item.pane),
                           ),
                       ],
@@ -1268,11 +1300,12 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 160),
                       child: KeyedSubtree(
-                        key: ValueKey(_pane),
+                        key: ValueKey(effectivePane),
                         child: Navigator(
                           key: _paneNavigatorKey,
                           onGenerateRoute: (_) => MaterialPageRoute<void>(
-                            builder: (_) => _DesktopPaneContent(pane: _pane),
+                            builder: (_) =>
+                                _DesktopPaneContent(pane: effectivePane),
                           ),
                         ),
                       ),
@@ -1380,7 +1413,7 @@ class _DesktopPaneContent extends StatelessWidget {
       _DesktopSettingsPane.preferences => const PreferencesSettingsScreen(
         showBackButton: false,
       ),
-      _DesktopSettingsPane.windowsRelated => const WindowsRelatedSettingsScreen(
+      _DesktopSettingsPane.desktop => const DesktopSettingsScreen(
         showBackButton: false,
       ),
       _DesktopSettingsPane.ai => const AiSettingsScreen(showBackButton: false),

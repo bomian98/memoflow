@@ -228,6 +228,8 @@ class DevicePreferencesController extends StateNotifier<DevicePreferences> {
       _setAndPersist(_queuedState.copyWith(thirdPartyShareEnabled: value));
   void setWindowsCloseToTray(bool value) =>
       _setAndPersist(_queuedState.copyWith(windowsCloseToTray: value));
+  void setMacosCloseToMenuBar(bool value) =>
+      _setAndPersist(_queuedState.copyWith(macosCloseToMenuBar: value));
   void setDesktopShortcutBinding({
     required DesktopShortcutAction action,
     required DesktopShortcutBinding binding,
