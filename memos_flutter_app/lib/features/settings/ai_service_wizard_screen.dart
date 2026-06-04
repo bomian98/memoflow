@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/ai/ai_settings_log.dart';
 import '../../data/logs/log_manager.dart';
@@ -11,10 +9,12 @@ import '../../core/uid.dart';
 import '../../data/repositories/ai_settings_repository.dart';
 import '../../i18n/strings.g.dart';
 import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_page.dart';
 import '../../platform/widgets/platform_secondary_task_surface.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import 'ai_provider_logo.dart';
 import 'ai_proxy_settings_screen.dart';
+import 'settings_ui.dart';
 
 class AiServiceWizardScreen extends ConsumerStatefulWidget {
   const AiServiceWizardScreen({super.key, this.embeddedTaskSurface = false});
@@ -92,31 +92,17 @@ class _AiServiceWizardScreenState extends ConsumerState<AiServiceWizardScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(aiSettingsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isZh =
         Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
+    final bg = settingsPageTokens(context).background;
     final proxyConfigured = settings.proxySettings.isConfigured;
     final titleText = isZh ? '\u6dfb\u52a0\u670d\u52a1' : 'Add Service';
 
-    final content = Scaffold(
+    final content = PlatformPage(
       backgroundColor: bg,
-      appBar: widget.embeddedTaskSurface
+      title: widget.embeddedTaskSurface
           ? null
-          : AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              surfaceTintColor: Colors.transparent,
-              automaticallyImplyLeading:
-                  resolveDesktopRouteAutomaticallyImplyLeading(
-                    context: context,
-                    automaticallyImplyLeading: true,
-                  ),
-              title: Text(isZh ? '添加服务' : 'Add Service'),
-            ),
+          : Text(isZh ? '添加服务' : 'Add Service'),
       body: Stepper(
         currentStep: _step,
         onStepTapped: _handleStepTapped,
@@ -260,9 +246,8 @@ class _AiServiceWizardScreenState extends ConsumerState<AiServiceWizardScreen> {
                       builtinModelPresetsForTemplate(
                         _selectedTemplate!,
                       ).isNotEmpty) ...[
-                    Text(
-                      isZh ? '内置模型' : 'Built-in Models',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    SettingsSectionHeader(
+                      title: isZh ? '内置模型' : 'Built-in Models',
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -961,12 +946,7 @@ class _QueuedModelCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      draft.displayName,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                    SettingsRowTitle(draft.displayName),
                     const SizedBox(height: 4),
                     Text(
                       draft.modelKey,
@@ -1236,12 +1216,7 @@ class _CustomTemplateEntryCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          isZh ? '添加自定义模型' : 'Add Custom Model',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        SettingsRowTitle(isZh ? '添加自定义模型' : 'Add Custom Model'),
                         const SizedBox(height: 4),
                         Text(
                           activeLabel,
@@ -1456,12 +1431,7 @@ class _TemplateChoiceCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          title,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        SettingsRowTitle(title),
                         const SizedBox(height: 4),
                         Text(
                           subtitle,

@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_localization.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/repositories/ai_settings_repository.dart';
-import '../../state/settings/ai_settings_provider.dart';
 import '../../i18n/strings.g.dart';
+import '../../state/settings/ai_settings_provider.dart';
+import 'settings_ui.dart';
 
 enum AiProviderSettingsMode { generation, embedding }
 
@@ -194,27 +193,17 @@ class _AiProviderSettingsScreenState
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 18, 14, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              context.t.strings.legacy.msg_model,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
+                      child: SettingsContentHeader(
+                        title: context.t.strings.legacy.msg_model,
+                        trailing: TextButton(
+                          onPressed: () =>
+                              setDialogState(() => isEditing = !isEditing),
+                          child: Text(
+                            isEditing
+                                ? context.t.strings.legacy.msg_done
+                                : context.t.strings.legacy.msg_edit,
                           ),
-                          TextButton(
-                            onPressed: () =>
-                                setDialogState(() => isEditing = !isEditing),
-                            child: Text(
-                              isEditing
-                                  ? context.t.strings.legacy.msg_done
-                                  : context.t.strings.legacy.msg_edit,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                     const Divider(height: 1),
@@ -315,18 +304,13 @@ class _AiProviderSettingsScreenState
   Widget build(BuildContext context) {
     final isZh =
         Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final border = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
+    final card = tokens.card;
+    final textMain = tokens.textMain;
+    final textMuted = tokens.textMuted;
+    final border = Theme.of(
+      context,
+    ).colorScheme.outlineVariant.withValues(alpha: 0.65);
 
     final pageTitle = _isGenerationMode
         ? (isZh ? 'LLM 模型' : 'LLM Model')
@@ -344,7 +328,7 @@ class _AiProviderSettingsScreenState
 
     Widget buildGenerationCard() {
       return Container(
-        decoration: _cardDecoration(card, border, isDark),
+        decoration: _cardDecoration(card, border),
         child: Form(
           key: _formKey,
           child: Column(
@@ -440,7 +424,7 @@ class _AiProviderSettingsScreenState
 
     Widget buildEmbeddingCard() {
       return Container(
-        decoration: _cardDecoration(card, border, isDark),
+        decoration: _cardDecoration(card, border),
         child: Form(
           key: _formKey,
           child: Column(
@@ -513,19 +497,12 @@ class _AiProviderSettingsScreenState
 
     Widget buildInfoCard() {
       return Container(
-        decoration: _cardDecoration(card, border, isDark),
+        decoration: _cardDecoration(card, border),
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              pageTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: textMain,
-              ),
-            ),
+            SettingsContentHeader(title: pageTitle),
             const SizedBox(height: 6),
             Text(
               pageDescription,
@@ -543,118 +520,34 @@ class _AiProviderSettingsScreenState
       );
     }
 
-    Widget body() {
-      return Stack(
-        children: [
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
-            children: [
-              buildInfoCard(),
-              const SizedBox(height: 14),
-              _isGenerationMode ? buildGenerationCard() : buildEmbeddingCard(),
-            ],
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 18,
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                height: 54,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: MemoFlowPalette.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    elevation: isDark ? 0 : 4,
-                  ),
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          context.t.strings.legacy.msg_save_settings,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
+    return SettingsPage(
+      title: Text(pageTitle),
+      children: [
+        buildInfoCard(),
+        const SizedBox(height: 14),
+        _isGenerationMode ? buildGenerationCard() : buildEmbeddingCard(),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SettingsAction(
+            onPressed: _saving ? null : _save,
+            label: _saving
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(context.t.strings.legacy.msg_save_settings),
           ),
         ),
-        title: Text(pageTitle),
-        centerTitle: false,
-      ),
-      body: isDark
-          ? Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [const Color(0xFF0B0B0B), bg, bg],
-                      ),
-                    ),
-                  ),
-                ),
-                body(),
-              ],
-            )
-          : body(),
+      ],
     );
   }
 
-  BoxDecoration _cardDecoration(Color card, Color border, bool isDark) {
+  BoxDecoration _cardDecoration(Color card, Color border) {
     return BoxDecoration(
       color: card,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(8),
       border: Border.all(color: border),
-      boxShadow: isDark
-          ? [
-              BoxShadow(
-                blurRadius: 28,
-                offset: const Offset(0, 16),
-                color: Colors.black.withValues(alpha: 0.45),
-              ),
-            ]
-          : [
-              BoxShadow(
-                blurRadius: 18,
-                offset: const Offset(0, 10),
-                color: Colors.black.withValues(alpha: 0.06),
-              ),
-            ],
     );
   }
 }

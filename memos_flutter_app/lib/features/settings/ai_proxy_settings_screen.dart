@@ -4,13 +4,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/ai/adapters/_ai_provider_http.dart';
 import '../../data/repositories/ai_settings_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_primary_action.dart';
 import '../../state/settings/ai_settings_provider.dart';
+import 'settings_ui.dart';
 
 const _defaultProxyTestUrl = 'https://www.google.com';
 
@@ -65,184 +65,111 @@ class _AiProxySettingsScreenState extends ConsumerState<AiProxySettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.58 : 0.62);
     final t = context.t.strings.aiProxy;
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(t.title),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : _save,
+          child: Text(context.t.strings.common.save),
         ),
-        title: Text(t.title),
-        actions: [
-          TextButton(
-            onPressed: _saving ? null : _save,
-            child: Text(context.t.strings.common.save),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: card,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      ],
+      children: [
+        Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SettingsSection(
                 children: [
-                  Text(
-                    t.description,
-                    style: TextStyle(color: textMuted, height: 1.5),
+                  SettingsInfoRow(description: t.description),
+                  SettingsMenuRow<AiProxyProtocol>(
+                    label: t.protocol,
+                    value: _protocol,
+                    values: AiProxyProtocol.values,
+                    labelFor: (value) =>
+                        value == AiProxyProtocol.http ? 'HTTP' : 'SOCKS5',
+                    onChanged: (value) => setState(() => _protocol = value),
                   ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<AiProxyProtocol>(
-                    initialValue: _protocol,
-                    decoration: InputDecoration(labelText: t.protocol),
-                    items: AiProxyProtocol.values
-                        .map(
-                          (value) => DropdownMenuItem<AiProxyProtocol>(
-                            value: value,
-                            child: Text(
-                              value == AiProxyProtocol.http ? 'HTTP' : 'SOCKS5',
-                            ),
-                          ),
-                        )
-                        .toList(growable: false),
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() => _protocol = value);
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _hostController,
-                    decoration: InputDecoration(labelText: t.host),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
+                  SettingsInputRow(label: t.host, controller: _hostController),
+                  SettingsInputRow(
+                    label: t.port,
                     controller: _portController,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: t.port),
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
+                  SettingsInputRow(
+                    label: t.username,
                     controller: _usernameController,
-                    decoration: InputDecoration(labelText: t.username),
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
+                  SettingsInputRow(
+                    label: t.password,
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: t.password,
-                      suffixIcon: IconButton(
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                        ),
+                    suffixIcon: IconButton(
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
+                  SettingsToggleRow(
+                    label: t.bypassLocalAddresses,
                     value: _bypassLocalAddresses,
                     onChanged: (value) {
                       setState(() => _bypassLocalAddresses = value);
                     },
-                    title: Text(t.bypassLocalAddresses),
+                    onTap: () {
+                      setState(
+                        () => _bypassLocalAddresses = !_bypassLocalAddresses,
+                      );
+                    },
                   ),
-                  const SizedBox(height: 20),
-                  const Divider(height: 1),
-                  const SizedBox(height: 20),
-                  Text(
-                    t.testSectionTitle,
-                    style: TextStyle(
-                      color: textMain,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    t.testSectionDescription,
-                    style: TextStyle(color: textMuted, height: 1.5),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _testUrlController,
-                    keyboardType: TextInputType.url,
-                    decoration: InputDecoration(
-                      labelText: t.testUrl,
-                      hintText: _defaultProxyTestUrl,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FilledButton.tonalIcon(
-                      onPressed: _testing ? null : _testConnection,
-                      icon: _testing
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.network_check_rounded),
-                      label: Text(_testing ? t.testing : t.testAction),
-                    ),
-                  ),
-                  if (_testResult != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: (_testSuccess ?? false)
-                            ? Colors.green.withValues(alpha: 0.12)
-                            : Colors.orange.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        _testResult!,
-                        style: TextStyle(
-                          color: (_testSuccess ?? false)
-                              ? Colors.green.shade700
-                              : Colors.orange.shade800,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
-            ),
+              const SizedBox(height: 20),
+              SettingsSection(
+                header: Text(t.testSectionTitle),
+                children: [
+                  SettingsInfoRow(description: t.testSectionDescription),
+                  SettingsInputRow(
+                    label: t.testUrl,
+                    controller: _testUrlController,
+                    hint: _defaultProxyTestUrl,
+                    keyboardType: TextInputType.url,
+                  ),
+                  if (_testResult != null)
+                    _ProxyTestResultRow(
+                      message: _testResult!,
+                      success: _testSuccess ?? false,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SettingsAction(
+                    onPressed: _testing ? null : _testConnection,
+                    icon: _testing
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.network_check_rounded),
+                    label: Text(_testing ? t.testing : t.testAction),
+                    variant: PlatformPrimaryActionVariant.tonal,
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -401,5 +328,18 @@ class _AiProxySettingsScreenState extends ConsumerState<AiProxySettingsScreen> {
       password: _passwordController.text.trim(),
       bypassLocalAddresses: _bypassLocalAddresses,
     );
+  }
+}
+
+class _ProxyTestResultRow extends StatelessWidget {
+  const _ProxyTestResultRow({required this.message, required this.success});
+
+  final String message;
+  final bool success;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = success ? Colors.green : Colors.orange;
+    return SettingsWarningRow(message: message, iconColor: color);
   }
 }

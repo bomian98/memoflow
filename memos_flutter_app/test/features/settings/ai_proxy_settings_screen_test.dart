@@ -60,21 +60,22 @@ Widget _buildTestApp(_MemoryAiSettingsRepository repository) {
 void main() {
   setUp(() => LocaleSettings.setLocale(AppLocale.en));
 
-  testWidgets('AiProxySettingsScreen shows proxy test area with Google default', (
-    tester,
-  ) async {
-    final repository = _MemoryAiSettingsRepository(
-      AiSettings.defaultsFor(AppLanguage.en),
-    );
+  testWidgets(
+    'AiProxySettingsScreen shows proxy test area with Google default',
+    (tester) async {
+      final repository = _MemoryAiSettingsRepository(
+        AiSettings.defaultsFor(AppLanguage.en),
+      );
 
-    await tester.pumpWidget(_buildTestApp(repository));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_buildTestApp(repository));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Proxy Test'), findsOneWidget);
-    expect(find.text('Test Connection'), findsOneWidget);
-    final urlField = tester.widget<TextFormField>(find.byType(TextFormField).at(4));
-    expect(urlField.controller?.text, 'https://www.google.com');
-  });
+      expect(find.text('Proxy Test'), findsOneWidget);
+      expect(find.text('Test Connection'), findsOneWidget);
+      final urlField = tester.widget<TextField>(find.byType(TextField).at(4));
+      expect(urlField.controller?.text, 'https://www.google.com');
+    },
+  );
 
   testWidgets('AiProxySettingsScreen clears an existing proxy configuration', (
     tester,
@@ -95,8 +96,8 @@ void main() {
     await tester.pumpWidget(_buildTestApp(repository));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField).at(0), '');
-    await tester.enterText(find.byType(TextFormField).at(1), '');
+    await tester.enterText(find.byType(TextField).at(0), '');
+    await tester.enterText(find.byType(TextField).at(1), '');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 5));
@@ -116,8 +117,8 @@ void main() {
     await tester.pumpWidget(_buildTestApp(repository));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField).at(0), 'proxy.example.com');
-    await tester.enterText(find.byType(TextFormField).at(1), '70000');
+    await tester.enterText(find.byType(TextField).at(0), 'proxy.example.com');
+    await tester.enterText(find.byType(TextField).at(1), '70000');
     await tester.tap(find.text('Save'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 5));
@@ -142,15 +143,12 @@ void main() {
       await tester.tap(find.text('SOCKS5').last);
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'proxy.example.com');
-      await tester.enterText(find.byType(TextFormField).at(1), '1080');
-      await tester.enterText(find.byType(TextFormField).at(2), 'demo');
-      await tester.enterText(find.byType(TextFormField).at(3), 'secret');
+      await tester.enterText(find.byType(TextField).at(0), 'proxy.example.com');
+      await tester.enterText(find.byType(TextField).at(1), '1080');
+      await tester.enterText(find.byType(TextField).at(2), 'demo');
+      await tester.enterText(find.byType(TextField).at(3), 'secret');
       await tester.tap(
-        find.widgetWithText(
-          SwitchListTile,
-          'Automatically bypass local/private addresses',
-        ),
+        find.text('Automatically bypass local/private addresses'),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save'));

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/repositories/ai_settings_repository.dart';
-import '../../state/settings/ai_settings_provider.dart';
 import '../../i18n/strings.g.dart';
+import '../../state/settings/ai_settings_provider.dart';
+import 'settings_ui.dart';
 
 class AiUserProfileScreen extends ConsumerStatefulWidget {
   const AiUserProfileScreen({super.key});
@@ -69,173 +68,42 @@ class _AiUserProfileScreenState extends ConsumerState<AiUserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final border = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
-
-    Widget body() {
-      return Stack(
-        children: [
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: card,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: border),
-                  boxShadow: isDark
-                      ? [
-                          BoxShadow(
-                            blurRadius: 28,
-                            offset: const Offset(0, 16),
-                            color: Colors.black.withValues(alpha: 0.45),
-                          ),
-                        ]
-                      : [
-                          BoxShadow(
-                            blurRadius: 18,
-                            offset: const Offset(0, 10),
-                            color: Colors.black.withValues(alpha: 0.06),
-                          ),
-                        ],
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.t.strings.legacy.msg_my_profile,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: textMuted,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _controller,
-                      enabled: !_saving,
-                      minLines: 6,
-                      maxLines: 12,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: textMain,
-                        height: 1.35,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: context
-                            .t
-                            .strings
-                            .legacy
-                            .msg_e_g_my_role_topics_interest,
-                        hintStyle: TextStyle(color: textMuted),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                context
-                    .t
-                    .strings
-                    .legacy
-                    .msg_info_only_used_background_ai_summaries,
-                style: TextStyle(fontSize: 12, height: 1.35, color: textMuted),
-              ),
-            ],
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 18,
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                height: 54,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: MemoFlowPalette.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    elevation: isDark ? 0 : 4,
-                  ),
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          context.t.strings.legacy.msg_save_settings,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                ),
-              ),
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_my_profile),
+      children: [
+        SettingsSection(
+          children: [
+            SettingsInputRow(
+              label: context.t.strings.legacy.msg_my_profile,
+              controller: _controller,
+              enabled: !_saving,
+              minLines: 6,
+              maxLines: 12,
+              hint: context.t.strings.legacy.msg_e_g_my_role_topics_interest,
             ),
-          ),
-        ],
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+            SettingsInfoRow(
+              description: context
+                  .t
+                  .strings
+                  .legacy
+                  .msg_info_only_used_background_ai_summaries,
+            ),
+          ],
         ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SettingsAction(
+            onPressed: _saving ? null : _save,
+            label: _saving
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(context.t.strings.legacy.msg_save_settings),
           ),
         ),
-        title: Text(context.t.strings.legacy.msg_my_profile),
-        centerTitle: false,
-      ),
-      body: isDark
-          ? Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [const Color(0xFF0B0B0B), bg, bg],
-                      ),
-                    ),
-                  ),
-                ),
-                body(),
-              ],
-            )
-          : body(),
+      ],
     );
   }
 }

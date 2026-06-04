@@ -2,11 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/repositories/ai_settings_repository.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_controls.dart';
 import '../../state/settings/ai_settings_provider.dart';
 import 'ai_provider_logo.dart';
 import 'ai_proxy_settings_screen.dart';
@@ -14,6 +13,7 @@ import 'ai_service_detail_screen.dart';
 import 'ai_service_model_screen.dart';
 import 'ai_service_wizard_screen.dart';
 import 'ai_user_profile_screen.dart';
+import 'settings_ui.dart';
 
 class AiSettingsScreen extends ConsumerWidget {
   const AiSettingsScreen({super.key, this.showBackButton = true});
@@ -23,15 +23,6 @@ class AiSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(aiSettingsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
     final isZh =
         Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
     final useDesktopAddAction =
@@ -44,138 +35,73 @@ class AiSettingsScreen extends ConsumerWidget {
       openAiServiceWizard(context);
     }
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: showBackButton,
-        ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: showBackButton
-              ? IconButton(
-                  tooltip: context.t.strings.legacy.msg_back,
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(context).maybePop(),
-                )
-              : null,
-        ),
-        title: Text(context.t.strings.legacy.msg_ai_settings),
-        actions: [
-          if (useDesktopAddAction)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: FilledButton.icon(
-                onPressed: openAddService,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(isZh ? '\u6dfb\u52a0\u670d\u52a1' : 'Add Service'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_ai_settings),
+      showBackButton: showBackButton,
+      actions: [
+        if (useDesktopAddAction)
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: FilledButton.icon(
+              onPressed: openAddService,
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: Text(isZh ? '\u6dfb\u52a0\u670d\u52a1' : 'Add Service'),
             ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
-              ),
-            ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-            children: [
-              _CardRow(
-                card: card,
-                title: context.t.strings.legacy.msg_my_profile,
-                subtitle: '',
-                textMain: textMain,
-                textMuted: textMuted,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const AiUserProfileScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              _CardRow(
-                card: card,
-                title: context.t.strings.aiProxy.title,
-                subtitle: _proxySummary(context, settings.proxySettings),
-                textMain: textMain,
-                textMuted: textMuted,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const AiProxySettingsScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              Text(
-                isZh ? '\u670d\u52a1\u5217\u8868' : 'Services',
-                style: TextStyle(fontWeight: FontWeight.w800, color: textMain),
-              ),
-              const SizedBox(height: 12),
-              if (settings.services.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: card,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isZh
-                            ? '\u8fd8\u6ca1\u6709 AI \u670d\u52a1\uff0c\u70b9\u51fb\u300c\u6dfb\u52a0\u670d\u52a1\u300d\u5f00\u59cb\u914d\u7f6e\u3002'
-                            : 'No AI services yet. Tap Add Service to get started.',
-                        style: TextStyle(color: textMuted, height: 1.5),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                ...settings.services.map(
-                  (service) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _ServiceCard(service: service),
-                  ),
-                ),
-            ],
           ),
-        ],
-      ),
-      floatingActionButton: useDesktopAddAction
-          ? null
-          : FloatingActionButton.extended(
+      ],
+      children: [
+        SettingsSection(
+          children: [
+            SettingsNavigationRow(
+              label: context.t.strings.legacy.msg_my_profile,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AiUserProfileScreen(),
+                  ),
+                );
+              },
+            ),
+            SettingsNavigationRow(
+              label: context.t.strings.aiProxy.title,
+              description: _proxySummary(context, settings.proxySettings),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AiProxySettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        SettingsSection(
+          header: Text(isZh ? '\u670d\u52a1\u5217\u8868' : 'Services'),
+          children: [
+            if (settings.services.isEmpty)
+              SettingsInfoRow(
+                description: isZh
+                    ? '\u8fd8\u6ca1\u6709 AI \u670d\u52a1\uff0c\u70b9\u51fb\u300c\u6dfb\u52a0\u670d\u52a1\u300d\u5f00\u59cb\u914d\u7f6e\u3002'
+                    : 'No AI services yet. Tap Add Service to get started.',
+              )
+            else
+              for (final service in settings.services)
+                _ServiceCard(service: service),
+          ],
+        ),
+        if (!useDesktopAddAction) ...[
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SettingsAction(
               onPressed: openAddService,
               icon: const Icon(Icons.add_rounded),
               label: Text(isZh ? '\u6dfb\u52a0\u670d\u52a1' : 'Add Service'),
             ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -187,40 +113,29 @@ class _ServiceCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tokens = settingsPageTokens(context);
+    final colorScheme = Theme.of(context).colorScheme;
     final settings = ref.watch(aiSettingsProvider);
     final isZh =
         Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
     final template = findAiProviderTemplate(service.templateId);
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.58 : 0.62);
     final defaultModelIds = _defaultModelIds(settings);
 
     return Material(
-      color: Colors.transparent,
+      color: colorScheme.surface,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.65),
+        ),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
         onTap: () {
           openAiServiceDetail(context, serviceId: service.serviceId);
         },
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: card,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: isDark
-                ? null
-                : [
-                    BoxShadow(
-                      blurRadius: 18,
-                      offset: const Offset(0, 10),
-                      color: Colors.black.withValues(alpha: 0.05),
-                    ),
-                  ],
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -232,13 +147,7 @@ class _ServiceCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          service.displayName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: textMain,
-                          ),
-                        ),
+                        SettingsRowTitle(service.displayName),
                         const SizedBox(height: 4),
                         Text(
                           template == null
@@ -247,12 +156,15 @@ class _ServiceCard extends ConsumerWidget {
                                   template,
                                   isZh: isZh,
                                 ),
-                          style: TextStyle(fontSize: 12, color: textMuted),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tokens.textMuted,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Switch.adaptive(
+                  PlatformSwitch(
                     value: service.enabled,
                     onChanged: (value) {
                       ref
@@ -282,7 +194,7 @@ class _ServiceCard extends ConsumerWidget {
                           ? '\u672a\u8bbe\u7f6e Base URL'
                           : 'Base URL not configured')
                     : service.baseUrl,
-                style: TextStyle(fontSize: 12, color: textMuted),
+                style: TextStyle(fontSize: 12, color: tokens.textMuted),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -389,13 +301,11 @@ class _ServiceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.05),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -414,78 +324,6 @@ class _ServiceBadge extends StatelessWidget {
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CardRow extends StatelessWidget {
-  const _CardRow({
-    required this.card,
-    required this.title,
-    required this.subtitle,
-    required this.textMain,
-    required this.textMuted,
-    required this.onTap,
-  });
-
-  final Color card;
-  final String title;
-  final String subtitle;
-  final Color textMain;
-  final Color textMuted;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: card,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: isDark
-                ? null
-                : [
-                    BoxShadow(
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                      color: Colors.black.withValues(alpha: 0.06),
-                    ),
-                  ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: textMain,
-                      ),
-                    ),
-                    if (subtitle.trim().isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: textMuted),
-            ],
-          ),
-        ),
       ),
     );
   }

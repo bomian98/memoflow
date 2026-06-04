@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../data/ai/ai_settings_log.dart';
 import '../../data/logs/log_manager.dart';
 import '../../core/top_toast.dart';
 import '../../core/uid.dart';
 import '../../data/repositories/ai_settings_repository.dart';
 import '../../state/settings/ai_settings_provider.dart';
+import 'settings_ui.dart';
 
 Future<AiModelEntry?> showAiModelEditorDialog(
   BuildContext context, {
@@ -35,33 +34,17 @@ class AiServiceModelScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(aiSettingsProvider);
     final service = settings.services.firstById(serviceId);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isZh =
         Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
 
     if (service == null) {
       final missing = Center(
         child: Text(isZh ? '服务不存在。' : 'Service not found.'),
       );
       if (embedded) return missing;
-      return Scaffold(
-        backgroundColor: bg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading:
-              resolveDesktopRouteAutomaticallyImplyLeading(
-                context: context,
-                automaticallyImplyLeading: true,
-              ),
-          title: Text(isZh ? '模型管理' : 'Models'),
-        ),
-        body: missing,
+      return SettingsPage(
+        title: Text(isZh ? '模型管理' : 'Models'),
+        children: [missing],
       );
     }
 
@@ -70,20 +53,9 @@ class AiServiceModelScreen extends ConsumerWidget {
       return content;
     }
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        title: Text(isZh ? '模型管理' : 'Models'),
-      ),
-      body: content,
+    return SettingsPage(
+      title: Text(isZh ? '模型管理' : 'Models'),
+      children: [_AiServiceModelPanel(service: service, embedded: true)],
     );
   }
 }
@@ -130,14 +102,11 @@ class _AiServiceModelPanelState extends ConsumerState<_AiServiceModelPanel> {
     final presets = template == null
         ? const <AiBuiltinModelPreset>[]
         : builtinModelPresetsForTemplate(template);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tokens = settingsPageTokens(context);
     final isZh =
         Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.58 : 0.62);
+    final card = tokens.card;
+    final textMuted = tokens.textMuted;
     final query = _searchController.text.trim().toLowerCase();
     final filteredModels = _buildVisibleModels(service.models, query);
     final hasModelFilters =
@@ -161,24 +130,9 @@ class _AiServiceModelPanelState extends ConsumerState<_AiServiceModelPanel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isZh ? '模型列表' : 'Model Library',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: textMain,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _CountPill(count: filteredModels.length),
-                ],
+              SettingsContentHeader(
+                title: isZh ? '模型列表' : 'Model Library',
+                trailing: _CountPill(count: filteredModels.length),
               ),
               const SizedBox(height: 12),
               Row(
@@ -276,19 +230,11 @@ class _AiServiceModelPanelState extends ConsumerState<_AiServiceModelPanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isZh ? '内置模型' : 'Built-in Models',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: textMain,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isZh
+                SettingsContentHeader(
+                  title: isZh ? '内置模型' : 'Built-in Models',
+                  description: isZh
                       ? '直接从当前服务商的常用模型预设里添加。'
                       : 'Quick add common presets for this provider.',
-                  style: TextStyle(fontSize: 12, color: textMuted),
                 ),
                 const SizedBox(height: 12),
                 ...presets.map((preset) {
@@ -323,18 +269,9 @@ class _AiServiceModelPanelState extends ConsumerState<_AiServiceModelPanel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Text(
-                    isZh ? '我的模型' : 'My Models',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: textMain,
-                    ),
-                  ),
-                  const Spacer(),
-                  _CountPill(count: filteredModels.length),
-                ],
+              SettingsContentHeader(
+                title: isZh ? '我的模型' : 'My Models',
+                trailing: _CountPill(count: filteredModels.length),
               ),
               const SizedBox(height: 12),
               if (filteredModels.isEmpty)
@@ -1045,11 +982,10 @@ class _ModelCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SettingsRowTitle(
                       model.displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     if (showModelKey) ...[
                       const SizedBox(height: 2),
