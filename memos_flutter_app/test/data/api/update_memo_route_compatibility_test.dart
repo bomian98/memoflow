@@ -212,36 +212,44 @@ void main() {
       },
     );
 
-    test('version 0.28.0 sends create_time without display_time', () async {
-      final harness = await _FakeUpdateMemoServer.start(MemoApiVersion.v028);
-      addTearDown(() async {
-        await harness.close();
-      });
+    for (final version in <MemoApiVersion>[
+      MemoApiVersion.v028,
+      MemoApiVersion.v029,
+    ]) {
+      test(
+        'version ${version.versionString} sends create_time without display_time',
+        () async {
+          final harness = await _FakeUpdateMemoServer.start(version);
+          addTearDown(() async {
+            await harness.close();
+          });
 
-      final api = MemoApiFacade.authenticated(
-        baseUrl: harness.baseUrl,
-        personalAccessToken: 'test-pat',
-        version: MemoApiVersion.v028,
-      );
+          final api = MemoApiFacade.authenticated(
+            baseUrl: harness.baseUrl,
+            personalAccessToken: 'test-pat',
+            version: version,
+          );
 
-      final memo = await api.updateMemo(
-        memoUid: '101',
-        createTime: DateTime.utc(2026, 3, 13, 18, 0),
-        displayTime: DateTime.utc(2026, 3, 13, 18, 0),
-      );
-      expect(memo.uid, '101');
+          final memo = await api.updateMemo(
+            memoUid: '101',
+            createTime: DateTime.utc(2026, 3, 13, 18, 0),
+            displayTime: DateTime.utc(2026, 3, 13, 18, 0),
+          );
+          expect(memo.uid, '101');
 
-      final capturedRequest = harness.findUpdateRequest();
-      expect(capturedRequest, isNotNull);
-      expect(capturedRequest!.path, '/api/v1/memos/101');
-      expect(capturedRequest.queryParameters['updateMask'], 'create_time');
-      expect(
-        capturedRequest.queryParameters['updateMask'],
-        isNot(contains('display_time')),
+          final capturedRequest = harness.findUpdateRequest();
+          expect(capturedRequest, isNotNull);
+          expect(capturedRequest!.path, '/api/v1/memos/101');
+          expect(capturedRequest.queryParameters['updateMask'], 'create_time');
+          expect(
+            capturedRequest.queryParameters['updateMask'],
+            isNot(contains('display_time')),
+          );
+          expect(capturedRequest.jsonBody?['createTime'], isNotNull);
+          expect(capturedRequest.jsonBody?.containsKey('displayTime'), isFalse);
+        },
       );
-      expect(capturedRequest.jsonBody?['createTime'], isNotNull);
-      expect(capturedRequest.jsonBody?.containsKey('displayTime'), isFalse);
-    });
+    }
   });
 
   group('MemoApiFacade updateMemo updateTime compatibility', () {

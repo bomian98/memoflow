@@ -20,7 +20,7 @@ const String _v027AmpersandTag = 'science&tech';
 const String _v027EmojiTag = 'watch\u{1F441}\uFE0F';
 
 void main() {
-  group('MemoApiVersion 0.28 support', () {
+  group('MemoApiVersion 0.28/0.29 support', () {
     test('parses and normalizes 0.28 versions', () {
       expect(parseMemoApiVersion('0.28'), MemoApiVersion.v028);
       expect(parseMemoApiVersion('0.28.0'), MemoApiVersion.v028);
@@ -29,45 +29,53 @@ void main() {
       expect(MemoApiVersion.v028.label, 'v0.28.0');
     });
 
-    test('includes 0.28.0 in probe order', () {
-      expect(kMemoApiVersionsProbeOrder.last, MemoApiVersion.v028);
+    test('parses and normalizes 0.29 versions', () {
+      expect(parseMemoApiVersion('0.29'), MemoApiVersion.v029);
+      expect(parseMemoApiVersion('0.29.0'), MemoApiVersion.v029);
+      expect(parseMemoApiVersion('0.29.7'), MemoApiVersion.v029);
+      expect(normalizeMemoApiVersion(' 0.29 '), '0.29.0');
+      expect(MemoApiVersion.v029.label, 'v0.29.0');
+    });
+
+    test('includes 0.29.0 in probe order as the newest version', () {
+      expect(kMemoApiVersionsProbeOrder.last, MemoApiVersion.v029);
       expect(
         kMemoApiVersionsProbeOrder.map((version) => version.versionString),
-        contains('0.28.0'),
+        containsAll(<String>['0.28.0', '0.29.0']),
       );
     });
   });
 
-  group('MemoApiFacade 0.28 profile', () {
-    test('creates strict 0.28 clients', () {
+  group('MemoApiFacade 0.29 profile', () {
+    test('creates strict 0.29 clients', () {
       final baseUrl = Uri.parse('http://127.0.0.1:1');
 
       final unauthenticated = MemoApiFacade.unauthenticated(
         baseUrl: baseUrl,
-        version: MemoApiVersion.v028,
+        version: MemoApiVersion.v029,
       );
       expect(unauthenticated.isStrictRouteLocked, isTrue);
-      expect(unauthenticated.effectiveServerVersion, '0.28.0');
+      expect(unauthenticated.effectiveServerVersion, '0.29.0');
 
       final authenticated = MemoApiFacade.authenticated(
         baseUrl: baseUrl,
         personalAccessToken: 'test-pat',
-        version: MemoApiVersion.v028,
+        version: MemoApiVersion.v029,
       );
       expect(authenticated.isStrictRouteLocked, isTrue);
-      expect(authenticated.effectiveServerVersion, '0.28.0');
+      expect(authenticated.effectiveServerVersion, '0.29.0');
 
       final sessionAuthenticated = MemoApiFacade.sessionAuthenticated(
         baseUrl: baseUrl,
         sessionCookie: 'user_session=test-session',
-        version: MemoApiVersion.v028,
+        version: MemoApiVersion.v029,
       );
       expect(sessionAuthenticated.isStrictRouteLocked, isTrue);
-      expect(sessionAuthenticated.effectiveServerVersion, '0.28.0');
+      expect(sessionAuthenticated.effectiveServerVersion, '0.29.0');
     });
 
     test('routes password sign-in through the modern v1 endpoint', () async {
-      final harness = await _FakeMemosServer.start(MemoApiVersion.v028);
+      final harness = await _FakeMemosServer.start(MemoApiVersion.v029);
       addTearDown(() async {
         await harness.close();
       });
@@ -76,7 +84,7 @@ void main() {
         baseUrl: harness.baseUrl,
         username: 'demo',
         password: 'secret',
-        version: MemoApiVersion.v028,
+        version: MemoApiVersion.v029,
       );
 
       expect(result.endpoint, MemoPasswordSignInEndpoint.signinV1);
@@ -178,6 +186,7 @@ void main() {
             case MemoApiVersion.v026:
             case MemoApiVersion.v027:
             case MemoApiVersion.v028:
+            case MemoApiVersion.v029:
               expect(capturedListRequest.queryParameters['state'], 'NORMAL');
               expect(
                 capturedListRequest.queryParameters.containsKey('view'),
@@ -233,50 +242,57 @@ void main() {
       expect(listRequest.queryParameters['order_by'], 'display_time desc');
     });
 
-    test('version 0.28.0 remaps display_time list ordering', () async {
-      final harness = await _FakeMemosServer.start(MemoApiVersion.v028);
-      addTearDown(() async {
-        await harness.close();
-      });
+    for (final version in <MemoApiVersion>[
+      MemoApiVersion.v028,
+      MemoApiVersion.v029,
+    ]) {
+      test(
+        'version ${version.versionString} remaps display_time list ordering',
+        () async {
+          final harness = await _FakeMemosServer.start(version);
+          addTearDown(() async {
+            await harness.close();
+          });
 
-      final api = MemoApiFacade.authenticated(
-        baseUrl: harness.baseUrl,
-        personalAccessToken: 'test-pat',
-        version: MemoApiVersion.v028,
+          final api = MemoApiFacade.authenticated(
+            baseUrl: harness.baseUrl,
+            personalAccessToken: 'test-pat',
+            version: version,
+          );
+
+          await api.listMemos(
+            pageSize: 10,
+            state: 'NORMAL',
+            orderBy: 'display_time desc',
+          );
+          await api.listExploreMemos(
+            pageSize: 10,
+            state: 'NORMAL',
+            orderBy: 'display_time desc',
+          );
+
+          final listRequests = harness.requests
+              .where(
+                (request) =>
+                    request.method == 'GET' &&
+                    request.path == _expectedRoutes(version).listMemosPath,
+              )
+              .toList(growable: false);
+          expect(listRequests, hasLength(2));
+
+          for (final request in listRequests) {
+            expect(request.queryParameters['orderBy'], 'create_time desc');
+            expect(request.queryParameters['order_by'], 'create_time desc');
+            expect(
+              request.queryParameters.values.any(
+                (value) => value.contains('display_time'),
+              ),
+              isFalse,
+            );
+          }
+        },
       );
-
-      await api.listMemos(
-        pageSize: 10,
-        state: 'NORMAL',
-        orderBy: 'display_time desc',
-      );
-      await api.listExploreMemos(
-        pageSize: 10,
-        state: 'NORMAL',
-        orderBy: 'display_time desc',
-      );
-
-      final listRequests = harness.requests
-          .where(
-            (request) =>
-                request.method == 'GET' &&
-                request.path ==
-                    _expectedRoutes(MemoApiVersion.v028).listMemosPath,
-          )
-          .toList(growable: false);
-      expect(listRequests, hasLength(2));
-
-      for (final request in listRequests) {
-        expect(request.queryParameters['orderBy'], 'create_time desc');
-        expect(request.queryParameters['order_by'], 'create_time desc');
-        expect(
-          request.queryParameters.values.any(
-            (value) => value.contains('display_time'),
-          ),
-          isFalse,
-        );
-      }
-    });
+    }
   });
 }
 
@@ -339,6 +355,12 @@ _ExpectedRoutes _expectedRoutes(MemoApiVersion version) {
       usesLegacyMemoListRoute: false,
     ),
     MemoApiVersion.v028 => const _ExpectedRoutes(
+      currentUserMethod: 'GET',
+      currentUserPath: '/api/v1/auth/me',
+      listMemosPath: '/api/v1/memos',
+      usesLegacyMemoListRoute: false,
+    ),
+    MemoApiVersion.v029 => const _ExpectedRoutes(
       currentUserMethod: 'GET',
       currentUserPath: '/api/v1/auth/me',
       listMemosPath: '/api/v1/memos',
