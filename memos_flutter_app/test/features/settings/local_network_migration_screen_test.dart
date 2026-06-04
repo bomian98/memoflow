@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/features/settings/local_network_migration_screen.dart';
+import 'package:memos_flutter_app/features/settings/settings_ui.dart';
+import 'package:memos_flutter_app/platform/widgets/platform_controls.dart';
 
 import 'settings_test_harness.dart';
 
@@ -11,6 +12,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsSection), findsNWidgets(3));
+    expect(find.byType(SettingsNavigationRow), findsNWidgets(2));
     expect(find.text('Local Network Migration'), findsOneWidget);
     expect(find.text('MemoFlow Migration'), findsOneWidget);
     expect(find.text('Connect Obsidian'), findsOneWidget);
@@ -31,6 +35,8 @@ void main() {
     await tester.tap(find.text('MemoFlow Migration'));
     await tester.pumpAndSettle();
 
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsNavigationRow), findsNWidgets(2));
     expect(find.text("I'm the Sender"), findsOneWidget);
     expect(find.text("I'm the Receiver"), findsOneWidget);
   });
@@ -48,12 +54,15 @@ void main() {
 
     expect(find.text('Connect Obsidian'), findsOneWidget);
     expect(find.text('MemoFlow Bridge'), findsNothing);
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsInputRow), findsNWidgets(3));
+    expect(find.byType(SettingsToggleRow), findsOneWidget);
+    expect(find.byType(PlatformSwitch), findsOneWidget);
     expect(
       find.text(
         'Pair with Obsidian over your local network. Other targets may come later.',
       ),
       findsOneWidget,
     );
-    expect(find.byType(SwitchListTile), findsOneWidget);
   });
 }

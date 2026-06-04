@@ -2,11 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/app_localization.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../data/logs/log_manager.dart';
 import '../../i18n/strings.g.dart';
-import '../../platform/widgets/platform_adaptive_layout.dart';
 import '../../platform/widgets/platform_primary_action.dart';
+import 'settings_ui.dart';
 
 class LocalModeSetupResult {
   const LocalModeSetupResult({required this.name});
@@ -127,111 +126,68 @@ class _LocalModeSetupScreenState extends State<LocalModeSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final subtitle = widget.subtitle?.trim();
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        title: Text(widget.title),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-        children: [
-          PlatformBoundedContent(
-            desktopMaxWidth: 560,
-            tabletMaxWidth: 560,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if ((widget.subtitle ?? '').trim().isNotEmpty) ...[
-                  Text(
-                    widget.subtitle!.trim(),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (widget.showStorageInfoCard) ...[
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Text(
-                        context.tr(
-                          zh: '\u672c\u5730\u6a21\u5f0f\u6570\u636e\u5c06\u9ed8\u8ba4\u4fdd\u5b58\u5728\u5e94\u7528\u5185\u90e8\u6587\u4ef6\u5939\u3002',
-                          en: 'Local mode data is stored in the app\'s private files by default.',
-                        ),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.t.strings.legacy.msg_repository_name,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _nameController,
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            hintText: context
-                                .t
-                                .strings
-                                .legacy
-                                .msg_enter_repository_name_hint,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                PlatformPrimaryAction(
-                  key: const ValueKey<String>('localModeSetup.confirmAction'),
-                  onPressed: _submitting ? null : _submit,
-                  desktopMaxWidth: 240,
-                  child: _submitting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(widget.confirmLabel),
-                ),
-                const SizedBox(height: 8),
-                PlatformPrimaryAction(
-                  key: const ValueKey<String>('localModeSetup.cancelAction'),
-                  onPressed: _submitting
-                      ? null
-                      : () => Navigator.of(context).maybePop(),
-                  variant: PlatformPrimaryActionVariant.text,
-                  desktopMaxWidth: 240,
-                  child: Text(widget.cancelLabel),
-                ),
-              ],
-            ),
-          ),
+    return SettingsPage(
+      title: Text(widget.title),
+      desktopMaxWidth: 560,
+      tabletMaxWidth: 560,
+      children: [
+        if (subtitle != null && subtitle.isNotEmpty) ...[
+          SettingsSection(children: [SettingsInfoRow(description: subtitle)]),
+          const SizedBox(height: 12),
         ],
-      ),
+        if (widget.showStorageInfoCard) ...[
+          SettingsSection(
+            children: [
+              SettingsInfoRow(
+                description: context.tr(
+                  zh: '\u672c\u5730\u6a21\u5f0f\u6570\u636e\u5c06\u9ed8\u8ba4\u4fdd\u5b58\u5728\u5e94\u7528\u5185\u90e8\u6587\u4ef6\u5939\u3002',
+                  en: 'Local mode data is stored in the app\'s private files by default.',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
+        SettingsSection(
+          children: [
+            SettingsInputRow(
+              label: context.t.strings.legacy.msg_repository_name,
+              controller: _nameController,
+              hint: context.t.strings.legacy.msg_enter_repository_name_hint,
+              onEditingComplete: _submit,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SettingsAction(
+            key: const ValueKey<String>('localModeSetup.confirmAction'),
+            onPressed: _submitting ? null : _submit,
+            label: _submitting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(widget.confirmLabel),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SettingsAction(
+            key: const ValueKey<String>('localModeSetup.cancelAction'),
+            onPressed: _submitting
+                ? null
+                : () => Navigator.of(context).maybePop(),
+            variant: PlatformPrimaryActionVariant.text,
+            label: Text(widget.cancelLabel),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -11,6 +11,7 @@ import 'package:memos_flutter_app/application/sync/migration/memoflow_migration_
 import 'package:memos_flutter_app/data/models/local_library.dart';
 import 'package:memos_flutter_app/features/settings/migration/memoflow_migration_send_method_screen.dart';
 import 'package:memos_flutter_app/features/settings/migration/memoflow_migration_sender_screen.dart';
+import 'package:memos_flutter_app/features/settings/settings_ui.dart';
 import 'package:memos_flutter_app/state/migration/memoflow_migration_sender_controller.dart';
 import 'package:memos_flutter_app/state/migration/memoflow_migration_providers.dart';
 import 'package:memos_flutter_app/state/migration/memoflow_migration_state.dart';
@@ -109,6 +110,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsSection), findsWidgets);
+    expect(find.byType(SettingsAction), findsOneWidget);
     expect(find.text("I'm the Sender"), findsOneWidget);
     expect(find.text('Notes content'), findsOneWidget);
     expect(find.text('Settings content'), findsOneWidget);
@@ -159,6 +163,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsSection), findsWidgets);
+    expect(find.byType(SettingsAction), findsAtLeastNWidgets(2));
     expect(find.text('Send method'), findsOneWidget);
     expect(find.text('Package ready'), findsOneWidget);
     expect(find.text('Manual'), findsOneWidget);
@@ -230,6 +237,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      expect(find.byType(SettingsPage), findsOneWidget);
       expect(controller.lastConnectedQrPayload, migrationQr);
     },
   );

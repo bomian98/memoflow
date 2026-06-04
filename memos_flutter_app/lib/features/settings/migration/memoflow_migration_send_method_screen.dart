@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_localization.dart';
-import '../../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../../i18n/strings.g.dart';
-import '../memoflow_bridge_screen.dart';
+import '../../../platform/widgets/platform_primary_action.dart';
 import '../../../state/migration/memoflow_migration_providers.dart';
 import '../../../state/migration/memoflow_migration_state.dart';
+import '../memoflow_bridge_screen.dart';
+import '../settings_ui.dart';
 import 'memoflow_migration_result_screen.dart';
 
 class MemoFlowMigrationSendMethodScreen extends ConsumerStatefulWidget {
@@ -55,188 +56,153 @@ class _MemoFlowMigrationSendMethodScreenState
     final tr = context.t.strings.legacy;
     final packageResult = state.packageResult;
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(tr.msg_memoflow_migration_send_method),
+      children: [
+        SettingsSection(
+          children: [
+            SettingsInfoRow(
+              description: tr.msg_memoflow_migration_send_method_desc,
+            ),
+          ],
         ),
-        title: Text(tr.msg_memoflow_migration_send_method),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            tr.msg_memoflow_migration_send_method_desc,
-            style: Theme.of(context).textTheme.bodyMedium,
+        if (packageResult != null) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            header: Text(tr.msg_memoflow_migration_package_ready),
+            children: [
+              SettingsInfoRow(
+                description: tr.msg_memoflow_migration_package_summary(
+                  memoCount: packageResult.manifest.memoCount,
+                  attachmentCount: packageResult.manifest.attachmentCount,
+                  size: _formatBytes(packageResult.manifest.totalBytes),
+                ),
+              ),
+              SettingsInfoRow(
+                description: context.tr(
+                  zh: '草稿 ${packageResult.manifest.draftCount} 条，草稿附件 ${packageResult.manifest.draftAttachmentCount} 个',
+                  en: 'Drafts ${packageResult.manifest.draftCount}, draft attachments ${packageResult.manifest.draftAttachmentCount}',
+                ),
+              ),
+            ],
           ),
-          if (packageResult != null) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.msg_memoflow_migration_package_ready,
-                      style: Theme.of(context).textTheme.titleMedium,
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: () async {
+                final raw = await Navigator.of(context).push<String>(
+                  MaterialPageRoute<String>(
+                    builder: (_) => MemoFlowPairQrScanScreen(
+                      titleText: tr.msg_memoflow_migration_scan_title,
+                      hintText: tr.msg_memoflow_migration_scan_hint,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      tr.msg_memoflow_migration_package_summary(
-                        memoCount: packageResult.manifest.memoCount,
-                        attachmentCount: packageResult.manifest.attachmentCount,
-                        size: _formatBytes(packageResult.manifest.totalBytes),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.tr(
-                        zh: '草稿 ${packageResult.manifest.draftCount} 条，草稿附件 ${packageResult.manifest.draftAttachmentCount} 个',
-                        en: 'Drafts ${packageResult.manifest.draftCount}, draft attachments ${packageResult.manifest.draftAttachmentCount}',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            final raw = await Navigator.of(context)
-                                .push<String>(
-                                  MaterialPageRoute<String>(
-                                    builder: (_) => MemoFlowPairQrScanScreen(
-                                      titleText:
-                                          tr.msg_memoflow_migration_scan_title,
-                                      hintText:
-                                          tr.msg_memoflow_migration_scan_hint,
-                                    ),
-                                  ),
-                                );
-                            if (raw != null && context.mounted) {
-                              await controller.connectFromQrPayload(raw);
-                            }
-                          },
-                          icon: const Icon(Icons.qr_code_scanner),
-                          label: Text(tr.msg_memoflow_migration_scan_receiver),
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            final request =
-                                await showDialog<_ManualReceiverConnectRequest>(
-                                  context: context,
-                                  builder: (_) =>
-                                      const _ManualReceiverConnectDialog(),
-                                );
-                            if (request != null && context.mounted) {
-                              await controller.connectManually(
-                                host: request.host,
-                                port: request.port,
-                                pairingCode: request.pairingCode,
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.keyboard_alt_outlined),
-                          label: Text(tr.msg_manual),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+                if (raw != null && context.mounted) {
+                  await controller.connectFromQrPayload(raw);
+                }
+              },
+              icon: const Icon(Icons.qr_code_scanner),
+              variant: PlatformPrimaryActionVariant.outlined,
+              label: Text(tr.msg_memoflow_migration_scan_receiver),
             ),
-          ],
-          if (packageResult == null &&
-              state.phase != MemoFlowMigrationSenderPhase.buildingPackage) ...[
-            const SizedBox(height: 12),
-            Card(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(tr.msg_memoflow_migration_prepare_send_first),
-              ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: () async {
+                final request = await showDialog<_ManualReceiverConnectRequest>(
+                  context: context,
+                  builder: (_) => const _ManualReceiverConnectDialog(),
+                );
+                if (request != null && context.mounted) {
+                  await controller.connectManually(
+                    host: request.host,
+                    port: request.port,
+                    pairingCode: request.pairingCode,
+                  );
+                }
+              },
+              icon: const Icon(Icons.keyboard_alt_outlined),
+              variant: PlatformPrimaryActionVariant.outlined,
+              label: Text(tr.msg_manual),
             ),
-          ],
-          if (state.phase == MemoFlowMigrationSenderPhase.uploading ||
-              state.phase == MemoFlowMigrationSenderPhase.waitingForReceiver ||
-              state.phase == MemoFlowMigrationSenderPhase.buildingPackage) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      state.statusMessage ?? '',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 12),
-                    LinearProgressIndicator(
-                      value:
-                          state.phase == MemoFlowMigrationSenderPhase.uploading
-                          ? state.uploadProgress
-                          : null,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          if ((state.errorMessage ?? '').isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Card(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(state.errorMessage!),
-              ),
-            ),
-          ],
-          if (state.result != null) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.msg_memoflow_migration_completed,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(state.statusMessage ?? ''),
-                    const SizedBox(height: 12),
-                    FilledButton.tonal(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => MemoFlowMigrationResultScreen(
-                              result: state.result!,
-                              title: tr.msg_memoflow_migration_result,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Text(tr.msg_memoflow_migration_view_result),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Text(
-            tr.msg_memoflow_migration_foreground_notice,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
           ),
         ],
-      ),
+        if (packageResult == null &&
+            state.phase != MemoFlowMigrationSenderPhase.buildingPackage) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [
+              SettingsInfoRow(
+                description: tr.msg_memoflow_migration_prepare_send_first,
+              ),
+            ],
+          ),
+        ],
+        if (state.phase == MemoFlowMigrationSenderPhase.uploading ||
+            state.phase == MemoFlowMigrationSenderPhase.waitingForReceiver ||
+            state.phase == MemoFlowMigrationSenderPhase.buildingPackage) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [
+              SettingsInfoRow(description: state.statusMessage ?? ''),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: LinearProgressIndicator(
+                  value: state.phase == MemoFlowMigrationSenderPhase.uploading
+                      ? state.uploadProgress
+                      : null,
+                ),
+              ),
+            ],
+          ),
+        ],
+        if ((state.errorMessage ?? '').isNotEmpty) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [SettingsWarningRow(message: state.errorMessage!)],
+          ),
+        ],
+        if (state.result != null) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [
+              SettingsInfoRow(description: tr.msg_memoflow_migration_completed),
+              if ((state.statusMessage ?? '').isNotEmpty)
+                SettingsInfoRow(description: state.statusMessage!),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => MemoFlowMigrationResultScreen(
+                      result: state.result!,
+                      title: tr.msg_memoflow_migration_result,
+                    ),
+                  ),
+                );
+              },
+              variant: PlatformPrimaryActionVariant.tonal,
+              label: Text(tr.msg_memoflow_migration_view_result),
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        SettingsSection(
+          children: [
+            SettingsInfoRow(
+              description: tr.msg_memoflow_migration_foreground_notice,
+            ),
+          ],
+        ),
+      ],
     );
   }
 

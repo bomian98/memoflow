@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/sync/migration/memoflow_migration_models.dart';
 import '../../../core/app_localization.dart';
-import '../../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../../i18n/strings.g.dart';
+import '../../../platform/widgets/platform_primary_action.dart';
 import '../../../state/migration/memoflow_migration_providers.dart';
 import '../../../state/migration/memoflow_migration_sender_controller.dart';
 import '../../../state/migration/memoflow_migration_state.dart';
+import '../settings_ui.dart';
 import 'memoflow_migration_result_screen.dart';
 import 'memoflow_migration_send_method_screen.dart';
 
@@ -45,170 +46,141 @@ class MemoFlowMigrationSenderScreen extends ConsumerWidget {
     );
     final tr = context.t.strings.legacy;
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        title: Text(tr.msg_memoflow_migration_sender),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (!state.isLocalLibraryMode)
-            Card(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(tr.msg_memoflow_migration_sender_only_local_mode),
+    return SettingsPage(
+      title: Text(tr.msg_memoflow_migration_sender),
+      children: [
+        if (!state.isLocalLibraryMode) ...[
+          SettingsSection(
+            children: [
+              SettingsWarningRow(
+                message: tr.msg_memoflow_migration_sender_only_local_mode,
               ),
-            ),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr.msg_memoflow_migration_select_content,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(tr.msg_memoflow_migration_notes),
-                    subtitle: Text(tr.msg_memoflow_migration_notes_desc),
-                    value: state.includeMemos,
-                    onChanged: state.isLocalLibraryMode
-                        ? (value) => controller.setIncludeMemos(value ?? false)
-                        : null,
-                  ),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(tr.msg_memoflow_migration_settings),
-                    subtitle: Text(tr.msg_memoflow_migration_settings_desc),
-                    value: state.includeSettings,
-                    onChanged: (value) =>
-                        controller.setIncludeSettings(value ?? false),
-                  ),
-                  if (state.includeSettings) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      tr.msg_memoflow_migration_safe_config,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    ...memoFlowMigrationSafeConfigDefaults.map(
-                      (type) => CheckboxListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(_configTypeLabel(context, type)),
-                        value: state.selectedConfigTypes.contains(type),
-                        onChanged: (value) =>
-                            controller.toggleConfigType(type, value ?? false),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      tr.msg_memoflow_migration_sensitive_config,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    ...memoFlowMigrationSensitiveConfigDefaults.map(
-                      (type) => CheckboxListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(_configTypeLabel(context, type)),
-                        value: state.selectedConfigTypes.contains(type),
-                        onChanged: (value) =>
-                            controller.toggleConfigType(type, value ?? false),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    onPressed: state.canBuildPackage
-                        ? () => _prepareAndContinue(context, ref, controller)
-                        : null,
-                    icon: const Icon(Icons.send_outlined),
-                    label: Text(tr.msg_memoflow_migration_prepare_send),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
-          if (state.phase == MemoFlowMigrationSenderPhase.buildingPackage) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      state.statusMessage ?? '',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 12),
-                    const LinearProgressIndicator(),
-                  ],
+          const SizedBox(height: 14),
+        ],
+        SettingsSection(
+          header: Text(tr.msg_memoflow_migration_select_content),
+          children: [
+            CheckboxListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              title: Text(tr.msg_memoflow_migration_notes),
+              subtitle: Text(tr.msg_memoflow_migration_notes_desc),
+              value: state.includeMemos,
+              onChanged: state.isLocalLibraryMode
+                  ? (value) => controller.setIncludeMemos(value ?? false)
+                  : null,
+            ),
+            CheckboxListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              title: Text(tr.msg_memoflow_migration_settings),
+              subtitle: Text(tr.msg_memoflow_migration_settings_desc),
+              value: state.includeSettings,
+              onChanged: (value) =>
+                  controller.setIncludeSettings(value ?? false),
+            ),
+          ],
+        ),
+        if (state.includeSettings) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            header: Text(tr.msg_memoflow_migration_safe_config),
+            children: [
+              ...memoFlowMigrationSafeConfigDefaults.map(
+                (type) => CheckboxListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  title: Text(_configTypeLabel(context, type)),
+                  value: state.selectedConfigTypes.contains(type),
+                  onChanged: (value) =>
+                      controller.toggleConfigType(type, value ?? false),
                 ),
               ),
-            ),
-          ],
-          if ((state.errorMessage ?? '').isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Card(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(state.errorMessage!),
-              ),
-            ),
-          ],
-          if (state.result != null) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.msg_memoflow_migration_completed,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(state.statusMessage ?? ''),
-                    const SizedBox(height: 12),
-                    FilledButton.tonal(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => MemoFlowMigrationResultScreen(
-                              result: state.result!,
-                              title: tr.msg_memoflow_migration_result,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Text(tr.msg_memoflow_migration_view_result),
-                    ),
-                  ],
+            ],
+          ),
+          const SizedBox(height: 14),
+          SettingsSection(
+            header: Text(tr.msg_memoflow_migration_sensitive_config),
+            children: [
+              ...memoFlowMigrationSensitiveConfigDefaults.map(
+                (type) => CheckboxListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  title: Text(_configTypeLabel(context, type)),
+                  value: state.selectedConfigTypes.contains(type),
+                  onChanged: (value) =>
+                      controller.toggleConfigType(type, value ?? false),
                 ),
               ),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Text(
-            tr.msg_memoflow_migration_foreground_notice,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            ],
           ),
         ],
-      ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SettingsAction(
+            onPressed: state.canBuildPackage
+                ? () => _prepareAndContinue(context, ref, controller)
+                : null,
+            icon: const Icon(Icons.send_outlined),
+            label: Text(tr.msg_memoflow_migration_prepare_send),
+          ),
+        ),
+        if (state.phase == MemoFlowMigrationSenderPhase.buildingPackage) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [
+              SettingsInfoRow(description: state.statusMessage ?? ''),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: LinearProgressIndicator(),
+              ),
+            ],
+          ),
+        ],
+        if ((state.errorMessage ?? '').isNotEmpty) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [SettingsWarningRow(message: state.errorMessage!)],
+          ),
+        ],
+        if (state.result != null) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [
+              SettingsInfoRow(description: tr.msg_memoflow_migration_completed),
+              if ((state.statusMessage ?? '').isNotEmpty)
+                SettingsInfoRow(description: state.statusMessage!),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => MemoFlowMigrationResultScreen(
+                      result: state.result!,
+                      title: tr.msg_memoflow_migration_result,
+                    ),
+                  ),
+                );
+              },
+              variant: PlatformPrimaryActionVariant.tonal,
+              label: Text(tr.msg_memoflow_migration_view_result),
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        SettingsSection(
+          children: [
+            SettingsInfoRow(
+              description: tr.msg_memoflow_migration_foreground_notice,
+            ),
+          ],
+        ),
+      ],
     );
   }
 

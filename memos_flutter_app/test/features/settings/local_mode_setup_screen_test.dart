@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/features/settings/local_mode_setup_screen.dart';
+import 'package:memos_flutter_app/features/settings/settings_ui.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 
 void main() {
@@ -24,6 +25,11 @@ void main() {
 
     await tester.pumpAndSettle();
 
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsSection), findsNWidgets(2));
+    expect(find.byType(SettingsInfoRow), findsOneWidget);
+    expect(find.byType(SettingsInputRow), findsOneWidget);
+    expect(find.byType(SettingsAction), findsNWidgets(2));
     expect(
       find.text(
         "Local mode data is stored in the app's private files by default.",
@@ -76,11 +82,43 @@ void main() {
       findsNothing,
     );
     expect(find.text('C:/MemoFlow/local_workspace'), findsOneWidget);
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsInfoRow), findsOneWidget);
+    expect(find.byType(SettingsInputRow), findsOneWidget);
+    expect(find.byType(SettingsAction), findsNWidgets(2));
 
     await tester.enterText(find.byType(TextField), '  Renamed Library  ');
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 
     expect(result?.name, 'Renamed Library');
+  });
+
+  testWidgets('empty name shows validation message without closing', (
+    WidgetTester tester,
+  ) async {
+    LocaleSettings.setLocale(AppLocale.en);
+
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: const MaterialApp(
+          home: LocalModeSetupScreen(
+            title: 'Add local library',
+            confirmLabel: 'Confirm',
+            cancelLabel: 'Cancel',
+            initialName: 'Local Library',
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), '   ');
+    await tester.tap(find.text('Confirm'));
+    await tester.pump();
+
+    expect(find.text('Please enter a repository name.'), findsOneWidget);
+    expect(find.byType(LocalModeSetupScreen), findsOneWidget);
   });
 }

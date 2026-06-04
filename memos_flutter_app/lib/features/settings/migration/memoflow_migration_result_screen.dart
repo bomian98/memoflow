@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../application/sync/migration/memoflow_migration_models.dart';
 import '../../../core/app_localization.dart';
-import '../../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../../i18n/strings.g.dart';
+import '../settings_ui.dart';
 
 class MemoFlowMigrationResultScreen extends StatelessWidget {
   const MemoFlowMigrationResultScreen({
@@ -25,73 +25,54 @@ class MemoFlowMigrationResultScreen extends StatelessWidget {
         .map((type) => _configTypeLabel(context, type))
         .join('、');
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        title: Text(title),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    result.sourceDeviceName,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  _InfoRow(
-                    label: tr.msg_memoflow_migration_notes,
-                    value: '${result.memoCount}',
-                  ),
-                  _InfoRow(
-                    label: tr.msg_attachment,
-                    value: '${result.attachmentCount}',
-                  ),
-                  _InfoRow(
-                    label: context.tr(zh: '草稿', en: 'Drafts'),
-                    value: '${result.draftCount}',
-                  ),
-                  _InfoRow(
-                    label: context.tr(zh: '草稿附件', en: 'Draft attachments'),
-                    value: '${result.draftAttachmentCount}',
-                  ),
-                  _InfoRow(
-                    label: tr.msg_memoflow_migration_receive_mode,
-                    value:
-                        result.receiveMode ==
-                            MemoFlowMigrationReceiveMode.newWorkspace
-                        ? tr.msg_memoflow_migration_receive_as_new_workspace
-                        : tr.msg_memoflow_migration_overwrite_current_workspace,
-                  ),
-                  if ((result.workspaceName ?? '').trim().isNotEmpty)
-                    _InfoRow(
-                      label: tr.msg_memoflow_migration_workspace_name,
-                      value: result.workspaceName!,
-                    ),
-                  if (applied.isNotEmpty)
-                    _InfoRow(
-                      label: tr.msg_memoflow_migration_applied_configs,
-                      value: applied,
-                    ),
-                  if (skipped.isNotEmpty)
-                    _InfoRow(
-                      label: tr.msg_memoflow_migration_skipped_configs,
-                      value: skipped,
-                    ),
-                ],
-              ),
+    return SettingsPage(
+      title: Text(title),
+      children: [
+        SettingsSection(
+          header: Text(result.sourceDeviceName),
+          children: [
+            _InfoRow(
+              label: tr.msg_memoflow_migration_notes,
+              value: '${result.memoCount}',
             ),
-          ),
-        ],
-      ),
+            _InfoRow(
+              label: tr.msg_attachment,
+              value: '${result.attachmentCount}',
+            ),
+            _InfoRow(
+              label: context.tr(zh: '草稿', en: 'Drafts'),
+              value: '${result.draftCount}',
+            ),
+            _InfoRow(
+              label: context.tr(zh: '草稿附件', en: 'Draft attachments'),
+              value: '${result.draftAttachmentCount}',
+            ),
+            _InfoRow(
+              label: tr.msg_memoflow_migration_receive_mode,
+              value:
+                  result.receiveMode ==
+                      MemoFlowMigrationReceiveMode.newWorkspace
+                  ? tr.msg_memoflow_migration_receive_as_new_workspace
+                  : tr.msg_memoflow_migration_overwrite_current_workspace,
+            ),
+            if ((result.workspaceName ?? '').trim().isNotEmpty)
+              _InfoRow(
+                label: tr.msg_memoflow_migration_workspace_name,
+                value: result.workspaceName!,
+              ),
+            if (applied.isNotEmpty)
+              _InfoRow(
+                label: tr.msg_memoflow_migration_applied_configs,
+                value: applied,
+              ),
+            if (skipped.isNotEmpty)
+              _InfoRow(
+                label: tr.msg_memoflow_migration_skipped_configs,
+                value: skipped,
+              ),
+          ],
+        ),
+      ],
     );
   }
 

@@ -10,13 +10,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:multicast_dns/multicast_dns.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/models/memoflow_bridge_settings.dart';
-import '../../state/settings/memoflow_bridge_settings_provider.dart';
-import '../../state/settings/device_preferences_provider.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_page.dart';
+import '../../platform/widgets/platform_primary_action.dart';
+import '../../state/settings/device_preferences_provider.dart';
+import '../../state/settings/memoflow_bridge_settings_provider.dart';
+import 'settings_ui.dart';
 
 bool supportsMemoFlowQrScannerOnCurrentPlatform() {
   return Platform.isAndroid;
@@ -458,18 +459,6 @@ class _MemoFlowBridgeScreenState extends ConsumerState<MemoFlowBridgeScreen> {
   Widget build(BuildContext context) {
     final tr = context.t.strings.legacy;
     final settings = ref.watch(memoFlowBridgeSettingsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.08);
     final hapticsEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.hapticsEnabled),
     );
@@ -480,311 +469,163 @@ class _MemoFlowBridgeScreenState extends ConsumerState<MemoFlowBridgeScreen> {
       }
     }
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(tr.msg_bridge_title),
+      desktopMaxWidth: 640,
+      tabletMaxWidth: 640,
+      children: [
+        SettingsSection(
+          children: [
+            SettingsInfoRow(description: tr.msg_bridge_local_mode_only),
+            SettingsInfoRow(
+              description: settings.isPaired
+                  ? tr.msg_bridge_paired_target(
+                      target: '${settings.host}:${settings.port}',
+                    )
+                  : tr.msg_bridge_unpaired,
+            ),
+            if (settings.serverName.trim().isNotEmpty)
+              SettingsInfoRow(
+                description: tr.msg_bridge_server(server: settings.serverName),
+              ),
+            SettingsInfoRow(
+              description: tr.msg_bridge_device(device: _deviceName),
+            ),
+            if (_statusMessage != null && _statusMessage!.trim().isNotEmpty)
+              SettingsInfoRow(description: _statusMessage!),
+          ],
         ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: tr.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SettingsAction(
+            onPressed: _pairing ? null : _scanQrAndPair,
+            icon: const Icon(Icons.qr_code_scanner),
+            label: Text(
+              _pairing
+                  ? tr.msg_bridge_processing
+                  : tr.msg_bridge_action_scan_pair,
+            ),
           ),
         ),
-        title: Text(tr.msg_bridge_title),
-        centerTitle: false,
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
-              ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SettingsAction(
+            onPressed: _discovering ? null : _discoverServers,
+            icon: const Icon(Icons.wifi_tethering),
+            variant: PlatformPrimaryActionVariant.outlined,
+            label: Text(
+              _discovering
+                  ? tr.msg_bridge_action_searching
+                  : tr.msg_bridge_action_mdns_discover,
             ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+          ),
+        ),
+        const SizedBox(height: 14),
+        SettingsSection(
+          children: [
+            SettingsInputRow(
+              label: 'Host',
+              controller: _hostController,
+              hint: '192.168.1.10',
+            ),
+            SettingsInputRow(
+              label: 'Port',
+              controller: _portController,
+              hint: '3000',
+              keyboardType: TextInputType.number,
+            ),
+            SettingsInputRow(
+              label: tr.msg_bridge_pair_code_label,
+              controller: _pairCodeController,
+              hint: tr.msg_bridge_pair_code_hint,
+            ),
+            SettingsToggleRow(
+              label: tr.msg_bridge_enable,
+              value: settings.enabled,
+              onChanged: (value) {
+                haptic();
+                ref
+                    .read(memoFlowBridgeSettingsProvider.notifier)
+                    .setEnabled(value);
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SettingsAction(
+            onPressed: _pairing
+                ? null
+                : () {
+                    haptic();
+                    unawaited(_pairFromForm());
+                  },
+            label: Text(
+              _pairing
+                  ? tr.msg_bridge_action_pairing
+                  : tr.msg_bridge_action_confirm_pair,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SettingsAction(
+            onPressed: _checkingHealth
+                ? null
+                : () {
+                    haptic();
+                    unawaited(_checkHealth(settings));
+                  },
+            variant: PlatformPrimaryActionVariant.outlined,
+            label: Text(
+              _checkingHealth
+                  ? tr.msg_bridge_action_checking
+                  : tr.msg_bridge_action_health_check,
+            ),
+          ),
+        ),
+        if (settings.isPaired) ...[
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: () {
+                haptic();
+                ref
+                    .read(memoFlowBridgeSettingsProvider.notifier)
+                    .clearPairing();
+                _pairCodeController.clear();
+                showTopToast(context, tr.msg_bridge_pair_cleared);
+              },
+              icon: const Icon(Icons.delete_outline),
+              variant: PlatformPrimaryActionVariant.text,
+              label: Text(tr.msg_bridge_clear_pair),
+            ),
+          ),
+        ],
+        if (_servers.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            header: Text(tr.msg_bridge_discovery_results),
             children: [
-              _SectionCard(
-                card: card,
-                border: divider,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.msg_bridge_local_mode_only,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: textMuted,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      settings.isPaired
-                          ? tr.msg_bridge_paired_target(
-                              target: '${settings.host}:${settings.port}',
-                            )
-                          : tr.msg_bridge_unpaired,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: textMain,
-                      ),
-                    ),
-                    if (settings.serverName.trim().isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        tr.msg_bridge_server(server: settings.serverName),
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    Text(
-                      tr.msg_bridge_device(device: _deviceName),
-                      style: TextStyle(fontSize: 12, color: textMuted),
-                    ),
-                    if (_statusMessage != null &&
-                        _statusMessage!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        _statusMessage!,
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: _pairing ? null : _scanQrAndPair,
-                            icon: const Icon(Icons.qr_code_scanner),
-                            label: Text(
-                              _pairing
-                                  ? tr.msg_bridge_processing
-                                  : tr.msg_bridge_action_scan_pair,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _discovering ? null : _discoverServers,
-                            icon: const Icon(Icons.wifi_tethering),
-                            label: Text(
-                              _discovering
-                                  ? tr.msg_bridge_action_searching
-                                  : tr.msg_bridge_action_mdns_discover,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              for (final server in _servers)
+                SettingsNavigationRow(
+                  label: '${server.host}:${server.port}',
+                  description: server.serviceDomain,
+                  onTap: () {
+                    haptic();
+                    _hostController.text = server.host;
+                    _portController.text = server.port.toString();
+                  },
                 ),
-              ),
-              const SizedBox(height: 12),
-              _SectionCard(
-                card: card,
-                border: divider,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: _hostController,
-                      decoration: const InputDecoration(
-                        labelText: 'Host',
-                        hintText: '192.168.1.10',
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _portController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Port',
-                        hintText: '3000',
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _pairCodeController,
-                      decoration: InputDecoration(
-                        labelText: tr.msg_bridge_pair_code_label,
-                        hintText: tr.msg_bridge_pair_code_hint,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: _pairing
-                                ? null
-                                : () {
-                                    haptic();
-                                    unawaited(_pairFromForm());
-                                  },
-                            child: Text(
-                              _pairing
-                                  ? tr.msg_bridge_action_pairing
-                                  : tr.msg_bridge_action_confirm_pair,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _checkingHealth
-                                ? null
-                                : () {
-                                    haptic();
-                                    unawaited(_checkHealth(settings));
-                                  },
-                            child: Text(
-                              _checkingHealth
-                                  ? tr.msg_bridge_action_checking
-                                  : tr.msg_bridge_action_health_check,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(tr.msg_bridge_enable),
-                      value: settings.enabled,
-                      onChanged: (value) {
-                        haptic();
-                        ref
-                            .read(memoFlowBridgeSettingsProvider.notifier)
-                            .setEnabled(value);
-                      },
-                    ),
-                    if (settings.isPaired)
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          onPressed: () {
-                            haptic();
-                            ref
-                                .read(memoFlowBridgeSettingsProvider.notifier)
-                                .clearPairing();
-                            _pairCodeController.clear();
-                            showTopToast(context, tr.msg_bridge_pair_cleared);
-                          },
-                          icon: const Icon(Icons.delete_outline),
-                          label: Text(tr.msg_bridge_clear_pair),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (_servers.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                _SectionCard(
-                  card: card,
-                  border: divider,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tr.msg_bridge_discovery_results,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: textMuted,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      for (var i = 0; i < _servers.length; i++) ...[
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            '${_servers[i].host}:${_servers[i].port}',
-                            style: TextStyle(
-                              color: textMain,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          subtitle: Text(
-                            _servers[i].serviceDomain,
-                            style: TextStyle(color: textMuted, fontSize: 12),
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            haptic();
-                            _hostController.text = _servers[i].host;
-                            _portController.text = _servers[i].port.toString();
-                          },
-                        ),
-                        if (i != _servers.length - 1)
-                          Divider(height: 1, color: divider),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.card,
-    required this.border,
-    required this.child,
-  });
-
-  final Color card;
-  final Color border;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: border),
-        boxShadow: isDark
-            ? [
-                BoxShadow(
-                  blurRadius: 24,
-                  offset: const Offset(0, 14),
-                  color: Colors.black.withValues(alpha: 0.35),
-                ),
-              ]
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: child,
+      ],
     );
   }
 }
@@ -842,51 +683,34 @@ class _MemoFlowPairQrScanScreenState extends State<MemoFlowPairQrScanScreen> {
     final titleText = widget.titleText ?? tr.msg_bridge_scan_title;
     final hintText = widget.hintText ?? tr.msg_bridge_scan_hint;
     if (!_supportsScanner) {
-      return Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading:
-              resolveDesktopRouteAutomaticallyImplyLeading(
-                context: context,
-                automaticallyImplyLeading: true,
+      return SettingsPage(
+        title: Text(titleText),
+        desktopMaxWidth: 520,
+        tabletMaxWidth: 520,
+        children: [
+          SettingsSection(
+            children: [
+              SettingsInfoRow(
+                description: tr.msg_qr_scan_not_supported_use_manual_pairing,
               ),
-          title: Text(titleText),
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.qr_code_scanner, size: 40),
-                const SizedBox(height: 12),
-                Text(
-                  context
-                      .t
-                      .strings
-                      .legacy
-                      .msg_qr_scan_not_supported_use_manual_pairing,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).maybePop(),
-                  child: Text(context.t.strings.legacy.msg_back),
-                ),
-              ],
+            ],
+          ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.qr_code_scanner),
+              variant: PlatformPrimaryActionVariant.outlined,
+              label: Text(tr.msg_back),
             ),
           ),
-        ),
+        ],
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        title: Text(titleText),
-      ),
+    return PlatformPage(
+      title: Text(titleText),
       body: Stack(
         children: [
           MobileScanner(controller: _controller!, onDetect: _onDetect),

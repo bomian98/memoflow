@@ -4,10 +4,11 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../application/sync/migration/memoflow_migration_models.dart';
 import '../../../core/app_localization.dart';
-import '../../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../../i18n/strings.g.dart';
+import '../../../platform/widgets/platform_primary_action.dart';
 import '../../../state/migration/memoflow_migration_providers.dart';
 import '../../../state/migration/memoflow_migration_state.dart';
+import '../settings_ui.dart';
 import 'memoflow_migration_result_screen.dart';
 
 class MemoFlowMigrationReceiverScreen extends ConsumerWidget {
@@ -29,154 +30,127 @@ class MemoFlowMigrationReceiverScreen extends ConsumerWidget {
             .toList(growable: false) ??
         const <MemoFlowMigrationConfigType>[];
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        title: Text(tr.msg_memoflow_migration_receiver),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (state.phase == MemoFlowMigrationReceiverPhase.idle ||
-              state.phase ==
-                  MemoFlowMigrationReceiverPhase.startingSession) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.msg_memoflow_migration_receiver_desc,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed:
-                          state.phase ==
-                              MemoFlowMigrationReceiverPhase.startingSession
-                          ? null
-                          : controller.startSession,
-                      icon: const Icon(Icons.wifi_tethering),
-                      label: Text(tr.msg_memoflow_migration_start_receive),
-                    ),
-                  ],
+    return SettingsPage(
+      title: Text(tr.msg_memoflow_migration_receiver),
+      children: [
+        if (state.phase == MemoFlowMigrationReceiverPhase.idle ||
+            state.phase == MemoFlowMigrationReceiverPhase.startingSession) ...[
+          SettingsSection(
+            children: [
+              SettingsInfoRow(
+                description: tr.msg_memoflow_migration_receiver_desc,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed:
+                  state.phase == MemoFlowMigrationReceiverPhase.startingSession
+                  ? null
+                  : controller.startSession,
+              icon: const Icon(Icons.wifi_tethering),
+              label: Text(tr.msg_memoflow_migration_start_receive),
+            ),
+          ),
+        ],
+        if (state.sessionDescriptor != null &&
+            (state.phase == MemoFlowMigrationReceiverPhase.waitingProposal ||
+                state.phase ==
+                    MemoFlowMigrationReceiverPhase.reviewingProposal ||
+                state.phase == MemoFlowMigrationReceiverPhase.receiving)) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            header: Text(state.sessionDescriptor!.receiverDeviceName),
+            children: [
+              if ((state.qrPayload ?? '').isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final qrSize = constraints.maxWidth > _kQrMaxSize
+                          ? _kQrMaxSize
+                          : constraints.maxWidth;
+                      return Center(
+                        child: SizedBox.square(
+                          dimension: qrSize,
+                          child: PrettyQrView.data(
+                            data: state.qrPayload!,
+                            decoration: const PrettyQrDecoration(),
+                            errorCorrectLevel: QrErrorCorrectLevel.M,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              SettingsInfoRow(
+                description:
+                    state.statusMessage ??
+                    tr.msg_memoflow_migration_waiting_receiver,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: SelectionArea(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SelectableText(
+                        state.sessionDescriptor!.address,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      SelectableText(
+                        '${tr.msg_bridge_pair_code_label}: '
+                        '${state.sessionDescriptor!.pairingCode}',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-          if (state.sessionDescriptor != null &&
-              (state.phase == MemoFlowMigrationReceiverPhase.waitingProposal ||
-                  state.phase ==
-                      MemoFlowMigrationReceiverPhase.reviewingProposal ||
-                  state.phase == MemoFlowMigrationReceiverPhase.receiving)) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      state.sessionDescriptor!.receiverDeviceName,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    if ((state.qrPayload ?? '').isNotEmpty)
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final qrSize = constraints.maxWidth > _kQrMaxSize
-                              ? _kQrMaxSize
-                              : constraints.maxWidth;
-                          return Center(
-                            child: SizedBox.square(
-                              dimension: qrSize,
-                              child: PrettyQrView.data(
-                                data: state.qrPayload!,
-                                decoration: const PrettyQrDecoration(),
-                                errorCorrectLevel: QrErrorCorrectLevel.M,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    const SizedBox(height: 12),
-                    Text(
-                      state.statusMessage ??
-                          tr.msg_memoflow_migration_waiting_receiver,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    SelectionArea(
-                      child: Column(
-                        children: [
-                          SelectableText(
-                            state.sessionDescriptor!.address,
-                            style: Theme.of(context).textTheme.bodySmall,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 4),
-                          SelectableText(
-                            '${tr.msg_bridge_pair_code_label}: '
-                            '${state.sessionDescriptor!.pairingCode}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+            ],
+          ),
+        ],
+        if (proposal != null &&
+            state.phase ==
+                MemoFlowMigrationReceiverPhase.reviewingProposal) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            header: Text(tr.msg_memoflow_migration_review_proposal),
+            children: [
+              _InfoRow(
+                label: tr.msg_memoflow_migration_sender_device,
+                value: proposal.senderDeviceName,
               ),
-            ),
-          ],
-          if (proposal != null &&
-              state.phase ==
-                  MemoFlowMigrationReceiverPhase.reviewingProposal) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.msg_memoflow_migration_review_proposal,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    _InfoRow(
-                      label: tr.msg_memoflow_migration_sender_device,
-                      value: proposal.senderDeviceName,
-                    ),
-                    _InfoRow(
-                      label: tr.msg_memoflow_migration_notes,
-                      value: '${proposal.manifest.memoCount}',
-                    ),
-                    _InfoRow(
-                      label: tr.msg_attachment,
-                      value: '${proposal.manifest.attachmentCount}',
-                    ),
-                    _InfoRow(
-                      label: context.tr(zh: '草稿', en: 'Drafts'),
-                      value: '${proposal.manifest.draftCount}',
-                    ),
-                    _InfoRow(
-                      label: context.tr(zh: '草稿附件', en: 'Draft attachments'),
-                      value: '${proposal.manifest.draftAttachmentCount}',
-                    ),
-                    _InfoRow(
-                      label: tr.msg_memoflow_migration_size,
-                      value: _formatBytes(proposal.manifest.totalBytes),
-                    ),
-                    if (proposal.manifest.includeMemos) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        tr.msg_memoflow_migration_receive_mode,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
+              _InfoRow(
+                label: tr.msg_memoflow_migration_notes,
+                value: '${proposal.manifest.memoCount}',
+              ),
+              _InfoRow(
+                label: tr.msg_attachment,
+                value: '${proposal.manifest.attachmentCount}',
+              ),
+              _InfoRow(
+                label: context.tr(zh: '草稿', en: 'Drafts'),
+                value: '${proposal.manifest.draftCount}',
+              ),
+              _InfoRow(
+                label: context.tr(zh: '草稿附件', en: 'Draft attachments'),
+                value: '${proposal.manifest.draftAttachmentCount}',
+              ),
+              _InfoRow(
+                label: tr.msg_memoflow_migration_size,
+                value: _formatBytes(proposal.manifest.totalBytes),
+              ),
+              if (proposal.manifest.includeMemos)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(tr.msg_memoflow_migration_receive_mode),
                       const SizedBox(height: 8),
                       SegmentedButton<MemoFlowMigrationReceiveMode>(
                         segments: <ButtonSegment<MemoFlowMigrationReceiveMode>>[
@@ -206,141 +180,125 @@ class MemoFlowMigrationReceiverScreen extends ConsumerWidget {
                         },
                       ),
                     ],
-                    if (sensitiveTypes.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        tr.msg_memoflow_migration_sensitive_config_confirm,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      ...sensitiveTypes.map(
-                        (type) => CheckboxListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(_configTypeLabel(context, type)),
-                          value: state.acceptedSensitiveConfigTypes.contains(
-                            type,
-                          ),
-                          onChanged: (value) => controller
-                              .toggleSensitiveConfigType(type, value ?? false),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        FilledButton.icon(
-                          onPressed: controller.acceptProposal,
-                          icon: const Icon(Icons.check_circle_outline),
-                          label: Text(tr.msg_memoflow_migration_accept),
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: controller.rejectProposal,
-                          icon: const Icon(Icons.cancel_outlined),
-                          label: Text(tr.msg_memoflow_migration_reject),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
-          if (state.phase == MemoFlowMigrationReceiverPhase.receiving &&
-              state.latestStatus != null) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      state.latestStatus!.message ?? '',
-                      style: Theme.of(context).textTheme.titleSmall,
+            ],
+          ),
+          if (sensitiveTypes.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            SettingsSection(
+              header: Text(tr.msg_memoflow_migration_sensitive_config_confirm),
+              children: [
+                ...sensitiveTypes.map(
+                  (type) => CheckboxListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    title: Text(_configTypeLabel(context, type)),
+                    value: state.acceptedSensitiveConfigTypes.contains(type),
+                    onChanged: (value) => controller.toggleSensitiveConfigType(
+                      type,
+                      value ?? false,
                     ),
-                    const SizedBox(height: 12),
-                    LinearProgressIndicator(
-                      value: _resolveProgress(proposal, state.latestStatus),
-                    ),
-                    if ((state.latestStatus?.receivedBytes ?? 0) > 0) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        tr.msg_memoflow_migration_received_bytes(
-                          size: _formatBytes(
-                            state.latestStatus!.receivedBytes!,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
-          if (state.result != null) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.msg_memoflow_migration_completed,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(state.statusMessage ?? ''),
-                    const SizedBox(height: 12),
-                    FilledButton.tonal(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => MemoFlowMigrationResultScreen(
-                              result: state.result!,
-                              title: tr.msg_memoflow_migration_result,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Text(tr.msg_memoflow_migration_view_result),
-                    ),
-                  ],
-                ),
-              ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: controller.acceptProposal,
+              icon: const Icon(Icons.check_circle_outline),
+              label: Text(tr.msg_memoflow_migration_accept),
             ),
-          ],
-          if ((state.errorMessage ?? '').isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Card(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(state.errorMessage!),
-              ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: controller.rejectProposal,
+              icon: const Icon(Icons.cancel_outlined),
+              variant: PlatformPrimaryActionVariant.outlined,
+              label: Text(tr.msg_memoflow_migration_reject),
             ),
-          ],
-          const SizedBox(height: 16),
-          Text(
-            tr.msg_memoflow_migration_foreground_notice,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
           ),
         ],
-      ),
-      bottomNavigationBar:
-          state.phase == MemoFlowMigrationReceiverPhase.waitingProposal
-          ? Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: OutlinedButton(
-                onPressed: controller.stopSession,
-                child: Text(tr.msg_cancel),
+        if (state.phase == MemoFlowMigrationReceiverPhase.receiving &&
+            state.latestStatus != null) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [
+              SettingsInfoRow(description: state.latestStatus!.message ?? ''),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: LinearProgressIndicator(
+                  value: _resolveProgress(proposal, state.latestStatus),
+                ),
               ),
-            )
-          : null,
+              if ((state.latestStatus?.receivedBytes ?? 0) > 0)
+                SettingsInfoRow(
+                  description: tr.msg_memoflow_migration_received_bytes(
+                    size: _formatBytes(state.latestStatus!.receivedBytes!),
+                  ),
+                ),
+            ],
+          ),
+        ],
+        if (state.result != null) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [
+              SettingsInfoRow(description: tr.msg_memoflow_migration_completed),
+              if ((state.statusMessage ?? '').isNotEmpty)
+                SettingsInfoRow(description: state.statusMessage!),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => MemoFlowMigrationResultScreen(
+                      result: state.result!,
+                      title: tr.msg_memoflow_migration_result,
+                    ),
+                  ),
+                );
+              },
+              variant: PlatformPrimaryActionVariant.tonal,
+              label: Text(tr.msg_memoflow_migration_view_result),
+            ),
+          ),
+        ],
+        if ((state.errorMessage ?? '').isNotEmpty) ...[
+          const SizedBox(height: 14),
+          SettingsSection(
+            children: [SettingsWarningRow(message: state.errorMessage!)],
+          ),
+        ],
+        const SizedBox(height: 14),
+        SettingsSection(
+          children: [
+            SettingsInfoRow(
+              description: tr.msg_memoflow_migration_foreground_notice,
+            ),
+          ],
+        ),
+        if (state.phase == MemoFlowMigrationReceiverPhase.waitingProposal) ...[
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: controller.stopSession,
+              variant: PlatformPrimaryActionVariant.outlined,
+              label: Text(tr.msg_cancel),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
