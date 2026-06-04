@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/memoflow_palette.dart';
-import '../../platform/platform_icons.dart';
 import '../../platform/platform_route.dart';
-import '../../platform/widgets/platform_page.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../import/import_flow_screens.dart';
 import 'export_memos_screen.dart';
-import 'import_export_shared_widgets.dart';
 import 'local_network_migration_screen.dart';
+import 'settings_ui.dart';
 
 class ImportExportScreen extends ConsumerWidget {
   const ImportExportScreen({super.key, this.showBackButton = true});
@@ -20,18 +17,6 @@ class ImportExportScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
     final hapticsEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.hapticsEnabled),
     );
@@ -42,136 +27,74 @@ class ImportExportScreen extends ConsumerWidget {
       }
     }
 
-    return PlatformPage(
-      backgroundColor: bg,
-      leading: showBackButton
-          ? IconButton(
-              tooltip: context.t.strings.legacy.msg_back,
-              icon: Icon(PlatformIcons.back),
-              onPressed: () => Navigator.of(context).maybePop(),
-            )
-          : null,
+    return SettingsPage(
       title: Text(context.t.strings.legacy.msg_import_export),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
+      showBackButton: showBackButton,
+      children: [
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_export),
+          children: [
+            SettingsNavigationRow(
+              leading: const Icon(Icons.download_outlined),
+              label: context.t.strings.legacy.msg_export,
+              value: 'Markdown + ZIP',
+              onTap: () {
+                haptic();
+                Navigator.of(context).push(
+                  buildPlatformPageRoute<void>(
+                    context: context,
+                    builder: (_) => const ExportMemosScreen(),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-            children: [
-              Text(
-                context.t.strings.legacy.msg_export,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ImportExportCardGroup(
-                card: card,
-                divider: divider,
-                children: [
-                  ImportExportSelectRow(
-                    icon: Icons.download_outlined,
-                    label: context.t.strings.legacy.msg_export,
-                    value: 'Markdown + ZIP',
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () {
-                      haptic();
-                      Navigator.of(context).push(
-                        buildPlatformPageRoute<void>(
-                          context: context,
-                          builder: (_) => const ExportMemosScreen(),
-                        ),
-                      );
-                    },
+          ],
+        ),
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_import),
+          children: [
+            SettingsNavigationRow(
+              leading: const Icon(Icons.file_upload_outlined),
+              label: context.t.strings.legacy.msg_import_file_2,
+              value: context.t.strings.legacy.msg_html_zip,
+              onTap: () {
+                haptic();
+                Navigator.of(context).push(
+                  buildPlatformPageRoute<void>(
+                    context: context,
+                    builder: (_) => const ImportSourceScreen(),
                   ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Text(
-                context.t.strings.legacy.msg_import,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ImportExportCardGroup(
-                card: card,
-                divider: divider,
-                children: [
-                  ImportExportSelectRow(
-                    icon: Icons.file_upload_outlined,
-                    label: context.t.strings.legacy.msg_import_file_2,
-                    value: context.t.strings.legacy.msg_html_zip,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () {
-                      haptic();
-                      Navigator.of(context).push(
-                        buildPlatformPageRoute<void>(
-                          context: context,
-                          builder: (_) => const ImportSourceScreen(),
-                        ),
-                      );
-                    },
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_local_network_migration),
+          children: [
+            SettingsNavigationRow(
+              leading: const Icon(Icons.devices_outlined),
+              label: context.t.strings.legacy.msg_local_network_migration,
+              value: context
+                  .t
+                  .strings
+                  .legacy
+                  .msg_memoflow_migration_targets_summary,
+              onTap: () {
+                haptic();
+                Navigator.of(context).push(
+                  buildPlatformPageRoute<void>(
+                    context: context,
+                    builder: (_) => const LocalNetworkMigrationScreen(),
                   ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Text(
-                context.t.strings.legacy.msg_local_network_migration,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ImportExportCardGroup(
-                card: card,
-                divider: divider,
-                children: [
-                  ImportExportSelectRow(
-                    icon: Icons.devices_outlined,
-                    label: context.t.strings.legacy.msg_local_network_migration,
-                    value: context
-                        .t
-                        .strings
-                        .legacy
-                        .msg_memoflow_migration_targets_summary,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () {
-                      haptic();
-                      Navigator.of(context).push(
-                        buildPlatformPageRoute<void>(
-                          context: context,
-                          builder: (_) => const LocalNetworkMigrationScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+                );
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

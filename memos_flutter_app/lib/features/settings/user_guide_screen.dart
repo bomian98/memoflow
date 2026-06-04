@@ -3,11 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/windows_adaptive_surface.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 class UserGuideScreen extends ConsumerWidget {
   const UserGuideScreen({super.key, this.showBackButton = true});
@@ -79,18 +78,7 @@ class UserGuideScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
     final hapticsEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.hapticsEnabled),
     );
@@ -101,255 +89,114 @@ class UserGuideScreen extends ConsumerWidget {
       }
     }
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: showBackButton,
-        ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: showBackButton
-              ? IconButton(
-                  tooltip: context.t.strings.legacy.msg_back,
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(context).maybePop(),
-                )
-              : null,
-        ),
-        title: Text(context.t.strings.legacy.msg_user_guide),
-        centerTitle: false,
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
+    return SettingsPage(
+      showBackButton: showBackButton,
+      title: Text(context.t.strings.legacy.msg_user_guide),
+      children: [
+        SettingsSection(
+          children: [
+            SettingsNavigationRow(
+              leading: Icon(
+                Icons.menu_book_outlined,
+                size: 20,
+                color: tokens.textMuted,
               ),
+              label: context.t.strings.legacy.msg_memos_backend_docs,
+              description: 'usememos.com/docs',
+              trailingIcon: Icons.open_in_new,
+              onTap: () async {
+                haptic();
+                await _openBackendDocs(context);
+              },
             ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-            children: [
-              _CardGroup(
-                card: card,
-                divider: divider,
-                children: [
-                  _GuideRow(
-                    icon: Icons.menu_book_outlined,
-                    title: context.t.strings.legacy.msg_memos_backend_docs,
-                    subtitle: 'usememos.com/docs',
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () async {
-                      haptic();
-                      await _openBackendDocs(context);
-                    },
-                  ),
-                  _GuideRow(
-                    icon: Icons.refresh,
-                    title: context.t.strings.legacy.msg_pull_refresh,
-                    subtitle: context.t.strings.legacy.msg_sync_recent_content,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () async {
-                      haptic();
-                      await _showInfo(
-                        context,
-                        title: context.t.strings.legacy.msg_pull_refresh,
-                        body: context
-                            .t
-                            .strings
-                            .legacy
-                            .msg_pull_memo_list_refresh_sync_sync,
-                      );
-                    },
-                  ),
-                  _GuideRow(
-                    icon: Icons.cloud_off_outlined,
-                    title: context.t.strings.legacy.msg_offline_ready,
-                    subtitle:
-                        context.t.strings.legacy.msg_local_db_pending_queue,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () async {
-                      haptic();
-                      await _showInfo(
-                        context,
-                        title: context.t.strings.legacy.msg_offline_ready,
-                        body: context
-                            .t
-                            .strings
-                            .legacy
-                            .msg_create_edit_delete_actions_offline_stored,
-                      );
-                    },
-                  ),
-                  _GuideRow(
-                    icon: Icons.search,
-                    title: context.t.strings.legacy.msg_full_text_search,
-                    subtitle: context.t.strings.legacy.msg_content_tags,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () async {
-                      haptic();
-                      await _showInfo(
-                        context,
-                        title: context.t.strings.legacy.msg_full_text_search,
-                        body: context
-                            .t
-                            .strings
-                            .legacy
-                            .msg_enter_keywords_search_box_query_local,
-                      );
-                    },
-                  ),
-                  _GuideRow(
-                    icon: Icons.graphic_eq,
-                    title: context.t.strings.legacy.msg_voice_memos,
-                    subtitle: context.t.strings.legacy.msg_record_create_memos,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () async {
-                      haptic();
-                      await _showInfo(
-                        context,
-                        title: context.t.strings.legacy.msg_voice_memos,
-                        body: context
-                            .t
-                            .strings
-                            .legacy
-                            .msg_after_recording_audio_added_current_draft,
-                      );
-                    },
-                  ),
-                ],
+            SettingsNavigationRow(
+              leading: Icon(Icons.refresh, size: 20, color: tokens.textMuted),
+              label: context.t.strings.legacy.msg_pull_refresh,
+              description: context.t.strings.legacy.msg_sync_recent_content,
+              onTap: () async {
+                haptic();
+                await _showInfo(
+                  context,
+                  title: context.t.strings.legacy.msg_pull_refresh,
+                  body: context
+                      .t
+                      .strings
+                      .legacy
+                      .msg_pull_memo_list_refresh_sync_sync,
+                );
+              },
+            ),
+            SettingsNavigationRow(
+              leading: Icon(
+                Icons.cloud_off_outlined,
+                size: 20,
+                color: tokens.textMuted,
               ),
-              const SizedBox(height: 16),
-              Text(
-                context
-                    .t
-                    .strings
-                    .legacy
-                    .msg_note_most_features_offline_stats_ai,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.4,
-                  color: textMuted.withValues(alpha: 0.7),
-                ),
+              label: context.t.strings.legacy.msg_offline_ready,
+              description: context.t.strings.legacy.msg_local_db_pending_queue,
+              onTap: () async {
+                haptic();
+                await _showInfo(
+                  context,
+                  title: context.t.strings.legacy.msg_offline_ready,
+                  body: context
+                      .t
+                      .strings
+                      .legacy
+                      .msg_create_edit_delete_actions_offline_stored,
+                );
+              },
+            ),
+            SettingsNavigationRow(
+              leading: Icon(Icons.search, size: 20, color: tokens.textMuted),
+              label: context.t.strings.legacy.msg_full_text_search,
+              description: context.t.strings.legacy.msg_content_tags,
+              onTap: () async {
+                haptic();
+                await _showInfo(
+                  context,
+                  title: context.t.strings.legacy.msg_full_text_search,
+                  body: context
+                      .t
+                      .strings
+                      .legacy
+                      .msg_enter_keywords_search_box_query_local,
+                );
+              },
+            ),
+            SettingsNavigationRow(
+              leading: Icon(
+                Icons.graphic_eq,
+                size: 20,
+                color: tokens.textMuted,
               ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CardGroup extends StatelessWidget {
-  const _CardGroup({
-    required this.card,
-    required this.divider,
-    required this.children,
-  });
-
-  final Color card;
-  final Color divider;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i != children.length - 1) Divider(height: 1, color: divider),
+              label: context.t.strings.legacy.msg_voice_memos,
+              description: context.t.strings.legacy.msg_record_create_memos,
+              onTap: () async {
+                haptic();
+                await _showInfo(
+                  context,
+                  title: context.t.strings.legacy.msg_voice_memos,
+                  body: context
+                      .t
+                      .strings
+                      .legacy
+                      .msg_after_recording_audio_added_current_draft,
+                );
+              },
+            ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _GuideRow extends StatelessWidget {
-  const _GuideRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.textMain,
-    required this.textMuted,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color textMain;
-  final Color textMuted;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: textMuted),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: textMain,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 12, color: textMuted),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, size: 20, color: textMuted),
-            ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          context.t.strings.legacy.msg_note_most_features_offline_stats_ai,
+          style: TextStyle(
+            fontSize: 12,
+            height: 1.4,
+            color: tokens.textMuted.withValues(alpha: 0.7),
           ),
         ),
-      ),
+      ],
     );
   }
 }

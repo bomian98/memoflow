@@ -8,15 +8,15 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
+import '../../platform/widgets/platform_list_section.dart';
 import '../../state/system/debug_log_provider.dart';
 import '../../state/system/logging_provider.dart';
 import '../../state/system/network_log_provider.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/webdav/webdav_log_provider.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 class ExportLogsScreen extends ConsumerStatefulWidget {
   const ExportLogsScreen({super.key});
@@ -174,18 +174,6 @@ class _ExportLogsScreenState extends ConsumerState<ExportLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
     final actionsLocked = _busy || _clearing;
     final networkLoggingEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.networkLoggingEnabled),
@@ -200,305 +188,114 @@ class _ExportLogsScreenState extends ConsumerState<ExportLogsScreen> {
       }
     }
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ),
-        title: Text(context.t.strings.legacy.msg_submit_logs),
-        centerTitle: false,
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
-              ),
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_submit_logs),
+      children: [
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_include),
+          children: [
+            SettingsToggleRow(
+              label: context.t.strings.legacy.msg_include_error_details,
+              value: _includeErrors,
+              onChanged: (v) {
+                haptic();
+                setState(() => _includeErrors = v);
+              },
             ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            SettingsToggleRow(
+              label: context.t.strings.legacy.msg_include_pending_queue,
+              value: _includeOutbox,
+              onChanged: (v) {
+                haptic();
+                setState(() => _includeOutbox = v);
+              },
+            ),
+            SettingsToggleRow(
+              label: context.t.strings.legacy.msg_record_request_response_logs,
+              value: networkLoggingEnabled,
+              onChanged: (v) {
+                haptic();
+                ref
+                    .read(devicePreferencesProvider.notifier)
+                    .setNetworkLoggingEnabled(v);
+              },
+            ),
+          ],
+        ),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_additional_notes_optional),
+          children: [_NotesRow(controller: _noteController)],
+        ),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_actions),
+          children: [
+            _ActionRow(
+              icon: Icons.file_present_outlined,
+              label: _busy
+                  ? context.t.strings.legacy.msg_generating
+                  : context.t.strings.legacy.msg_generate_log_file,
+              enabled: !actionsLocked,
+              onTap: () {
+                haptic();
+                unawaited(_exportReport());
+              },
+            ),
+            _ActionRow(
+              icon: Icons.delete_outline,
+              label: context.t.strings.legacy.msg_clear_logs,
+              enabled: !actionsLocked,
+              onTap: () {
+                haptic();
+                unawaited(_clearAllLogs());
+              },
+            ),
+          ],
+        ),
+        if (_lastPath != null)
+          SettingsSection(
+            header: Text(context.t.strings.legacy.msg_log_file),
             children: [
-              Text(
-                context.t.strings.legacy.msg_include,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: textMuted,
+              PlatformListSectionRow(
+                title: SettingsRowDescription(_lastPath!),
+                trailing: TextButton(
+                  onPressed: () async {
+                    haptic();
+                    await Clipboard.setData(ClipboardData(text: _lastPath!));
+                    if (!context.mounted) return;
+                    showTopToast(
+                      context,
+                      context.t.strings.legacy.msg_path_copied,
+                    );
+                  },
+                  child: Text(context.t.strings.legacy.msg_copy_path),
                 ),
-              ),
-              const SizedBox(height: 10),
-              _CardGroup(
-                card: card,
-                divider: divider,
-                children: [
-                  _ToggleRow(
-                    icon: Icons.report_gmailerrorred_outlined,
-                    label: context.t.strings.legacy.msg_include_error_details,
-                    value: _includeErrors,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onChanged: (v) {
-                      haptic();
-                      setState(() => _includeErrors = v);
-                    },
-                  ),
-                  _ToggleRow(
-                    icon: Icons.outbox_outlined,
-                    label: context.t.strings.legacy.msg_include_pending_queue,
-                    value: _includeOutbox,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onChanged: (v) {
-                      haptic();
-                      setState(() => _includeOutbox = v);
-                    },
-                  ),
-                  _ToggleRow(
-                    icon: Icons.swap_horiz,
-                    label: context
-                        .t
-                        .strings
-                        .legacy
-                        .msg_record_request_response_logs,
-                    value: networkLoggingEnabled,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onChanged: (v) {
-                      haptic();
-                      ref
-                          .read(devicePreferencesProvider.notifier)
-                          .setNetworkLoggingEnabled(v);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                context.t.strings.legacy.msg_additional_notes_optional,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: card,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: TextField(
-                  controller: _noteController,
-                  minLines: 3,
-                  maxLines: 5,
-                  decoration: InputDecoration(
-                    hintText: context
-                        .t
-                        .strings
-                        .legacy
-                        .msg_describe_issue_time_repro_steps_etc,
-                    border: InputBorder.none,
-                    hintStyle: TextStyle(color: textMuted),
-                  ),
-                  style: TextStyle(color: textMain),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                context.t.strings.legacy.msg_actions,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _CardGroup(
-                card: card,
-                divider: divider,
-                children: [
-                  _ActionRow(
-                    icon: Icons.file_present_outlined,
-                    label: _busy
-                        ? context.t.strings.legacy.msg_generating
-                        : context.t.strings.legacy.msg_generate_log_file,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: actionsLocked
-                        ? () {}
-                        : () {
-                            haptic();
-                            unawaited(_exportReport());
-                          },
-                  ),
-                  _ActionRow(
-                    icon: Icons.delete_outline,
-                    label: context.t.strings.legacy.msg_clear_logs,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: actionsLocked
-                        ? () {}
-                        : () {
-                            haptic();
-                            unawaited(_clearAllLogs());
-                          },
-                  ),
-                ],
-              ),
-              if (_lastPath != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: card,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t.strings.legacy.msg_log_file,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: textMain,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _lastPath!,
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                      const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          onPressed: () async {
-                            haptic();
-                            await Clipboard.setData(
-                              ClipboardData(text: _lastPath!),
-                            );
-                            if (!context.mounted) return;
-                            showTopToast(
-                              context,
-                              context.t.strings.legacy.msg_path_copied,
-                            );
-                          },
-                          child: Text(context.t.strings.legacy.msg_copy_path),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Text(
-                context.t.strings.legacy.msg_logs_export_local_only,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.4,
-                  color: textMuted.withValues(alpha: 0.8),
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (!networkLoggingEnabled) ...[
-                Text(
-                  context
-                      .t
-                      .strings
-                      .legacy
-                      .msg_enable_network_logging_before_exporting,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.4,
-                    color: textMuted.withValues(alpha: 0.8),
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-              Text(
-                context
-                    .t
-                    .strings
-                    .legacy
-                    .msg_note_logs_sanitized_automatically_sensitive_data,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.4,
-                  color: textMuted.withValues(alpha: 0.75),
-                ),
+                denseOnDesktop: false,
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CardGroup extends StatelessWidget {
-  const _CardGroup({
-    required this.card,
-    required this.divider,
-    required this.children,
-  });
-
-  final Color card;
-  final Color divider;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i != children.length - 1) Divider(height: 1, color: divider),
+        SettingsSection(
+          children: [
+            SettingsInfoRow(
+              description: context.t.strings.legacy.msg_logs_export_local_only,
+            ),
+            if (!networkLoggingEnabled)
+              SettingsInfoRow(
+                description: context
+                    .t
+                    .strings
+                    .legacy
+                    .msg_enable_network_logging_before_exporting,
+              ),
+            SettingsInfoRow(
+              description: context
+                  .t
+                  .strings
+                  .legacy
+                  .msg_note_logs_sanitized_automatically_sensitive_data,
+            ),
           ],
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -507,80 +304,58 @@ class _ActionRow extends StatelessWidget {
   const _ActionRow({
     required this.icon,
     required this.label,
-    required this.textMain,
-    required this.textMuted,
+    required this.enabled,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final Color textMain;
-  final Color textMuted;
+  final bool enabled;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: textMuted),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: textMain,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+    final tokens = settingsPageTokens(context);
+    return Opacity(
+      opacity: enabled ? 1 : 0.55,
+      child: PlatformListSectionRow(
+        leading: Icon(icon, size: 20, color: tokens.textMuted),
+        title: SettingsRowTitle(label),
+        trailing: Icon(Icons.chevron_right, size: 20, color: tokens.textMuted),
+        onTap: enabled ? onTap : null,
       ),
     );
   }
 }
 
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.textMain,
-    required this.textMuted,
-    required this.onChanged,
-  });
+class _NotesRow extends StatelessWidget {
+  const _NotesRow({required this.controller});
 
-  final IconData icon;
-  final String label;
-  final bool value;
-  final Color textMain;
-  final Color textMuted;
-  final ValueChanged<bool> onChanged;
+  final TextEditingController controller;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: textMuted),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-            ),
+    final tokens = settingsPageTokens(context);
+    return PlatformListSectionRow(
+      title: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: TextField(
+          controller: controller,
+          minLines: 3,
+          maxLines: 5,
+          decoration: InputDecoration(
+            hintText: context
+                .t
+                .strings
+                .legacy
+                .msg_describe_issue_time_repro_steps_etc,
+            border: InputBorder.none,
+            hintStyle: TextStyle(color: tokens.textMuted),
           ),
-          Switch(value: value, onChanged: onChanged),
-        ],
+          style: TextStyle(color: tokens.textMain),
+        ),
       ),
+      denseOnDesktop: false,
     );
   }
 }

@@ -2,12 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../../core/memoflow_palette.dart';
-import '../../core/top_toast.dart';
 import '../../application/widgets/home_widget_service.dart';
-import '../../platform/platform_icons.dart';
-import '../../platform/widgets/platform_page.dart';
+import '../../core/top_toast.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 class WidgetsScreen extends StatelessWidget {
   const WidgetsScreen({super.key, this.showBackButton = true});
@@ -19,123 +17,56 @@ class WidgetsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final border = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
 
-    Widget content() {
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-        children: [
-          _Section(
-            title: context.t.strings.legacy.msg_random_review,
-            textMuted: textMuted,
-            child: _WidgetCard(
-              card: card,
-              border: border,
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_widgets),
+      showBackButton: showBackButton,
+      children: [
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_random_review),
+          children: [
+            _WidgetPreviewRow(
               preview: _WidgetPreview(
                 height: 140,
-                isDark: isDark,
-                textMuted: textMuted,
+                isDark: tokens.isDark,
                 child: const _RandomMemoPreview(),
               ),
               onAdd: () => _handleAdd(context, HomeWidgetType.dailyReview),
             ),
-          ),
-          const SizedBox(height: 14),
-          _Section(
-            title: context.t.strings.legacy.msg_quick_input,
-            textMuted: textMuted,
-            child: _WidgetCard(
-              card: card,
-              border: border,
+          ],
+        ),
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_quick_input),
+          children: [
+            _WidgetPreviewRow(
               preview: _WidgetPreview(
                 height: 92,
-                isDark: isDark,
-                textMuted: textMuted,
+                isDark: tokens.isDark,
                 child: const _QuickInputPreview(),
               ),
               onAdd: () => _handleAdd(context, HomeWidgetType.quickInput),
             ),
-          ),
-          const SizedBox(height: 14),
-          _Section(
-            title: context.t.strings.legacy.msg_activity_heatmap,
-            textMuted: textMuted,
-            child: _WidgetCard(
-              card: card,
-              border: border,
+          ],
+        ),
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_activity_heatmap),
+          children: [
+            _WidgetPreviewRow(
               preview: _WidgetPreview(
                 height: 164,
-                isDark: isDark,
-                textMuted: textMuted,
+                isDark: tokens.isDark,
                 child: const _CalendarPreview(),
               ),
               onAdd: () => _handleAdd(context, HomeWidgetType.calendar),
             ),
-          ),
-          const SizedBox(height: 18),
-          Center(
-            child: FutureBuilder<PackageInfo>(
-              future: WidgetsScreen._packageInfoFuture,
-              builder: (context, snapshot) {
-                final version = snapshot.data?.version.trim() ?? '';
-                final label = version.isEmpty
-                    ? 'MemoFlow'
-                    : 'MemoFlow | v$version';
-                return Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.0,
-                    color: textMuted.withValues(alpha: 0.75),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      );
-    }
-
-    return PlatformPage(
-      backgroundColor: bg,
-      leading: showBackButton
-          ? IconButton(
-              tooltip: context.t.strings.legacy.msg_back,
-              icon: Icon(PlatformIcons.back),
-              onPressed: () => Navigator.of(context).maybePop(),
-            )
-          : null,
-      title: Text(context.t.strings.legacy.msg_widgets),
-      body: isDark
-          ? Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [const Color(0xFF0B0B0B), bg, bg],
-                      ),
-                    ),
-                  ),
-                ),
-                content(),
-              ],
-            )
-          : content(),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Center(child: _VersionFooter(color: tokens.textMuted)),
+      ],
     );
   }
 
@@ -161,117 +92,52 @@ class WidgetsScreen extends StatelessWidget {
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.title,
-    required this.textMuted,
-    required this.child,
-  });
+class _WidgetPreviewRow extends StatelessWidget {
+  const _WidgetPreviewRow({required this.preview, required this.onAdd});
 
-  final String title;
-  final Color textMuted;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: textMuted,
-          ),
-        ),
-        const SizedBox(height: 10),
-        child,
-      ],
-    );
-  }
-}
-
-class _WidgetCard extends StatefulWidget {
-  const _WidgetCard({
-    required this.card,
-    required this.border,
-    required this.preview,
-    required this.onAdd,
-  });
-
-  final Color card;
-  final Color border;
   final Widget preview;
   final VoidCallback onAdd;
 
   @override
-  State<_WidgetCard> createState() => _WidgetCardState();
-}
-
-class _WidgetCardState extends State<_WidgetCard> {
-  var _pressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: widget.card,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: widget.border),
-        boxShadow: isDark
-            ? [
-                BoxShadow(
-                  blurRadius: 28,
-                  offset: const Offset(0, 16),
-                  color: Colors.black.withValues(alpha: 0.45),
-                ),
-              ]
-            : [
-                BoxShadow(
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       child: Column(
         children: [
-          widget.preview,
+          preview,
           const SizedBox(height: 14),
-          GestureDetector(
-            onTapDown: (_) => setState(() => _pressed = true),
-            onTapCancel: () => setState(() => _pressed = false),
-            onTapUp: (_) {
-              setState(() => _pressed = false);
-              widget.onAdd();
-            },
-            child: AnimatedScale(
-              scale: _pressed ? 0.98 : 1.0,
-              duration: const Duration(milliseconds: 140),
-              child: Container(
-                height: 40,
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                decoration: BoxDecoration(
-                  color: MemoFlowPalette.primary,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Center(
-                  child: Text(
-                    context.t.strings.legacy.msg_add_home_screen,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          SettingsAction(
+            label: Text(context.t.strings.legacy.msg_add_home_screen),
+            icon: const Icon(Icons.add),
+            onPressed: onAdd,
           ),
         ],
       ),
+    );
+  }
+}
+
+class _VersionFooter extends StatelessWidget {
+  const _VersionFooter({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: WidgetsScreen._packageInfoFuture,
+      builder: (context, snapshot) {
+        final version = snapshot.data?.version.trim() ?? '';
+        final label = version.isEmpty ? 'MemoFlow' : 'MemoFlow | v$version';
+        return Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: color.withValues(alpha: 0.75),
+          ),
+        );
+      },
     );
   }
 }
@@ -280,13 +146,11 @@ class _WidgetPreview extends StatelessWidget {
   const _WidgetPreview({
     required this.height,
     required this.isDark,
-    required this.textMuted,
     required this.child,
   });
 
   final double height;
   final bool isDark;
-  final Color textMuted;
   final Widget child;
 
   @override
@@ -325,7 +189,7 @@ class _RandomMemoPreview extends StatelessWidget {
           context.t.strings.legacy.msg_random_review,
           style: TextStyle(
             fontSize: 10,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: text,
           ),
         ),
@@ -387,6 +251,7 @@ class _QuickInputPreview extends StatelessWidget {
     final text = isDark
         ? Colors.white.withValues(alpha: 0.65)
         : Colors.black.withValues(alpha: 0.5);
+    final primary = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
         Expanded(
@@ -411,7 +276,7 @@ class _QuickInputPreview extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: MemoFlowPalette.primary,
+            color: primary,
             borderRadius: BorderRadius.circular(14),
           ),
           child: const Icon(
@@ -434,8 +299,9 @@ class _CalendarPreview extends StatelessWidget {
     const weekColor = Color(0xFF667085);
     const outsideColor = Color(0xFF98A2B3);
     const dayColor = Color(0xFF344054);
-    final todayBorder = MemoFlowPalette.primary.withValues(alpha: 0.64);
-    final hot = MemoFlowPalette.primary;
+    final primary = Theme.of(context).colorScheme.primary;
+    final todayBorder = primary.withValues(alpha: 0.64);
+    final hot = primary;
     const labels = <String>[
       '1',
       '2',

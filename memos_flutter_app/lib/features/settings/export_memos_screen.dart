@@ -13,8 +13,6 @@ import 'package:saf_stream/saf_stream.dart';
 
 import '../../core/attachment_url.dart';
 import '../../core/app_localization.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/memo_relations.dart';
 import '../../core/top_toast.dart';
 import '../../data/local_library/local_library_markdown.dart';
@@ -27,7 +25,7 @@ import '../../i18n/strings.g.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/system/database_provider.dart';
 import '../../state/system/session_provider.dart';
-import 'import_export_shared_widgets.dart';
+import 'settings_ui.dart';
 
 class ExportMemosScreen extends ConsumerStatefulWidget {
   const ExportMemosScreen({super.key});
@@ -40,7 +38,6 @@ class _ExportMemosScreenState extends ConsumerState<ExportMemosScreen> {
   DateTimeRange? _range;
   var _includeArchived = false;
   var _exporting = false;
-  var _pressed = false;
   String? _lastExportPath;
 
   String _formatRange(DateTimeRange? range, AppLanguage language) {
@@ -402,18 +399,9 @@ class _ExportMemosScreenState extends ConsumerState<ExportMemosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+    final language = ref.watch(
+      devicePreferencesProvider.select((p) => p.language),
+    );
     final hapticsEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.hapticsEnabled),
     );
@@ -424,197 +412,98 @@ class _ExportMemosScreenState extends ConsumerState<ExportMemosScreen> {
       }
     }
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    void copyLastExportPath() {
+      final path = _lastExportPath;
+      if (path == null) return;
+      haptic();
+      Clipboard.setData(ClipboardData(text: path)).then((_) {
+        if (!context.mounted) return;
+        showTopToast(context, context.t.strings.legacy.msg_path_copied);
+      });
+    }
+
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_export),
+      children: [
+        SettingsSection(
+          children: [
+            SettingsValueRow(
+              label: context.t.strings.legacy.msg_date_range,
+              value: _formatRange(_range, language),
+              icon: Icons.date_range_outlined,
+              onTap: () {
+                haptic();
+                _pickRange();
+              },
+            ),
+            SettingsToggleRow(
+              label: context.t.strings.legacy.msg_include_archived,
+              value: _includeArchived,
+              onChanged: (v) {
+                haptic();
+                setState(() => _includeArchived = v);
+              },
+            ),
+            SettingsValueRow(
+              label: context.t.strings.legacy.msg_export_format,
+              value: 'Markdown + ZIP',
+              icon: Icons.description_outlined,
+              onTap: () {
+                haptic();
+                showTopToast(
+                  context,
+                  context.t.strings.legacy.msg_format_fixed_markdown_zip,
+                );
+              },
+            ),
+          ],
         ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SettingsAction(
+            key: const ValueKey<String>('exportMemos.exportAction'),
+            onPressed: _exporting
+                ? null
+                : () {
+                    haptic();
+                    _export();
+                  },
+            icon: _exporting
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                  )
+                : const Icon(Icons.download_outlined),
+            label: Text(context.t.strings.legacy.msg_export),
           ),
         ),
-        title: Text(context.t.strings.legacy.msg_export),
-        centerTitle: false,
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
-              ),
-            ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        if (_lastExportPath != null) ...[
+          const SizedBox(height: 12),
+          SettingsSection(
             children: [
-              ImportExportCardGroup(
-                card: card,
-                divider: divider,
-                children: [
-                  ImportExportSelectRow(
-                    icon: Icons.date_range_outlined,
-                    label: context.t.strings.legacy.msg_date_range,
-                    value: _formatRange(
-                      _range,
-                      ref.read(devicePreferencesProvider).language,
-                    ),
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () {
-                      haptic();
-                      _pickRange();
-                    },
-                  ),
-                  ImportExportToggleRow(
-                    icon: Icons.delete_outline,
-                    label: context.t.strings.legacy.msg_include_archived,
-                    value: _includeArchived,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onChanged: (v) {
-                      haptic();
-                      setState(() => _includeArchived = v);
-                    },
-                  ),
-                  ImportExportSelectRow(
-                    icon: Icons.description_outlined,
-                    label: context.t.strings.legacy.msg_export_format,
-                    value: 'Markdown + ZIP',
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: () {
-                      haptic();
-                      showTopToast(
-                        context,
-                        context.t.strings.legacy.msg_format_fixed_markdown_zip,
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              GestureDetector(
-                onTapDown: _exporting
-                    ? null
-                    : (_) => setState(() => _pressed = true),
-                onTapCancel: () => setState(() => _pressed = false),
-                onTapUp: _exporting
-                    ? null
-                    : (_) {
-                        setState(() => _pressed = false);
-                        haptic();
-                        _export();
-                      },
-                child: AnimatedScale(
-                  scale: _pressed ? 0.98 : 1.0,
-                  duration: const Duration(milliseconds: 140),
-                  child: Container(
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: MemoFlowPalette.primary,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Center(
-                      child: _exporting
-                          ? const SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              context.t.strings.legacy.msg_export,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-              if (_lastExportPath != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: card,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: isDark
-                        ? null
-                        : [
-                            BoxShadow(
-                              blurRadius: 18,
-                              offset: const Offset(0, 10),
-                              color: Colors.black.withValues(alpha: 0.06),
-                            ),
-                          ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _lastExportPath!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            height: 1.35,
-                            color: textMuted,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: context.t.strings.legacy.msg_copy_path,
-                        icon: Icon(Icons.copy, size: 18, color: textMuted),
-                        onPressed: () async {
-                          haptic();
-                          await Clipboard.setData(
-                            ClipboardData(text: _lastExportPath!),
-                          );
-                          if (!context.mounted) return;
-                          showTopToast(
-                            context,
-                            context.t.strings.legacy.msg_path_copied,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Text(
-                context
-                    .t
-                    .strings
-                    .legacy
-                    .msg_note_export_includes_content_already_synced,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.4,
-                  color: textMuted.withValues(alpha: 0.7),
-                ),
+              SettingsValueRow(
+                label: context.t.strings.legacy.msg_copy_path,
+                value: _lastExportPath!,
+                icon: Icons.copy,
+                onTap: copyLastExportPath,
               ),
             ],
           ),
         ],
-      ),
+        const SizedBox(height: 16),
+        SettingsSection(
+          children: [
+            SettingsInfoRow(
+              description: context
+                  .t
+                  .strings
+                  .legacy
+                  .msg_note_export_includes_content_already_synced,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

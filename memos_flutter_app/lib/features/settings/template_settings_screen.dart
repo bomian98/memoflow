@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/uid.dart';
 import '../../data/models/memo_template_settings.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_list_section.dart';
 import '../../state/settings/memo_template_settings_provider.dart';
+import 'settings_ui.dart';
 
 class TemplateSettingsScreen extends ConsumerWidget {
   const TemplateSettingsScreen({super.key});
@@ -15,15 +15,7 @@ class TemplateSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(memoTemplateSettingsProvider);
     final controller = ref.read(memoTemplateSettingsProvider.notifier);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
+    final tokens = settingsPageTokens(context);
 
     Future<void> openTemplateEditor({MemoTemplate? initial}) async {
       final edited = await showDialog<MemoTemplate>(
@@ -47,8 +39,7 @@ class TemplateSettingsScreen extends ConsumerWidget {
     Future<void> openVariableDocsDialog() async {
       await showDialog<void>(
         context: context,
-        builder: (_) =>
-            _VariableDocsDialog(textMain: textMain, textMuted: textMuted),
+        builder: (_) => const _VariableDocsDialog(),
       );
     }
 
@@ -80,60 +71,44 @@ class TemplateSettingsScreen extends ConsumerWidget {
       controller.removeTemplateById(template.id);
     }
 
-    Widget buildTemplateCard(MemoTemplate template) {
+    Widget buildTemplateRow(MemoTemplate template) {
       final subtitle = template.content.trim().isEmpty
           ? context.t.strings.legacy.msg_empty_content
           : template.content.trim().replaceAll('\n', ' ');
-      return Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: card,
-          borderRadius: BorderRadius.circular(18),
+      return PlatformListSectionRow(
+        title: SettingsRowTitle(template.name),
+        subtitle: SettingsRowDescription(subtitle),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: context.t.strings.legacy.msg_edit,
+              onPressed: () => openTemplateEditor(initial: template),
+              icon: Icon(Icons.edit_outlined, color: tokens.textMuted),
+            ),
+            IconButton(
+              tooltip: context.t.strings.legacy.msg_delete,
+              onPressed: () => deleteTemplate(template),
+              icon: Icon(Icons.delete_outline, color: tokens.textMuted),
+            ),
+          ],
         ),
-        child: ListTile(
-          title: Text(
-            template.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
-          ),
-          subtitle: Text(
-            subtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, color: textMuted),
-          ),
-          trailing: Wrap(
-            spacing: 4,
-            children: [
-              IconButton(
-                tooltip: context.t.strings.legacy.msg_edit,
-                onPressed: () => openTemplateEditor(initial: template),
-                icon: Icon(Icons.edit_outlined, color: textMuted),
-              ),
-              IconButton(
-                tooltip: context.t.strings.legacy.msg_delete,
-                onPressed: () => deleteTemplate(template),
-                icon: Icon(Icons.delete_outline, color: textMuted),
-              ),
-            ],
-          ),
-        ),
+        denseOnDesktop: false,
       );
     }
 
-    Widget buildTemplateList(List<MemoTemplate> templates) {
+    Widget buildTemplateSection(List<MemoTemplate> templates) {
       if (templates.isEmpty) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          decoration: BoxDecoration(
-            color: card,
-            borderRadius: BorderRadius.circular(18),
+        return SettingsSection(
+          header: Text(context.t.strings.legacy.msg_template_list),
+          footer: Text(
+            context.t.strings.legacy.msg_many_templates_support_scroll,
           ),
-          child: Text(
-            context.t.strings.legacy.msg_no_templates_click_add,
-            style: TextStyle(fontSize: 13, color: textMuted),
-          ),
+          children: [
+            SettingsInfoRow(
+              description: context.t.strings.legacy.msg_no_templates_click_add,
+            ),
+          ],
         );
       }
 
@@ -144,17 +119,25 @@ class TemplateSettingsScreen extends ConsumerWidget {
           .clamp(96.0, maxHeight)
           .toDouble();
 
-      return SizedBox(
-        height: estimatedHeight,
-        child: Scrollbar(
-          thumbVisibility: templates.length > 3,
-          child: ListView.builder(
-            primary: false,
-            padding: EdgeInsets.zero,
-            itemCount: templates.length,
-            itemBuilder: (_, index) => buildTemplateCard(templates[index]),
-          ),
+      return SettingsSection(
+        header: Text(context.t.strings.legacy.msg_template_list),
+        footer: Text(
+          context.t.strings.legacy.msg_many_templates_support_scroll,
         ),
+        children: [
+          SizedBox(
+            height: estimatedHeight,
+            child: Scrollbar(
+              thumbVisibility: templates.length > 3,
+              child: ListView.builder(
+                primary: false,
+                padding: EdgeInsets.zero,
+                itemCount: templates.length,
+                itemBuilder: (_, index) => buildTemplateRow(templates[index]),
+              ),
+            ),
+          ),
+        ],
       );
     }
 
@@ -171,203 +154,49 @@ class TemplateSettingsScreen extends ConsumerWidget {
                 ))
         : context.t.strings.legacy.msg_weather_variables_disabled;
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_template),
+      actions: [
+        IconButton(
+          tooltip: context.t.strings.legacy.msg_new_template,
+          onPressed: () => openTemplateEditor(),
+          icon: const Icon(Icons.add),
         ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.common.back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
+      ],
+      children: [
+        SettingsToggleCard(
+          label: context.t.strings.legacy.msg_template_feature_title,
+          description: context.t.strings.legacy.msg_template_feature_desc,
+          value: settings.enabled,
+          onChanged: controller.setEnabled,
         ),
-        title: Text(context.t.strings.legacy.msg_template),
-        centerTitle: false,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: card,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t.strings.legacy.msg_template_feature_title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: textMain,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.t.strings.legacy.msg_template_feature_desc,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: textMuted,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: settings.enabled,
-                  onChanged: controller.setEnabled,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text(
-                context.t.strings.legacy.msg_template_list,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: textMuted,
-                ),
-              ),
-              const Spacer(),
-              FilledButton.icon(
-                onPressed: () => openTemplateEditor(),
-                icon: const Icon(Icons.add, size: 16),
-                label: Text(context.t.strings.legacy.msg_new_template),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            context.t.strings.legacy.msg_many_templates_support_scroll,
-            style: TextStyle(fontSize: 12, color: textMuted),
-          ),
-          const SizedBox(height: 10),
-          buildTemplateList(templates),
-          const SizedBox(height: 8),
-          Text(
-            context.t.strings.legacy.msg_variable_settings,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: textMuted,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Material(
-            color: card,
-            borderRadius: BorderRadius.circular(18),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
+        const SizedBox(height: 12),
+        buildTemplateSection(templates),
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_variable_settings),
+          children: [
+            SettingsNavigationRow(
+              label: context.t.strings.legacy.msg_template_variables,
+              description: weatherSummary,
               onTap: openVariableSettings,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.t.strings.legacy.msg_template_variables,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: textMain,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            weatherSummary,
-                            style: TextStyle(fontSize: 12, color: textMuted),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: textMuted),
-                  ],
-                ),
-              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Material(
-            color: card,
-            borderRadius: BorderRadius.circular(18),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
+            SettingsNavigationRow(
+              label: context.t.strings.legacy.msg_available_variable_docs,
+              description:
+                  context.t.strings.legacy.msg_available_variable_docs_desc,
+              leading: Icon(Icons.help_outline, color: tokens.textMuted),
               onTap: openVariableDocsDialog,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context
-                                .t
-                                .strings
-                                .legacy
-                                .msg_available_variable_docs,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: textMain,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context
-                                .t
-                                .strings
-                                .legacy
-                                .msg_available_variable_docs_desc,
-                            style: TextStyle(fontSize: 12, color: textMuted),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.help_outline, color: textMuted),
-                    const SizedBox(width: 4),
-                    Icon(Icons.chevron_right, color: textMuted),
-                  ],
-                ),
-              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
 
 class _VariableDocsDialog extends StatefulWidget {
-  const _VariableDocsDialog({required this.textMain, required this.textMuted});
-
-  final Color textMain;
-  final Color textMuted;
+  const _VariableDocsDialog();
 
   @override
   State<_VariableDocsDialog> createState() => _VariableDocsDialogState();
@@ -472,8 +301,9 @@ class _VariableDocsDialogState extends State<_VariableDocsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final textMain = widget.textMain;
-    final textMuted = widget.textMuted;
+    final tokens = settingsPageTokens(context);
+    final textMain = tokens.textMain;
+    final textMuted = tokens.textMuted;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
@@ -485,6 +315,9 @@ class _VariableDocsDialogState extends State<_VariableDocsDialog> {
         ? const Color(0xFFE0E7FF)
         : const Color(0xFF27438F);
     final docs = _docs(context);
+    final tableHeight = (MediaQuery.sizeOf(context).height * 0.52)
+        .clamp(260.0, 420.0)
+        .toDouble();
 
     Widget cell({
       required String text,
@@ -531,7 +364,7 @@ class _VariableDocsDialogState extends State<_VariableDocsDialog> {
             ),
             const SizedBox(height: 10),
             SizedBox(
-              height: 420,
+              height: tableHeight,
               child: Scrollbar(
                 controller: _verticalController,
                 thumbVisibility: true,
@@ -676,11 +509,7 @@ class _TemplateEditorDialogState extends State<_TemplateEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
+    final textMuted = settingsPageTokens(context).textMuted;
 
     return AlertDialog(
       title: Text(
@@ -813,11 +642,7 @@ class _TemplateVariableSettingsDialogState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
+    final textMuted = settingsPageTokens(context).textMuted;
 
     return AlertDialog(
       title: Text(context.t.strings.legacy.msg_template_variable_settings),
@@ -858,15 +683,10 @@ class _TemplateVariableSettingsDialogState
                 decoration: const InputDecoration(hintText: 'yyyy-MM-dd HH:mm'),
               ),
               const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
+              _DialogToggleRow(
+                title: context.t.strings.legacy.msg_enable_weather_variables,
+                subtitle: context.t.strings.legacy.msg_weather_variable_tokens,
                 value: _weatherEnabled,
-                title: Text(
-                  context.t.strings.legacy.msg_enable_weather_variables,
-                ),
-                subtitle: Text(
-                  context.t.strings.legacy.msg_weather_variable_tokens,
-                ),
                 onChanged: (value) => setState(() => _weatherEnabled = value),
               ),
               if (_weatherEnabled) ...[
@@ -893,15 +713,14 @@ class _TemplateVariableSettingsDialogState
                 ),
               ],
               const SizedBox(height: 8),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
+              _DialogToggleRow(
+                title: context.t.strings.legacy.msg_keep_unknown_variables_raw,
+                subtitle: context
+                    .t
+                    .strings
+                    .legacy
+                    .msg_keep_unknown_variables_raw_desc,
                 value: _keepUnknownVariables,
-                title: Text(
-                  context.t.strings.legacy.msg_keep_unknown_variables_raw,
-                ),
-                subtitle: Text(
-                  context.t.strings.legacy.msg_keep_unknown_variables_raw_desc,
-                ),
                 onChanged: (value) =>
                     setState(() => _keepUnknownVariables = value),
               ),
@@ -919,6 +738,31 @@ class _TemplateVariableSettingsDialogState
           child: Text(context.t.strings.common.save),
         ),
       ],
+    );
+  }
+}
+
+class _DialogToggleRow extends StatelessWidget {
+  const _DialogToggleRow({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsToggleRow(
+      label: title,
+      description: subtitle,
+      value: value,
+      onChanged: onChanged,
+      onTap: () => onChanged(!value),
     );
   }
 }

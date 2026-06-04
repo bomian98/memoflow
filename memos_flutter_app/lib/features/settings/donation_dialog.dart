@@ -8,9 +8,9 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 enum _DonationStep { request, success }
 
@@ -73,7 +73,7 @@ class _DonationDialogState extends State<DonationDialog>
   }
 
   void _close() {
-    Navigator.of(context).maybePop();
+    Navigator.of(context, rootNavigator: true).pop();
   }
 
   void _goSuccess() {
@@ -153,17 +153,20 @@ class _DonationDialogState extends State<DonationDialog>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF1F1B18) : Colors.white;
-    final surface = isDark ? const Color(0xFF2C2520) : const Color(0xFFF7EFE6);
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.65 : 0.6);
-    final accent = MemoFlowPalette.primary;
+    final tokens = settingsPageTokens(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final cardColor = tokens.card;
+    final surface = tokens.isDark
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.45)
+        : colorScheme.primaryContainer.withValues(alpha: 0.28);
+    final textMain = tokens.textMain;
+    final textMuted = textMain.withValues(alpha: tokens.isDark ? 0.65 : 0.6);
+    final accent = colorScheme.primary;
     final danger = const Color(0xFFC6564A);
-    final badgeBg = isDark ? const Color(0xFF233128) : const Color(0xFFE6F4EA);
-    final badgeText = isDark
+    final badgeBg = tokens.isDark
+        ? const Color(0xFF233128)
+        : const Color(0xFFE6F4EA);
+    final badgeText = tokens.isDark
         ? const Color(0xFF9AD1A8)
         : const Color(0xFF3BA55D);
 
@@ -198,48 +201,51 @@ class _DonationDialogState extends State<DonationDialog>
                 ),
               ),
             Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 340),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
-                  switchInCurve: Curves.easeOutBack,
-                  switchOutCurve: Curves.easeIn,
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(
-                        scale: Tween<double>(
-                          begin: 0.96,
-                          end: 1.0,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: _step == _DonationStep.request
-                      ? _DonationRequestCard(
-                          key: const ValueKey('request'),
-                          cardColor: cardColor,
-                          surface: surface,
-                          textMain: textMain,
-                          textMuted: textMuted,
-                          accent: accent,
-                          danger: danger,
-                          onSaveQr: _saveQrToGallery,
-                          onConfirm: _goSuccess,
-                          onCancel: _close,
-                        )
-                      : _DonationSuccessCard(
-                          key: const ValueKey('success'),
-                          cardColor: cardColor,
-                          textMain: textMain,
-                          textMuted: textMuted,
-                          accent: accent,
-                          badgeBg: badgeBg,
-                          badgeText: badgeText,
-                          starsController: _starsController,
-                          onClose: _close,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 340),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    switchInCurve: Curves.easeOutBack,
+                    switchOutCurve: Curves.easeIn,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: 0.96,
+                            end: 1.0,
+                          ).animate(animation),
+                          child: child,
                         ),
+                      );
+                    },
+                    child: _step == _DonationStep.request
+                        ? _DonationRequestCard(
+                            key: const ValueKey('request'),
+                            cardColor: cardColor,
+                            surface: surface,
+                            textMain: textMain,
+                            textMuted: textMuted,
+                            accent: accent,
+                            danger: danger,
+                            onSaveQr: _saveQrToGallery,
+                            onConfirm: _goSuccess,
+                            onCancel: _close,
+                          )
+                        : _DonationSuccessCard(
+                            key: const ValueKey('success'),
+                            cardColor: cardColor,
+                            textMain: textMain,
+                            textMuted: textMuted,
+                            accent: accent,
+                            badgeBg: badgeBg,
+                            badgeText: badgeText,
+                            starsController: _starsController,
+                            onClose: _close,
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -280,7 +286,6 @@ class _DonationRequestCard extends StatelessWidget {
     final border = textMuted.withValues(alpha: 0.18);
     final labelStyle = TextStyle(
       fontSize: 11,
-      letterSpacing: 1.2,
       fontWeight: FontWeight.w700,
       color: danger,
     );
@@ -304,13 +309,11 @@ class _DonationRequestCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text('bolt 10% ENERGY LEFT', style: labelStyle),
           const SizedBox(height: 6),
-          Text(
-            context.t.strings.legacy.msg_energy_critically_low,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: textMain,
-            ),
+          SettingsContentHeader(
+            title: context.t.strings.legacy.msg_energy_critically_low,
+            textAlign: TextAlign.center,
+            maxTitleLines: 2,
+            prominent: true,
           ),
           const SizedBox(height: 10),
           Text.rich(
@@ -347,31 +350,14 @@ class _DonationRequestCard extends StatelessWidget {
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accent,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 18,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                elevation: 0,
-              ),
-              icon: const Icon(
-                Icons.coffee_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
+            child: SettingsAction(
+              key: const ValueKey<String>('donationDialog.confirmAction'),
+              onPressed: onConfirm,
+              icon: const Icon(Icons.coffee_rounded, size: 18),
               label: Text(
                 context.t.strings.legacy.msg_coffee_add_drumstick,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
-              onPressed: onConfirm,
             ),
           ),
           const SizedBox(height: 6),
@@ -443,14 +429,11 @@ class _DonationSuccessCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            context.t.strings.legacy.msg_thanks_energy_fully_restored,
+          SettingsContentHeader(
+            title: context.t.strings.legacy.msg_thanks_energy_fully_restored,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: textMain,
-            ),
+            maxTitleLines: 2,
+            prominent: true,
           ),
           const SizedBox(height: 8),
           Text(
@@ -461,25 +444,12 @@ class _DonationSuccessCard extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accent,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 18,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                elevation: 0,
-              ),
+            child: SettingsAction(
+              key: const ValueKey<String>('donationDialog.closeAction'),
               onPressed: onClose,
-              child: Text(
+              label: Text(
                 context.t.strings.legacy.msg_awesome,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -594,7 +564,6 @@ class _QrPlaceholder extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
                 color: textMuted,
               ),
             ),

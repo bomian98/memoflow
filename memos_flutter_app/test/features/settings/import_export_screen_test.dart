@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/features/settings/import_export_screen.dart';
+import 'package:memos_flutter_app/features/settings/settings_ui.dart';
 
 import 'settings_test_harness.dart';
 
@@ -15,6 +16,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsSection), findsNWidgets(3));
+    expect(find.byType(SettingsNavigationRow), findsNWidgets(3));
     expect(find.text('Import / Export'), findsOneWidget);
     expect(find.text('Export'), findsNWidgets(2));
     expect(find.text('Markdown + ZIP'), findsOneWidget);
@@ -37,6 +41,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.byType(SettingsSection), findsNWidgets(3));
+      expect(find.byType(SettingsNavigationRow), findsNWidgets(3));
       expect(find.text('Import / Export'), findsOneWidget);
       expect(find.text('Local Network Migration'), findsNWidgets(2));
       expect(find.text('MemoFlow / Obsidian'), findsOneWidget);
