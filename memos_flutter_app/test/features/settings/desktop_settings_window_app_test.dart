@@ -1042,14 +1042,15 @@ void main() {
       await tester.tap(find.text('Image Bed').first);
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      final backButton = find.byTooltip('Back');
+      expect(backButton, findsOneWidget);
       expect(find.text('Image Bed'), findsWidgets);
       expect(
         tester.getTopLeft(find.text('Image Bed').last).dy,
         greaterThan(46),
       );
 
-      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.tap(backButton);
       await tester.pumpAndSettle();
 
       expect(find.text('Components'), findsWidgets);

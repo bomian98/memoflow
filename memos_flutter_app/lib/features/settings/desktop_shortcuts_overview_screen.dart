@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/desktop/shortcuts.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 String _desktopShortcutActionLabel(
   BuildContext context,
@@ -61,31 +60,20 @@ class DesktopShortcutsOverviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolved = normalizeDesktopShortcutBindings(bindings);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
+    final textMain = tokens.textMain;
+    final textMuted = tokens.textMuted;
     final primary = desktopPrimaryShortcutLabel();
 
     List<Widget> buildRows(List<({String action, String key})> items) {
       return [
-        for (var i = 0; i < items.length; i++) ...[
+        for (var i = 0; i < items.length; i++)
           _OverviewRow(
             action: items[i].action,
             shortcut: items[i].key,
             textMain: textMain,
             textMuted: textMuted,
           ),
-          if (i != items.length - 1) Divider(height: 1, color: divider),
-        ],
       ];
     }
 
@@ -113,99 +101,27 @@ class DesktopShortcutsOverviewScreen extends StatelessWidget {
         ),
     ];
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_shortcuts_overview),
+      children: [
+        SettingsInfoRow(
+          description: context.t.strings.legacy.msg_action_shortcut,
         ),
-        title: Text(context.t.strings.legacy.msg_shortcuts_overview),
-        centerTitle: false,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(2, 0, 2, 10),
-            child: Text(
-              context.t.strings.legacy.msg_action_shortcut,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: textMuted,
-              ),
-            ),
-          ),
-          _SectionTitle(
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: SettingsSectionHeader(
             title: context.t.strings.legacy.msg_editor,
-            textMuted: textMuted,
           ),
-          const SizedBox(height: 8),
-          _OverviewGroup(card: card, children: buildRows(editorItems)),
-          const SizedBox(height: 12),
-          _SectionTitle(
-            title: context.t.strings.legacy.msg_global,
-            textMuted: textMuted,
-          ),
-          const SizedBox(height: 8),
-          _OverviewGroup(card: card, children: buildRows(globalItems)),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.textMuted});
-
-  final String title;
-  final Color textMuted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 0, 2, 0),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: textMuted,
+          children: buildRows(editorItems),
         ),
-      ),
-    );
-  }
-}
-
-class _OverviewGroup extends StatelessWidget {
-  const _OverviewGroup({required this.card, required this.children});
-
-  final Color card;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(children: children),
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: SettingsSectionHeader(
+            title: context.t.strings.legacy.msg_global,
+          ),
+          children: buildRows(globalItems),
+        ),
+      ],
     );
   }
 }

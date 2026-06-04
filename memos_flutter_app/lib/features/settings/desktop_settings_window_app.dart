@@ -1145,11 +1145,12 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
   @override
   Widget build(BuildContext context) {
     _pushPendingTargetRouteIfNeeded();
+    final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.58 : 0.64);
+    final textMain = colorScheme.onSurface;
+    final textMuted = colorScheme.onSurfaceVariant.withValues(
+      alpha: isDark ? 0.76 : 0.82,
+    );
     final leftBg = isDark ? const Color(0xFF1D1D1D) : const Color(0xFFF7F5F2);
     final rightBg = isDark ? const Color(0xFF181818) : const Color(0xFFEFEBE6);
     final divider = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE0DBD3);
@@ -1348,18 +1349,18 @@ class _DesktopPaneNavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeBg = isDark
-        ? MemoFlowPalette.primary.withValues(alpha: 0.22)
-        : MemoFlowPalette.primary.withValues(alpha: 0.12);
+        ? colorScheme.primary.withValues(alpha: 0.22)
+        : colorScheme.primary.withValues(alpha: 0.12);
     final hoverBg = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.04);
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.7 : 0.78);
-    final fg = selected ? MemoFlowPalette.primary : textMuted;
+        ? colorScheme.onSurface.withValues(alpha: 0.06)
+        : colorScheme.onSurface.withValues(alpha: 0.04);
+    final textMuted = colorScheme.onSurfaceVariant.withValues(
+      alpha: isDark ? 0.76 : 0.82,
+    );
+    final fg = selected ? colorScheme.primary : textMuted;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Material(
