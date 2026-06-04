@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:memos_flutter_app/data/api/memos_live_refresh_api.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
 import 'package:memos_flutter_app/data/models/content_fingerprint.dart';
 import 'package:memos_flutter_app/data/models/instance_profile.dart';
@@ -32,12 +35,21 @@ void main() {
       reactions: [_reaction()],
       comments: [_remoteMemo('comment')],
     );
+    final source = _FakeMemosLiveRefreshEventSource();
 
     await tester.pumpWidget(
       _buildCardHarness(
         memo: _localMemo(),
         showEngagement: false,
         client: client,
+        liveRefreshEventSource: source,
+      ),
+    );
+    await tester.pumpAndSettle();
+    source.add(
+      const MemosLiveRefreshEvent(
+        type: MemosLiveRefreshEventType.reactionUpserted,
+        name: 'memos/memo-1',
       ),
     );
     await tester.pumpAndSettle();
@@ -156,6 +168,52 @@ void main() {
     expect(find.text('Comment 0'), findsOneWidget);
   });
 
+  testWidgets('card updates engagement after live refresh event', (
+    tester,
+  ) async {
+    final client = _FakeMemoEngagementClient();
+    final source = _FakeMemosLiveRefreshEventSource();
+
+    await tester.pumpWidget(
+      _buildCardHarness(
+        memo: _localMemo(),
+        showEngagement: true,
+        client: client,
+        users: _testUsers,
+        liveRefreshEventSource: source,
+        liveRefreshRegistry: MemoEngagementLiveRefreshRegistry(
+          coalesceDelay: Duration.zero,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Like 0'), findsOneWidget);
+    expect(find.text('Comment 0'), findsOneWidget);
+
+    client.reactions = [_reaction(creator: 'users/alice')];
+    client.comments = [_remoteMemo('live comment', creator: 'users/alice')];
+    source
+      ..add(
+        const MemosLiveRefreshEvent(
+          type: MemosLiveRefreshEventType.reactionUpserted,
+          name: 'memos/memo-1',
+        ),
+      )
+      ..add(
+        const MemosLiveRefreshEvent(
+          type: MemosLiveRefreshEventType.memoCommentCreated,
+          name: 'memos/comment-1',
+          parent: 'memos/memo-1',
+        ),
+      );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Like 1'), findsOneWidget);
+    expect(find.text('Comment 1'), findsOneWidget);
+    expect(find.textContaining('live comment'), findsOneWidget);
+  });
+
   testWidgets('card like action toggles the current user like', (tester) async {
     final client = _FakeMemoEngagementClient();
 
@@ -208,19 +266,36 @@ Widget _buildCardHarness({
   required bool showEngagement,
   required _FakeMemoEngagementClient client,
   Map<String, User> users = const <String, User>{},
+  _FakeMemosLiveRefreshEventSource? liveRefreshEventSource,
+  MemoEngagementLiveRefreshRegistry? liveRefreshRegistry,
 }) {
   LocaleSettings.setLocale(AppLocale.en);
+  final overrides = <Override>[
+    memoEngagementClientProvider.overrideWithValue(client),
+    memoDetailControllerProvider.overrideWith(
+      (ref) => _FakeMemoDetailController(ref, users),
+    ),
+    appSessionProvider.overrideWith((ref) => _TestSessionController()),
+    memoRelationsProvider.overrideWith(
+      (ref, uid) => Stream<List<MemoRelation>>.value(const <MemoRelation>[]),
+    ),
+  ];
+  if (liveRefreshEventSource != null) {
+    overrides.add(
+      memosLiveRefreshEventSourceProvider.overrideWithValue(
+        liveRefreshEventSource,
+      ),
+    );
+  }
+  if (liveRefreshRegistry != null) {
+    overrides.add(
+      memoEngagementLiveRefreshRegistryProvider.overrideWithValue(
+        liveRefreshRegistry,
+      ),
+    );
+  }
   return ProviderScope(
-    overrides: [
-      memoEngagementClientProvider.overrideWithValue(client),
-      memoDetailControllerProvider.overrideWith(
-        (ref) => _FakeMemoDetailController(ref, users),
-      ),
-      appSessionProvider.overrideWith((ref) => _TestSessionController()),
-      memoRelationsProvider.overrideWith(
-        (ref, uid) => Stream<List<MemoRelation>>.value(const <MemoRelation>[]),
-      ),
-    ],
+    overrides: overrides,
     child: TranslationProvider(
       child: MaterialApp(
         locale: AppLocale.en.flutterLocale,
@@ -387,6 +462,23 @@ class _FakeMemoEngagementClient implements MemoEngagementClient {
     final memo = _remoteMemo(content, name: 'memos/comment-${_nextComment++}');
     comments.insert(0, memo);
     return memo;
+  }
+}
+
+class _FakeMemosLiveRefreshEventSource implements MemosLiveRefreshEventSource {
+  final StreamController<MemosLiveRefreshEvent> _controller =
+      StreamController<MemosLiveRefreshEvent>.broadcast();
+
+  @override
+  bool get isSupported => true;
+
+  @override
+  Stream<MemosLiveRefreshEvent> watchEvents({void Function()? onConnected}) {
+    return _controller.stream;
+  }
+
+  void add(MemosLiveRefreshEvent event) {
+    _controller.add(event);
   }
 }
 

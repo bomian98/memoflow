@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/api/memo_api_version.dart';
 import '../../data/api/memos_api.dart';
+import '../../data/api/memos_live_refresh_api.dart';
 import '../../data/models/memo.dart';
 import '../../data/models/reaction.dart';
 import '../system/session_provider.dart';
@@ -13,6 +15,57 @@ const kMemoLikeReactionType = '\u2764\uFE0F';
 final memoEngagementClientProvider = Provider<MemoEngagementClient>((ref) {
   return _MemosApiMemoEngagementClient(ref);
 });
+
+final memosLiveRefreshEventSourceProvider =
+    Provider<MemosLiveRefreshEventSource?>((ref) {
+      final session = ref.watch(appSessionProvider);
+      final account = session.valueOrNull?.currentAccount;
+      if (account == null) return null;
+
+      final versionRaw = ref
+          .read(appSessionProvider.notifier)
+          .resolveEffectiveServerVersionForAccount(account: account);
+      final version = parseMemoApiVersion(versionRaw);
+      if (version == null || !supportsMemosLiveRefresh(version)) return null;
+
+      final token = account.personalAccessToken.trim();
+      if (token.isEmpty) return null;
+
+      return MemosLiveRefreshApi(
+        baseUrl: account.baseUrl,
+        personalAccessToken: token,
+        version: version,
+      );
+    });
+
+final memoEngagementLiveRefreshRegistryProvider =
+    Provider<MemoEngagementLiveRefreshRegistry>((ref) {
+      final registry = MemoEngagementLiveRefreshRegistry();
+      ref.onDispose(registry.dispose);
+      return registry;
+    });
+
+final memoEngagementLiveRefreshCoordinatorProvider =
+    Provider.autoDispose<MemoEngagementLiveRefreshCoordinator>((ref) {
+      final coordinator = MemoEngagementLiveRefreshCoordinator(
+        ref: ref,
+        registry: ref.watch(memoEngagementLiveRefreshRegistryProvider),
+        eventSource: ref.watch(memosLiveRefreshEventSourceProvider),
+      );
+      ref.onDispose(coordinator.dispose);
+      coordinator.start();
+      return coordinator;
+    });
+
+final memoEngagementLiveRefreshRegistrationProvider = Provider.autoDispose
+    .family<void, MemoEngagementRequest>((ref, request) {
+      final registry = ref.watch(memoEngagementLiveRefreshRegistryProvider);
+      registry.activate(request);
+      ref.watch(memoEngagementLiveRefreshCoordinatorProvider);
+      ref.onDispose(() {
+        registry.deactivate(request);
+      });
+    });
 
 final memoEngagementControllerProvider =
     StateNotifierProvider.family<
@@ -95,6 +148,233 @@ class _MemosApiMemoEngagementClient implements MemoEngagementClient {
       visibility: visibility,
     );
   }
+}
+
+class MemoEngagementLiveRefreshRegistry {
+  MemoEngagementLiveRefreshRegistry({
+    this.coalesceDelay = const Duration(milliseconds: 120),
+  });
+
+  final Duration coalesceDelay;
+  final Set<MemoEngagementRequest> _activeRequests = <MemoEngagementRequest>{};
+  final Map<String, _PendingEngagementRefresh> _pendingRefreshes =
+      <String, _PendingEngagementRefresh>{};
+  final Map<String, Timer> _pendingTimers = <String, Timer>{};
+
+  bool get hasActiveRequests => _activeRequests.isNotEmpty;
+
+  Set<String> get activeMemoUids {
+    return _activeRequests
+        .map((request) => request.normalizedMemoUid)
+        .where((uid) => uid.isNotEmpty)
+        .toSet();
+  }
+
+  void activate(MemoEngagementRequest request) {
+    if (request.normalizedMemoUid.isEmpty) return;
+    _activeRequests.add(request);
+  }
+
+  void deactivate(MemoEngagementRequest request) {
+    _activeRequests.remove(request);
+  }
+
+  void scheduleEvent(Ref ref, MemosLiveRefreshEvent event) {
+    final uid = event.targetMemoUid?.trim();
+    if (uid == null || uid.isEmpty) return;
+    if (!event.refreshesReactions && !event.refreshesComments) return;
+    if (!_hasActiveRequestForUid(uid)) return;
+
+    final pending = _pendingRefreshes.putIfAbsent(
+      uid,
+      _PendingEngagementRefresh.new,
+    );
+    pending.reactions = pending.reactions || event.refreshesReactions;
+    pending.comments = pending.comments || event.refreshesComments;
+    _pendingTimers[uid] ??= Timer(coalesceDelay, () {
+      final refresh = _pendingRefreshes.remove(uid);
+      _pendingTimers.remove(uid);
+      if (refresh == null) return;
+      unawaited(
+        _refreshUid(
+          ref,
+          uid,
+          reactions: refresh.reactions,
+          comments: refresh.comments,
+        ),
+      );
+    });
+  }
+
+  Future<void> refreshFromEvent(Ref ref, MemosLiveRefreshEvent event) async {
+    final uid = event.targetMemoUid?.trim();
+    if (uid == null || uid.isEmpty) return;
+    if (!event.refreshesReactions && !event.refreshesComments) return;
+    await _refreshUid(
+      ref,
+      uid,
+      reactions: event.refreshesReactions,
+      comments: event.refreshesComments,
+    );
+  }
+
+  Future<void> refreshAll(Ref ref) async {
+    final requests = List<MemoEngagementRequest>.from(_activeRequests);
+    await Future.wait(
+      requests.map(
+        (request) =>
+            _refreshRequest(ref, request, reactions: true, comments: true),
+      ),
+    );
+  }
+
+  void dispose() {
+    for (final timer in _pendingTimers.values) {
+      timer.cancel();
+    }
+    _pendingTimers.clear();
+    _pendingRefreshes.clear();
+    _activeRequests.clear();
+  }
+
+  bool _hasActiveRequestForUid(String uid) {
+    return _activeRequests.any((request) => request.normalizedMemoUid == uid);
+  }
+
+  Future<void> _refreshUid(
+    Ref ref,
+    String uid, {
+    required bool reactions,
+    required bool comments,
+  }) async {
+    final requests = _activeRequests
+        .where((request) => request.normalizedMemoUid == uid)
+        .toList(growable: false);
+    await Future.wait(
+      requests.map(
+        (request) => _refreshRequest(
+          ref,
+          request,
+          reactions: reactions,
+          comments: comments,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _refreshRequest(
+    Ref ref,
+    MemoEngagementRequest request, {
+    required bool reactions,
+    required bool comments,
+  }) async {
+    final controller = ref.read(
+      memoEngagementControllerProvider(request).notifier,
+    );
+    await Future.wait(<Future<void>>[
+      if (reactions) controller.loadReactions(force: true),
+      if (comments) controller.loadComments(force: true),
+    ]);
+  }
+}
+
+class MemoEngagementLiveRefreshCoordinator {
+  MemoEngagementLiveRefreshCoordinator({
+    required Ref ref,
+    required MemoEngagementLiveRefreshRegistry registry,
+    required MemosLiveRefreshEventSource? eventSource,
+    this.initialReconnectDelay = const Duration(seconds: 1),
+    this.maxReconnectDelay = const Duration(seconds: 30),
+  }) : _ref = ref,
+       _registry = registry,
+       _eventSource = eventSource;
+
+  final Ref _ref;
+  final MemoEngagementLiveRefreshRegistry _registry;
+  final MemosLiveRefreshEventSource? _eventSource;
+  final Duration initialReconnectDelay;
+  final Duration maxReconnectDelay;
+
+  StreamSubscription<MemosLiveRefreshEvent>? _subscription;
+  Timer? _reconnectTimer;
+  bool _disposed = false;
+  bool _started = false;
+  int _reconnectAttempt = 0;
+
+  void start() {
+    if (_started) return;
+    _started = true;
+    _connect();
+  }
+
+  void dispose() {
+    _disposed = true;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    unawaited(_subscription?.cancel());
+    _subscription = null;
+  }
+
+  void _connect() {
+    if (_disposed || !_registry.hasActiveRequests) return;
+    final eventSource = _eventSource;
+    if (eventSource == null || !eventSource.isSupported) return;
+
+    var connected = false;
+    _subscription = eventSource
+        .watchEvents(
+          onConnected: () {
+            connected = true;
+            _reconnectAttempt = 0;
+            scheduleMicrotask(() {
+              if (_disposed || !_registry.hasActiveRequests) return;
+              unawaited(_registry.refreshAll(_ref));
+            });
+          },
+        )
+        .listen(
+          (event) {
+            _registry.scheduleEvent(_ref, event);
+          },
+          onError: (_, _) {
+            _subscription = null;
+            _scheduleReconnect();
+          },
+          onDone: () {
+            _subscription = null;
+            if (connected) {
+              _scheduleReconnect();
+            }
+          },
+        );
+  }
+
+  void _scheduleReconnect() {
+    if (_disposed || !_registry.hasActiveRequests) return;
+    final eventSource = _eventSource;
+    if (eventSource == null || !eventSource.isSupported) return;
+
+    _reconnectTimer?.cancel();
+    _reconnectAttempt += 1;
+    final delay = _nextReconnectDelay();
+    _reconnectTimer = Timer(delay, _connect);
+  }
+
+  Duration _nextReconnectDelay() {
+    var delayMs = initialReconnectDelay.inMilliseconds;
+    for (var i = 1; i < _reconnectAttempt; i += 1) {
+      delayMs *= 2;
+      if (delayMs >= maxReconnectDelay.inMilliseconds) {
+        return maxReconnectDelay;
+      }
+    }
+    return Duration(milliseconds: delayMs);
+  }
+}
+
+class _PendingEngagementRefresh {
+  bool reactions = false;
+  bool comments = false;
 }
 
 class MemoEngagementRequest {

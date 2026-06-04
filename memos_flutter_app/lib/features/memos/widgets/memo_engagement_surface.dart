@@ -1453,6 +1453,7 @@ class _MemoEngagementSurfaceState extends ConsumerState<MemoEngagementSurface> {
   @override
   Widget build(BuildContext context) {
     final request = _request;
+    ref.watch(memoEngagementLiveRefreshRegistrationProvider(request));
     final state = ref.watch(memoEngagementControllerProvider(request));
     final snapshot = state.snapshot;
     _schedulePrefetchCreators(snapshot);
