@@ -15,6 +15,7 @@ import 'package:memos_flutter_app/data/models/memo_toolbar_preferences.dart';
 import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/features/settings/memo_toolbar_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/preferences_settings_screen.dart';
+import 'package:memos_flutter_app/features/settings/settings_ui.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
@@ -99,6 +100,8 @@ void main() {
 
       await _pumpToolbarSettingsScreen(tester, container: container);
 
+      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.byType(SettingsSection), findsNWidgets(2));
       final removeBold = find.byKey(const ValueKey('memo-toolbar-remove-bold'));
       tester
           .widget<InkResponse>(

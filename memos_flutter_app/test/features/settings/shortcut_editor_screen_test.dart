@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/data/models/shortcut.dart';
 import 'package:memos_flutter_app/features/settings/shortcut_editor_screen.dart';
+import 'package:memos_flutter_app/features/settings/settings_ui.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
@@ -52,6 +53,9 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(ShortcutEditorScreen), findsOneWidget);
+    expect(find.byType(SettingsSection), findsWidgets);
+    expect(find.byType(SettingsInputRow), findsWidgets);
+    expect(find.byType(SettingsAction), findsWidgets);
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
     expect(find.byIcon(Icons.arrow_back), findsNothing);
     expect(find.widgetWithText(TextButton, 'Done'), findsOneWidget);
@@ -94,6 +98,9 @@ void main() {
 
     expect(find.byType(Dialog), findsNothing);
     expect(find.byType(ShortcutEditorScreen), findsOneWidget);
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsSection), findsWidgets);
+    expect(find.byType(SettingsInputRow), findsWidgets);
     expect(find.text('Work'), findsOneWidget);
     expect(find.text('#work'), findsOneWidget);
 

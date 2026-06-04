@@ -4,16 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/app_localization.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../core/windows_adaptive_surface.dart';
 import '../../data/models/shortcut.dart';
 import '../../platform/platform_route.dart';
+import '../../platform/widgets/platform_primary_action.dart';
 import '../../platform/widgets/platform_secondary_task_surface.dart';
 import '../../state/memos/memos_providers.dart';
 import '../../state/tags/tag_color_lookup.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 class ShortcutEditorResult {
   const ShortcutEditorResult({required this.title, required this.filter});
@@ -134,9 +134,9 @@ class _ShortcutEditorScreenState extends ConsumerState<ShortcutEditorScreen> {
       initialDateRange: initial,
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(
-            context,
-          ).colorScheme.copyWith(primary: MemoFlowPalette.primary),
+          colorScheme: Theme.of(context).colorScheme.copyWith(
+            primary: Theme.of(context).colorScheme.primary,
+          ),
         ),
         child: child ?? const SizedBox.shrink(),
       ),
@@ -183,18 +183,8 @@ class _ShortcutEditorScreenState extends ConsumerState<ShortcutEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final border = isDark
-        ? MemoFlowPalette.borderDark
-        : MemoFlowPalette.borderLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
+    final tokens = settingsPageTokens(context);
+    final colorScheme = Theme.of(context).colorScheme;
     final canSubmit =
         _titleController.text.trim().isNotEmpty && _buildFilter().isNotEmpty;
     final tags = ref.watch(tagStatsProvider).valueOrNull ?? const <TagStat>[];
@@ -203,345 +193,245 @@ class _ShortcutEditorScreenState extends ConsumerState<ShortcutEditorScreen> {
     final titleText = widget.shortcut == null
         ? context.t.strings.legacy.msg_shortcut_2
         : context.t.strings.legacy.msg_edit_shortcut;
+    final tr = context.t.strings.legacy;
 
-    final content = Scaffold(
-      backgroundColor: bg,
-      appBar: widget.embeddedTaskSurface
-          ? null
-          : AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              surfaceTintColor: Colors.transparent,
-              automaticallyImplyLeading:
-                  resolveDesktopRouteAutomaticallyImplyLeading(
-                    context: context,
-                    automaticallyImplyLeading: true,
-                  ),
-              leading: resolveDesktopRouteDismissalLeading(
-                context: context,
-                leading: TextButton(
-                  onPressed: () => context.safePop(),
-                  child: Text(
-                    context.t.strings.legacy.msg_cancel_2,
-                    style: TextStyle(
-                      color: MemoFlowPalette.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+    final editorChildren = <Widget>[
+      SettingsSection(
+        children: [
+          SettingsInputRow(
+            label: tr.msg_name,
+            controller: _titleController,
+            hint: tr.msg_shortcut_name,
+          ),
+        ],
+      ),
+      const SizedBox(height: 14),
+      SettingsSection(
+        header: Text(tr.msg_match),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+            child: _SegmentedControl<_MatchMode>(
+              value: _matchAll ? _MatchMode.all : _MatchMode.any,
+              onChanged: (value) =>
+                  setState(() => _matchAll = value == _MatchMode.all),
+              options: [
+                _SegmentOption(value: _MatchMode.all, label: tr.msg_match_all),
+                _SegmentOption(value: _MatchMode.any, label: tr.msg_match_any),
+              ],
+            ),
+          ),
+        ],
+      ),
+      if (_hasUnsupportedFilter) ...[
+        const SizedBox(height: 14),
+        SettingsSection(
+          children: [
+            SettingsWarningRow(
+              message:
+                  tr.msg_shortcut_includes_advanced_conditions_saving_overwrite,
+            ),
+          ],
+        ),
+      ],
+      const SizedBox(height: 14),
+      _ShortcutConditionCard(
+        title: tr.msg_tags,
+        onClear: _selectedTags.isEmpty ? null : _clearTags,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SegmentedControl<_TagMatchMode>(
+              value: _tagMatchMode,
+              onChanged: (value) => setState(() => _tagMatchMode = value),
+              options: [
+                _SegmentOption(value: _TagMatchMode.any, label: tr.msg_any),
+                _SegmentOption(value: _TagMatchMode.all, label: tr.msg_all),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SettingsAction(
+              onPressed: () => _openTagPicker(tags),
+              icon: const Icon(Icons.add, size: 16),
+              variant: PlatformPrimaryActionVariant.outlined,
+              label: Text(tr.msg_select_tags),
+            ),
+            if (_selectedTags.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _selectedTags
+                    .map((tag) {
+                      final colors = tagColors.resolveChipColorsByPath(
+                        tag,
+                        surfaceColor: colorScheme.surface,
+                        isDark: tokens.isDark,
+                      );
+                      return InputChip(
+                        label: Text('#$tag'),
+                        onDeleted: () =>
+                            setState(() => _selectedTags.remove(tag)),
+                        backgroundColor:
+                            colors?.background ?? colorScheme.surface,
+                        deleteIconColor: colors?.text ?? tokens.textMuted,
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: colors?.text ?? tokens.textMain,
+                        ),
+                        side: BorderSide(
+                          color:
+                              colors?.border ??
+                              colorScheme.outlineVariant.withValues(alpha: 0.8),
+                        ),
+                      );
+                    })
+                    .toList(growable: false),
+              ),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 14),
+      _ShortcutConditionCard(
+        title: tr.msg_created_2,
+        onClear: _createdMode == _CreatedMode.range
+            ? (_createdRange == null ? null : _clearDateRange)
+            : (_createdLastDays == null ? null : _clearLastDays),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SegmentedControl<_CreatedMode>(
+              value: _createdMode,
+              onChanged: (value) => setState(() => _createdMode = value),
+              options: [
+                _SegmentOption(
+                  value: _CreatedMode.range,
+                  label: tr.msg_date_range_2,
                 ),
-              ),
-              title: Text(
-                titleText,
-                style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
-              ),
-              centerTitle: true,
-              actions: [
-                TextButton(
-                  onPressed: canSubmit ? _submit : null,
-                  child: Text(
-                    context.t.strings.legacy.msg_done,
-                    style: TextStyle(
-                      color: canSubmit ? MemoFlowPalette.primary : textMuted,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                _SegmentOption(
+                  value: _CreatedMode.lastDays,
+                  label: tr.msg_past_days,
                 ),
               ],
             ),
+            const SizedBox(height: 10),
+            if (_createdMode == _CreatedMode.range) ...[
+              SettingsRowDescription(tr.msg_within_range),
+              const SizedBox(height: 8),
+              SettingsAction(
+                onPressed: _openDateRangePicker,
+                icon: const Icon(Icons.date_range, size: 18),
+                variant: PlatformPrimaryActionVariant.outlined,
+                label: Text(
+                  _createdRange == null
+                      ? tr.msg_select_date_range
+                      : '${dateFormat.format(_createdRange!.start)} - ${dateFormat.format(_createdRange!.end)}',
+                ),
+              ),
+            ] else ...[
+              SettingsInputRow(
+                label: tr.msg_how_many_days_back,
+                controller: _lastDaysController,
+                hint: tr.msg_enter_days,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onChanged: (value) {
+                  final parsed = int.tryParse(value);
+                  setState(
+                    () => _createdLastDays = (parsed != null && parsed > 0)
+                        ? parsed
+                        : null,
+                  );
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 14),
+      _ShortcutConditionCard(
+        title: tr.msg_visibility,
+        onClear: _visibilityMode == _VisibilityMode.all
+            ? null
+            : _clearVisibility,
+        child: _SegmentedControl<_VisibilityMode>(
+          value: _visibilityMode,
+          onChanged: (value) => setState(() => _visibilityMode = value),
+          options: [
+            _SegmentOption(
+              value: _VisibilityMode.private,
+              label: tr.msg_private,
+            ),
+            _SegmentOption(value: _VisibilityMode.public, label: tr.msg_public),
+            _SegmentOption(value: _VisibilityMode.all, label: tr.msg_all_2),
+          ],
+        ),
+      ),
+    ];
+
+    final embeddedBody = ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: editorChildren,
+    );
+
+    if (!widget.embeddedTaskSurface) {
+      return SettingsPage(
+        title: Text(titleText),
+        showBackButton: false,
+        actions: [
+          TextButton(
+            onPressed: () => context.safePop(),
+            child: Text(tr.msg_cancel_2),
+          ),
+          TextButton(
+            onPressed: canSubmit ? _submit : null,
+            child: Text(tr.msg_done),
+          ),
+        ],
+        children: editorChildren,
+      );
+    }
+
+    return PlatformSecondaryTaskFrame(
+      title: Text(titleText),
+      closeTooltip: tr.msg_cancel_2,
+      onClose: () => context.safePop(),
+      backgroundColor: tokens.background,
+      actions: [
+        TextButton(
+          onPressed: canSubmit ? _submit : null,
+          child: Text(
+            tr.msg_done,
+            style: TextStyle(
+              color: canSubmit ? colorScheme.primary : tokens.textMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
       body: Stack(
         children: [
-          if (isDark)
+          if (tokens.isDark)
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
+                    colors: [
+                      const Color(0xFF0B0B0B),
+                      tokens.background,
+                      tokens.background,
+                    ],
                   ),
                 ),
               ),
             ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-            children: [
-              _FieldLabel(
-                text: context.t.strings.legacy.msg_name,
-                textColor: textMain,
-              ),
-              const SizedBox(height: 8),
-              _TextFieldCard(
-                cardColor: card,
-                borderColor: border,
-                controller: _titleController,
-                hintText: context.t.strings.legacy.msg_shortcut_name,
-                textColor: textMain,
-              ),
-              const SizedBox(height: 16),
-              _FieldLabel(
-                text: context.t.strings.legacy.msg_match,
-                textColor: textMain,
-              ),
-              const SizedBox(height: 8),
-              _SegmentedControl<_MatchMode>(
-                value: _matchAll ? _MatchMode.all : _MatchMode.any,
-                onChanged: (value) =>
-                    setState(() => _matchAll = value == _MatchMode.all),
-                options: [
-                  _SegmentOption(
-                    value: _MatchMode.all,
-                    label: context.t.strings.legacy.msg_match_all,
-                  ),
-                  _SegmentOption(
-                    value: _MatchMode.any,
-                    label: context.t.strings.legacy.msg_match_any,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (_hasUnsupportedFilter)
-                _WarningCard(
-                  cardColor: card,
-                  borderColor: border,
-                  text: context
-                      .t
-                      .strings
-                      .legacy
-                      .msg_shortcut_includes_advanced_conditions_saving_overwrite,
-                ),
-              if (_hasUnsupportedFilter) const SizedBox(height: 12),
-              _ShortcutConditionCard(
-                title: context.t.strings.legacy.msg_tags,
-                onClear: _selectedTags.isEmpty ? null : _clearTags,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _SegmentedControl<_TagMatchMode>(
-                      value: _tagMatchMode,
-                      onChanged: (value) =>
-                          setState(() => _tagMatchMode = value),
-                      options: [
-                        _SegmentOption(
-                          value: _TagMatchMode.any,
-                          label: context.t.strings.legacy.msg_any,
-                        ),
-                        _SegmentOption(
-                          value: _TagMatchMode.all,
-                          label: context.t.strings.legacy.msg_all,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _openTagPicker(tags),
-                        icon: const Icon(Icons.add, size: 16),
-                        label: Text(context.t.strings.legacy.msg_select_tags),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: MemoFlowPalette.primary,
-                          side: BorderSide(color: border),
-                          shape: const StadiumBorder(),
-                        ),
-                      ),
-                    ),
-                    if (_selectedTags.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _selectedTags
-                            .map((tag) {
-                              final colors = tagColors.resolveChipColorsByPath(
-                                tag,
-                                surfaceColor: Theme.of(
-                                  context,
-                                ).colorScheme.surface,
-                                isDark: isDark,
-                              );
-                              return InputChip(
-                                label: Text('#$tag'),
-                                onDeleted: () =>
-                                    setState(() => _selectedTags.remove(tag)),
-                                backgroundColor: colors?.background ?? card,
-                                deleteIconColor: colors?.text ?? textMuted,
-                                labelStyle: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: colors?.text ?? textMain,
-                                ),
-                                side: BorderSide(
-                                  color:
-                                      colors?.border ??
-                                      border.withValues(alpha: 0.8),
-                                ),
-                              );
-                            })
-                            .toList(growable: false),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _ShortcutConditionCard(
-                title: context.t.strings.legacy.msg_created_2,
-                onClear: _createdMode == _CreatedMode.range
-                    ? (_createdRange == null ? null : _clearDateRange)
-                    : (_createdLastDays == null ? null : _clearLastDays),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _SegmentedControl<_CreatedMode>(
-                      value: _createdMode,
-                      onChanged: (value) =>
-                          setState(() => _createdMode = value),
-                      options: [
-                        _SegmentOption(
-                          value: _CreatedMode.range,
-                          label: context.t.strings.legacy.msg_date_range_2,
-                        ),
-                        _SegmentOption(
-                          value: _CreatedMode.lastDays,
-                          label: context.t.strings.legacy.msg_past_days,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    if (_createdMode == _CreatedMode.range) ...[
-                      Text(
-                        context.t.strings.legacy.msg_within_range,
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _openDateRangePicker,
-                        icon: const Icon(Icons.date_range, size: 18),
-                        label: Text(
-                          _createdRange == null
-                              ? context.t.strings.legacy.msg_select_date_range
-                              : '${dateFormat.format(_createdRange!.start)} - ${dateFormat.format(_createdRange!.end)}',
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: MemoFlowPalette.primary,
-                          side: BorderSide(color: border),
-                          shape: const StadiumBorder(),
-                        ),
-                      ),
-                    ] else ...[
-                      Text(
-                        context.t.strings.legacy.msg_how_many_days_back,
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: card,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: border),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _lastDaysController,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                decoration: InputDecoration(
-                                  hintText:
-                                      context.t.strings.legacy.msg_enter_days,
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                ),
-                                onChanged: (value) {
-                                  final parsed = int.tryParse(value);
-                                  setState(
-                                    () => _createdLastDays =
-                                        (parsed != null && parsed > 0)
-                                        ? parsed
-                                        : null,
-                                  );
-                                },
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: textMain,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              context.t.strings.legacy.msg_days_4,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _ShortcutConditionCard(
-                title: context.t.strings.legacy.msg_visibility,
-                onClear: _visibilityMode == _VisibilityMode.all
-                    ? null
-                    : _clearVisibility,
-                child: _SegmentedControl<_VisibilityMode>(
-                  value: _visibilityMode,
-                  onChanged: (value) => setState(() => _visibilityMode = value),
-                  options: [
-                    _SegmentOption(
-                      value: _VisibilityMode.private,
-                      label: context.t.strings.legacy.msg_private,
-                    ),
-                    _SegmentOption(
-                      value: _VisibilityMode.public,
-                      label: context.t.strings.legacy.msg_public,
-                    ),
-                    _SegmentOption(
-                      value: _VisibilityMode.all,
-                      label: context.t.strings.legacy.msg_all_2,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          embeddedBody,
         ],
       ),
     );
-
-    if (widget.embeddedTaskSurface) {
-      return PlatformSecondaryTaskFrame(
-        title: Text(titleText),
-        closeTooltip: context.t.strings.legacy.msg_cancel_2,
-        onClose: () => context.safePop(),
-        backgroundColor: bg,
-        actions: [
-          TextButton(
-            onPressed: canSubmit ? _submit : null,
-            child: Text(
-              context.t.strings.legacy.msg_done,
-              style: TextStyle(
-                color: canSubmit ? MemoFlowPalette.primary : textMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-        body: content,
-      );
-    }
-
-    return content;
   }
 
   String _buildFilter() {
@@ -836,106 +726,6 @@ enum _CreatedMode { range, lastDays }
 
 enum _VisibilityMode { private, public, all }
 
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel({required this.text, required this.textColor});
-
-  final String text;
-  final Color textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(fontWeight: FontWeight.w600, color: textColor),
-    );
-  }
-}
-
-class _TextFieldCard extends StatelessWidget {
-  const _TextFieldCard({
-    required this.cardColor,
-    required this.borderColor,
-    required this.controller,
-    required this.hintText,
-    required this.textColor,
-  });
-
-  final Color cardColor;
-  final Color borderColor;
-  final TextEditingController controller;
-  final String hintText;
-  final Color textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: hintText,
-          border: InputBorder.none,
-          isDense: true,
-        ),
-        style: TextStyle(fontWeight: FontWeight.w600, color: textColor),
-      ),
-    );
-  }
-}
-
-class _WarningCard extends StatelessWidget {
-  const _WarningCard({
-    required this.cardColor,
-    required this.borderColor,
-    required this.text,
-  });
-
-  final Color cardColor;
-  final Color borderColor;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline,
-            size: 18,
-            color: textMain.withValues(alpha: 0.6),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 12,
-                color: textMain.withValues(alpha: 0.7),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ShortcutConditionCard extends StatelessWidget {
   const _ShortcutConditionCard({
     required this.title,
@@ -949,48 +739,36 @@ class _ShortcutConditionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final border = isDark
-        ? MemoFlowPalette.borderDark
-        : MemoFlowPalette.borderLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
+    final tokens = settingsPageTokens(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return SettingsSection(
+      header: Text(title),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-              ),
-              const Spacer(),
-              if (onClear != null)
-                IconButton(
-                  onPressed: onClear,
-                  icon: Icon(
-                    Icons.close,
-                    size: 18,
-                    color: textMain.withValues(alpha: 0.6),
+              if (onClear != null) ...[
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: IconButton(
+                    onPressed: onClear,
+                    icon: Icon(Icons.close, size: 18, color: tokens.textMuted),
+                    tooltip: context.t.strings.legacy.msg_clear,
                   ),
-                  tooltip: context.t.strings.legacy.msg_clear,
                 ),
+                Divider(
+                  height: 12,
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+                ),
+              ],
+              child,
             ],
           ),
-          const SizedBox(height: 8),
-          child,
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -1015,20 +793,15 @@ class _SegmentedControl<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final border = isDark
-        ? MemoFlowPalette.borderDark
-        : MemoFlowPalette.borderLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
+    final tokens = settingsPageTokens(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -1042,7 +815,7 @@ class _SegmentedControl<T> extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
                     color: option.value == value
-                        ? MemoFlowPalette.primary
+                        ? colorScheme.primary
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(999),
                   ),
@@ -1052,7 +825,9 @@ class _SegmentedControl<T> extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: option.value == value ? Colors.white : textMain,
+                      color: option.value == value
+                          ? colorScheme.onPrimary
+                          : tokens.textMain,
                     ),
                   ),
                 ),
@@ -1079,11 +854,8 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: 0.55);
+    final tokens = settingsPageTokens(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
       child: Column(
@@ -1098,7 +870,7 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
                   child: Text(
                     context.t.strings.legacy.msg_cancel_2,
                     style: TextStyle(
-                      color: MemoFlowPalette.primary,
+                      color: colorScheme.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1108,7 +880,7 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
                   context.t.strings.legacy.msg_select_tags,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: textMain,
+                    color: tokens.textMain,
                   ),
                 ),
                 const Spacer(),
@@ -1117,7 +889,7 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
                   child: Text(
                     context.t.strings.legacy.msg_done,
                     style: TextStyle(
-                      color: MemoFlowPalette.primary,
+                      color: colorScheme.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1131,7 +903,7 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
                     padding: const EdgeInsets.all(24),
                     child: Text(
                       context.t.strings.legacy.msg_no_tags,
-                      style: TextStyle(color: textMuted),
+                      style: TextStyle(color: tokens.textMuted),
                     ),
                   )
                 : ListView.builder(
@@ -1154,15 +926,18 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
                         title: Text(
                           '#${tag.tag}',
                           style: TextStyle(
-                            color: textMain,
+                            color: tokens.textMain,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         subtitle: Text(
                           '${tag.count}',
-                          style: TextStyle(fontSize: 12, color: textMuted),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tokens.textMuted,
+                          ),
                         ),
-                        activeColor: MemoFlowPalette.primary,
+                        activeColor: colorScheme.primary,
                       );
                     },
                   ),

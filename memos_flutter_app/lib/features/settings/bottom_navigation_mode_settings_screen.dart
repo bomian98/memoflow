@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../data/models/home_navigation_preferences.dart';
 import '../../features/home/home_navigation_resolver.dart';
 import '../../features/home/home_root_destination_registry.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_list_section.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
 import '../../state/system/session_provider.dart';
+import 'settings_ui.dart';
 
 class BottomNavigationModeSettingsScreen extends ConsumerWidget {
   const BottomNavigationModeSettingsScreen({super.key});
@@ -26,14 +26,7 @@ class BottomNavigationModeSettingsScreen extends ConsumerWidget {
       navigationPrefs,
       hasAccount: hasAccount,
     );
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
 
     Future<void> pickDestination(HomeNavigationSlot slot) async {
       final currentResolved = resolveHomeNavigationPreferences(
@@ -49,6 +42,7 @@ class BottomNavigationModeSettingsScreen extends ConsumerWidget {
       final selected = await showDialog<HomeRootDestination>(
         context: context,
         builder: (dialogContext) {
+          final colorScheme = Theme.of(dialogContext).colorScheme;
           final selectedSet = <HomeRootDestination>{
             currentResolved.leftPrimary,
             currentResolved.leftSecondary,
@@ -56,7 +50,7 @@ class BottomNavigationModeSettingsScreen extends ConsumerWidget {
             currentResolved.rightSecondary,
           }..remove(currentValue);
           return AlertDialog(
-            backgroundColor: card,
+            backgroundColor: tokens.card,
             surfaceTintColor: Colors.transparent,
             insetPadding: const EdgeInsets.symmetric(horizontal: 24),
             shape: RoundedRectangleBorder(
@@ -86,7 +80,7 @@ class BottomNavigationModeSettingsScreen extends ConsumerWidget {
                             enabled:
                                 destination == HomeRootDestination.none ||
                                 !selectedSet.contains(destination),
-                            activeColor: MemoFlowPalette.primary,
+                            activeColor: colorScheme.primary,
                             secondary: Icon(
                               destination == HomeRootDestination.none
                                   ? Icons.visibility_off_outlined
@@ -112,88 +106,37 @@ class BottomNavigationModeSettingsScreen extends ConsumerWidget {
           .setHomeNavigationSlot(slot, selected);
     }
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
-        ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ),
-        title: Text(context.t.strings.legacy.msg_navigation_mode_bottom_bar),
-        centerTitle: false,
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
-              ),
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_navigation_mode_bottom_bar),
+      children: [
+        _PreviewCard(resolved: resolved, tokens: tokens),
+        const SizedBox(height: 12),
+        SettingsSection(
+          children: [
+            _DestinationRow(
+              label: _slotLabel(context, HomeNavigationSlot.leftPrimary),
+              destination: resolved.leftPrimary,
+              onTap: () => pickDestination(HomeNavigationSlot.leftPrimary),
             ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-            children: [
-              _PreviewCard(resolved: resolved),
-              const SizedBox(height: 12),
-              _SectionCard(
-                card: card,
-                divider: divider,
-                children: [
-                  _DestinationRow(
-                    label: _slotLabel(context, HomeNavigationSlot.leftPrimary),
-                    destination: resolved.leftPrimary,
-                    onTap: () =>
-                        pickDestination(HomeNavigationSlot.leftPrimary),
-                  ),
-                  _DestinationRow(
-                    label: _slotLabel(
-                      context,
-                      HomeNavigationSlot.leftSecondary,
-                    ),
-                    destination: resolved.leftSecondary,
-                    onTap: () =>
-                        pickDestination(HomeNavigationSlot.leftSecondary),
-                  ),
-                  _FixedAddRow(label: context.t.strings.legacy.msg_create_memo),
-                  _DestinationRow(
-                    label: _slotLabel(context, HomeNavigationSlot.rightPrimary),
-                    destination: resolved.rightPrimary,
-                    onTap: () =>
-                        pickDestination(HomeNavigationSlot.rightPrimary),
-                  ),
-                  _DestinationRow(
-                    label: _slotLabel(
-                      context,
-                      HomeNavigationSlot.rightSecondary,
-                    ),
-                    destination: resolved.rightSecondary,
-                    onTap: () =>
-                        pickDestination(HomeNavigationSlot.rightSecondary),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+            _DestinationRow(
+              label: _slotLabel(context, HomeNavigationSlot.leftSecondary),
+              destination: resolved.leftSecondary,
+              onTap: () => pickDestination(HomeNavigationSlot.leftSecondary),
+            ),
+            _FixedAddRow(label: context.t.strings.legacy.msg_create_memo),
+            _DestinationRow(
+              label: _slotLabel(context, HomeNavigationSlot.rightPrimary),
+              destination: resolved.rightPrimary,
+              onTap: () => pickDestination(HomeNavigationSlot.rightPrimary),
+            ),
+            _DestinationRow(
+              label: _slotLabel(context, HomeNavigationSlot.rightSecondary),
+              destination: resolved.rightSecondary,
+              onTap: () => pickDestination(HomeNavigationSlot.rightSecondary),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -221,47 +164,6 @@ class BottomNavigationModeSettingsScreen extends ConsumerWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.card,
-    required this.divider,
-    required this.children,
-  });
-
-  final Color card;
-  final Color divider;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var index = 0; index < children.length; index++) ...[
-            children[index],
-            if (index != children.length - 1)
-              Divider(height: 1, thickness: 1, color: divider),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 class _DestinationRow extends StatelessWidget {
   const _DestinationRow({
     required this.label,
@@ -276,52 +178,17 @@ class _DestinationRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final definition = homeRootDestinationDefinition(destination);
-    final textMain = Theme.of(context).brightness == Brightness.dark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
     final isNone = destination == HomeRootDestination.none;
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: textMain,
-                ),
-              ),
-            ),
-            Icon(
-              isNone ? Icons.visibility_off_outlined : definition!.icon,
-              size: 20,
-              color: textMain.withValues(alpha: 0.72),
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                isNone
-                    ? context.t.strings.legacy.msg_none
-                    : definition!.labelBuilder(context),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: textMain.withValues(alpha: 0.76),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: textMain.withValues(alpha: 0.48)),
-          ],
-        ),
+    return SettingsNavigationRow(
+      label: label,
+      value: isNone
+          ? context.t.strings.legacy.msg_none
+          : definition!.labelBuilder(context),
+      leading: Icon(
+        isNone ? Icons.visibility_off_outlined : definition!.icon,
+        size: 20,
       ),
+      onTap: onTap,
     );
   }
 }
@@ -333,53 +200,35 @@ class _FixedAddRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textMain = Theme.of(context).brightness == Brightness.dark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              context.t.strings.legacy.msg_navigation_slot_center,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: textMain,
-              ),
-            ),
-          ),
-          Icon(Icons.add_circle_outline, color: MemoFlowPalette.primary),
-          const SizedBox(width: 10),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: textMain.withValues(alpha: 0.82),
-            ),
-          ),
-        ],
+    final tokens = settingsPageTokens(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    return PlatformListSectionRow(
+      leading: Icon(Icons.add_circle_outline, color: colorScheme.primary),
+      title: SettingsRowTitle(
+        context.t.strings.legacy.msg_navigation_slot_center,
+      ),
+      trailing: Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: tokens.textMain.withValues(alpha: 0.82),
+        ),
       ),
     );
   }
 }
 
 class _PreviewCard extends StatelessWidget {
-  const _PreviewCard({required this.resolved});
+  const _PreviewCard({required this.resolved, required this.tokens});
 
   final ResolvedHomeNavigationPreferences resolved;
+  final SettingsPageTokens tokens;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark
-        ? MemoFlowPalette.cardDark
-        : Theme.of(context).colorScheme.surface;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+    final colorScheme = Theme.of(context).colorScheme;
+    final borderColor = colorScheme.outlineVariant.withValues(alpha: 0.65);
 
     Widget buildItem(HomeRootDestination destination) {
       if (destination == HomeRootDestination.none) {
@@ -390,7 +239,7 @@ class _PreviewCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(definition.icon, color: MemoFlowPalette.primary, size: 20),
+            Icon(definition.icon, color: colorScheme.primary, size: 20),
             const SizedBox(height: 4),
             Text(
               definition.labelBuilder(context),
@@ -406,8 +255,8 @@ class _PreviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(22),
+        color: tokens.card,
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderColor),
       ),
       child: Column(
@@ -430,7 +279,7 @@ class _PreviewCard extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.add_circle,
-                      color: MemoFlowPalette.primary,
+                      color: colorScheme.primary,
                       size: 24,
                     ),
                     const SizedBox(height: 4),

@@ -279,12 +279,8 @@ class _ShortcutCaptureDialogState extends State<_ShortcutCaptureDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _desktopShortcutActionLabel(context, widget.action),
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: tokens.textMain,
-                ),
+              SettingsContentHeader(
+                title: _desktopShortcutActionLabel(context, widget.action),
               ),
               const SizedBox(height: 8),
               Text(

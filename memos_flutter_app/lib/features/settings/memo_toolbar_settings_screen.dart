@@ -8,12 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/desktop_quick_input_channel.dart';
 import '../../core/desktop_runtime_role.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
 import '../memos/compose_toolbar_shared.dart';
 import '../memos/memo_toolbar_custom_icon_catalog.dart' as toolbar_icons;
+import 'settings_ui.dart';
 
 class MemoToolbarSettingsScreen extends ConsumerWidget {
   const MemoToolbarSettingsScreen({super.key});
@@ -27,17 +26,11 @@ class MemoToolbarSettingsScreen extends ConsumerWidget {
     );
     final notifier = ref.read(currentWorkspacePreferencesProvider.notifier);
     final runtimeRole = ref.read(desktopRuntimeRoleProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final textColor = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final mutedTextColor = textColor.withValues(alpha: isDark ? 0.58 : 0.62);
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textColor = tokens.textMain;
+    final mutedTextColor = tokens.textMuted;
+    final borderColor = colorScheme.outlineVariant.withValues(alpha: 0.65);
     final toolbarStrings = context.t.strings.settings.preferences.editorToolbar;
     final toolboxItems = prefs.hiddenItemIdsInOrder();
 
@@ -82,138 +75,77 @@ class MemoToolbarSettingsScreen extends ConsumerWidget {
       persist(prefs.addCustomButton(created));
     }
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(toolbarStrings.title),
+      actions: [
+        TextButton(
+          onPressed: resetToDefaults,
+          child: Text(context.t.strings.legacy.msg_restore_defaults),
         ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ),
-        title: Text(toolbarStrings.title),
-        centerTitle: false,
-        actions: [
-          TextButton(
-            onPressed: resetToDefaults,
-            child: Text(context.t.strings.legacy.msg_restore_defaults),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF0B0B0B),
-                      backgroundColor,
-                      backgroundColor,
-                    ],
-                  ),
-                ),
+      ],
+      children: [
+        SettingsSection(
+          header: Text(toolbarStrings.toolbox),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: _ToolboxPanel(
+                preferences: prefs,
+                items: toolboxItems,
+                isDark: tokens.isDark,
+                textColor: textColor,
+                mutedTextColor: mutedTextColor,
+                borderColor: borderColor,
+                onCreateCustom: createCustomButton,
+                onAdd: (item) => persist(prefs.setHiddenItem(item, false)),
+                onDropIntoToolbox: (item) =>
+                    persist(prefs.setHiddenItem(item, true)),
               ),
             ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              _SectionCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      toolbarStrings.toolbox,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: textColor,
+          ],
+        ),
+        const SizedBox(height: 14),
+        SettingsSection(
+          header: Text(toolbarStrings.toolbarPreview),
+          footer: Text(toolbarStrings.toolbarDescription),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: TextButton.icon(
+                      key: const ValueKey('memo-toolbar-clear-all'),
+                      onPressed: clearAllToolbarButtons,
+                      icon: const Icon(Icons.clear_all_rounded, size: 18),
+                      label: Text(context.t.strings.legacy.msg_clear),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _EditorToolbarPreview(
+                    isDark: tokens.isDark,
+                    preferences: prefs,
+                    textColor: textColor,
+                    mutedTextColor: mutedTextColor,
+                    borderColor: borderColor,
+                    onRemove: (item) =>
+                        persist(prefs.setHiddenItem(item, true)),
+                    onDrop: (item, row, visibleIndex) => persist(
+                      moveItemToSlot(
+                        item: item,
+                        row: row,
+                        visibleIndex: visibleIndex,
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    _ToolboxPanel(
-                      preferences: prefs,
-                      items: toolboxItems,
-                      isDark: isDark,
-                      textColor: textColor,
-                      mutedTextColor: mutedTextColor,
-                      borderColor: borderColor,
-                      onCreateCustom: createCustomButton,
-                      onAdd: (item) =>
-                          persist(prefs.setHiddenItem(item, false)),
-                      onDropIntoToolbox: (item) =>
-                          persist(prefs.setHiddenItem(item, true)),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              _SectionCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            toolbarStrings.toolbarPreview,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: textColor,
-                            ),
-                          ),
-                        ),
-                        TextButton.icon(
-                          key: const ValueKey('memo-toolbar-clear-all'),
-                          onPressed: clearAllToolbarButtons,
-                          icon: const Icon(Icons.clear_all_rounded, size: 18),
-                          label: Text(context.t.strings.legacy.msg_clear),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      toolbarStrings.toolbarDescription,
-                      style: TextStyle(color: mutedTextColor),
-                    ),
-                    const SizedBox(height: 14),
-                    _EditorToolbarPreview(
-                      isDark: isDark,
-                      preferences: prefs,
-                      textColor: textColor,
-                      mutedTextColor: mutedTextColor,
-                      borderColor: borderColor,
-                      onRemove: (item) =>
-                          persist(prefs.setHiddenItem(item, true)),
-                      onDrop: (item, row, visibleIndex) => persist(
-                        moveItemToSlot(
-                          item: item,
-                          row: row,
-                          visibleIndex: visibleIndex,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -284,20 +216,6 @@ class _ToolbarDraggable extends StatelessWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: child,
-    );
-  }
-}
-
 class _ToolboxPanel extends StatelessWidget {
   const _ToolboxPanel({
     required this.preferences,
@@ -324,6 +242,7 @@ class _ToolboxPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final toolbarStrings = context.t.strings.settings.preferences.editorToolbar;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return DragTarget<MemoToolbarItemId>(
       onWillAcceptWithDetails: (_) => true,
@@ -335,7 +254,7 @@ class _ToolboxPanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
             color: isActive
-                ? MemoFlowPalette.primary.withValues(alpha: isDark ? 0.18 : 0.1)
+                ? colorScheme.primary.withValues(alpha: isDark ? 0.18 : 0.1)
                 : Colors.transparent,
           ),
           child: LayoutBuilder(
@@ -1463,23 +1382,22 @@ class _SendPreviewButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: MemoFlowPalette.primary,
+        color: colorScheme.primary,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: MemoFlowPalette.primary.withValues(
-              alpha: isDark ? 0.28 : 0.36,
-            ),
+            color: colorScheme.primary.withValues(alpha: isDark ? 0.28 : 0.36),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: const Icon(Icons.send_rounded, size: 20, color: Colors.white),
+      child: Icon(Icons.send_rounded, size: 20, color: colorScheme.onPrimary),
     );
   }
 }

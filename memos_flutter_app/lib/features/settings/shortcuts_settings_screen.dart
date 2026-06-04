@@ -4,16 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_localization.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/models/shortcut.dart';
+import '../../i18n/strings.g.dart';
+import '../../platform/widgets/platform_list_section.dart';
 import '../../state/memos/memos_providers.dart';
 import '../../state/settings/device_preferences_provider.dart';
-import '../../state/system/session_provider.dart';
 import '../../state/settings/user_settings_provider.dart';
+import '../../state/system/session_provider.dart';
 import 'shortcut_editor_screen.dart';
-import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 class ShortcutsSettingsScreen extends ConsumerStatefulWidget {
   const ShortcutsSettingsScreen({super.key});
@@ -171,18 +171,7 @@ class _ShortcutsSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+    final tr = context.t.strings.legacy;
     final hapticsEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.hapticsEnabled),
     );
@@ -195,123 +184,71 @@ class _ShortcutsSettingsScreenState
 
     final shortcutsAsync = ref.watch(shortcutsProvider);
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(tr.msg_shortcuts),
+      actions: [
+        IconButton(
+          tooltip: tr.msg_add,
+          icon: const Icon(Icons.add),
+          onPressed: _saving
+              ? null
+              : () {
+                  maybeHaptic();
+                  _openEditor();
+                },
         ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ),
-        title: Text(context.t.strings.legacy.msg_shortcuts),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            tooltip: context.t.strings.legacy.msg_add,
-            icon: const Icon(Icons.add),
-            onPressed: _saving
-                ? null
-                : () {
-                    maybeHaptic();
-                    _openEditor();
-                  },
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
-              ),
-            ),
-          shortcutsAsync.when(
-            data: (shortcuts) {
-              if (shortcuts.isEmpty) {
-                return Center(
-                  child: Text(
-                    context.t.strings.legacy.msg_no_shortcuts_configured,
-                    style: TextStyle(color: textMuted),
-                  ),
-                );
-              }
-
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      ],
+      children: [
+        shortcutsAsync.when(
+          data: (shortcuts) {
+            if (shortcuts.isEmpty) {
+              return SettingsSection(
                 children: [
-                  _Group(
-                    card: card,
-                    divider: divider,
-                    children: [
-                      for (final shortcut in shortcuts)
-                        _ShortcutRow(
-                          shortcut: shortcut,
-                          textMain: textMain,
-                          textMuted: textMuted,
-                          onEdit: () {
-                            maybeHaptic();
-                            _openEditor(shortcut: shortcut);
-                          },
-                          onDelete: () {
-                            maybeHaptic();
-                            _deleteShortcut(shortcut);
-                          },
-                        ),
-                    ],
-                  ),
+                  SettingsInfoRow(description: tr.msg_no_shortcuts_configured),
                 ],
               );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      context.t.strings.legacy.msg_failed_load_2,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: textMain,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _formatLoadError(context, error),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: textMuted),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => ref.invalidate(shortcutsProvider),
-                      child: Text(context.t.strings.legacy.msg_retry),
-                    ),
-                  ],
-                ),
-              ),
+            }
+
+            return SettingsSection(
+              children: [
+                for (final shortcut in shortcuts)
+                  _ShortcutRow(
+                    shortcut: shortcut,
+                    onEdit: () {
+                      maybeHaptic();
+                      _openEditor(shortcut: shortcut);
+                    },
+                    onDelete: () {
+                      maybeHaptic();
+                      _deleteShortcut(shortcut);
+                    },
+                  ),
+              ],
+            );
+          },
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 28),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, _) => SettingsSection(
+            children: [
+              SettingsWarningRow(message: tr.msg_failed_load_2),
+              SettingsInfoRow(description: _formatLoadError(context, error)),
+            ],
+          ),
+        ),
+        if (shortcutsAsync.hasError) ...[
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SettingsAction(
+              onPressed: () => ref.invalidate(shortcutsProvider),
+              icon: const Icon(Icons.refresh),
+              label: Text(tr.msg_retry),
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -319,15 +256,11 @@ class _ShortcutsSettingsScreenState
 class _ShortcutRow extends StatelessWidget {
   const _ShortcutRow({
     required this.shortcut,
-    required this.textMain,
-    required this.textMuted,
     required this.onEdit,
     required this.onDelete,
   });
 
   final Shortcut shortcut;
-  final Color textMain;
-  final Color textMuted;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -335,84 +268,26 @@ class _ShortcutRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = shortcut.title.trim().isEmpty ? '--' : shortcut.title.trim();
     final filter = shortcut.filter.trim();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final tokens = settingsPageTokens(context);
+    return PlatformListSectionRow(
+      title: SettingsRowTitle(title),
+      subtitle: filter.isEmpty ? null : SettingsRowDescription(filter),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: textMain,
-                  ),
-                ),
-                if (filter.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    filter,
-                    style: TextStyle(fontSize: 12, color: textMuted),
-                  ),
-                ],
-              ],
-            ),
-          ),
           IconButton(
             tooltip: context.t.strings.legacy.msg_edit,
-            icon: Icon(Icons.edit, size: 18, color: textMuted),
+            icon: Icon(Icons.edit, size: 18, color: tokens.textMuted),
             onPressed: onEdit,
           ),
           IconButton(
             tooltip: context.t.strings.legacy.msg_delete,
-            icon: Icon(Icons.delete_outline, size: 18, color: textMuted),
+            icon: Icon(Icons.delete_outline, size: 18, color: tokens.textMuted),
             onPressed: onDelete,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Group extends StatelessWidget {
-  const _Group({
-    required this.card,
-    required this.divider,
-    required this.children,
-  });
-
-  final Color card;
-  final Color divider;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i != children.length - 1) Divider(height: 1, color: divider),
-          ],
-        ],
-      ),
+      denseOnDesktop: filter.isEmpty,
     );
   }
 }

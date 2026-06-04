@@ -809,12 +809,6 @@ class _CustomThemeDialogState extends State<CustomThemeDialog> {
         : Colors.black.withValues(alpha: 0.04);
     final accent = MemoFlowPalette.primary;
     final shadow = Colors.black.withValues(alpha: 0.16);
-    final headerStyle = TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w800,
-      color: textMain,
-    );
-
     return Material(
       type: MaterialType.transparency,
       child: SafeArea(
@@ -839,9 +833,8 @@ class _CustomThemeDialogState extends State<CustomThemeDialog> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      context.t.strings.settings.preferences.customTheme,
-                      style: headerStyle,
+                    SettingsContentHeader(
+                      title: context.t.strings.settings.preferences.customTheme,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
@@ -878,16 +871,13 @@ class _CustomThemeDialogState extends State<CustomThemeDialog> {
                           title: context.t.strings.settings.preferences.history,
                           entries: _history,
                           border: border,
-                          textMuted: textMuted,
                           onTap: _applyHistory,
                         ),
                       ],
                     ] else ...[
-                      _ModeSectionHeader(
-                        label: context.t.strings.settings.preferences.lightMode,
+                      SettingsSectionHeader(
+                        title: context.t.strings.settings.preferences.lightMode,
                         caption: 'LIGHT MODE',
-                        textMain: textMain,
-                        textMuted: textMuted,
                       ),
                       const SizedBox(height: 8),
                       _ColorSquarePicker(
@@ -908,9 +898,8 @@ class _CustomThemeDialogState extends State<CustomThemeDialog> {
                             _handleHexChanged(value, _updateManualLight),
                       ),
                       const SizedBox(height: 12),
-                      _SurfaceSectionHeader(
+                      SettingsSectionHeader(
                         title: context.t.strings.settings.preferences.surfaces,
-                        textMuted: textMuted,
                       ),
                       const SizedBox(height: 8),
                       _SurfaceColorRow(
@@ -1002,16 +991,13 @@ class _CustomThemeDialogState extends State<CustomThemeDialog> {
                           title: context.t.strings.settings.preferences.history,
                           entries: _history,
                           border: border,
-                          textMuted: textMuted,
                           onTap: _applyHistory,
                         ),
                       ],
                       const SizedBox(height: 16),
-                      _ModeSectionHeader(
-                        label: context.t.strings.settings.preferences.darkMode,
+                      SettingsSectionHeader(
+                        title: context.t.strings.settings.preferences.darkMode,
                         caption: 'DARK MODE',
-                        textMain: textMain,
-                        textMuted: textMuted,
                       ),
                       const SizedBox(height: 8),
                       _ColorSquarePicker(
@@ -1032,9 +1018,8 @@ class _CustomThemeDialogState extends State<CustomThemeDialog> {
                             _handleHexChanged(value, _updateManualDark),
                       ),
                       const SizedBox(height: 12),
-                      _SurfaceSectionHeader(
+                      SettingsSectionHeader(
                         title: context.t.strings.settings.preferences.surfaces,
-                        textMuted: textMuted,
                       ),
                       const SizedBox(height: 8),
                       _SurfaceColorRow(
@@ -1534,11 +1519,7 @@ class _HexInputRow extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              style: TextStyle(
-                color: textMain,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-              ),
+              style: TextStyle(color: textMain, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 6),
@@ -1557,25 +1538,6 @@ class _HexInputRow extends StatelessWidget {
 }
 
 enum _SurfaceSlot { background, card, border }
-
-class _SurfaceSectionHeader extends StatelessWidget {
-  const _SurfaceSectionHeader({required this.title, required this.textMuted});
-
-  final String title;
-  final Color textMuted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        color: textMuted,
-      ),
-    );
-  }
-}
 
 class _SurfaceColorRow extends StatelessWidget {
   const _SurfaceColorRow({
@@ -1633,14 +1595,12 @@ class _HistoryRow extends StatelessWidget {
     required this.title,
     required this.entries,
     required this.border,
-    required this.textMuted,
     required this.onTap,
   });
 
   final String title;
   final List<CustomThemeColorPair> entries;
   final Color border;
-  final Color textMuted;
   final ValueChanged<CustomThemeColorPair> onTap;
 
   @override
@@ -1648,14 +1608,7 @@ class _HistoryRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: textMuted,
-          ),
-        ),
+        SettingsSectionHeader(title: title),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -1699,42 +1652,6 @@ class _HistoryDot extends StatelessWidget {
           border: Border.all(color: border),
         ),
       ),
-    );
-  }
-}
-
-class _ModeSectionHeader extends StatelessWidget {
-  const _ModeSectionHeader({
-    required this.label,
-    required this.caption,
-    required this.textMain,
-    required this.textMuted,
-  });
-
-  final String label;
-  final String caption;
-  final Color textMain;
-  final Color textMuted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontWeight: FontWeight.w700, color: textMain),
-        ),
-        const Spacer(),
-        Text(
-          caption,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-            color: textMuted,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1840,9 +1757,9 @@ class _SurfaceColorDialogState extends State<_SurfaceColorDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              widget.title,
-              style: TextStyle(fontWeight: FontWeight.w800, color: textMain),
+            SettingsContentHeader(
+              title: widget.title,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             _ColorSquarePicker(
