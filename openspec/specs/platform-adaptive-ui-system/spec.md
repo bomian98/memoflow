@@ -213,3 +213,623 @@ Desktop transient UI, search, and compose presentation SHALL be selected from se
 - **WHEN** desktop adaptive surface, search, or compose code is added to public shell files
 - **THEN** it SHALL NOT introduce subscription, billing, entitlement, receipt, paywall, StoreKit, product ID, price, buyout, private release automation, or `AccessDecision.source` business branching logic
 
+### Requirement: Desktop settings SHALL expose platform-scoped lifecycle controls
+Desktop settings SHALL present desktop lifecycle controls only for the current desktop platform and SHALL render those controls through settings semantic components. macOS close-to-menu-bar controls SHALL appear in a macOS-specific section when running as macOS desktop experience; Windows close-to-tray controls SHALL remain Windows-specific.
+
+#### Scenario: macOS lifecycle setting is visible on macOS
+- **WHEN** 用户在 macOS desktop experience 打开 Desktop settings
+- **THEN** 页面 SHALL show a macOS-specific lifecycle section or row for close-to-menu-bar
+- **AND** the row SHALL reflect the current macOS close-to-menu-bar preference value
+
+#### Scenario: macOS lifecycle setting is hidden outside macOS
+- **WHEN** 用户在 Windows、Linux、mobile、tablet 或 web experience 打开 Desktop settings
+- **THEN** 页面 SHALL NOT show the macOS close-to-menu-bar row
+- **AND** non-macOS experiences SHALL NOT be able to change the macOS-only setting from that page
+
+#### Scenario: Windows close-to-tray remains Windows-scoped
+- **WHEN** 用户在 Windows desktop experience 打开 Desktop settings
+- **THEN** 页面 SHALL keep showing the Windows close-to-tray row
+- **AND** Windows row SHALL NOT be renamed or rewired to control macOS close-to-menu-bar behavior
+
+#### Scenario: Lifecycle rows use settings semantic components
+- **WHEN** Desktop settings renders macOS or Windows lifecycle toggles
+- **THEN** it SHALL use `SettingsSection`、`SettingsToggleRow` 或 an approved settings semantic seam
+- **AND** it SHALL NOT introduce page-local card/toggle styling that bypasses the settings UI system
+
+### Requirement: Shortcuts and toolbar settings surfaces SHALL use semantic settings UI seams
+
+`ShortcutsSettingsScreen`, `ShortcutEditorScreen`, and `MemoToolbarSettingsScreen` SHALL render page chrome, grouped list/form/editor surfaces, status rows, action rows, manual inputs, high-level editor sections, toolbar toolbox/preview groups, explanatory notes, and empty/error states through `SettingsPage`, `SettingsSection`, settings row/action/input components, `settingsPageTokens`, platform controls, theme colors, or equivalent settings/platform seams instead of local scaffold/card/palette/button implementations.
+
+#### Scenario: App shortcuts list is migrated
+
+- **WHEN** `ShortcutsSettingsScreen` renders page chrome, add action, shortcuts list, shortcut rows, empty state, loading state, error state, retry action, edit action, delete action, or delete confirmation entry point
+- **THEN** those visible settings surfaces SHALL use settings semantic seams or equivalent settings/platform seams
+- **AND** haptics, local/server shortcut selection, provider invalidation, save/delete calls, toast/snackbar behavior, delete confirmation labels, unsupported-server error formatting, shortcut labels, and route to `ShortcutEditorScreen` SHALL be preserved
+- **AND** the change SHALL NOT modify API route adapters, request/response models, shortcut data models, local shortcut repository semantics, or server compatibility logic
+
+#### Scenario: Shortcut editor is migrated
+
+- **WHEN** `ShortcutEditorScreen` renders title/name input, match mode, unsupported-filter warning, tag condition, created date condition, visibility condition, tag picker entry, date range picker entry, clear actions, cancel/done actions, embedded desktop task surface content, or validation messages
+- **THEN** page chrome and grouped visible editor surfaces SHALL use settings semantic seams or equivalent settings/platform seams
+- **AND** desktop secondary task surface selection, filter parsing/building, tag selection, date range selection, visibility selection, validation, `ShortcutEditorResult`, and existing labels SHALL be preserved
+- **AND** the change SHALL NOT modify shortcut filter grammar, memo search semantics, tag providers, or desktop secondary task surface policy
+
+#### Scenario: Memo toolbar settings editor is migrated
+
+- **WHEN** `MemoToolbarSettingsScreen` renders page chrome, restore defaults, toolbox section, create custom button action, toolbox items, toolbar preview section, clear action, drag/drop targets, add/remove actions, empty toolbox state, custom button dialog entry, or explanatory copy
+- **THEN** page chrome and high-level grouped surfaces SHALL use settings semantic seams or equivalent settings/platform seams
+- **AND** drag/drop behavior, toolbar preference mutations, reset/clear behavior, custom button dialog, icon catalog behavior, desktop preference notification, existing `ValueKey`s, and labels SHALL be preserved
+- **AND** the change SHALL NOT modify `MemoToolbarPreferences`, compose toolbar runtime behavior, desktop quick-input channel semantics, or custom icon catalog data
+
+#### Scenario: Drift guardrail reflects completed shortcuts and toolbar migration
+
+- **WHEN** this batch is implemented
+- **THEN** `shortcuts_settings_screen.dart`, `shortcut_editor_screen.dart`, and `memo_toolbar_settings_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** those files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+- **AND** `desktop_shortcuts_overview_screen.dart` and `desktop_settings_window_app.dart` SHALL remain deferred unless a separate OpenSpec change approves their migration
+
+### Requirement: Local network migration settings surfaces SHALL use semantic settings UI seams
+
+`LocalNetworkMigrationScreen`, `MemoFlowBridgeScreen`, and MemoFlow migration sender/receiver/result settings surfaces SHALL render page chrome, grouped status blocks, navigation entries, toggles, action rows, manual inputs, receiver QR/proposal sections, progress/status sections, result summaries, and explanatory notes through `SettingsPage`, `SettingsSection`, settings row/action/input components, `settingsPageTokens`, platform controls, theme colors, or equivalent settings/platform seams instead of local scaffold/card/palette/switch implementations.
+
+#### Scenario: Local network migration hub and role screens are migrated
+
+- **WHEN** `LocalNetworkMigrationScreen` renders MemoFlow Migration and Connect Obsidian entries
+- **THEN** page chrome and target rows SHALL use settings semantic seams
+- **AND** haptic behavior, localized labels, asset icons, route targets, and navigation to `MemoFlowMigrationRoleScreen` and `MemoFlowBridgeScreen` SHALL be preserved
+- **WHEN** `MemoFlowMigrationRoleScreen` renders sender and receiver role choices
+- **THEN** role choices SHALL use settings semantic rows or equivalent settings seams
+- **AND** local library gating, haptics, localized labels, foreground notice, and navigation to sender/receiver screens SHALL be preserved
+
+#### Scenario: MemoFlow bridge settings surface is migrated
+
+- **WHEN** `MemoFlowBridgeScreen` renders pairing status, local mode notice, scan pair action, mDNS discovery action, manual host/port/pair-code inputs, confirm pair action, health check action, enable bridge toggle, clear pairing action, status message, or discovery results
+- **THEN** those visible settings surfaces SHALL use settings semantic sections, rows, inputs, toggles, actions, theme/platform controls, or equivalent settings seams
+- **AND** pairing, mDNS discovery, health check, QR scanner route, provider writes, toasts, validation labels, status messages, and enabled state SHALL be preserved
+- **AND** the change SHALL NOT modify bridge network endpoints, payload parsing, Dio behavior, mDNS behavior, QR scanner behavior, device-name resolution, or bridge settings model/provider semantics
+
+#### Scenario: MemoFlow migration sender, send-method, receiver, and result screens are migrated
+
+- **WHEN** sender, send-method, receiver, or result screens render content selection, settings selection, package ready summary, scan/manual connect actions, auto-connect status, receiver QR/session details, proposal review, receive mode, sensitive config confirmation, progress, error/completion/result sections, bottom cancel action, or result summary rows
+- **THEN** page chrome and grouped visible surfaces SHALL use settings semantic seams or equivalent settings/platform seams
+- **AND** package build, sender/receiver controller calls, auto-connect, manual connect dialog validation, QR payload handling, proposal accept/reject, receive mode selection, sensitive config selection, progress calculation, result navigation, localized labels, and foreground notices SHALL be preserved
+- **AND** the change SHALL NOT modify migration protocol, package format, config transfer, sender/receiver controllers, state models, local library persistence, database behavior, network payloads, API files, WebDAV behavior, AI settings, desktop routing, private hooks, or commercial logic
+
+#### Scenario: Drift guardrail reflects completed local migration UI migration
+
+- **WHEN** this batch is implemented
+- **THEN** `local_network_migration_screen.dart`, `memoflow_bridge_screen.dart`, and in-scope `migration/memoflow_migration_*.dart` files SHALL be removed from `legacyAllowlist`
+- **AND** those files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Export memos page SHALL use semantic settings UI seams
+
+`ExportMemosScreen` SHALL render page chrome, export option rows, include archived toggle, export format row, export action, last export path display, and explanatory note through `SettingsPage`, `SettingsSection`, settings row/action components, `settingsPageTokens`, theme colors, or equivalent settings/platform seams instead of local scaffold/card/button/switch implementations.
+
+#### Scenario: Export memos settings page is migrated
+
+- **WHEN** `ExportMemosScreen` renders title, date range row, include archived toggle, export format row, export action, last export path, copy path action, or explanatory note
+- **THEN** page chrome and grouped settings surfaces SHALL use settings semantic seams
+- **AND** `_export`, date range picker behavior, include archived state, haptics, toast/snackbar/dialog behavior, clipboard copy path behavior, zip/markdown/sidecar/attachment export behavior, existing labels, and route entry behavior SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, export data format, database queries, attachment fetching, SAF/path provider behavior, WebDAV behavior, local network migration behavior, private hooks, commercial logic, AI settings, desktop routing/window, shortcut editor, memo toolbar, or migration flows
+
+#### Scenario: Import/export shared UI wrappers are removed or migrated
+
+- **WHEN** `ExportMemosScreen` no longer uses `ImportExportCardGroup`, `ImportExportSelectRow`, or `ImportExportToggleRow`
+- **THEN** `import_export_shared_widgets.dart` SHALL either be deleted after repository-wide reference verification
+- **OR** it SHALL be migrated to settings/platform seams and tracked by the drift guardrail
+- **AND** no unused legacy direct `MemoFlowPalette` or bare `Switch` wrapper SHALL remain in the settings UI legacy allowlist
+
+#### Scenario: Drift guardrail reflects completed export memos migration
+
+- **WHEN** this batch is implemented
+- **THEN** `export_memos_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** `export_memos_screen.dart` SHALL be added to `migratedFiles`
+- **AND** `import_export_shared_widgets.dart` SHALL be removed from `legacyAllowlist` if deleted, or added to `migratedFiles` if retained
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Donation and quick QR settings surfaces SHALL not remain legacy UI drift entries
+
+`DonationDialog` SHALL render its public donation request/success UI using settings or platform UI seams for color tokens and primary actions instead of direct palette reads or page-local button styling. `quick_qr_action.dart` SHALL not remain in the settings UI drift legacy allowlist when it does not render a settings page or local visual surface, and SHALL be tracked by the migrated scan so future drift is blocked.
+
+#### Scenario: Donation dialog is migrated to settings seams
+
+- **WHEN** `DonationDialog` renders its request card, QR image area, confirm action, cancel action, success card, close action, snackbar, top toast, or animation state
+- **THEN** color and primary action decisions SHALL use `settingsPageTokens`, `SettingsAction`, `Theme.of(context).colorScheme`, or equivalent settings/platform seams
+- **AND** donation QR asset, long-press save QR, gallery permission handling, snackbar/top toast behavior, success step, confetti, close/cancel behavior, existing labels, and public donation entry SHALL be preserved
+- **AND** the change SHALL NOT introduce subscription, billing, entitlement, receipt, paywall, StoreKit, product ID, private overlay, or `AccessDecision.source` business branching
+
+#### Scenario: Drift guardrail reflects donation and quick QR cleanup
+
+- **WHEN** this batch is implemented
+- **THEN** `donation_dialog.dart` SHALL be removed from `legacyAllowlist`
+- **AND** `donation_dialog.dart` SHALL be added to `migratedFiles`
+- **AND** `quick_qr_action.dart` SHALL be removed from `legacyAllowlist`
+- **AND** `quick_qr_action.dart` SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+#### Scenario: Quick QR behavior is preserved
+
+- **WHEN** `classifyQuickQrPayload` receives a MemoFlow migration QR payload, a bridge pairing QR payload, an empty payload, or unsupported QR data
+- **THEN** it SHALL preserve the existing target classification and rejection behavior
+- **AND** the batch SHALL NOT modify bridge pairing, migration sender routing, QR scanner support detection, local network migration behavior, API files, request/response models, route adapters, or version compatibility logic
+
+### Requirement: Local mode setup page SHALL use semantic settings UI seams
+
+`LocalModeSetupScreen` SHALL render page chrome, bounded task content, subtitle text, storage info, repository name input, validation messaging, confirm action, and cancel action through `SettingsPage`, `SettingsSection`, settings row/action components, `settingsPageTokens`, theme colors, or equivalent settings/platform seams instead of local scaffold/card implementations.
+
+#### Scenario: Local mode setup page is migrated
+
+- **WHEN** `LocalModeSetupScreen` renders title, subtitle, storage info, repository name field, confirm action, cancel action, or validation message
+- **THEN** page chrome and grouped settings surfaces SHALL use settings semantic seams
+- **AND** `LocalModeSetupScreen.show`, `LocalModeSetupResult`, title/confirm/cancel/subtitle parameters, storage info visibility, trimmed-name submit behavior, empty-name snackbar, cancel pop behavior, and debug logging SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, local library persistence, database, file paths, sync, WebDAV behavior, local network migration behavior, private hooks, commercial logic, AI settings, desktop routing/window, shortcut editor, memo toolbar, quick QR, donation dialog, or import/export flows
+
+#### Scenario: Drift guardrail reflects completed local mode setup migration
+
+- **WHEN** this batch is implemented
+- **THEN** `local_mode_setup_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** `local_mode_setup_screen.dart` SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Import/export settings hub SHALL use semantic settings UI seams
+
+`ImportExportScreen` SHALL render page chrome, grouped hub categories, route rows, labels, values, and navigation affordances through `SettingsPage`, `SettingsSection`, settings row components, `settingsPageTokens`, theme colors, or equivalent settings/platform seams instead of local scaffold/card/palette implementations.
+
+#### Scenario: Import/export hub is migrated
+
+- **WHEN** `ImportExportScreen` renders Export, Import file, or Local Network Migration entries
+- **THEN** page chrome and grouped settings surfaces SHALL use settings semantic seams
+- **AND** haptic behavior, `showBackButton`, `buildPlatformPageRoute` navigation, target screens, labels, and route values SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, `ExportMemosScreen`, `ImportSourceScreen`, `LocalNetworkMigrationScreen`, shared import/export widgets, import/export file logic, local migration behavior, WebDAV behavior, private hooks, commercial logic, AI settings, desktop routing/window, shortcut editor, memo toolbar, quick QR, or donation dialog
+
+#### Scenario: Drift guardrail reflects completed import/export hub migration
+
+- **WHEN** this batch is implemented
+- **THEN** `import_export_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** `import_export_screen.dart` SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Simple utility settings surfaces SHALL use semantic settings UI seams
+
+`TemplateSettingsScreen` and `WidgetsScreen` SHALL render page chrome, grouped controls, template rows, widget preview actions, helper notes, and settings navigation affordances through `SettingsPage`, `SettingsSection`, settings row/action components, `settingsPageTokens`, theme colors, or equivalent settings/platform seams instead of local scaffold/card/palette implementations.
+
+#### Scenario: Template settings page is migrated
+
+- **WHEN** `TemplateSettingsScreen` renders template enablement, template list rows, empty template state, variable settings entry, variable docs entry, edit/delete actions, or helper text
+- **THEN** page chrome and grouped settings surfaces SHALL use settings semantic seams
+- **AND** template add/edit/delete behavior, delete confirmation, variable settings dialog, variable docs dialog, provider calls, sync requests triggered by the provider, UID handling, and localized text SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, template repository/model/provider behavior, WebDAV sync behavior, home widget service behavior, private hooks, commercial logic, AI settings, desktop routing/window, import/export, migration, shortcut editor, memo toolbar, quick QR, or donation dialog
+
+#### Scenario: Widgets settings page is migrated
+
+- **WHEN** `WidgetsScreen` renders home widget preview groups, add actions, unsupported-target toast behavior, supported Android pin request behavior, or version footer
+- **THEN** page chrome, grouped surfaces, action controls, and footer styling SHALL use settings semantic seams, theme colors, or platform components
+- **AND** preview contents, `HomeWidgetService.requestPinWidget` invocation, Android support gate, toast messages, package version lookup, and `showBackButton` behavior SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, `HomeWidgetService`, platform channel implementation, package info plugin seam, private hooks, commercial logic, AI settings, desktop routing/window, import/export, migration, shortcut editor, memo toolbar, quick QR, or donation dialog
+
+#### Scenario: Drift guardrail reflects completed simple utility migration
+
+- **WHEN** this batch is implemented
+- **THEN** `template_settings_screen.dart` and `widgets_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** both files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Utility settings pages SHALL use semantic settings UI seams
+
+`ExportLogsScreen` and `SelfRepairScreen` SHALL render page chrome, grouped controls, utility rows, toggles, action rows, notes, and state surfaces through `SettingsPage`, `SettingsSection`, settings row components, `settingsPageTokens`, theme colors, or equivalent settings/platform seams instead of local scaffold/card/palette implementations.
+
+#### Scenario: Export logs page is migrated
+
+- **WHEN** `ExportLogsScreen` renders include toggles, network logging toggle, note input, generate/clear actions, last exported path, copy path action, or helper notes
+- **THEN** page chrome and grouped surfaces SHALL use settings semantic seams
+- **AND** report generation, export path resolution, log bundle export, log clearing, device preference writes, haptic behavior, clipboard copy, toast/snackbar behavior, busy/clearing state, and local include/note state SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, log providers/stores, database repair logic, WebDAV behavior, path provider behavior, private hooks, commercial logic, AI settings, desktop routing/window, import/export, migration, shortcut editor, memo toolbar, quick QR, or donation dialog
+
+#### Scenario: Self repair page is migrated
+
+- **WHEN** `SelfRepairScreen` renders repair actions, subtitles, running/disabled state, confirmation dialog trigger, success/error messaging, or local-only note
+- **THEN** page chrome and grouped surfaces SHALL use settings semantic seams
+- **AND** confirmation dialogs, `selfRepairMutationServiceProvider` calls, running state, haptic behavior, snackbar behavior, and repair success/error messages SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, self repair mutation service, database repair logic, log providers/stores, WebDAV behavior, private hooks, commercial logic, AI settings, desktop routing/window, import/export, migration, shortcut editor, memo toolbar, quick QR, or donation dialog
+
+#### Scenario: Drift guardrail reflects completed utility migration
+
+- **WHEN** this batch is implemented
+- **THEN** `export_logs_screen.dart` and `self_repair_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** both files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Integrations settings pages SHALL use semantic settings UI seams
+
+`ApiPluginsScreen` and `WebhooksSettingsScreen` SHALL render page chrome, grouped controls, integration rows, token/webhook state surfaces, and helper text through `SettingsPage`, `SettingsSection`, settings row components, `settingsPageTokens`, theme colors, or equivalent settings/platform seams instead of local scaffold/card/palette implementations.
+
+#### Scenario: API plugins page is migrated
+
+- **WHEN** `ApiPluginsScreen` renders token creation controls, expiration selection, loading state, error state, empty state, existing token rows, copy action, or helper text
+- **THEN** page chrome and grouped surfaces SHALL use settings semantic seams
+- **AND** token creation, one-time token display, clipboard copy, repository save/read, refresh behavior, form validation, current-account guard, toast/snackbar behavior, and token masking SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, token data models, repositories, provider behavior, private hooks, commercial logic, AI settings, desktop routing/window, import/export, migration, shortcut editor, or memo toolbar
+
+#### Scenario: Webhooks page is migrated
+
+- **WHEN** `WebhooksSettingsScreen` renders webhook rows, empty state, loading state, error state, add action, edit action, delete action, or retry action
+- **THEN** page chrome and grouped surfaces SHALL use settings semantic seams
+- **AND** webhook add/edit/delete API calls, `userWebhooksProvider` invalidation, dialog behavior, haptic behavior, toast/snackbar behavior, and unsupported-server load error messaging SHALL be preserved
+- **AND** the change SHALL NOT edit API files, request/response models, route adapters, version compatibility logic, webhook data models, repositories, provider behavior, private hooks, commercial logic, AI settings, desktop routing/window, import/export, migration, shortcut editor, or memo toolbar
+
+#### Scenario: Drift guardrail reflects completed integrations migration
+
+- **WHEN** this batch is implemented
+- **THEN** `api_plugins_screen.dart` and `webhooks_settings_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** both files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Location settings page SHALL use semantic settings UI seams
+
+`LocationSettingsScreen` SHALL render page chrome, grouped controls, location enabled toggle, provider selection, API key inputs, helper text, and precision controls through `SettingsPage`, `SettingsSection`, `SettingsToggleRow`, `SettingsMenuRow`, `SettingsInputRow`, `settingsPageTokens`, or equivalent settings/platform seams instead of local scaffold/card/palette implementations.
+
+#### Scenario: Location page is migrated
+
+- **WHEN** `LocationSettingsScreen` renders the location enabled control, provider picker, provider-specific API key fields, or precision selector
+- **THEN** page chrome and grouped controls SHALL use settings semantic seams
+- **AND** enabled toggle, provider selection, API key writes, precision writes, controller lifecycle, provider subscription, and `_dirty` behavior SHALL be preserved
+- **AND** the change SHALL NOT edit API files, location data models, repositories, adapters, provider behavior, permission logic, geocoder behavior, private hooks, commercial logic, AI settings, desktop routing, import/export, or WebDAV config transfer
+
+#### Scenario: Drift guardrail reflects completed location migration
+
+- **WHEN** this batch is implemented
+- **THEN** `location_settings_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** it SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Navigation customization settings pages SHALL use semantic settings UI seams
+
+Navigation and home customization settings pages in this batch SHALL render page chrome, grouped rows, toggle rows, selectable rows, helper text, and preview surfaces through `SettingsPage`, `SettingsSection`, `SettingsToggleRow`, `SettingsNavigationRow`, `SettingsSelectableItemRow`, `settingsPageTokens`, or equivalent settings/platform seams instead of local scaffold/card/palette implementations.
+
+#### Scenario: Navigation mode page is migrated
+
+- **WHEN** `NavigationModeScreen` renders classic and bottom bar navigation mode choices
+- **THEN** it SHALL use settings semantic page and row seams
+- **AND** classic/bottom selection behavior, `bottomSelectKey`, `bottomSettingsKey`, and bottom settings detail navigation SHALL be preserved
+- **AND** bottom settings SHALL remain unavailable until bottom bar mode is selected
+
+#### Scenario: Bottom navigation detail page is migrated
+
+- **WHEN** `BottomNavigationModeSettingsScreen` renders preview, slot rows, fixed center action, or destination picker dialog
+- **THEN** page chrome and slot grouping SHALL use settings semantic seams
+- **AND** preview MAY remain a page-local presentation helper if it uses settings/theme tokens
+- **AND** destination availability filtering, duplicate destination disabling, center fixed action behavior, and provider writes SHALL be preserved
+
+#### Scenario: Drawer customization page is migrated
+
+- **WHEN** `CustomizeDrawerScreen` renders drawer visibility toggles
+- **THEN** it SHALL use `SettingsToggleRow` or equivalent settings toggle seam
+- **AND** each toggle SHALL preserve its existing `currentWorkspacePreferencesProvider` setter
+
+#### Scenario: Home shortcuts customization page is migrated
+
+- **WHEN** `CustomizeHomeShortcutsScreen` renders quick entry slots or picker dialog
+- **THEN** page chrome and slot rows SHALL use settings semantic seams
+- **AND** local-only / signed-in candidate filtering, used action disabled state, dialog selection, and provider writes SHALL be preserved
+
+#### Scenario: Drift guardrail reflects completed navigation migration
+
+- **WHEN** this batch is implemented
+- **THEN** `navigation_mode_screen.dart`, `bottom_navigation_mode_settings_screen.dart`, `customize_drawer_screen.dart`, and `customize_home_shortcuts_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** those files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Reference settings pages SHALL use semantic settings UI seams
+
+Reference and entry settings pages in this batch SHALL render page chrome, grouped rows, helper text, and placeholder messaging through `SettingsPage`, `SettingsSection`, `SettingsNavigationRow`, `SettingsInfoRow`, `settingsPageTokens`, or equivalent settings/platform seams instead of local scaffold/card/palette implementations.
+
+#### Scenario: Laboratory page is migrated
+
+- **WHEN** `LaboratoryScreen` renders experimental settings entry rows
+- **THEN** it SHALL use settings semantic page and row seams
+- **AND** it SHALL preserve existing route targets, `showBackButton` behavior, package version display, and app identity display
+- **AND** it SHALL NOT introduce API file edits, commercial branching, WebDAV, AI, desktop routing, import/export, or shortcut editor scope
+
+#### Scenario: User guide page is migrated
+
+- **WHEN** `UserGuideScreen` renders guide rows, external docs entry, helper footer text, or info surfaces
+- **THEN** page chrome and guide rows SHALL use settings semantic seams
+- **AND** existing haptics, external URL launch, snackbar fallback, Windows adaptive surface, and bottom sheet behavior SHALL be preserved
+
+#### Scenario: Placeholder page is migrated
+
+- **WHEN** `SettingsPlaceholderScreen` renders a title and message from legacy string keys
+- **THEN** it SHALL use settings semantic page/section seams
+- **AND** dynamic i18n key lookup and route dismissal behavior SHALL be preserved
+
+#### Scenario: Drift guardrail reflects completed reference migration
+
+- **WHEN** this batch is implemented
+- **THEN** `laboratory_screen.dart`, `user_guide_screen.dart`, and `placeholder_settings_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** those files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: WebDAV settings pages SHALL use semantic settings UI seams
+
+WebDAV settings surfaces in `webdav_sync_screen.dart` SHALL render page chrome, grouped rows, toggles, navigation entries, input rows, action buttons, status/progress rows, warning/copy rows, and log entries through `SettingsPage`, `SettingsSection`, semantic settings rows/actions, or equivalent settings/platform seams instead of direct palette/local card/button/toggle implementations.
+
+#### Scenario: WebDAV root page is migrated
+
+- **WHEN** `WebDavSyncScreen` renders enable sync, connection entry, backup strategy entry, Vault security status entry, logs entry, backup/restore actions, progress state, or sync error copy
+- **THEN** it SHALL use settings semantic page/section/row/action seams
+- **AND** it SHALL preserve enable/disable writes, navigation targets, manual sync, backup now, restore backup, progress pause/resume, sync error presentation, and existing provider/service call paths
+
+#### Scenario: WebDAV connection page is migrated
+
+- **WHEN** `_WebDavConnectionScreen` renders server URL, username, password, auth mode, ignore TLS, root path, warning copy, or connection test action
+- **THEN** it SHALL use settings semantic page/section/input/toggle/value/action seams
+- **AND** it SHALL preserve controller binding, draft settings construction, validation hints, connection test behavior, toast/snackbar feedback, auth mode picker, TLS toggle, and root path normalization
+
+#### Scenario: WebDAV backup settings page is migrated
+
+- **WHEN** `_WebDavBackupSettingsScreen` renders backup content, config scope, backup mode, backup password/Vault entry, schedule, retention, unavailable hints, backup error copy, or exit guard
+- **THEN** it SHALL use settings semantic page/section/row/action seams
+- **AND** it SHALL preserve backup config/content writes, full config encryption guard, encryption mode picker, password setup flow, schedule picker, retention writes, backup password missing exit guard, and backup error presentation
+
+#### Scenario: WebDAV logs page is migrated
+
+- **WHEN** `WebDavLogsScreen` renders loading, empty state, log entries, refresh action, or log detail dialog
+- **THEN** it SHALL avoid direct palette/local card styling and use settings/theme/platform seams
+- **AND** it SHALL preserve log store reads, refresh behavior, entry ordering, and detail dialog content
+
+#### Scenario: Drift guardrail reflects completed WebDAV migration
+
+- **WHEN** this batch is implemented
+- **THEN** `webdav_sync_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** it SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Settings security pages SHALL use semantic settings UI seams
+
+Security settings pages in this batch SHALL render page chrome, grouped rows, toggle rows, value/navigation rows, status rows, action controls, loading states, and explanatory copy through `SettingsPage`, `SettingsSection`, semantic settings rows/actions, or equivalent settings/platform seams instead of page-local scaffold/card/palette/switch implementations.
+
+#### Scenario: Password lock page is migrated
+
+- **WHEN** `PasswordLockScreen` renders app lock enablement, change password entry, auto-lock time entry, or explanatory copy
+- **THEN** it SHALL use settings semantic page/section/row seams
+- **AND** it SHALL preserve enable app lock, disable app lock, set password dialog, change password dialog, auto-lock picker, provider writes, and toast behavior
+- **AND** it SHALL NOT edit WebDAV sync behavior, API files, private hooks, account/server pages, AI settings, desktop routing, or commercial logic
+
+#### Scenario: Vault security status page is migrated
+
+- **WHEN** `VaultSecurityStatusScreen` renders Vault enabled status, recovery code status, remote/local/export plaintext status, local plaintext cache toggle, cleanup actions, recovery code action, backup test action, or loading state
+- **THEN** it SHALL use settings semantic page/section/row/action seams
+- **AND** it SHALL preserve status loading, cleanup reminders, recovery code password verification, backup restore test mode selection, local plain cache toggle, clear plaintext actions, snackbars, toasts, dialogs, and existing provider/service call paths
+- **AND** it SHALL NOT change WebDAV sync/backup/import/export behavior or provider ownership
+
+#### Scenario: Drift guardrail reflects completed security migration
+
+- **WHEN** this batch is implemented
+- **THEN** `password_lock_screen.dart` and `vault_security_status_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** those files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Settings account/server pages SHALL use semantic settings UI seams
+
+Account/server settings pages in this batch SHALL render page chrome, grouped rows, selectable account/local-library rows, server setting form sections, loading states, retry actions, and footer text through `SettingsPage`, `SettingsSection`, semantic settings rows/actions, or equivalent settings/platform seams instead of page-local scaffold/card/palette implementations.
+
+#### Scenario: Account security page is migrated
+
+- **WHEN** `AccountSecurityScreen` renders account summary, account actions, remote accounts, local libraries, or removal warning text
+- **THEN** it SHALL use settings semantic page/section/row seams
+- **AND** it SHALL preserve add account, add local library, user general settings navigation, server settings navigation, sign out/remove account, local library switch, local library scan, local library rename, local library remove, dialog, haptics, and snackbar behavior
+- **AND** it SHALL NOT edit API files, private hooks, WebDAV sync behavior, AI settings, desktop routing, security pages, or commercial logic
+
+#### Scenario: Server settings page is migrated
+
+- **WHEN** `ServerSettingsScreen` renders memo content limit or attachment upload limit controls
+- **THEN** it SHALL use settings semantic page/form/action seams
+- **AND** it SHALL preserve refresh, loading, unavailable/read-only, empty-field hint, focus blur restore, local positive integer validation, save status message, and retry behavior
+- **AND** it SHALL keep provider/API ownership in `serverSettingsProvider` and existing data layers without editing API contract files
+
+#### Scenario: Drift guardrail reflects completed account/server migration
+
+- **WHEN** this batch is implemented
+- **THEN** `account_security_screen.dart` and `server_settings_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** those files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Settings support/general pages SHALL use semantic settings UI seams
+
+Support/general settings pages in this batch SHALL render page chrome, grouped rows, row actions, footer text, loading states, and retry actions through `SettingsPage`, `SettingsSection`, `SettingsNavigationRow`, `SettingsValueRow`, `SettingsInfoRow`, `SettingsAction`, or equivalent settings/platform seams instead of local scaffold/card/palette implementations.
+
+#### Scenario: Feedback page is migrated
+
+- **WHEN** `FeedbackScreen` renders submit logs, self repair, or external issue-reporting entries
+- **THEN** it SHALL use settings semantic page and row seams
+- **AND** it SHALL preserve the existing nested route targets, external URL, haptics behavior, and error snackbar behavior
+- **AND** it SHALL NOT introduce API file edits, commercial branching, WebDAV, AI, desktop routing, account security, or server settings scope
+
+#### Scenario: About page is migrated
+
+- **WHEN** `AboutUsScreen` renders app identity, version information, legal/help/release/contributor entries, or debug logo tap behavior
+- **THEN** page chrome and row groups SHALL use settings semantic seams
+- **AND** page-specific app logo/version presentation MAY remain in the page if it uses settings/theme tokens rather than direct `MemoFlowPalette` styling
+- **AND** existing external links, release notes route, donor wall route, and debug tools route behavior SHALL be preserved
+
+#### Scenario: User general settings page is migrated
+
+- **WHEN** `UserGeneralSettingsScreen` renders locale and default memo visibility controls
+- **THEN** it SHALL use settings semantic page, section, and value row seams
+- **AND** locale/visibility picker, saving guard, provider invalidation, retry action, and existing provider/API call behavior SHALL be preserved
+- **AND** server-wide controls SHALL remain absent from this page
+
+#### Scenario: Drift guardrail reflects completed support/general migration
+
+- **WHEN** this batch is implemented
+- **THEN** `feedback_screen.dart`, `about_us_screen.dart`, and `user_general_settings_screen.dart` SHALL be removed from `legacyAllowlist`
+- **AND** those files SHALL be added to `migratedFiles`
+- **AND** non-allowlisted migrated files SHALL continue to fail architecture verification if they reintroduce direct `Scaffold`, direct `MemoFlowPalette`, page-local `styleFrom`, bare `Switch`, `Switch.adaptive`, or private `_ToggleCard`
+
+### Requirement: Settings migration batches SHALL be coordinated by a control change
+Settings UI 后续迁移 SHALL 先通过总控 change 记录批次矩阵、子 change 边界、顺序、验证门禁和暂停条件，再开始对应页面的 runtime implementation。
+
+#### Scenario: Batch matrix is prepared before child implementation
+- **WHEN** settings UI 后续迁移进入新的页面批次
+- **THEN** 总控 change SHALL 先记录该批次的目标页面、风险级别、预期子 change 名称、验证命令和是否允许自动继续
+- **AND** 子 change SHALL NOT 开始 runtime implementation，直到其边界和门禁在 OpenSpec artifacts 中清楚记录
+
+#### Scenario: Control change does not implement settings UI runtime code
+- **WHEN** 总控 change 被 apply
+- **THEN** implementation SHALL 只更新 OpenSpec 编排、规则、验证记录或验收清单
+- **AND** it MUST NOT 修改 `memos_flutter_app/lib/features/settings` runtime page code
+
+#### Scenario: Child scopes are explicit
+- **WHEN** 创建 settings UI migration child change
+- **THEN** child proposal/design/tasks SHALL 明确列出允许触碰的 settings pages、guardrails、focused tests 和 out-of-scope pages
+- **AND** WebDAV、AI、desktop settings routing SHALL NOT 被隐式纳入普通视觉批次
+
+### Requirement: Settings migration child changes SHALL apply sequentially with validation gates
+Settings UI migration child changes SHALL 按总控规则中的顺序执行；只有当前批次完成并通过验证后，才允许自动进入下一批。
+
+#### Scenario: Automatic continuation is gated
+- **WHEN** 一个 child change 完成 implementation tasks
+- **THEN** 自动继续下一批 SHALL require successful OpenSpec validation, relevant focused tests, `settings_ui_drift_guardrail_test.dart`, relevant architecture guardrails, and `flutter analyze` or a documented blocker
+- **AND** 验证结果 SHALL 记录在当前 child change 或总控验收记录中
+
+#### Scenario: Apply pauses on blockers
+- **WHEN** implementation reveals unclear requirements, design conflict, API file edits, public/private boundary risk, commercial leakage risk, test failure, analyze failure, guardrail failure, or unapproved scope growth
+- **THEN** the apply workflow MUST pause before starting another child change
+- **AND** it SHALL report the blocker, affected scope, completed tasks, and options for resolving the issue
+
+#### Scenario: Child changes do not overlap silently
+- **WHEN** two child changes might touch the same settings page, shared settings seam, provider, route, or guardrail allowlist entry
+- **THEN** the total-control rules SHALL define a deterministic order or require artifact updates before either child change is applied
+- **AND** overlapping runtime edits MUST NOT proceed as independent parallel implementation
+
+### Requirement: Settings migration acceptance SHALL support final unified review
+Settings UI migration SHALL collect per-batch visible changes and verification results so the user can perform a final consolidated acceptance pass after ordered child changes complete.
+
+#### Scenario: Visible changes are recorded per child change
+- **WHEN** a settings UI migration child change completes
+- **THEN** it SHALL record the pages changed, user-visible UI differences, preserved behaviors, verification commands, and any pages intentionally left on the legacy allowlist
+
+#### Scenario: Final review checklist is produced
+- **WHEN** all planned child changes in the current migration wave are complete or intentionally deferred
+- **THEN** the total-control workflow SHALL produce a final checklist grouped by settings area, platform/form factor risk, verification result, and remaining follow-up work
+- **AND** the checklist SHALL distinguish completed pages from deferred WebDAV, AI, desktop routing, or other active-change-dependent pages
+
+#### Scenario: Guardrail state is reviewable
+- **WHEN** a migrated page is moved from legacy settings styling to the settings semantic UI seam
+- **THEN** `settings_ui_drift_guardrail_test.dart` SHALL reflect the page as migrated or document an explicit temporary exception
+- **AND** remaining allowlist entries SHALL stay reviewable for the next migration batch
+
+### Requirement: Settings follow-up migration SHALL unify high-perception settings surfaces
+The platform adaptive UI system SHALL continue settings UI migration by moving the settings home surface and direct Components detail surfaces onto the settings semantic UI seam.
+
+#### Scenario: Settings home is migrated
+- **WHEN** `SettingsScreen` renders profile entry, shortcut entries, grouped settings entries, extension entries, version footer, page background, desktop width, or navigation rows
+- **THEN** it SHALL use `SettingsPage`, `SettingsSection`, settings semantic entry widgets, `PlatformPage`, or an approved settings/home composition seam
+- **AND** it SHALL NOT reintroduce independent page-local card, row, shadow, radius, palette, or app bar visual systems for reusable settings navigation UI
+
+#### Scenario: Component detail pages are migrated
+- **WHEN** `ImageBedSettingsScreen` or `ImageCompressionSettingsScreen` renders page chrome, settings sections, toggles, selectable rows, text input rows, numeric stepper rows, warning/info rows, or actions
+- **THEN** those controls SHALL be expressed through settings semantic components or narrow settings-owned form seams
+- **AND** platform-specific row density, grouped-list behavior, desktop width, switches, and action geometry SHALL be delegated to settings/platform seams
+
+#### Scenario: Page roles remain distinct
+- **WHEN** a migrated settings page is a settings home, feature management list, or feature detail configuration page
+- **THEN** it SHALL keep its page role distinct while sharing settings semantic UI seams
+- **AND** detail configuration pages SHALL NOT be forced into `SettingsFeatureModule` unless they are actually managing a list of feature modules
+
+### Requirement: Settings follow-up migration SHALL preserve behavior and ownership
+The settings UI follow-up migration SHALL change presentation ownership without changing setting semantics, provider ownership, persistence behavior, API behavior, or public/private boundaries.
+
+#### Scenario: Settings home behavior is preserved
+- **WHEN** `SettingsScreen` is migrated
+- **THEN** existing navigation entries, desktop settings platform gate, private extension bundle entries, donation entry, drawer/close behavior, embedded presentation behavior, and version footer SHALL remain functional
+- **AND** the page SHALL NOT add capability, subscription, entitlement, paywall, StoreKit, product ID, receipt, private overlay, or `AccessDecision.source` business branching
+
+#### Scenario: Image bed behavior is preserved
+- **WHEN** `ImageBedSettingsScreen` is migrated
+- **THEN** existing image bed enabled state, provider selection, base URL normalization, credential inputs, retry settings, and save/update callbacks SHALL continue to use the existing `imageBedSettingsProvider` owner
+- **AND** reusable visual behavior SHALL move to settings UI seams rather than into state, application, core, or data layers
+
+#### Scenario: Image compression behavior is preserved
+- **WHEN** `ImageCompressionSettingsScreen` is migrated
+- **THEN** existing compression mode, output format, lossless, metadata, resize, quality, size-limit, skip, warning, and numeric adjustment behavior SHALL continue to use the existing `imageCompressionSettingsProvider` owner
+- **AND** reusable visual behavior SHALL move to settings UI seams rather than into state, application, core, or data layers
+
+### Requirement: Settings follow-up migration SHALL shrink legacy drift guardrails
+The settings UI follow-up migration SHALL tighten automated drift protection for every settings file migrated in this batch.
+
+#### Scenario: Migrated files leave the legacy allowlist
+- **WHEN** `SettingsScreen`, `ImageBedSettingsScreen`, or `ImageCompressionSettingsScreen` has been migrated to settings semantic UI seams
+- **THEN** `settings_ui_drift_guardrail_test.dart` SHALL remove that file from the legacy allowlist and include it in migrated coverage
+- **AND** architecture verification SHALL fail if the migrated file reintroduces direct reusable `Scaffold`, bare `Switch` or `Switch.adaptive`, page-local `styleFrom`, private `_ToggleCard`, or direct `MemoFlowPalette` visual decisions beyond an explicit narrow exception
+
+#### Scenario: Remaining settings pages are not silently claimed as migrated
+- **WHEN** this batch completes
+- **THEN** remaining legacy settings pages such as `WebDavSyncScreen`, `AiSettingsScreen`, `PasswordLockScreen`, and other allowlisted pages MAY remain in the legacy allowlist
+- **AND** their remaining status SHALL be documented by tasks, guardrail comments, or follow-up OpenSpec planning rather than being treated as complete
+
+### Requirement: Platform adaptive settings pages SHALL separate shared desktop intent from platform-specific rows
+The platform adaptive UI system SHALL require migrated settings pages to express shared desktop intent and platform-specific rows through adaptive settings seams rather than Windows-only page trees or scattered platform branches.
+
+#### Scenario: Migrated settings page contains shared and platform-specific desktop rows
+- **WHEN** a migrated settings page contains settings that apply to multiple desktop platforms and settings that apply to only one desktop platform
+- **THEN** the page SHALL present the shared settings through a shared desktop section
+- **AND** the page SHALL present platform-specific settings through platform-specific sections or an equivalent capability-gated composition
+- **AND** the page SHALL NOT name the entire settings surface after a single platform unless all rows are exclusive to that platform
+
+#### Scenario: Desktop settings platform support is capability-gated
+- **WHEN** a desktop settings row is rendered for Windows, macOS, or Linux
+- **THEN** row visibility SHALL be based on the platform target and the row's supported capability
+- **AND** unsupported platforms SHALL receive an explicit fallback or no entry rather than a misleading platform-specific control
+
+#### Scenario: Linux desktop settings can remain hidden until supported
+- **GIVEN** a migrated desktop settings entry is only validated for Windows and macOS
+- **WHEN** the app runs on Linux desktop
+- **THEN** the adaptive settings composition MAY hide that entry and related pane entirely
+- **AND** it SHALL NOT show Linux-specific desktop controls unless their behavior is specified and tested
+
+#### Scenario: Settings migration keeps adaptive UI seam ownership
+- **WHEN** a settings page is migrated as part of platform adaptive UI work
+- **THEN** scaffold, list/form row presentation, switch styling, desktop width, and platform visual behavior SHALL be provided by `settings_ui.dart`, `platform/` widgets, `DesktopShellHost`, or equivalent adaptive seams
+- **AND** the migrated page SHALL NOT duplicate a complete platform-specific settings page tree
+
+#### Scenario: Settings hotspot improvement is guarded during evolve_modularity
+- **GIVEN** the architecture phase is `evolve_modularity`
+- **WHEN** settings platform adaptive work touches a migrated settings page
+- **THEN** the change SHALL include a touched-area improvement such as reducing page-local platform branching, moving standard row visuals into settings seams, or tightening a settings UI guardrail
+
+### Requirement: Settings row surfaces SHALL use theme-mode tokens
+设置页面中的 section、row、cell、value area、divider、border、hover、pressed、selected 和 disabled surface SHALL 根据当前 `Brightness.light` / `Brightness.dark` 从 settings-owned UI tokens、`ThemeData` 或 approved settings/platform seam 解析。设置页面 SHALL 使用这些 tokens 表达 `语言`、`字号`、`行高`、`字体`、`启动动作`、`主题色` 等设置项所在的背景和交互状态。
+
+#### Scenario: Settings row background is centralized
+- **WHEN** 设置页面渲染 navigation row、value row、toggle row、action row 或 equivalent settings cell
+- **THEN** row/cell background、border、divider 和 interaction state SHALL 使用 settings-owned theme-mode tokens 或 approved settings/platform seam
+- **AND** 页面 SHALL NOT 为普通设置行直接硬编码 page-local card/row background、border 或 divider 颜色
+
+#### Scenario: Light and dark setting surfaces are consistent
+- **WHEN** 同一个设置 section 和 row 分别在 `Brightness.light` 和 `Brightness.dark` 下渲染
+- **THEN** section background、row background、divider、border、hover、pressed、selected 和 disabled 状态 SHALL 来自同一套按模式分支的 settings surface tokens
+- **AND** 视觉差异 SHALL 来自 theme-mode token、semantic state 或 platform layout seam，而不是页面局部颜色分叉
+
+#### Scenario: Material button colors remain customizable
+- **WHEN** app 渲染 `FilledButton`、`ElevatedButton`、`OutlinedButton`、`TextButton` 或 `PlatformPrimaryAction`
+- **THEN** 本 requirement SHALL NOT force those true button colors to a fixed settings row background
+- **AND** 普通按钮 SHALL continue to resolve color from the existing app theme, selected theme color, custom theme color, semantic variant, or explicitly approved button seam
+
+#### Scenario: Settings semantic exceptions keep their own visuals
+- **WHEN** 设置 UI 渲染 destructive/error action、theme color swatch、custom color preview、status preview、editing preview 或 semantic warning state
+- **THEN** 该 UI MAY 使用对应语义颜色或预览颜色
+- **AND** settings row surface tokens SHALL NOT 覆盖这些语义/预览色
+
+#### Scenario: System and media surfaces are excluded
+- **WHEN** UI 属于媒体预览/播放 overlay、图片查看器控制、系统文件/图片选择器、平台原生 picker、系统窗口控制按钮或 OS-controlled surface
+- **THEN** 该 surface MAY 使用上下文专属或系统原生视觉
+- **AND** 它 MUST NOT 被 settings row surface 统一要求强制改写
+
+#### Scenario: Settings surface drift is guardrailed
+- **WHEN** 新增或修改的非 allowlisted migrated settings file 为普通设置 row/section/cell 引入 page-local background、border、divider、raw palette surface 或绕过 settings tokens 的局部 surface styling
+- **THEN** architecture/style verification SHALL fail or require an explicit documented exception
+- **AND** allowlist 条目 MUST 说明该 surface 属于 semantic danger/error、theme swatch、color preview、media overlay、system/native surface、window controls 或其他已批准例外
+

@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+定义桌面快速记录在 system hotkey 注册不可用时的主窗口 fallback 行为，并明确后台触发能力仍以 system hotkey 注册成功为前提。
+
+## Requirements
 
 ### Requirement: Desktop quick record SHALL fallback in the main window when system hotkey registration is unavailable
 桌面快速记录 SHALL 区分 system hotkey 注册成功与状态栏/托盘能力可用这两个不同状态。当 `quickRecord` system hotkey 未注册成功时，主窗口内匹配同一快捷键的事件 SHALL 触发窗口内快速记录 fallback，而不是被标记为已委托给 system hotkey。

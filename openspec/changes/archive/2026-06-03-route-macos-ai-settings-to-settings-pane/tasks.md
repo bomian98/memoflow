@@ -30,4 +30,4 @@
 - [x] 5.2 运行相关 architecture guardrail tests。
 - [x] 5.3 从 `memos_flutter_app` 运行 `flutter analyze`。
 - [x] 5.4 运行 `openspec validate route-macos-ai-settings-to-settings-pane --strict`。
-- [ ] 5.5 在 macOS 手动验证 AI 菜单打开 AI 设置时进入桌面设置窗口 AI pane；失败 fallback 仍可见。
+- [x] 5.5 在 macOS 手动验证 AI 菜单打开 AI 设置时进入桌面设置窗口 AI pane；失败 fallback 仍可见。

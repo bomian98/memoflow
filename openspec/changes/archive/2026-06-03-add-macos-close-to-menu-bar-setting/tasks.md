@@ -28,4 +28,4 @@
 
 - [x] 5.1 在 `memos_flutter_app` 运行 focused tests：desktop lifecycle、device preferences、desktop settings widget/guardrail tests
 - [x] 5.2 在 `memos_flutter_app` 运行 `flutter analyze`
-- [ ] 5.3 在 macOS 手动 smoke：关闭主窗口后进程与菜单栏图标保留、Dock 中无最小化窗口项、菜单栏恢复主窗口、`Cmd+Q` 和退出菜单真正退出
+- [x] 5.3 在 macOS 手动 smoke：关闭主窗口后进程与菜单栏图标保留、Dock 中无最小化窗口项、菜单栏恢复主窗口、`Cmd+Q` 和退出菜单真正退出

@@ -54,7 +54,7 @@ MemoFlow-specific menu actions SHALL be routed through a dedicated macOS command
 - **THEN** the action SHALL be dispatched through an application-owned command seam before reaching UI or navigation code
 
 ### Requirement: macOS settings menu commands SHALL open or fallback to a visible settings surface
-The macOS application menu Settings command and Window menu Open Settings Window command SHALL route through the application-owned command seam and SHALL result in a visible settings surface.
+The macOS application menu Settings command, Window menu Open Settings Window command, and settings-like MemoFlow menu commands SHALL route through the application-owned command seam and SHALL result in a visible settings surface.
 
 #### Scenario: Application Settings command succeeds
 - **WHEN** the user selects Settings from the macOS application menu or presses `Cmd+,`
@@ -70,6 +70,17 @@ The macOS application menu Settings command and Window menu Open Settings Window
 - **WHEN** the user selects Open Settings Window from the macOS Window menu
 - **AND** the macOS settings window request is unsupported or fails
 - **THEN** the command seam SHALL open a visible fallback settings page in the main window
+
+#### Scenario: AI Settings command opens the settings window AI pane
+- **WHEN** the user selects `AI Settings` from the macOS `AI` menu
+- **THEN** the command seam SHALL request the desktop settings window with the AI settings target
+- **AND** when the request succeeds, the settings window SHALL show the AI settings pane
+- **AND** the command SHALL NOT open `AiSettingsScreen` as a standalone main-window route as its primary path
+
+#### Scenario: AI Settings command falls back visibly
+- **WHEN** the user selects `AI Settings` from the macOS `AI` menu
+- **AND** the target settings window request is unsupported or fails
+- **THEN** the command seam SHALL open a visible AI settings fallback page in the main window
 
 ### Requirement: macOS settings menu commands SHALL NOT be fire-and-forget
 macOS settings menu commands SHALL await or otherwise observe the settings window open result before deciding whether fallback is required.
@@ -174,4 +185,24 @@ macOS menu commands that require home navigation state, desktop utility embeddin
 - **WHEN** the implementation scans `New Memo`, `Search Memos`, `Sync Queue`, or `AI Reports`
 - **THEN** the change SHALL document them as deferred or out of scope
 - **AND** the implementation SHALL NOT route them to settings window solely because they are visible from the macOS menu
+
+### Requirement: macOS Quit SHALL remain an explicit full-exit command when close-to-menu-bar is enabled
+macOS application menu and menu-bar exit actions SHALL continue to represent explicit full application exit even when macOS close-to-menu-bar is enabled. Closing the main window SHALL NOT silently replace Quit semantics.
+
+#### Scenario: Application menu Quit exits the app
+- **GIVEN** macOS close-to-menu-bar 偏好为 enabled
+- **WHEN** 用户选择 application menu 中的 Quit
+- **THEN** 系统 SHALL execute full application exit
+- **AND** SHALL NOT interpret Quit as a request to hide the main window
+
+#### Scenario: Cmd+Q remains full exit
+- **GIVEN** macOS close-to-menu-bar 偏好为 enabled
+- **WHEN** 用户按下 `Cmd+Q`
+- **THEN** 系统 SHALL execute the same full application exit path used by the application menu Quit command
+
+#### Scenario: Menu-bar exit remains full exit
+- **GIVEN** main window is currently hidden by macOS close-to-menu-bar behavior
+- **WHEN** 用户选择菜单栏图标菜单中的退出命令
+- **THEN** 系统 SHALL execute full application exit
+- **AND** SHALL NOT treat the menu-bar exit command as a hide/show toggle
 
