@@ -521,6 +521,11 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
       case macosMenuCommandOpenSettingsWindow:
         await _openMacosSettingsWindow(fallback: const SettingsScreen());
         return;
+      case macosMenuCommandQuit:
+        await DesktopExitCoordinator.requestExit(
+          reason: 'macos_app_menu_quit',
+        );
+        return;
       case macosMenuCommandHelpCenter:
         await _openExternalUrl('https://memoflow.hzc073.com/help/');
         return;

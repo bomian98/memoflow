@@ -54,9 +54,10 @@ void main() {
         isTrue,
       );
       expect(appDelegate.contains('windowMenu()'), isTrue);
+      expect(appDelegate.contains('command: "quit"'), isTrue);
       expect(
         appDelegate.contains('action: #selector(NSApplication.terminate(_:))'),
-        isTrue,
+        isFalse,
       );
       expect(appDelegate.contains('keyEquivalent: "q"'), isTrue);
       expect(appDelegate.contains('performClose'), isTrue);
@@ -108,6 +109,8 @@ void main() {
       );
       expect(app.contains('macosMenuCommandChannelName'), isTrue);
       expect(app.contains('macosMenuCommandOpenSettingsWindow'), isTrue);
+      expect(app.contains('macosMenuCommandQuit'), isTrue);
+      expect(app.contains('macos_app_menu_quit'), isTrue);
       const migratedSettingsCases = <String, String>{
         'macosMenuCommandAiSettings': 'DesktopSettingsWindowTarget.ai',
         'macosMenuCommandAiProvider': 'DesktopSettingsWindowTarget.aiProvider',

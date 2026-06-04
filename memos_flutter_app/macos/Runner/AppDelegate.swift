@@ -137,9 +137,9 @@ final class MemoFlowMenuBuilder {
       action: #selector(NSApplication.unhideAllApplications(_:))
     ))
     menu.addItem(.separator())
-    menu.addItem(systemItem(
+    menu.addItem(commandItem(
       title: localized("app.quit", "Quit APP_NAME"),
-      action: #selector(NSApplication.terminate(_:)),
+      command: "quit",
       keyEquivalent: "q"
     ))
 

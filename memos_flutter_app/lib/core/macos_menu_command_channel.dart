@@ -34,6 +34,7 @@ const String macosMenuCommandSelfRepair = 'selfRepair';
 const String macosMenuCommandExportDiagnostics = 'exportDiagnostics';
 const String macosMenuCommandOpenSettingsWindow = 'openSettingsWindow';
 const String macosMenuCommandFocusQuickInput = 'focusQuickInput';
+const String macosMenuCommandQuit = 'quit';
 const String macosMenuCommandHelpCenter = 'helpCenter';
 const String macosMenuCommandMemosBackendDocs = 'memosBackendDocs';
 const String macosMenuCommandReleaseNotes = 'releaseNotes';
