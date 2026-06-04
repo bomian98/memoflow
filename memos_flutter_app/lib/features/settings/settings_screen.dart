@@ -10,14 +10,12 @@ import 'package:window_manager/window_manager.dart';
 import '../../core/app_localization.dart';
 import '../../application/desktop/desktop_settings_window.dart';
 import '../../core/drawer_navigation.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/platform_layout.dart';
 import '../../core/url.dart';
 import '../../platform/platform_icons.dart';
 import '../../platform/platform_route.dart';
 import '../../platform/platform_target.dart';
 import '../../platform/widgets/platform_adaptive_layout.dart';
-import '../../platform/widgets/platform_list_section.dart';
 import '../../platform/widgets/platform_page.dart';
 import '../../private_hooks/private_extension_bundle_provider.dart';
 import '../../state/system/local_library_provider.dart';
@@ -43,6 +41,7 @@ import 'import_export_screen.dart';
 import 'laboratory_screen.dart';
 import 'password_lock_screen.dart';
 import 'preferences_settings_screen.dart';
+import 'settings_ui.dart';
 import 'user_guide_screen.dart';
 import 'widgets_screen.dart';
 import '../../i18n/strings.g.dart';
@@ -138,9 +137,59 @@ class SettingsScreen extends ConsumerWidget
     );
   }
 
+  Widget _buildAvatar(BuildContext context, String avatarUrl, Color iconColor) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final avatarFallback = Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: colorScheme.surfaceContainerHighest,
+      ),
+      child: Icon(Icons.person, color: iconColor),
+    );
+
+    if (avatarUrl.trim().isEmpty) return avatarFallback;
+    if (avatarUrl.startsWith('data:')) {
+      final bytes = _tryDecodeDataUri(avatarUrl);
+      if (bytes == null) return avatarFallback;
+      return ClipOval(
+        child: Image.memory(
+          bytes,
+          width: 44,
+          height: 44,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => avatarFallback,
+        ),
+      );
+    }
+
+    return ClipOval(
+      child: CachedNetworkImage(
+        imageUrl: avatarUrl,
+        width: 44,
+        height: 44,
+        fit: BoxFit.cover,
+        placeholder: (_, _) => avatarFallback,
+        errorWidget: (_, _, _) => avatarFallback,
+      ),
+    );
+  }
+
+  Uint8List? _tryDecodeDataUri(String raw) {
+    final index = raw.indexOf('base64,');
+    if (index == -1) return null;
+    final data = raw.substring(index + 'base64,'.length).trim();
+    if (data.isEmpty) return null;
+    try {
+      return base64Decode(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final enableWindowsDragToMove =
         Theme.of(context).platform == TargetPlatform.windows;
     final enableAppBarDragToMove = enableDragToMove || enableWindowsDragToMove;
@@ -153,14 +202,11 @@ class SettingsScreen extends ConsumerWidget
             platformTarget == PlatformTarget.iPad
         ? PlatformIcons.close
         : Icons.close;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
+    final tokens = settingsPageTokens(context);
+    final homeHierarchy = tokens.homeHierarchy;
+    final bg = tokens.background;
+    final textMain = tokens.textMain;
+    final textMuted = tokens.textMuted;
     final versionStyle = TextStyle(fontSize: 11, color: textMuted);
     final hapticsEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.hapticsEnabled),
@@ -218,7 +264,7 @@ class SettingsScreen extends ConsumerWidget
 
     final pageBody = Stack(
       children: [
-        if (isDark)
+        if (tokens.isDark)
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -240,26 +286,20 @@ class SettingsScreen extends ConsumerWidget
                 key: const ValueKey<String>('settings.boundedContent'),
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _ProfileCard(
-                    card: card,
-                    textMain: textMain,
-                    textMuted: textMuted,
+                  SettingsHomeProfileEntry(
+                    avatar: _buildAvatar(context, avatarUrl, textMuted),
                     name: name,
                     subtitle: subtitle,
-                    avatarUrl: avatarUrl,
                     onTap: () {
                       haptic();
                       pushSettingsPage((_) => const AccountSecurityScreen());
                     },
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: homeHierarchy.sectionSpacing),
                   Row(
                     children: [
                       Expanded(
-                        child: _ShortcutTile(
-                          card: card,
-                          textMain: textMain,
-                          textMuted: textMuted,
+                        child: SettingsHomeShortcutTile(
                           icon: Icons.calendar_month_outlined,
                           label: context.t.strings.legacy.msg_stats,
                           onTap: () {
@@ -268,12 +308,9 @@ class SettingsScreen extends ConsumerWidget
                           },
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: homeHierarchy.shortcutSpacing),
                       Expanded(
-                        child: _ShortcutTile(
-                          card: card,
-                          textMain: textMain,
-                          textMuted: textMuted,
+                        child: SettingsHomeShortcutTile(
                           icon: Icons.widgets_outlined,
                           label: context.t.strings.legacy.msg_widgets,
                           onTap: () {
@@ -282,12 +319,9 @@ class SettingsScreen extends ConsumerWidget
                           },
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: homeHierarchy.shortcutSpacing),
                       Expanded(
-                        child: _ShortcutTile(
-                          card: card,
-                          textMain: textMain,
-                          textMuted: textMuted,
+                        child: SettingsHomeShortcutTile(
                           icon: Icons.code,
                           label: context.t.strings.legacy.msg_api_plugins,
                           onTap: () {
@@ -298,14 +332,16 @@ class SettingsScreen extends ConsumerWidget
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  _CardGroup(
+                  SizedBox(height: homeHierarchy.sectionSpacing),
+                  SettingsHomeSection(
                     children: [
-                      _SettingRow(
-                        icon: Icons.menu_book_outlined,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.menu_book_outlined,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_user_guide,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage((_) => const UserGuideScreen());
@@ -313,14 +349,16 @@ class SettingsScreen extends ConsumerWidget
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _CardGroup(
+                  SizedBox(height: homeHierarchy.sectionSpacing),
+                  SettingsHomeSection(
                     children: [
-                      _SettingRow(
-                        icon: Icons.person_outline,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.person_outline,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_account_security,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage(
@@ -328,11 +366,9 @@ class SettingsScreen extends ConsumerWidget
                           );
                         },
                       ),
-                      _SettingRow(
-                        icon: Icons.tune,
+                      SettingsNavigationRow(
+                        leading: Icon(Icons.tune, size: 20, color: textMuted),
                         label: context.t.strings.legacy.msg_preferences,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage(
@@ -341,11 +377,13 @@ class SettingsScreen extends ConsumerWidget
                         },
                       ),
                       if (showDesktopSettings)
-                        _SettingRow(
-                          icon: Icons.devices_outlined,
+                        SettingsNavigationRow(
+                          leading: Icon(
+                            Icons.devices_outlined,
+                            size: 20,
+                            color: textMuted,
+                          ),
                           label: context.t.strings.legacy.msg_desktop_settings,
-                          textMain: textMain,
-                          textMuted: textMuted,
                           onTap: () {
                             haptic();
                             pushSettingsPage(
@@ -353,21 +391,25 @@ class SettingsScreen extends ConsumerWidget
                             );
                           },
                         ),
-                      _SettingRow(
-                        icon: Icons.smart_toy_outlined,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.smart_toy_outlined,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_ai_settings,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage((_) => const AiSettingsScreen());
                         },
                       ),
-                      _SettingRow(
-                        icon: Icons.lock_outline,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.lock_outline,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_app_lock,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage((_) => const PasswordLockScreen());
@@ -375,24 +417,28 @@ class SettingsScreen extends ConsumerWidget
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _CardGroup(
+                  SizedBox(height: homeHierarchy.sectionSpacing),
+                  SettingsHomeSection(
                     children: [
-                      _SettingRow(
-                        icon: Icons.science_outlined,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.science_outlined,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_laboratory,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage((_) => const LaboratoryScreen());
                         },
                       ),
-                      _SettingRow(
-                        icon: Icons.extension_outlined,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.extension_outlined,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_components,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage(
@@ -402,44 +448,57 @@ class SettingsScreen extends ConsumerWidget
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _CardGroup(
+                  SizedBox(height: homeHierarchy.sectionSpacing),
+                  SettingsHomeSection(
                     children: [
-                      _SettingRow(
-                        icon: Icons.chat_bubble_outline,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.chat_bubble_outline,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_feedback,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage((_) => const FeedbackScreen());
                         },
                       ),
-                      _SettingRow(
-                        icon: Icons.bolt_outlined,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.bolt_outlined,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_charging_station,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           DonationDialog.show(context);
                         },
                       ),
-                      _SettingRow(
-                        icon: Icons.import_export,
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.import_export,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_import_export,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage((_) => const ImportExportScreen());
                         },
                       ),
-                      _SettingRow(
-                        icon: Icons.info_outline,
+                    ],
+                  ),
+                  SizedBox(height: homeHierarchy.sectionSpacing),
+                  SettingsHomeSection(
+                    children: [
+                      SettingsNavigationRow(
+                        leading: Icon(
+                          Icons.info_outline,
+                          size: 20,
+                          color: textMuted,
+                        ),
                         label: context.t.strings.legacy.msg_about,
-                        textMain: textMain,
-                        textMuted: textMuted,
                         onTap: () {
                           haptic();
                           pushSettingsPage((_) => const AboutUsScreen());
@@ -448,16 +507,18 @@ class SettingsScreen extends ConsumerWidget
                     ],
                   ),
                   if (extensionEntries.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _CardGroup(
+                    SizedBox(height: homeHierarchy.sectionSpacing),
+                    SettingsHomeSection(
                       children: [
                         ...extensionEntries.map(
-                          (entry) => _SettingRow(
-                            icon: entry.icon,
+                          (entry) => SettingsNavigationRow(
+                            leading: Icon(
+                              entry.icon,
+                              size: 20,
+                              color: textMuted,
+                            ),
                             label: entry.titleBuilder(context),
-                            subtitle: entry.subtitleBuilder?.call(context),
-                            textMain: textMain,
-                            textMuted: textMuted,
+                            description: entry.subtitleBuilder?.call(context),
                             onTap: () {
                               haptic();
                               entry.onTap();
@@ -560,240 +621,6 @@ class SettingsScreen extends ConsumerWidget
               fallback: platformPage,
             )
           : platformPage,
-    );
-  }
-}
-
-class _CardGroup extends StatelessWidget {
-  const _CardGroup({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return PlatformListSection(padding: EdgeInsets.zero, children: children);
-  }
-}
-
-class _SettingRow extends StatelessWidget {
-  const _SettingRow({
-    required this.icon,
-    required this.label,
-    required this.textMain,
-    required this.textMuted,
-    this.subtitle,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final String? subtitle;
-  final Color textMain;
-  final Color textMuted;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final normalizedSubtitle = subtitle?.trim();
-    return PlatformListSectionRow(
-      leading: Icon(icon, size: 20, color: textMuted),
-      title: Text(
-        label,
-        style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-      ),
-      subtitle: normalizedSubtitle == null || normalizedSubtitle.isEmpty
-          ? null
-          : Text(
-              normalizedSubtitle,
-              style: TextStyle(fontSize: 12, color: textMuted),
-            ),
-      trailing: Icon(PlatformIcons.chevronForward, size: 18, color: textMuted),
-      onTap: onTap,
-    );
-  }
-}
-
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({
-    required this.card,
-    required this.textMain,
-    required this.textMuted,
-    required this.name,
-    required this.subtitle,
-    required this.avatarUrl,
-    required this.onTap,
-  });
-
-  final Color card;
-  final Color textMain;
-  final Color textMuted;
-  final String name;
-  final String subtitle;
-  final String avatarUrl;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final avatarFallback = Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.06),
-      ),
-      child: Icon(Icons.person, color: textMuted),
-    );
-    Widget avatarWidget = avatarFallback;
-    if (avatarUrl.trim().isNotEmpty) {
-      if (avatarUrl.startsWith('data:')) {
-        final bytes = _tryDecodeDataUri(avatarUrl);
-        if (bytes != null) {
-          avatarWidget = ClipOval(
-            child: Image.memory(
-              bytes,
-              width: 44,
-              height: 44,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => avatarFallback,
-            ),
-          );
-        }
-      } else {
-        avatarWidget = ClipOval(
-          child: CachedNetworkImage(
-            imageUrl: avatarUrl,
-            width: 44,
-            height: 44,
-            fit: BoxFit.cover,
-            placeholder: (_, _) => avatarFallback,
-            errorWidget: (_, _, _) => avatarFallback,
-          ),
-        );
-      }
-    }
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: card,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: isDark
-                ? null
-                : [
-                    BoxShadow(
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                      color: Colors.black.withValues(alpha: 0.06),
-                    ),
-                  ],
-          ),
-          child: Row(
-            children: [
-              avatarWidget,
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: textMain,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 12, color: textMuted),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  static Uint8List? _tryDecodeDataUri(String raw) {
-    final index = raw.indexOf('base64,');
-    if (index == -1) return null;
-    final data = raw.substring(index + 'base64,'.length).trim();
-    if (data.isEmpty) return null;
-    try {
-      return base64Decode(data);
-    } catch (_) {
-      return null;
-    }
-  }
-}
-
-class _ShortcutTile extends StatelessWidget {
-  const _ShortcutTile({
-    required this.card,
-    required this.textMain,
-    required this.textMuted,
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
-
-  final Color card;
-  final Color textMain;
-  final Color textMuted;
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Container(
-          height: 72,
-          decoration: BoxDecoration(
-            color: card,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: isDark
-                ? null
-                : [
-                    BoxShadow(
-                      blurRadius: 18,
-                      offset: const Offset(0, 10),
-                      color: Colors.black.withValues(alpha: 0.06),
-                    ),
-                  ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 22, color: textMuted),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: textMain,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
