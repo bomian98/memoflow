@@ -4,14 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_localization.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../data/models/user_setting.dart';
+import '../../platform/widgets/platform_list_section.dart';
 import '../../state/memos/memos_providers.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/settings/user_settings_provider.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 class WebhooksSettingsScreen extends ConsumerStatefulWidget {
   const WebhooksSettingsScreen({super.key});
@@ -187,18 +187,6 @@ class _WebhooksSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
     final hapticsEnabled = ref.watch(
       devicePreferencesProvider.select((p) => p.hapticsEnabled),
     );
@@ -211,124 +199,73 @@ class _WebhooksSettingsScreenState
 
     final webhooksAsync = ref.watch(userWebhooksProvider);
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_webhooks),
+      actions: [
+        IconButton(
+          tooltip: context.t.strings.legacy.msg_add,
+          icon: const Icon(Icons.add),
+          onPressed: _saving
+              ? null
+              : () {
+                  maybeHaptic();
+                  _openEditor();
+                },
         ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ),
-        title: Text(context.t.strings.legacy.msg_webhooks),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            tooltip: context.t.strings.legacy.msg_add,
-            icon: const Icon(Icons.add),
-            onPressed: _saving
-                ? null
-                : () {
-                    maybeHaptic();
-                    _openEditor();
-                  },
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
-              ),
-            ),
-          webhooksAsync.when(
+      ],
+      children: [
+        SettingsSection(
+          children: webhooksAsync.when(
             data: (webhooks) {
               if (webhooks.isEmpty) {
-                return Center(
-                  child: Text(
-                    context.t.strings.legacy.msg_no_webhooks_configured,
-                    style: TextStyle(color: textMuted),
+                return [
+                  SettingsInfoRow(
+                    description:
+                        context.t.strings.legacy.msg_no_webhooks_configured,
                   ),
-                );
+                ];
               }
 
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                children: [
-                  _Group(
-                    card: card,
-                    divider: divider,
-                    children: [
-                      for (final webhook in webhooks)
-                        _WebhookRow(
-                          title: _displayName(webhook),
-                          url: webhook.url,
-                          textMain: textMain,
-                          textMuted: textMuted,
-                          onEdit: () {
-                            maybeHaptic();
-                            _openEditor(webhook: webhook);
-                          },
-                          onDelete: () {
-                            maybeHaptic();
-                            _deleteWebhook(webhook);
-                          },
-                        ),
-                    ],
+              return [
+                for (final webhook in webhooks)
+                  _WebhookRow(
+                    title: _displayName(webhook),
+                    url: webhook.url,
+                    onEdit: () {
+                      maybeHaptic();
+                      _openEditor(webhook: webhook);
+                    },
+                    onDelete: () {
+                      maybeHaptic();
+                      _deleteWebhook(webhook);
+                    },
                   ),
-                ],
-              );
+              ];
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      context.t.strings.legacy.msg_failed_load_2,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: textMain,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _formatLoadError(context, error),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: textMuted),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => ref.invalidate(userWebhooksProvider),
-                      child: Text(context.t.strings.legacy.msg_retry),
-                    ),
-                  ],
-                ),
+            loading: () => [
+              const PlatformListSectionRow(
+                title: Center(child: CircularProgressIndicator.adaptive()),
+                denseOnDesktop: false,
               ),
-            ),
+            ],
+            error: (error, _) => [
+              PlatformListSectionRow(
+                title: SettingsRowTitle(
+                  context.t.strings.legacy.msg_failed_load_2,
+                ),
+                subtitle: SettingsRowDescription(
+                  _formatLoadError(context, error),
+                ),
+                trailing: TextButton(
+                  onPressed: () => ref.invalidate(userWebhooksProvider),
+                  child: Text(context.t.strings.legacy.msg_retry),
+                ),
+                denseOnDesktop: false,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -337,94 +274,37 @@ class _WebhookRow extends StatelessWidget {
   const _WebhookRow({
     required this.title,
     required this.url,
-    required this.textMain,
-    required this.textMuted,
     required this.onEdit,
     required this.onDelete,
   });
 
   final String title;
   final String url;
-  final Color textMain;
-  final Color textMuted;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final tokens = settingsPageTokens(context);
+    return PlatformListSectionRow(
+      title: SettingsRowTitle(title),
+      subtitle: SettingsRowDescription(url),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: textMain,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(url, style: TextStyle(fontSize: 12, color: textMuted)),
-              ],
-            ),
-          ),
           IconButton(
             tooltip: context.t.strings.legacy.msg_edit,
-            icon: Icon(Icons.edit, size: 18, color: textMuted),
+            icon: Icon(Icons.edit_outlined, size: 18, color: tokens.textMuted),
             onPressed: onEdit,
           ),
           IconButton(
             tooltip: context.t.strings.legacy.msg_delete,
-            icon: Icon(Icons.delete_outline, size: 18, color: textMuted),
+            icon: Icon(Icons.delete_outline, size: 18, color: tokens.textMuted),
             onPressed: onDelete,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Group extends StatelessWidget {
-  const _Group({
-    required this.card,
-    required this.divider,
-    required this.children,
-  });
-
-  final Color card;
-  final Color divider;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i != children.length - 1) Divider(height: 1, color: divider),
-          ],
-        ],
-      ),
+      denseOnDesktop: false,
     );
   }
 }

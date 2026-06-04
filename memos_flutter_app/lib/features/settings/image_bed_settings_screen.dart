@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_localization.dart';
-import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../core/image_bed_url.dart';
-import '../../core/windows_adaptive_surface.dart';
-import '../../core/memoflow_palette.dart';
 import '../../data/models/image_bed_settings.dart';
+import '../../platform/widgets/platform_picker.dart';
 import '../../state/settings/image_bed_settings_provider.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 
 class ImageBedSettingsScreen extends ConsumerStatefulWidget {
   const ImageBedSettingsScreen({super.key});
@@ -107,17 +106,9 @@ class _ImageBedSettingsScreenState
     BuildContext context,
     WidgetBuilder builder,
   ) {
-    if (shouldUseWindowsAdaptiveSurface(context)) {
-      return showWindowsAdaptiveSurface<ImageBedProvider>(
-        context: context,
-        kind: WindowsAdaptiveSurfaceKind.popover,
-        maxWidth: 420,
-        builder: builder,
-      );
-    }
-    return showModalBottomSheet<ImageBedProvider>(
+    return showPlatformPicker<ImageBedProvider>(
       context: context,
-      showDragHandle: true,
+      desktopMaxWidth: 420,
       builder: builder,
     );
   }
@@ -145,500 +136,95 @@ class _ImageBedSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(imageBedSettingsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
-
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: resolveDesktopRouteAutomaticallyImplyLeading(
-          context: context,
-          automaticallyImplyLeading: true,
+    return SettingsPage(
+      title: Text(context.t.strings.legacy.msg_image_bed_3),
+      children: [
+        SettingsToggleCard(
+          label: context.t.strings.legacy.msg_enable_image_bed,
+          description: context
+              .t
+              .strings
+              .legacy
+              .msg_automatically_upload_images_append_links_memo,
+          value: settings.enabled,
+          onChanged: (value) =>
+              ref.read(imageBedSettingsProvider.notifier).setEnabled(value),
         ),
-        leading: resolveDesktopRouteDismissalLeading(
-          context: context,
-          leading: IconButton(
-            tooltip: context.t.strings.legacy.msg_back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ),
-        title: Text(context.t.strings.legacy.msg_image_bed_3),
-        centerTitle: false,
-      ),
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
-                  ),
-                ),
-              ),
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_provider),
+          children: [
+            SettingsValueRow(
+              label: context.t.strings.legacy.msg_image_bed,
+              value: _providerLabel(context, _provider),
+              onTap: _selectProvider,
             ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              _ToggleCard(
-                card: card,
-                textMain: textMain,
-                textMuted: textMuted,
-                label: context.t.strings.legacy.msg_enable_image_bed,
-                description: context
-                    .t
-                    .strings
-                    .legacy
-                    .msg_automatically_upload_images_append_links_memo,
-                value: settings.enabled,
-                onChanged: (value) => ref
-                    .read(imageBedSettingsProvider.notifier)
-                    .setEnabled(value),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                context.t.strings.legacy.msg_provider,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _Group(
-                card: card,
-                divider: divider,
-                children: [
-                  _SelectRow(
-                    label: context.t.strings.legacy.msg_image_bed,
-                    value: _providerLabel(context, _provider),
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onTap: _selectProvider,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                context.t.strings.legacy.msg_basics,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _Group(
-                card: card,
-                divider: divider,
-                children: [
-                  _InputRow(
-                    label: context.t.strings.legacy.msg_api_url,
-                    hint: 'https://lsky.example.com',
-                    controller: _baseUrlController,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    keyboardType: TextInputType.url,
-                    onChanged: (v) {
-                      _markDirty();
-                      ref.read(imageBedSettingsProvider.notifier).setBaseUrl(v);
-                    },
-                    onEditingComplete: _normalizeBaseUrl,
-                  ),
-                  _InputRow(
-                    label: context.t.strings.legacy.msg_email,
-                    hint: context.t.strings.legacy.msg_enter_email,
-                    controller: _emailController,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    keyboardType: TextInputType.emailAddress,
-                    onChanged: (v) {
-                      _markDirty();
-                      ref.read(imageBedSettingsProvider.notifier).setEmail(v);
-                    },
-                  ),
-                  _InputRow(
-                    label: context.t.strings.legacy.msg_password,
-                    hint: context.t.strings.legacy.msg_enter_password_2,
-                    controller: _passwordController,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    obscureText: true,
-                    onChanged: (v) {
-                      _markDirty();
-                      ref
-                          .read(imageBedSettingsProvider.notifier)
-                          .setPassword(v);
-                    },
-                  ),
-                  _InputRow(
-                    label: context.t.strings.legacy.msg_strategy_id,
-                    hint: context
-                        .t
-                        .strings
-                        .legacy
-                        .msg_optional_leave_empty_default,
-                    controller: _strategyController,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    keyboardType: TextInputType.number,
-                    onChanged: (v) {
-                      _markDirty();
-                      ref
-                          .read(imageBedSettingsProvider.notifier)
-                          .setStrategyId(v);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                context.t.strings.legacy.msg_policy,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _Group(
-                card: card,
-                divider: divider,
-                children: [
-                  _StepperRow(
-                    label: context.t.strings.legacy.msg_retry_count,
-                    value: _retryCount,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    onDecrease: () => _updateRetry(-1),
-                    onIncrease: () => _updateRetry(1),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                context
-                    .t
-                    .strings
-                    .legacy
-                    .msg_retry_count_controls_how_many_extra,
-                style: TextStyle(fontSize: 12, height: 1.35, color: textMuted),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Group extends StatelessWidget {
-  const _Group({
-    required this.card,
-    required this.divider,
-    required this.children,
-  });
-
-  final Color card;
-  final Color divider;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i != children.length - 1) Divider(height: 1, color: divider),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ToggleCard extends StatelessWidget {
-  const _ToggleCard({
-    required this.card,
-    required this.textMain,
-    required this.textMuted,
-    required this.label,
-    required this.description,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final Color card;
-  final Color textMain;
-  final Color textMuted;
-  final String label;
-  final String description;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: textMain,
-                  ),
-                ),
-              ),
-              Switch(value: value, onChanged: onChanged),
-            ],
-          ),
-          if (description.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4, right: 44),
-              child: Text(
-                description,
-                style: TextStyle(fontSize: 12, color: textMuted, height: 1.3),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SelectRow extends StatelessWidget {
-  const _SelectRow({
-    required this.label,
-    required this.value,
-    required this.textMain,
-    required this.textMuted,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final Color textMain;
-  final Color textMuted;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: textMain,
-                  ),
-                ),
-              ),
-              Text(
-                value,
-                style: TextStyle(fontWeight: FontWeight.w600, color: textMuted),
-              ),
-              const SizedBox(width: 6),
-              Icon(Icons.chevron_right, size: 18, color: textMuted),
-            ],
-          ),
         ),
-      ),
-    );
-  }
-}
-
-class _InputRow extends StatelessWidget {
-  const _InputRow({
-    required this.label,
-    required this.hint,
-    required this.controller,
-    required this.textMain,
-    required this.textMuted,
-    this.keyboardType,
-    this.obscureText = false,
-    this.onChanged,
-    this.onEditingComplete,
-  });
-
-  final String label;
-  final String hint;
-  final TextEditingController controller;
-  final Color textMain;
-  final Color textMuted;
-  final TextInputType? keyboardType;
-  final bool obscureText;
-  final ValueChanged<String>? onChanged;
-  final VoidCallback? onEditingComplete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textMuted,
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_basics),
+          children: [
+            SettingsInputRow(
+              label: context.t.strings.legacy.msg_api_url,
+              hint: 'https://lsky.example.com',
+              controller: _baseUrlController,
+              keyboardType: TextInputType.url,
+              onChanged: (v) {
+                _markDirty();
+                ref.read(imageBedSettingsProvider.notifier).setBaseUrl(v);
+              },
+              onEditingComplete: _normalizeBaseUrl,
             ),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: controller,
-            onChanged: onChanged,
-            onEditingComplete: onEditingComplete,
-            obscureText: obscureText,
-            keyboardType: keyboardType,
-            style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(color: textMuted),
-              border: InputBorder.none,
-              isDense: true,
+            SettingsInputRow(
+              label: context.t.strings.legacy.msg_email,
+              hint: context.t.strings.legacy.msg_enter_email,
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              onChanged: (v) {
+                _markDirty();
+                ref.read(imageBedSettingsProvider.notifier).setEmail(v);
+              },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepperRow extends StatelessWidget {
-  const _StepperRow({
-    required this.label,
-    required this.value,
-    required this.textMain,
-    required this.textMuted,
-    required this.onDecrease,
-    required this.onIncrease,
-  });
-
-  final String label;
-  final int value;
-  final Color textMain;
-  final Color textMuted;
-  final VoidCallback onDecrease;
-  final VoidCallback onIncrease;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pillBg = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.04);
-    final pillBorder = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.08);
-
-    Widget buildButton(IconData icon, VoidCallback onTap) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          width: 28,
-          height: 28,
-          child: Icon(icon, size: 16, color: textMuted),
+            SettingsInputRow(
+              label: context.t.strings.legacy.msg_password,
+              hint: context.t.strings.legacy.msg_enter_password_2,
+              controller: _passwordController,
+              obscureText: true,
+              onChanged: (v) {
+                _markDirty();
+                ref.read(imageBedSettingsProvider.notifier).setPassword(v);
+              },
+            ),
+            SettingsInputRow(
+              label: context.t.strings.legacy.msg_strategy_id,
+              hint: context.t.strings.legacy.msg_optional_leave_empty_default,
+              controller: _strategyController,
+              keyboardType: TextInputType.number,
+              onChanged: (v) {
+                _markDirty();
+                ref.read(imageBedSettingsProvider.notifier).setStrategyId(v);
+              },
+            ),
+          ],
         ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: textMain),
-            ),
+        const SizedBox(height: 12),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_policy),
+          footer: Text(
+            context.t.strings.legacy.msg_retry_count_controls_how_many_extra,
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: pillBg,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: pillBorder),
+          children: [
+            SettingsStepperRow(
+              label: context.t.strings.legacy.msg_retry_count,
+              value: _retryCount,
+              unit: ' ${context.t.strings.legacy.msg_times_2}',
+              onDecrease: () => _updateRetry(-1),
+              onIncrease: () => _updateRetry(1),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                buildButton(Icons.remove, onDecrease),
-                const SizedBox(width: 6),
-                Text(
-                  '$value ${context.t.strings.legacy.msg_times_2}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: textMain,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                buildButton(Icons.add, onIncrease),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
