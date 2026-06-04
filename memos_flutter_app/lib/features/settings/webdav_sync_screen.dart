@@ -18,7 +18,6 @@ import '../../application/sync/webdav_sync_service.dart';
 import '../../core/app_localization.dart';
 import '../../core/desktop/desktop_titlebar_navigation_policy.dart';
 import '../../core/log_sanitizer.dart';
-import '../../core/memoflow_palette.dart';
 import '../../core/sync_error_presenter.dart';
 import '../../core/top_toast.dart';
 import '../../core/uid.dart';
@@ -41,9 +40,12 @@ import '../../state/webdav/webdav_vault_provider.dart';
 import '../../platform/platform_icons.dart';
 import '../../platform/platform_route.dart';
 import '../../platform/widgets/platform_controls.dart';
+import '../../platform/widgets/platform_list_section.dart';
 import '../../platform/widgets/platform_list_tile.dart';
 import '../../platform/widgets/platform_page.dart';
+import '../../platform/widgets/platform_primary_action.dart';
 import '../../i18n/strings.g.dart';
+import 'settings_ui.dart';
 part 'vault_security_status_screen.dart';
 
 class WebDavSyncScreen extends ConsumerStatefulWidget {
@@ -1904,19 +1906,7 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
     final backupAvailable = usesServerMode ? true : localLibrary != null;
     final backupUnavailableHint =
         context.t.strings.legacy.msg_local_library_only;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isCompact = MediaQuery.sizeOf(context).width < 600;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
     final serverUrl = _serverUrlController.text.trim();
     final connectionSubtitle = serverUrl.isEmpty
         ? context.t.strings.legacy.msg_not_set
@@ -1940,17 +1930,8 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
         ? context.tr(zh: '\u5df2\u542f\u7528', en: 'Enabled')
         : context.tr(zh: '\u672a\u542f\u7528', en: 'Not enabled');
 
-    return PlatformPage(
-      backgroundColor: bg,
+    return SettingsPage(
       title: Text(context.t.strings.legacy.msg_webdav_sync),
-      leading: resolveDesktopRouteDismissalLeading(
-        context: context,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: Icon(PlatformIcons.back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-      ),
       actions: [
         IconButton(
           tooltip: context.t.strings.legacy.msg_sync,
@@ -1963,287 +1944,237 @@ class _WebDavSyncScreenState extends ConsumerState<WebDavSyncScreen> {
               : const Icon(Icons.sync),
         ),
       ],
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
+      children: [
+        SettingsSection(
+          children: [
+            SettingsToggleRow(
+              label: context.t.strings.legacy.msg_enable_webdav_sync,
+              description: context.tr(
+                zh: '\u8bbe\u7f6e\u66f4\u6539\u4f1a\u540c\u6b65 WebDAV \u914d\u7f6e\uff1b\u7b14\u8bb0\u4e0e\u9644\u4ef6\u9700\u8981\u5355\u72ec\u5907\u4efd\u3002',
+                en: 'Setting changes sync WebDAV configuration. Memos and attachments are backed up separately.',
+              ),
+              value: _enabled,
+              onChanged: _setEnabled,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SettingsSection(
+          children: [
+            SettingsNavigationRow(
+              leading: Icon(
+                Icons.link_rounded,
+                size: 20,
+                color: tokens.textMuted,
+              ),
+              label: context.t.strings.legacy.msg_server_connection,
+              description: connectionSubtitle,
+              onTap: _openConnectionSettings,
+            ),
+            SettingsNavigationRow(
+              leading: Icon(
+                Icons.cloud_upload_outlined,
+                size: 20,
+                color: tokens.textMuted,
+              ),
+              label: context.tr(zh: '备份策略设置', en: 'Backup strategy settings'),
+              description: backupSubtitle,
+              onTap: _openBackupSettings,
+            ),
+            SettingsNavigationRow(
+              leading: Icon(
+                Icons.lock_outline,
+                size: 20,
+                color: tokens.textMuted,
+              ),
+              label: context.tr(zh: '安全状态检查', en: 'Vault security status'),
+              description: vaultSecuritySubtitle,
+              enabled: !vaultSecurityDisabled,
+              onTap: vaultSecurityDisabled ? null : _openVaultSecurityStatus,
+            ),
+            SettingsNavigationRow(
+              leading: Icon(
+                Icons.receipt_long_outlined,
+                size: 20,
+                color: tokens.textMuted,
+              ),
+              label: 'WebDAV ${context.t.strings.legacy.msg_logs}',
+              description: context.t.strings.legacy.msg_view_debug_logs,
+              onTap: _openWebDavLogs,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          children: [
+            _WebDavActionButton(
+              label: backupStatus.running
+                  ? context.t.strings.legacy.msg_backing
+                  : context.t.strings.legacy.msg_start_backup,
+              icon: backupStatus.running
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.backup_outlined, size: 18),
+              onPressed: (!_enabled || backupBusy) ? null : _backupNow,
+              variant: PlatformPrimaryActionVariant.filled,
+            ),
+            _WebDavActionButton(
+              label: _backupRestoring
+                  ? context.t.strings.legacy.msg_restoring
+                  : usesServerMode
+                  ? context.t.strings.legacy.msg_restore_to_directory
+                  : context.t.strings.legacy.msg_restore_cloud,
+              icon: _backupRestoring
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.cloud_download_outlined, size: 18),
+              onPressed: (!_enabled || backupBusy) ? null : _restoreBackup,
+            ),
+          ],
+        ),
+        if (progressSnapshot.running) ...[
+          const SizedBox(height: 10),
+          Builder(
+            builder: (context) {
+              final snapshot = progressSnapshot;
+              final progressText = snapshot.total > 0
+                  ? '${snapshot.completed}/${snapshot.total}'
+                  : '-';
+              final detail = _progressDetail(snapshot);
+              final stageLabel = _progressStageLabel(snapshot.stage);
+              return Container(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
+                  color: tokens.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
-              ),
-            ),
-          ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              _ToggleCard(
-                card: card,
-                textMain: textMain,
-                textMuted: textMuted,
-                label: context.t.strings.legacy.msg_enable_webdav_sync,
-                description: context.tr(
-                  zh: '\u8bbe\u7f6e\u66f4\u6539\u4f1a\u540c\u6b65 WebDAV \u914d\u7f6e\uff1b\u7b14\u8bb0\u4e0e\u9644\u4ef6\u9700\u8981\u5355\u72ec\u5907\u4efd\u3002',
-                  en: 'Setting changes sync WebDAV configuration. Memos and attachments are backed up separately.',
-                ),
-                value: _enabled,
-                onChanged: _setEnabled,
-              ),
-              const SizedBox(height: 14),
-              _NavCard(
-                card: card,
-                title: context.t.strings.legacy.msg_server_connection,
-                subtitle: connectionSubtitle,
-                icon: Icons.link_rounded,
-                onTap: _openConnectionSettings,
-              ),
-              const SizedBox(height: 12),
-              _NavCard(
-                card: card,
-                title: context.tr(zh: '备份策略设置', en: 'Backup strategy settings'),
-                subtitle: backupSubtitle,
-                icon: Icons.cloud_upload_outlined,
-                onTap: _openBackupSettings,
-              ),
-              const SizedBox(height: 12),
-              _NavCard(
-                card: card,
-                title: context.tr(zh: '安全状态检查', en: 'Vault security status'),
-                subtitle: vaultSecuritySubtitle,
-                icon: Icons.lock_outline,
-                onTap: vaultSecurityDisabled ? null : _openVaultSecurityStatus,
-              ),
-              const SizedBox(height: 12),
-              _NavCard(
-                card: card,
-                title: 'WebDAV ${context.t.strings.legacy.msg_logs}',
-                subtitle: context.t.strings.legacy.msg_view_debug_logs,
-                icon: Icons.receipt_long_outlined,
-                onTap: _openWebDavLogs,
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Wrap(
-                  alignment: isCompact
-                      ? WrapAlignment.center
-                      : WrapAlignment.start,
-                  spacing: 12,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      height: 42,
-                      child: ElevatedButton.icon(
-                        onPressed: (!_enabled || backupBusy)
-                            ? null
-                            : _backupNow,
-                        icon: backupStatus.running
-                            ? const SizedBox.square(
-                                dimension: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.backup_outlined),
-                        label: Text(
-                          backupStatus.running
-                              ? context.t.strings.legacy.msg_backing
-                              : context.t.strings.legacy.msg_start_backup,
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 18),
-                          minimumSize: const Size(0, 42),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
+                    Text(
+                      '${context.tr(zh: '阶段', en: 'Stage')}: $stageLabel',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: tokens.textMain,
                       ),
                     ),
-                    SizedBox(
-                      height: 42,
-                      child: OutlinedButton.icon(
-                        onPressed: (!_enabled || backupBusy)
-                            ? null
-                            : _restoreBackup,
-                        icon: _backupRestoring
-                            ? const SizedBox.square(
-                                dimension: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.cloud_download_outlined),
-                        label: Text(
-                          _backupRestoring
-                              ? context.t.strings.legacy.msg_restoring
-                              : usesServerMode
-                              ? context
-                                    .t
-                                    .strings
-                                    .legacy
-                                    .msg_restore_to_directory
-                              : context.t.strings.legacy.msg_restore_cloud,
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 18),
-                          minimumSize: const Size(0, 42),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          '${context.tr(zh: '进度', en: 'Progress')}:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tokens.textMuted,
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: snapshot.progress,
+                            minHeight: 6,
+                            backgroundColor: tokens.textMuted.withValues(
+                              alpha: 0.15,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          progressText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tokens.textMuted,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${context.tr(zh: '说明', en: 'Detail')}: $detail',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: tokens.textMuted),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      context.tr(
+                        zh: '备份/恢复需要保持前台，进入后台将自动暂停。',
+                        en: 'Keep the app in foreground during backup/restore; it will pause in background.',
+                      ),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: tokens.isDark
+                            ? const Color(0xFFFF8A80)
+                            : const Color(0xFFD32F2F),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              if (progressSnapshot.running) ...[
-                const SizedBox(height: 10),
-                Builder(
-                  builder: (context) {
-                    final snapshot = progressSnapshot;
-                    final progressText = snapshot.total > 0
-                        ? '${snapshot.completed}/${snapshot.total}'
-                        : '-';
-                    final detail = _progressDetail(snapshot);
-                    final stageLabel = _progressStageLabel(snapshot.stage);
-                    return Container(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                      decoration: BoxDecoration(
-                        color: card,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: divider),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${context.tr(zh: '阶段', en: 'Stage')}: $stageLabel',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: textMain,
+                    if (snapshot.paused) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                        decoration: BoxDecoration(
+                          color: tokens.isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.pause_circle_outline,
+                              size: 18,
+                              color: tokens.textMuted,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(
-                                '${context.tr(zh: '进度', en: 'Progress')}:',
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                context.tr(
+                                  zh: '已暂停：回到前台可继续',
+                                  en: 'Paused: return to foreground to continue',
+                                ),
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: textMuted,
+                                  color: tokens.textMain,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: LinearProgressIndicator(
-                                  value: snapshot.progress,
-                                  minHeight: 6,
-                                  backgroundColor: textMuted.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                progressText,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: textMuted,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${context.tr(zh: '说明', en: 'Detail')}: $detail',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 12, color: textMuted),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            context.tr(
-                              zh: '备份/恢复需要保持前台，进入后台将自动暂停。',
-                              en: 'Keep the app in foreground during backup/restore; it will pause in background.',
                             ),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark
-                                  ? const Color(0xFFFF8A80)
-                                  : const Color(0xFFD32F2F),
-                            ),
-                          ),
-                          if (snapshot.paused) ...[
-                            const SizedBox(height: 10),
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.05)
-                                    : Colors.black.withValues(alpha: 0.04),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(
-                                    Icons.pause_circle_outline,
-                                    size: 18,
-                                    color: textMuted,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      context.tr(
-                                        zh: '已暂停：回到前台可继续',
-                                        en: 'Paused: return to foreground to continue',
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: textMain,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  FilledButton(
-                                    onPressed: () => ref
-                                        .read(
-                                          webDavBackupProgressTrackerProvider,
-                                        )
-                                        .resume(),
-                                    child: Text(
-                                      context.tr(zh: '继续', en: 'Resume'),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              onPressed: () => ref
+                                  .read(webDavBackupProgressTrackerProvider)
+                                  .resume(),
+                              child: Text(context.tr(zh: '继续', en: 'Resume')),
                             ),
                           ],
-                        ],
+                        ),
                       ),
-                    );
-                  },
+                    ],
+                  ],
                 ),
-              ],
-              if (syncErrorText != null && syncErrorText.trim().isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  syncErrorText,
-                  style: TextStyle(fontSize: 12, color: textMuted),
-                ),
-              ],
-            ],
+              );
+            },
           ),
         ],
-      ),
+        if (syncErrorText != null && syncErrorText.trim().isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            syncErrorText,
+            style: TextStyle(fontSize: 12, color: tokens.textMuted),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -2410,6 +2341,33 @@ class _WebDavConflictDialogState extends State<_WebDavConflictDialog> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _WebDavActionButton extends StatelessWidget {
+  const _WebDavActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.variant = PlatformPrimaryActionVariant.outlined,
+  });
+
+  final String label;
+  final Widget icon;
+  final VoidCallback? onPressed;
+  final PlatformPrimaryActionVariant variant;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 184, maxWidth: 280),
+      child: SettingsAction(
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        icon: icon,
+        onPressed: onPressed,
+        variant: variant,
+      ),
     );
   }
 }
@@ -2584,77 +2542,6 @@ class _WarningCard extends StatelessWidget {
   }
 }
 
-class _ToggleCard extends StatelessWidget {
-  const _ToggleCard({
-    required this.card,
-    required this.label,
-    required this.description,
-    required this.value,
-    required this.textMain,
-    required this.textMuted,
-    required this.onChanged,
-  });
-
-  final Color card;
-  final String label;
-  final String description;
-  final bool value;
-  final Color textMain;
-  final Color textMuted;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: card,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: isDark
-              ? null
-              : [
-                  BoxShadow(
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                    color: Colors.black.withValues(alpha: 0.06),
-                  ),
-                ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: textMain,
-                    ),
-                  ),
-                ),
-                PlatformSwitch(value: value, onChanged: onChanged),
-              ],
-            ),
-            if (description.trim().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4, right: 44),
-                child: Text(
-                  description,
-                  style: TextStyle(fontSize: 12, color: textMuted, height: 1.3),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _Group extends StatelessWidget {
   const _Group({
     required this.card,
@@ -2670,32 +2557,7 @@ class _Group extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final resolvedDivider = divider ?? Colors.transparent;
-    return Container(
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-              ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (showDividers && i > 0)
-              Divider(height: 1, color: resolvedDivider),
-            children[i],
-          ],
-        ],
-      ),
-    );
+    return SettingsSection(children: children);
   }
 }
 
@@ -3052,18 +2914,7 @@ class _WebDavConnectionScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
     final serverUrl = widget.serverUrlController.text.trim();
     final isHttp = serverUrl.startsWith('http://');
     final hasCredentialMismatch =
@@ -3071,191 +2922,149 @@ class _WebDavConnectionScreenState
         widget.passwordController.text.trim().isEmpty;
     final canTestConnection = serverUrl.isNotEmpty && !hasCredentialMismatch;
 
-    return PlatformPage(
-      backgroundColor: bg,
+    return SettingsPage(
       title: Text(context.t.strings.legacy.msg_server_connection),
-      leading: resolveDesktopRouteDismissalLeading(
-        context: context,
-        leading: IconButton(
-          tooltip: context.t.strings.legacy.msg_back,
-          icon: Icon(PlatformIcons.back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          Text(
-            context.t.strings.legacy.msg_basic_settings,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textMuted,
+      children: [
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_basic_settings),
+          children: [
+            _InputRow(
+              label: context.t.strings.legacy.msg_server_url,
+              hint: 'https://example.com/dav',
+              controller: widget.serverUrlController,
+              textMain: tokens.textMain,
+              textMuted: tokens.textMuted,
+              keyboardType: TextInputType.url,
+              onChanged: widget.onServerUrlChanged,
+              onEditingComplete: widget.onServerUrlEditingComplete,
+              suffixIcon: IconButton(
+                tooltip: context.tr(
+                  zh: '\u6d4b\u8bd5\u8fde\u63a5',
+                  en: 'Test connection',
+                ),
+                onPressed: (!canTestConnection || _testingConnection)
+                    ? null
+                    : _testConnection,
+                icon: _testingConnection
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.network_check_rounded, size: 20),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          _Group(
-            card: card,
-            divider: divider,
-            children: [
-              _InputRow(
-                label: context.t.strings.legacy.msg_server_url,
-                hint: 'https://example.com/dav',
-                controller: widget.serverUrlController,
-                textMain: textMain,
-                textMuted: textMuted,
-                keyboardType: TextInputType.url,
-                onChanged: widget.onServerUrlChanged,
-                onEditingComplete: widget.onServerUrlEditingComplete,
-                suffixIcon: IconButton(
-                  tooltip: context.tr(
-                    zh: '\u6d4b\u8bd5\u8fde\u63a5',
-                    en: 'Test connection',
+            if (hasCredentialMismatch) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Text(
+                  context.tr(
+                    zh: '\u8bf7\u540c\u65f6\u586b\u5199\u7528\u6237\u540d\u548c\u5bc6\u7801\uff0c\u6216\u5747\u7559\u7a7a\u3002',
+                    en: 'Enter both username and password, or leave both empty.',
                   ),
-                  onPressed: (!canTestConnection || _testingConnection)
-                      ? null
-                      : _testConnection,
-                  icon: _testingConnection
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.network_check_rounded, size: 20),
-                ),
-              ),
-              if (hasCredentialMismatch) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                  child: Text(
-                    context.tr(
-                      zh: '\u8bf7\u540c\u65f6\u586b\u5199\u7528\u6237\u540d\u548c\u5bc6\u7801\uff0c\u6216\u5747\u7559\u7a7a\u3002',
-                      en: 'Enter both username and password, or leave both empty.',
-                    ),
-                    style: TextStyle(fontSize: 12, color: textMuted),
-                  ),
-                ),
-              ],
-              _InputRow(
-                label: context.t.strings.legacy.msg_username,
-                hint: context.t.strings.legacy.msg_enter_username,
-                controller: widget.usernameController,
-                textMain: textMain,
-                textMuted: textMuted,
-                onChanged: widget.onUsernameChanged,
-              ),
-              PlatformListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
-                ),
-                title: Text(
-                  context.t.strings.legacy.msg_password,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: textMain,
-                  ),
-                ),
-                subtitle: PlatformTextField(
-                  controller: widget.passwordController,
-                  obscureText: _obscurePassword,
-                  onChanged: widget.onPasswordChanged,
-                  style: TextStyle(
-                    color: textMain,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: context.t.strings.legacy.msg_enter_password_2,
-                    hintStyle: TextStyle(
-                      color: textMuted.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                    border: InputBorder.none,
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        size: 18,
-                      ),
-                    ),
-                  ),
+                  style: TextStyle(fontSize: 12, color: tokens.textMuted),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          if (isHttp || _ignoreTlsErrors) ...[
-            _WarningCard(
-              text: context
-                  .t
-                  .strings
-                  .legacy
-                  .msg_use_https_avoid_ignoring_tls_errors,
-              isDark: isDark,
+            _InputRow(
+              label: context.t.strings.legacy.msg_username,
+              hint: context.t.strings.legacy.msg_enter_username,
+              controller: widget.usernameController,
+              textMain: tokens.textMain,
+              textMuted: tokens.textMuted,
+              onChanged: widget.onUsernameChanged,
             ),
-            const SizedBox(height: 16),
+            PlatformListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 6,
+              ),
+              title: Text(
+                context.t.strings.legacy.msg_password,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: tokens.textMain,
+                ),
+              ),
+              subtitle: PlatformTextField(
+                controller: widget.passwordController,
+                obscureText: _obscurePassword,
+                onChanged: widget.onPasswordChanged,
+                style: TextStyle(
+                  color: tokens.textMain,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  hintText: context.t.strings.legacy.msg_enter_password_2,
+                  hintStyle: TextStyle(
+                    color: tokens.textMuted.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
+                  border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
-          Text(
-            context.t.strings.legacy.msg_auth_settings,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textMuted,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _Group(
-            card: card,
-            divider: divider,
-            children: [
-              _SelectRow(
-                label: context.t.strings.legacy.msg_auth_mode,
-                value: _authMode.name.toUpperCase(),
-                textMain: textMain,
-                textMuted: textMuted,
-                onTap: _pickAuthMode,
-              ),
-            ],
+        ),
+        const SizedBox(height: 16),
+        if (isHttp || _ignoreTlsErrors) ...[
+          _WarningCard(
+            text: context
+                .t
+                .strings
+                .legacy
+                .msg_use_https_avoid_ignoring_tls_errors,
+            isDark: tokens.isDark,
           ),
           const SizedBox(height: 16),
-          Text(
-            context.t.strings.legacy.msg_advanced_security,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textMuted,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _Group(
-            card: card,
-            divider: divider,
-            children: [
-              _ToggleRow(
-                label: context.t.strings.legacy.msg_ignore_tls_errors,
-                value: _ignoreTlsErrors,
-                textMain: textMain,
-                onChanged: (v) {
-                  setState(() => _ignoreTlsErrors = v);
-                  widget.onIgnoreTlsChanged(v);
-                },
-              ),
-              _InputRow(
-                label: context.t.strings.legacy.msg_root_path,
-                hint: '/notes',
-                controller: widget.rootPathController,
-                textMain: textMain,
-                textMuted: textMuted,
-                onChanged: widget.onRootPathChanged,
-                onEditingComplete: widget.onRootPathEditingComplete,
-              ),
-            ],
-          ),
         ],
-      ),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_auth_settings),
+          children: [
+            _SelectRow(
+              label: context.t.strings.legacy.msg_auth_mode,
+              value: _authMode.name.toUpperCase(),
+              textMain: tokens.textMain,
+              textMuted: tokens.textMuted,
+              onTap: _pickAuthMode,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SettingsSection(
+          header: Text(context.t.strings.legacy.msg_advanced_security),
+          children: [
+            _ToggleRow(
+              label: context.t.strings.legacy.msg_ignore_tls_errors,
+              value: _ignoreTlsErrors,
+              textMain: tokens.textMain,
+              onChanged: (v) {
+                setState(() => _ignoreTlsErrors = v);
+                widget.onIgnoreTlsChanged(v);
+              },
+            ),
+            _InputRow(
+              label: context.t.strings.legacy.msg_root_path,
+              hint: '/notes',
+              controller: widget.rootPathController,
+              textMain: tokens.textMain,
+              textMuted: tokens.textMuted,
+              onChanged: widget.onRootPathChanged,
+              onEditingComplete: widget.onRootPathEditingComplete,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -3640,18 +3449,10 @@ class _WebDavBackupSettingsScreenState
             language: context.appLanguage,
             error: backupStatus.lastError!,
           );
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final card = isDark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
-    final divider = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+    final tokens = settingsPageTokens(context);
+    final divider = Theme.of(
+      context,
+    ).colorScheme.outlineVariant.withValues(alpha: 0.55);
     final backupPathUnavailable =
         _backupContentMemos && !widget.backupAvailable;
     final busy = backupStatus.running || widget.backupRestoring;
@@ -3663,7 +3464,7 @@ class _WebDavBackupSettingsScreenState
         await _requestClose();
       },
       child: PlatformPage(
-        backgroundColor: bg,
+        backgroundColor: tokens.background,
         title: Text(context.t.strings.legacy.msg_backup_settings),
         leading: resolveDesktopRouteDismissalLeading(
           context: context,
@@ -3681,19 +3482,19 @@ class _WebDavBackupSettingsScreenState
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: textMuted,
+                color: tokens.textMuted,
               ),
             ),
             const SizedBox(height: 8),
             _Group(
-              card: card,
+              card: tokens.card,
               divider: divider,
               showDividers: false,
               children: [
                 _ToggleRow(
                   label: context.tr(zh: '备份配置', en: 'Backup config'),
                   value: _configScope != WebDavBackupConfigScope.none,
-                  textMain: textMain,
+                  textMain: tokens.textMain,
                   onChanged: busy ? null : _handleBackupConfigToggle,
                 ),
                 if (_configScope != WebDavBackupConfigScope.none) ...[
@@ -3704,7 +3505,7 @@ class _WebDavBackupSettingsScreenState
                       context.tr(zh: '配置内容', en: 'Config scope'),
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: textMain,
+                        color: tokens.textMain,
                       ),
                     ),
                     trailing: DropdownButtonHideUnderline(
@@ -3712,11 +3513,11 @@ class _WebDavBackupSettingsScreenState
                         value: _configScope,
                         isDense: true,
                         borderRadius: BorderRadius.circular(12),
-                        icon: Icon(Icons.expand_more, color: textMuted),
+                        icon: Icon(Icons.expand_more, color: tokens.textMuted),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: textMain,
+                          color: tokens.textMain,
                         ),
                         onChanged: busy
                             ? null
@@ -3768,7 +3569,7 @@ class _WebDavBackupSettingsScreenState
                                 .strings
                                 .legacy
                                 .msg_backup_config_safe_desc,
-                      style: TextStyle(fontSize: 12, color: textMuted),
+                      style: TextStyle(fontSize: 12, color: tokens.textMuted),
                     ),
                   ),
                 ] else
@@ -3776,14 +3577,14 @@ class _WebDavBackupSettingsScreenState
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: Text(
                       context.t.strings.legacy.msg_backup_config_none_desc,
-                      style: TextStyle(fontSize: 12, color: textMuted),
+                      style: TextStyle(fontSize: 12, color: tokens.textMuted),
                     ),
                   ),
                 const Divider(height: 1),
                 _ToggleRow(
                   label: context.tr(zh: '备份笔记', en: 'Backup memos'),
                   value: _backupContentMemos,
-                  textMain: textMain,
+                  textMain: tokens.textMain,
                   onChanged: busy ? null : _handleBackupContentMemos,
                 ),
               ],
@@ -3792,7 +3593,7 @@ class _WebDavBackupSettingsScreenState
               const SizedBox(height: 6),
               Text(
                 widget.backupUnavailableHint,
-                style: TextStyle(fontSize: 12, color: textMuted),
+                style: TextStyle(fontSize: 12, color: tokens.textMuted),
               ),
             ],
             const SizedBox(height: 16),
@@ -3801,20 +3602,20 @@ class _WebDavBackupSettingsScreenState
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: textMuted,
+                color: tokens.textMuted,
               ),
             ),
             const SizedBox(height: 8),
             _Group(
-              card: card,
+              card: tokens.card,
               divider: divider,
               showDividers: false,
               children: [
                 _SelectRow(
                   label: context.tr(zh: '备份方式', en: 'Backup mode'),
                   value: _encryptionModeLabel(_encryptionMode, context),
-                  textMain: textMain,
-                  textMuted: textMuted,
+                  textMain: tokens.textMain,
+                  textMuted: tokens.textMuted,
                   onTap: busy ? null : _pickBackupEncryptionMode,
                 ),
                 if (_encryptionMode == WebDavBackupEncryptionMode.encrypted)
@@ -3828,23 +3629,23 @@ class _WebDavBackupSettingsScreenState
                     value: _backupPasswordSet
                         ? context.tr(zh: '已设置', en: 'Set')
                         : context.t.strings.legacy.msg_not_set,
-                    textMain: textMain,
-                    textMuted: textMuted,
+                    textMain: tokens.textMain,
+                    textMuted: tokens.textMuted,
                     onTap: busy ? null : _handleSetupBackupPassword,
                   ),
                 _SelectRow(
                   label: context.t.strings.legacy.msg_backup_schedule,
                   value: _scheduleLabel(_schedule, context),
-                  textMain: textMain,
-                  textMuted: textMuted,
+                  textMain: tokens.textMain,
+                  textMuted: tokens.textMuted,
                   onTap: busy ? null : _pickSchedule,
                 ),
                 _InlineInputRow(
                   label: context.t.strings.legacy.msg_retention,
                   hint: '5',
                   controller: widget.backupRetentionController,
-                  textMain: textMain,
-                  textMuted: textMuted,
+                  textMain: tokens.textMain,
+                  textMuted: tokens.textMuted,
                   keyboardType: TextInputType.number,
                   onChanged: widget.onBackupRetentionChanged,
                 ),
@@ -3857,14 +3658,18 @@ class _WebDavBackupSettingsScreenState
                   .strings
                   .legacy
                   .msg_keeping_more_versions_uses_more_storage,
-              style: TextStyle(fontSize: 12, height: 1.4, color: textMuted),
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.4,
+                color: tokens.textMuted,
+              ),
             ),
             if (backupErrorText != null &&
                 backupErrorText.trim().isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(
                 backupErrorText,
-                style: TextStyle(fontSize: 12, color: textMuted),
+                style: TextStyle(fontSize: 12, color: tokens.textMuted),
               ),
             ],
           ],
@@ -3959,14 +3764,7 @@ class _WebDavLogsScreenState extends ConsumerState<WebDavLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? MemoFlowPalette.backgroundDark
-        : MemoFlowPalette.backgroundLight;
-    final textMain = isDark
-        ? MemoFlowPalette.textDark
-        : MemoFlowPalette.textLight;
-    final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
+    final tokens = settingsPageTokens(context);
     final items = _entries.reversed.toList(growable: false);
 
     Widget body;
@@ -3976,7 +3774,7 @@ class _WebDavLogsScreenState extends ConsumerState<WebDavLogsScreen> {
       body = Center(
         child: Text(
           context.t.strings.legacy.msg_no_logs_yet,
-          style: TextStyle(color: textMuted),
+          style: TextStyle(color: tokens.textMuted),
         ),
       );
     } else {
@@ -3996,9 +3794,7 @@ class _WebDavLogsScreenState extends ConsumerState<WebDavLogsScreen> {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? MemoFlowPalette.cardDark
-                        : MemoFlowPalette.cardLight,
+                    color: tokens.card,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -4008,7 +3804,7 @@ class _WebDavLogsScreenState extends ConsumerState<WebDavLogsScreen> {
                         entry.label,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: textMain,
+                          color: tokens.textMain,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -4016,7 +3812,7 @@ class _WebDavLogsScreenState extends ConsumerState<WebDavLogsScreen> {
                         _entrySubtitle(entry),
                         maxLines: 4,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12, color: textMuted),
+                        style: TextStyle(fontSize: 12, color: tokens.textMuted),
                       ),
                     ],
                   ),
@@ -4029,7 +3825,7 @@ class _WebDavLogsScreenState extends ConsumerState<WebDavLogsScreen> {
     }
 
     return PlatformPage(
-      backgroundColor: bg,
+      backgroundColor: tokens.background,
       title: Text('WebDAV ${context.t.strings.legacy.msg_logs}'),
       leading: resolveDesktopRouteDismissalLeading(
         context: context,

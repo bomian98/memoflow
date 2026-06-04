@@ -22,6 +22,7 @@ import 'package:memos_flutter_app/data/logs/webdav_backup_progress_tracker.dart'
 import 'package:memos_flutter_app/data/repositories/webdav_backup_password_repository.dart';
 import 'package:memos_flutter_app/data/repositories/webdav_backup_state_repository.dart';
 import 'package:memos_flutter_app/data/repositories/webdav_settings_repository.dart';
+import 'package:memos_flutter_app/features/settings/settings_ui.dart';
 import 'package:memos_flutter_app/features/settings/webdav_sync_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/system/local_library_provider.dart';
@@ -615,6 +616,8 @@ void main() {
     );
 
     await tester.pumpAndSettle();
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(SettingsSection), findsWidgets);
     await tester.tap(find.byTooltip(t.strings.legacy.msg_sync));
     await tester.pumpAndSettle();
 
@@ -785,6 +788,8 @@ void main() {
       await tester.tap(find.text(t.strings.legacy.msg_server_connection));
       await tester.pumpAndSettle();
 
+      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.byType(SettingsSection), findsWidgets);
       final testConnectionButton = find.byTooltip('Test connection');
       expect(testConnectionButton, findsOneWidget);
       await tester.tap(testConnectionButton);
@@ -822,6 +827,7 @@ void main() {
 
     await tester.tap(find.text('Backup strategy settings'));
     await tester.pumpAndSettle();
+    expect(find.byType(SettingsSection), findsWidgets);
     await tester.tap(find.byTooltip(t.strings.legacy.msg_back));
     await tester.pumpAndSettle();
 

@@ -12,6 +12,7 @@ import 'package:memos_flutter_app/data/models/instance_profile.dart';
 import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/features/home/app_drawer.dart';
 import 'package:memos_flutter_app/features/settings/customize_drawer_screen.dart';
+import 'package:memos_flutter_app/features/settings/settings_ui.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/memos/stats_providers.dart';
@@ -152,9 +153,8 @@ void main() {
       220,
       scrollable: find.byType(Scrollable).first,
     );
-    final collectionsRow = find.ancestor(
-      of: find.text('Collections'),
-      matching: find.byType(Row),
+    final collectionsRow = find.byWidgetPredicate(
+      (widget) => widget is SettingsToggleRow && widget.label == 'Collections',
     );
     await tester.tap(
       find.descendant(of: collectionsRow, matching: find.byType(Switch)),
@@ -189,9 +189,8 @@ void main() {
       220,
       scrollable: find.byType(Scrollable).first,
     );
-    final draftBoxRow = find.ancestor(
-      of: find.text('Draft Box'),
-      matching: find.byType(Row),
+    final draftBoxRow = find.byWidgetPredicate(
+      (widget) => widget is SettingsToggleRow && widget.label == 'Draft Box',
     );
     await tester.tap(
       find.descendant(of: draftBoxRow, matching: find.byType(Switch)),

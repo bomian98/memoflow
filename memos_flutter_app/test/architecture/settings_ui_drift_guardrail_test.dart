@@ -8,10 +8,22 @@ void main() {
     const legacyAllowlist = <String>{
       // Shrink this list as settings pages migrate to SettingsPage,
       // SettingsSection, SettingsToggleRow, and related semantic seams.
-      'lib/features/settings/about_us_screen.dart',
+    };
+
+    const migratedFiles = <String>{
       'lib/features/settings/account_security_screen.dart',
-      'lib/features/settings/ai_provider_settings_screen.dart',
+      'lib/features/settings/bottom_navigation_mode_settings_screen.dart',
+      'lib/features/settings/components_settings_screen.dart',
+      'lib/features/settings/customize_drawer_screen.dart',
+      'lib/features/settings/customize_home_shortcuts_screen.dart',
+      'lib/features/settings/desktop_settings_screen.dart',
+      'lib/features/settings/desktop_settings_window_app.dart',
+      'lib/features/settings/desktop_shortcuts_overview_screen.dart',
+      'lib/features/settings/desktop_shortcuts_settings_screen.dart',
+      'lib/features/settings/donation_dialog.dart',
+      'lib/features/settings/about_us_screen.dart',
       'lib/features/settings/ai_provider_logo.dart',
+      'lib/features/settings/ai_provider_settings_screen.dart',
       'lib/features/settings/ai_proxy_settings_screen.dart',
       'lib/features/settings/ai_route_settings_screen.dart',
       'lib/features/settings/ai_service_detail_screen.dart',
@@ -20,25 +32,18 @@ void main() {
       'lib/features/settings/ai_settings_screen.dart',
       'lib/features/settings/ai_user_profile_screen.dart',
       'lib/features/settings/api_plugins_screen.dart',
-      'lib/features/settings/bottom_navigation_mode_settings_screen.dart',
-      'lib/features/settings/customize_drawer_screen.dart',
-      'lib/features/settings/customize_home_shortcuts_screen.dart',
-      'lib/features/settings/desktop_settings_window_app.dart',
-      'lib/features/settings/desktop_shortcuts_overview_screen.dart',
-      'lib/features/settings/donation_dialog.dart',
-      'lib/features/settings/export_logs_screen.dart',
       'lib/features/settings/export_memos_screen.dart',
+      'lib/features/settings/export_logs_screen.dart',
       'lib/features/settings/feedback_screen.dart',
       'lib/features/settings/image_bed_settings_screen.dart',
       'lib/features/settings/image_compression_settings_screen.dart',
       'lib/features/settings/import_export_screen.dart',
-      'lib/features/settings/import_export_shared_widgets.dart',
       'lib/features/settings/laboratory_screen.dart',
-      'lib/features/settings/local_mode_setup_screen.dart',
       'lib/features/settings/local_network_migration_screen.dart',
+      'lib/features/settings/local_mode_setup_screen.dart',
       'lib/features/settings/location_settings_screen.dart',
-      'lib/features/settings/memo_toolbar_settings_screen.dart',
       'lib/features/settings/memoflow_bridge_screen.dart',
+      'lib/features/settings/memo_toolbar_settings_screen.dart',
       'lib/features/settings/migration/memoflow_migration_receiver_screen.dart',
       'lib/features/settings/migration/memoflow_migration_result_screen.dart',
       'lib/features/settings/migration/memoflow_migration_role_screen.dart',
@@ -47,10 +52,12 @@ void main() {
       'lib/features/settings/navigation_mode_screen.dart',
       'lib/features/settings/password_lock_screen.dart',
       'lib/features/settings/placeholder_settings_screen.dart',
+      'lib/features/settings/preferences_settings_screen.dart',
       'lib/features/settings/quick_qr_action.dart',
-      'lib/features/settings/self_repair_screen.dart',
       'lib/features/settings/server_settings_screen.dart',
+      'lib/features/settings/self_repair_screen.dart',
       'lib/features/settings/settings_screen.dart',
+      'lib/features/settings/settings_ui.dart',
       'lib/features/settings/shortcut_editor_screen.dart',
       'lib/features/settings/shortcuts_settings_screen.dart',
       'lib/features/settings/template_settings_screen.dart',
@@ -60,14 +67,6 @@ void main() {
       'lib/features/settings/webdav_sync_screen.dart',
       'lib/features/settings/webhooks_settings_screen.dart',
       'lib/features/settings/widgets_screen.dart',
-    };
-
-    const migratedFiles = <String>{
-      'lib/features/settings/components_settings_screen.dart',
-      'lib/features/settings/desktop_settings_screen.dart',
-      'lib/features/settings/desktop_shortcuts_settings_screen.dart',
-      'lib/features/settings/preferences_settings_screen.dart',
-      'lib/features/settings/settings_ui.dart',
     };
 
     final files = await Directory('lib/features/settings')
@@ -117,6 +116,66 @@ void main() {
                 'settings UI seams:\n${violations.join('\n')}',
     );
   });
+
+  test(
+    'settings row surfaces stay centralized without app button theme drift',
+    () async {
+      final settingsUi = await File(
+        'lib/features/settings/settings_ui.dart',
+      ).readAsString();
+      final settingsScreen = await File(
+        'lib/features/settings/settings_screen.dart',
+      ).readAsString();
+      final platformListSection = await File(
+        'lib/platform/widgets/platform_list_section.dart',
+      ).readAsString();
+      final appTheme = await File('lib/core/app_theme.dart').readAsString();
+
+      expect(
+        settingsUi,
+        contains('PlatformListSectionStyle get listSectionStyle'),
+      );
+      expect(
+        settingsUi,
+        contains('PlatformListSectionStyle get homeListSectionStyle'),
+      );
+      expect(settingsUi, contains('class SettingsHomeHierarchyTokens'));
+      expect(settingsUi, contains('class SettingsHomeSection'));
+      expect(settingsUi, contains('ListTileTheme.merge'));
+      expect(platformListSection, contains('class PlatformListSectionStyle'));
+      expect(
+        platformListSection,
+        contains('tileColor: sectionStyle?.rowColor'),
+      );
+      expect(platformListSection, contains('boxShadow: style?.boxShadow'));
+
+      for (final forbidden in const [
+        'MemoFlowPalette.',
+        'BoxShadow(',
+        'BorderRadius.circular(',
+        'elevation:',
+      ]) {
+        expect(
+          settingsScreen,
+          isNot(contains(forbidden)),
+          reason: 'Settings home hierarchy must stay in settings UI seams.',
+        );
+      }
+
+      for (final forbidden in const [
+        'filledButtonTheme',
+        'elevatedButtonTheme',
+        'outlinedButtonTheme',
+        'textButtonTheme',
+      ]) {
+        expect(
+          appTheme,
+          isNot(contains(forbidden)),
+          reason: 'This change must not fix app-wide true button colors.',
+        );
+      }
+    },
+  );
 }
 
 class _DriftRule {
@@ -154,11 +213,22 @@ final _rules = <_DriftRule>[
     RegExp(r'\bMemoFlowPalette\.'),
     'direct MemoFlowPalette',
   ),
+  _DriftRule(
+    'platform_list_section',
+    RegExp(r'\bPlatformListSection\s*\('),
+    'direct PlatformListSection outside settings surface seam',
+  ),
 ];
 
 Map<String, int> _allowancesFor(String relativePath) {
   if (relativePath == 'lib/features/settings/settings_ui.dart') {
-    return const {'palette': 6};
+    return const {
+      // Settings UI owns settings row/section surface tokens and delegates them
+      // to PlatformListSectionStyle for all migrated settings pages. It also
+      // owns the mobile settings home hierarchy section seam.
+      'palette': 8,
+      'platform_list_section': 2,
+    };
   }
   if (relativePath ==
       'lib/features/settings/preferences_settings_screen.dart') {
@@ -167,6 +237,14 @@ Map<String, int> _allowancesFor(String relativePath) {
       // values locally until those editor-specific controls are extracted.
       'palette': 8,
       'style_from': 4,
+    };
+  }
+  if (relativePath ==
+      'lib/features/settings/desktop_settings_window_app.dart') {
+    return const {
+      // Independent settings-window composition root applies persisted theme
+      // color before building its MaterialApp; no other palette usage allowed.
+      'palette': 1,
     };
   }
   return const {};
