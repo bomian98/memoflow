@@ -33,6 +33,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   static const List<String> _serverVersionOptions = <String>[
+    '0.29.0',
     '0.28.0',
     '0.27.0',
     '0.26.0',
@@ -50,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   var _loginMode = _LoginMode.password;
   var _useHttps = true;
-  var _selectedServerVersion = '0.28.0';
+  var _selectedServerVersion = _serverVersionOptions.first;
   var _probing = false;
   var _versionMenuExpanded = false;
   var _shownInitialError = false;

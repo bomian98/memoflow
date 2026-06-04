@@ -895,7 +895,8 @@ class _SwashbucklerDiaryImportEngine {
       MemoApiVersion.v025 ||
       MemoApiVersion.v026 ||
       MemoApiVersion.v027 ||
-      MemoApiVersion.v028 => true,
+      MemoApiVersion.v028 ||
+      MemoApiVersion.v029 => true,
       _ => false,
     };
   }

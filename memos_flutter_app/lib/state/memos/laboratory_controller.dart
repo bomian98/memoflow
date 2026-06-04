@@ -38,7 +38,7 @@ class LaboratoryController {
   final Ref _ref;
 
   LaboratoryVersion get defaultVersion =>
-      LaboratoryVersion._(MemoApiVersion.v028);
+      LaboratoryVersion._(MemoApiVersion.v029);
 
   String normalizeServerVersion(String raw) {
     return normalizeMemoApiVersion(raw);
@@ -137,7 +137,8 @@ class LaboratoryController {
       MemoApiVersion.v025 ||
       MemoApiVersion.v026 ||
       MemoApiVersion.v027 ||
-      MemoApiVersion.v028 => true,
+      MemoApiVersion.v028 ||
+      MemoApiVersion.v029 => true,
       MemoApiVersion.v021 ||
       MemoApiVersion.v022 ||
       MemoApiVersion.v023 ||
