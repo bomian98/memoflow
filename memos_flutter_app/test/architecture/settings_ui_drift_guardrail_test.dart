@@ -141,8 +141,11 @@ void main() {
       );
       expect(settingsUi, contains('class SettingsHomeHierarchyTokens'));
       expect(settingsUi, contains('class SettingsHomeSection'));
+      expect(settingsUi, contains('navigationRowMinHeight'));
+      expect(settingsUi, contains('class _SettingsHomeDensityScope'));
       expect(settingsUi, contains('ListTileTheme.merge'));
       expect(platformListSection, contains('class PlatformListSectionStyle'));
+      expect(platformListSection, contains('mobileMinTileHeight'));
       expect(
         platformListSection,
         contains('tileColor: sectionStyle?.rowColor'),
@@ -154,6 +157,7 @@ void main() {
         'BoxShadow(',
         'BorderRadius.circular(',
         'elevation:',
+        'minTileHeight:',
       ]) {
         expect(
           settingsScreen,

@@ -206,6 +206,7 @@ class PlatformListSectionRow extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.contentPadding,
+    this.mobileMinTileHeight,
     this.onTap,
     this.danger = false,
     this.denseOnDesktop = true,
@@ -216,6 +217,7 @@ class PlatformListSectionRow extends StatelessWidget {
   final Widget? subtitle;
   final Widget? trailing;
   final EdgeInsetsGeometry? contentPadding;
+  final double? mobileMinTileHeight;
   final VoidCallback? onTap;
   final bool danger;
   final bool denseOnDesktop;
@@ -258,6 +260,7 @@ class PlatformListSectionRow extends StatelessWidget {
       subtitle: subtitle,
       trailing: trailing,
       onTap: onTap,
+      minTileHeight: isDesktop ? null : mobileMinTileHeight,
       textColor: danger ? colorScheme.error : null,
       iconColor: danger ? colorScheme.error : null,
       tileColor: sectionStyle?.rowColor,

@@ -91,6 +91,7 @@ class SettingsHomeHierarchyTokens {
     required this.sectionSpacing,
     required this.shortcutSpacing,
     required this.shortcutTileHeight,
+    required this.navigationRowMinHeight,
     required this.profilePadding,
   });
 
@@ -106,6 +107,7 @@ class SettingsHomeHierarchyTokens {
   final double sectionSpacing;
   final double shortcutSpacing;
   final double shortcutTileHeight;
+  final double navigationRowMinHeight;
   final EdgeInsetsGeometry profilePadding;
 
   List<BoxShadow> get sectionShadow {
@@ -165,10 +167,11 @@ SettingsPageTokens settingsPageTokens(BuildContext context) {
       profileRadius: isPhone ? 24 : 8,
       sectionRadius: isPhone ? 22 : 8,
       shortcutRadius: isPhone ? 20 : 8,
-      sectionSpacing: isPhone ? 16 : 12,
+      sectionSpacing: isPhone ? 12 : 12,
       shortcutSpacing: isPhone ? 12 : 12,
-      shortcutTileHeight: isPhone ? 92 : 72,
-      profilePadding: EdgeInsets.all(isPhone ? 18 : 14),
+      shortcutTileHeight: isPhone ? 80 : 72,
+      navigationRowMinHeight: isPhone ? 48 : 56,
+      profilePadding: EdgeInsets.all(isPhone ? 16 : 14),
     ),
     textMain: textMain,
     textMuted: textMain.withValues(alpha: isDark ? 0.55 : 0.6),
@@ -308,16 +311,38 @@ class SettingsHomeSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = settingsPageTokens(context);
-    return PlatformListSection(
-      padding: EdgeInsets.zero,
-      header: header,
-      footer: footer,
-      desktopBorderRadius: BorderRadius.circular(
-        tokens.homeHierarchy.sectionRadius,
+    return _SettingsHomeDensityScope(
+      navigationRowMinHeight: tokens.homeHierarchy.navigationRowMinHeight,
+      child: PlatformListSection(
+        padding: EdgeInsets.zero,
+        header: header,
+        footer: footer,
+        desktopBorderRadius: BorderRadius.circular(
+          tokens.homeHierarchy.sectionRadius,
+        ),
+        style: tokens.homeListSectionStyle,
+        children: children,
       ),
-      style: tokens.homeListSectionStyle,
-      children: children,
     );
+  }
+}
+
+class _SettingsHomeDensityScope extends InheritedWidget {
+  const _SettingsHomeDensityScope({
+    required this.navigationRowMinHeight,
+    required super.child,
+  });
+
+  final double navigationRowMinHeight;
+
+  static _SettingsHomeDensityScope? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_SettingsHomeDensityScope>();
+  }
+
+  @override
+  bool updateShouldNotify(_SettingsHomeDensityScope oldWidget) {
+    return navigationRowMinHeight != oldWidget.navigationRowMinHeight;
   }
 }
 
@@ -509,6 +534,8 @@ class SettingsNavigationRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = settingsPageTokens(context);
+    final homeDensity = _SettingsHomeDensityScope.maybeOf(context);
+    final isSingleLine = description == null;
     return Opacity(
       opacity: enabled ? 1 : 0.55,
       child: PlatformListSectionRow(
@@ -537,6 +564,9 @@ class SettingsNavigationRow extends StatelessWidget {
           ],
         ),
         onTap: enabled ? onTap : null,
+        mobileMinTileHeight: isSingleLine
+            ? homeDensity?.navigationRowMinHeight
+            : null,
         denseOnDesktop: description == null,
       ),
     );

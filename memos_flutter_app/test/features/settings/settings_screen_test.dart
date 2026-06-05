@@ -186,9 +186,17 @@ void main() {
     final home = tokens.homeHierarchy;
 
     expect(home.usesLayeredCards, isTrue);
+    expect(home.shortcutTileHeight, 80);
+    expect(home.sectionSpacing, 12);
+    expect(home.navigationRowMinHeight, 48);
+    expect(home.profilePadding, const EdgeInsets.all(16));
     expect(find.byType(SettingsHomeProfileEntry), findsOneWidget);
     expect(find.byType(SettingsHomeShortcutTile), findsNWidgets(3));
     expect(find.byType(SettingsHomeSection), findsAtLeastNWidgets(5));
+    expect(
+      tester.getSize(find.byType(SettingsHomeShortcutTile).first).height,
+      80,
+    );
 
     final firstHomeSection = tester.widget<PlatformListSection>(
       find.descendant(
@@ -204,6 +212,17 @@ void main() {
       BorderRadius.circular(home.sectionRadius),
     );
     expect(firstHomeSection.style?.boxShadow, home.sectionShadow);
+
+    final firstHomeSectionRows = tester
+        .widgetList<ListTile>(
+          find.descendant(
+            of: find.byType(SettingsHomeSection).first,
+            matching: find.byType(ListTile),
+          ),
+        )
+        .toList();
+    expect(firstHomeSectionRows, hasLength(1));
+    expect(firstHomeSectionRows.single.minTileHeight, 48);
 
     expect(find.text('Stats'), findsOneWidget);
     expect(find.text('Widgets'), findsOneWidget);
@@ -221,6 +240,10 @@ void main() {
     expect(find.text('Export Logs'), findsOneWidget);
     expect(find.text('Self Repair'), findsOneWidget);
     expect(find.text('How to report?'), findsOneWidget);
+
+    final rows = tester.widgetList<ListTile>(find.byType(ListTile)).toList();
+    expect(rows, isNotEmpty);
+    expect(rows.every((row) => row.minTileHeight == null), isTrue);
   });
 
   testWidgets(

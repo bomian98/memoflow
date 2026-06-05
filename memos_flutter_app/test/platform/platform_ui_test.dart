@@ -376,6 +376,56 @@ void main() {
     expect(row.visualDensity, VisualDensity.standard);
   });
 
+  testWidgets('list section can apply semantic mobile row min height', (
+    tester,
+  ) async {
+    setTargetPlatform(TargetPlatform.android);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PlatformListSection(
+          children: [
+            PlatformListSectionRow(
+              title: const Text('Language'),
+              mobileMinTileHeight: 48,
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final row = tester.widget<ListTile>(find.byType(ListTile));
+    expect(row.dense, isFalse);
+    expect(row.visualDensity, VisualDensity.standard);
+    expect(row.minTileHeight, 48);
+  });
+
+  testWidgets(
+    'semantic mobile row min height does not override desktop dense',
+    (tester) async {
+      setTargetPlatform(TargetPlatform.windows);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PlatformListSection(
+            children: [
+              PlatformListSectionRow(
+                title: const Text('Language'),
+                mobileMinTileHeight: 48,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final row = tester.widget<ListTile>(find.byType(ListTile));
+      expect(row.dense, isTrue);
+      expect(row.minTileHeight, isNull);
+    },
+  );
+
   testWidgets('bounded content limits regular desktop width', (tester) async {
     setTargetPlatform(TargetPlatform.macOS);
 

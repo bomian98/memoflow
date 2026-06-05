@@ -148,6 +148,10 @@ void main() {
 
     expect(home.usesLayeredCards, isTrue);
     expect(home.cardElevation, greaterThan(0));
+    expect(home.shortcutTileHeight, 80);
+    expect(home.sectionSpacing, 12);
+    expect(home.navigationRowMinHeight, 48);
+    expect(home.profilePadding, const EdgeInsets.all(16));
 
     final profileMaterial = tester.widget<Material>(
       find
@@ -169,6 +173,10 @@ void main() {
       find.byType(SettingsHomeShortcutTile).first,
     );
     expect(shortcutSize.height, home.shortcutTileHeight);
+
+    final rows = tester.widgetList<ListTile>(find.byType(ListTile)).toList();
+    expect(rows, hasLength(2));
+    expect(rows.every((row) => row.minTileHeight == 48), isTrue);
 
     final section = tester.widget<PlatformListSection>(
       find.descendant(
@@ -197,6 +205,10 @@ void main() {
 
     expect(home.usesLayeredCards, isTrue);
     expect(home.cardElevation, 0);
+    expect(home.shortcutTileHeight, 80);
+    expect(home.sectionSpacing, 12);
+    expect(home.navigationRowMinHeight, 48);
+    expect(home.profilePadding, const EdgeInsets.all(16));
     expect(home.sectionShadow, isEmpty);
 
     final section = tester.widget<PlatformListSection>(
