@@ -15,14 +15,8 @@ class AppDelegate: FlutterAppDelegate {
   }
 
   override func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-    if !flag {
-      for window in NSApp.windows {
-        if !window.isVisible {
-          window.setIsVisible(true)
-        }
-        window.makeKeyAndOrderFront(self)
-        NSApp.activate(ignoringOtherApps: true)
-      }
+    if !flag || memoFlowMainWindow?.isVisible != true {
+      restoreMainWindow(sender)
     }
     return true
   }
@@ -36,6 +30,26 @@ class AppDelegate: FlutterAppDelegate {
       return
     }
     menuDispatcher.dispatch(command)
+  }
+
+  private func restoreMainWindow(_ sender: Any?) {
+    guard let window = memoFlowMainWindow else {
+      NSApp.activate(ignoringOtherApps: true)
+      return
+    }
+    if window.isMiniaturized {
+      window.deminiaturize(sender)
+    }
+    if !window.isVisible {
+      window.setIsVisible(true)
+    }
+    window.makeKeyAndOrderFront(sender)
+    NSApp.activate(ignoringOtherApps: true)
+  }
+
+  private var memoFlowMainWindow: MainFlutterWindow? {
+    NSApp.mainWindow as? MainFlutterWindow
+      ?? NSApp.windows.first { $0 is MainFlutterWindow } as? MainFlutterWindow
   }
 }
 

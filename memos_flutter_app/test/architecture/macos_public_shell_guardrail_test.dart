@@ -49,6 +49,15 @@ void main() {
         isTrue,
       );
       expect(appDelegate.contains('applicationShouldHandleReopen'), isTrue);
+      expect(appDelegate.contains('restoreMainWindow'), isTrue);
+      expect(
+        appDelegate.contains(
+          'if !flag || memoFlowMainWindow?.isVisible != true',
+        ),
+        isTrue,
+      );
+      expect(appDelegate.contains('for window in NSApp.windows'), isFalse);
+      expect(appDelegate.contains('MainFlutterWindow'), isTrue);
       expect(
         appDelegate.contains('applicationSupportsSecureRestorableState'),
         isTrue,

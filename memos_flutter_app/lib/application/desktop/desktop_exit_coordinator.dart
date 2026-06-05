@@ -108,6 +108,17 @@ class DesktopExitCoordinator with WindowListener {
   static String debugMainWindowTerminationAction() => 'close';
 
   @visibleForTesting
+  static bool debugSupportsMainWindowActivation({
+    required bool isWindows,
+    required bool isMacOS,
+  }) {
+    return _supportsMainWindowActivation(
+      isWindows: isWindows,
+      isMacOS: isMacOS,
+    );
+  }
+
+  @visibleForTesting
   static String debugCloseRequestAction({
     required bool isWindows,
     required bool closeToTray,
@@ -347,6 +358,13 @@ class DesktopExitCoordinator with WindowListener {
     return DesktopCloseRequestAction.fullExit;
   }
 
+  static bool _supportsMainWindowActivation({
+    required bool isWindows,
+    required bool isMacOS,
+  }) {
+    return isWindows || isMacOS;
+  }
+
   Future<void> _prepareForFullExit() async {
     final prepareForExit = _prepareForExit;
     if (prepareForExit == null) return;
@@ -387,22 +405,26 @@ class DesktopExitCoordinator with WindowListener {
   }
 
   Future<void> _activateMainWindow() async {
-    if (kIsWeb || !Platform.isWindows) return;
+    if (kIsWeb ||
+        !_supportsMainWindowActivation(
+          isWindows: Platform.isWindows,
+          isMacOS: Platform.isMacOS,
+        )) {
+      return;
+    }
     try {
       await windowManager.ensureInitialized();
       if (await windowManager.isMinimized()) {
         await windowManager.restore();
       }
-      if (!await windowManager.isVisible()) {
-        await windowManager.show();
-      } else {
-        await windowManager.show();
-      }
+      await windowManager.show();
       await windowManager.focus();
     } catch (_) {}
-    try {
-      await DesktopTrayController.instance.showFromTray();
-    } catch (_) {}
+    if (Platform.isWindows) {
+      try {
+        await DesktopTrayController.instance.showFromTray();
+      } catch (_) {}
+    }
   }
 
   Future<void> _terminateMainWindowForExit() async {

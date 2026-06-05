@@ -111,6 +111,30 @@ void main() {
     );
   });
 
+  test('main window activation supports Windows and macOS', () {
+    expect(
+      DesktopExitCoordinator.debugSupportsMainWindowActivation(
+        isWindows: true,
+        isMacOS: false,
+      ),
+      isTrue,
+    );
+    expect(
+      DesktopExitCoordinator.debugSupportsMainWindowActivation(
+        isWindows: false,
+        isMacOS: true,
+      ),
+      isTrue,
+    );
+    expect(
+      DesktopExitCoordinator.debugSupportsMainWindowActivation(
+        isWindows: false,
+        isMacOS: false,
+      ),
+      isFalse,
+    );
+  });
+
   test('secondary route close callback keeps guarded routes open', () async {
     var attempted = false;
 

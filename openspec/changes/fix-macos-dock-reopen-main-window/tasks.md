@@ -1,0 +1,7 @@
+- [x] 1.1 更新 OpenSpec delta spec，定义 Dock reopen 和 application activation 恢复主窗口的验收行为。
+- [x] 2.1 修改 `DesktopExitCoordinator.activateMainWindow()`，让 macOS 路径恢复并聚焦主窗口。
+- [x] 2.2 修改 `macos/Runner/AppDelegate.swift`，让 `applicationShouldHandleReopen` 只恢复主 `MainFlutterWindow`。
+- [x] 2.3 覆盖 `hasVisibleWindows == true` 但主窗口不可见时仍恢复主窗口的 Dock reopen 边界。
+- [x] 3.1 更新 focused desktop lifecycle test，防止 macOS activation 重新退化为 Windows-only。
+- [x] 3.2 更新 macOS public shell guardrail，防止 Dock reopen 继续遍历所有窗口。
+- [x] 4.1 运行 focused tests：`flutter test test/application/desktop/desktop_exit_coordinator_test.dart test/architecture/macos_public_shell_guardrail_test.dart --reporter expanded`。
