@@ -71,6 +71,13 @@ class _FrameStats {
   double get score => stdDev + (spread * _scoreSpreadWeight);
 }
 
+class VideoThumbnailCacheStats {
+  const VideoThumbnailCacheStats({required this.bytes, required this.files});
+
+  final int bytes;
+  final int files;
+}
+
 class VideoThumbnailCache {
   static const _folderName = 'video_thumbnails';
   static const _maxWidth = 512;
@@ -129,6 +136,45 @@ class VideoThumbnailCache {
   static final Map<String, Future<File?>> _pending = {};
   static final Map<String, Uint8List> _memoryCache = {};
   static final Map<String, File> _fileCache = {};
+
+  @visibleForTesting
+  static int get debugMemoryCacheEntryCount => _memoryCache.length;
+
+  @visibleForTesting
+  static int get debugFileCacheEntryCount => _fileCache.length;
+
+  static Future<VideoThumbnailCacheStats> describeCache() async {
+    final cacheDir = await _cacheDir();
+    if (!await cacheDir.exists()) {
+      return const VideoThumbnailCacheStats(bytes: 0, files: 0);
+    }
+    var bytes = 0;
+    var files = 0;
+    await for (final entity in cacheDir.list(
+      recursive: true,
+      followLinks: false,
+    )) {
+      if (entity is! File) continue;
+      try {
+        bytes += await entity.length();
+        files += 1;
+      } catch (_) {
+        // Ignore files that disappear or cannot be read during maintenance.
+      }
+    }
+    return VideoThumbnailCacheStats(bytes: bytes, files: files);
+  }
+
+  static Future<void> clearCache() async {
+    _pending.clear();
+    _memoryCache.clear();
+    _fileCache.clear();
+    final cacheDir = await _cacheDir();
+    if (!await cacheDir.exists()) return;
+    await for (final entity in cacheDir.list(followLinks: false)) {
+      await entity.delete(recursive: true);
+    }
+  }
 
   static File? peekThumbnailFile({
     required String id,
