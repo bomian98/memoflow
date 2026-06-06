@@ -86,13 +86,166 @@ void main() {
         sortOrder: MemoSortOrder.createDesc,
       );
 
-      final results = await container.read(
-        remoteSearchMemosProvider(query).future,
+      final results = await HttpOverrides.runWithHttpOverrides(
+        () => container.read(remoteSearchMemosProvider(query).future),
+        _PassthroughHttpOverrides(),
       );
       final uids = results.map((memo) => memo.uid).toList(growable: false);
 
       expect(uids, contains('memo-local'));
       expect(uids, isNot(contains('memo-remote')));
+    },
+  );
+
+  test(
+    'remoteSearchMemosProvider excludes remote-only memos outside current user scope',
+    () async {
+      final dbName = uniqueDbName('remote_search_user_scope');
+      final db = AppDatabase(dbName: dbName);
+      final server = await _FakeSearchServer.start(
+        memos: const <Map<String, Object?>>[
+          <String, Object?>{
+            'name': 'memos/memo-mine',
+            'creator': 'users/1',
+            'content': 'scope needle owned',
+            'visibility': 'PRIVATE',
+            'pinned': false,
+            'state': 'NORMAL',
+            'createTime': '2026-04-18T06:00:00Z',
+            'updateTime': '2026-04-18T06:00:00Z',
+            'tags': <String>[],
+            'attachments': <Object>[],
+          },
+          <String, Object?>{
+            'name': 'memos/memo-other',
+            'creator': 'users/2',
+            'content': 'scope needle other',
+            'visibility': 'PUBLIC',
+            'pinned': false,
+            'state': 'NORMAL',
+            'createTime': '2026-04-18T06:01:00Z',
+            'updateTime': '2026-04-18T06:01:00Z',
+            'tags': <String>[],
+            'attachments': <Object>[],
+          },
+          <String, Object?>{
+            'name': 'memos/memo-missing-creator',
+            'creator': '',
+            'content': 'scope needle untrusted',
+            'visibility': 'PUBLIC',
+            'pinned': false,
+            'state': 'NORMAL',
+            'createTime': '2026-04-18T06:02:00Z',
+            'updateTime': '2026-04-18T06:02:00Z',
+            'tags': <String>[],
+            'attachments': <Object>[],
+          },
+        ],
+      );
+      addTearDown(() async {
+        await server.close();
+        await db.close();
+        await deleteTestDatabase(dbName);
+      });
+
+      final container = ProviderContainer(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          appSessionProvider.overrideWith(
+            (ref) => _TestSessionController(server.baseUrl),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final query = (
+        searchQuery: 'scope needle',
+        state: 'NORMAL',
+        tag: null,
+        startTimeSec: null,
+        endTimeSecExclusive: null,
+        advancedFilters: AdvancedSearchFilters.empty,
+        pageSize: 20,
+        sortOrder: MemoSortOrder.createDesc,
+      );
+
+      final results = await HttpOverrides.runWithHttpOverrides(
+        () => container.read(remoteSearchMemosProvider(query).future),
+        _PassthroughHttpOverrides(),
+      );
+      final uids = results.map((memo) => memo.uid).toList(growable: false);
+
+      expect(uids, contains('memo-mine'));
+      expect(uids, isNot(contains('memo-other')));
+      expect(uids, isNot(contains('memo-missing-creator')));
+    },
+  );
+
+  test(
+    'remoteSearchMemosProvider keeps local library matches when remote creator is not trusted',
+    () async {
+      final dbName = uniqueDbName('remote_search_local_scope');
+      final db = AppDatabase(dbName: dbName);
+      final nowSec =
+          DateTime.utc(2026, 4, 18, 6, 0).millisecondsSinceEpoch ~/ 1000;
+
+      await _insertMemo(
+        db,
+        uid: 'memo-local',
+        content: 'local scope needle',
+        createTimeSec: nowSec,
+      );
+
+      final server = await _FakeSearchServer.start(
+        memos: const <Map<String, Object?>>[
+          <String, Object?>{
+            'name': 'memos/memo-local',
+            'creator': 'users/2',
+            'content': 'local scope needle',
+            'visibility': 'PUBLIC',
+            'pinned': false,
+            'state': 'NORMAL',
+            'createTime': '2026-04-18T06:00:00Z',
+            'updateTime': '2026-04-18T06:00:00Z',
+            'tags': <String>[],
+            'attachments': <Object>[],
+          },
+        ],
+      );
+      addTearDown(() async {
+        await server.close();
+        await db.close();
+        await deleteTestDatabase(dbName);
+      });
+
+      final container = ProviderContainer(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          appSessionProvider.overrideWith(
+            (ref) => _TestSessionController(server.baseUrl),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final query = (
+        searchQuery: 'scope needle',
+        state: 'NORMAL',
+        tag: null,
+        startTimeSec: null,
+        endTimeSecExclusive: null,
+        advancedFilters: AdvancedSearchFilters.empty,
+        pageSize: 20,
+        sortOrder: MemoSortOrder.createDesc,
+      );
+
+      final results = await HttpOverrides.runWithHttpOverrides(
+        () => container.read(remoteSearchMemosProvider(query).future),
+        _PassthroughHttpOverrides(),
+      );
+      final uids = results.map((memo) => memo.uid).toList(growable: false);
+
+      expect(uids, contains('memo-local'));
     },
   );
 
@@ -145,7 +298,10 @@ void main() {
       addTearDown(container.dispose);
 
       final controller = container.read(linkMemoControllerProvider);
-      final results = await controller.loadMemos(query: '  \u79e9\u5e8f  ');
+      final results = await HttpOverrides.runWithHttpOverrides(
+        () => controller.loadMemos(query: '  \u79e9\u5e8f  '),
+        _PassthroughHttpOverrides(),
+      );
       final uids = results.map((memo) => memo.uid).toList(growable: false);
 
       expect(uids, contains('memo-local'));
@@ -208,6 +364,8 @@ void main() {
     },
   );
 }
+
+class _PassthroughHttpOverrides extends HttpOverrides {}
 
 Future<void> _insertMemo(
   AppDatabase db, {

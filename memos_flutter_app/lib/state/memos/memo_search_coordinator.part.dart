@@ -92,7 +92,8 @@ class MemoSearchCoordinator {
     final endTimeSecExclusive = query.endTimeSecExclusive;
 
     final filters = <String>[];
-    final creatorId = _parseUserId(account.user.name);
+    final currentUserName = account.user.name.trim();
+    final creatorId = _parseUserId(currentUserName);
     final creatorFilter = creatorId == null
         ? null
         : _buildCreatorFilterExpression(
@@ -292,7 +293,8 @@ class MemoSearchCoordinator {
 
           if (!_matchesRemoteSearchMemoLocally(
             memo: memo,
-            creatorId: creatorId,
+            currentUserName: currentUserName,
+            currentUserId: creatorId,
             normalizedSearch: normalizedSearch,
             normalizedTag: normalizedTag,
             startTimeSec: startTimeSec,

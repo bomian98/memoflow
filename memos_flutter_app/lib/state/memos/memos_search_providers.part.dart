@@ -365,29 +365,30 @@ String _searchTokenPreview(String token) {
 
 bool _matchesRemoteSearchMemoLocally({
   required Memo memo,
-  required int? creatorId,
+  required String currentUserName,
+  required int? currentUserId,
   required String normalizedSearch,
   required String normalizedTag,
   required int? startTimeSec,
   required int? endTimeSecExclusive,
   Set<String> matchedLocalMemoKeys = const <String>{},
 }) {
-  if (creatorId != null) {
+  final memoKey = _memoRemoteKey(memo);
+  final matchedLocally =
+      memoKey.isNotEmpty && matchedLocalMemoKeys.contains(memoKey);
+
+  if (!matchedLocally) {
     final creatorRaw = memo.creator.trim();
-    if (creatorRaw.isNotEmpty) {
-      final memoCreatorId = _parseUserId(creatorRaw);
-      if (memoCreatorId != null) {
-        if (memoCreatorId != creatorId) return false;
-      } else if (creatorRaw != 'users/$creatorId') {
-        return false;
-      }
+    if (!_memoCreatorMatchesCurrentUser(
+      creatorRaw,
+      currentUserName: currentUserName,
+      currentUserId: currentUserId,
+    )) {
+      return false;
     }
   }
 
   if (normalizedSearch.isNotEmpty) {
-    final memoKey = _memoRemoteKey(memo);
-    final matchedLocally =
-        memoKey.isNotEmpty && matchedLocalMemoKeys.contains(memoKey);
     if (!matchedLocally &&
         !MemoSearchMatcher.matchesText(
           text: MemoSearchDocumentBuilder.buildCanonical(
@@ -430,6 +431,31 @@ bool _matchesRemoteSearchMemoLocally({
   }
 
   return true;
+}
+
+bool _memoCreatorMatchesCurrentUser(
+  String rawCreator, {
+  required String currentUserName,
+  required int? currentUserId,
+}) {
+  final creator = rawCreator.trim();
+  if (creator.isEmpty) return false;
+
+  final normalizedCurrentName = currentUserName.trim();
+  if (normalizedCurrentName.isNotEmpty && creator == normalizedCurrentName) {
+    return true;
+  }
+
+  final creatorId = _parseUserId(creator);
+  if (creatorId != null && currentUserId != null) {
+    return creatorId == currentUserId;
+  }
+
+  if (currentUserId != null && creator == 'users/$currentUserId') {
+    return true;
+  }
+
+  return false;
 }
 
 bool _shouldFallbackShortcutFilter(DioException e) {
