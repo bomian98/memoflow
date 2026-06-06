@@ -5,7 +5,7 @@ import '../home/app_drawer.dart';
 
 enum HomeScreenPresentation { standalone, embeddedBottomNav, desktopEmbedded }
 
-enum DesktopHomeUtilityView { none, syncQueue, notifications }
+enum DesktopHomeUtilityView { none, syncQueue, notifications, draftBox }
 
 abstract interface class HomeEmbeddedNavigationHost {
   void handleDrawerDestination(

@@ -31,10 +31,10 @@ import 'data/logs/log_manager.dart';
 import 'data/models/device_preferences.dart';
 import 'data/models/local_library.dart';
 import 'features/home/main_home_page.dart';
+import 'features/home/home_navigation_host.dart';
 import 'features/import/import_flow_screens.dart';
 import 'features/image_editor/i18n.dart';
 import 'features/lock/app_lock_gate.dart';
-import 'features/memos/draft_box_navigation_screen.dart';
 import 'features/memos/memo_editor_screen.dart';
 import 'features/memos/memos_list_screen.dart';
 import 'features/memos/recycle_bin_screen.dart';
@@ -388,7 +388,19 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
         );
         return;
       case macosMenuCommandDraftBox:
-        await _pushMacosMenuRoute(const DraftBoxNavigationScreen());
+        if (MemosListScreen.openDraftBoxInCurrentDesktopHome()) {
+          return;
+        }
+        await _pushMacosMenuRoute(
+          const MemosListScreen(
+            title: 'MemoFlow',
+            state: 'NORMAL',
+            showDrawer: true,
+            enableCompose: true,
+            enableDesktopResizableHomeInlineCompose: true,
+            initialDesktopUtilityView: DesktopHomeUtilityView.draftBox,
+          ),
+        );
         return;
       case macosMenuCommandTags:
         await _pushMacosMenuRoute(const TagsScreen());
@@ -522,9 +534,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
         await _openMacosSettingsWindow(fallback: const SettingsScreen());
         return;
       case macosMenuCommandQuit:
-        await DesktopExitCoordinator.requestExit(
-          reason: 'macos_app_menu_quit',
-        );
+        await DesktopExitCoordinator.requestExit(reason: 'macos_app_menu_quit');
         return;
       case macosMenuCommandHelpCenter:
         await _openExternalUrl('https://memoflow.hzc073.com/help/');

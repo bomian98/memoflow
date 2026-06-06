@@ -148,6 +148,7 @@ class _DraftBoxNavigationScreenState
         onOpenNotifications: _openNotifications,
         presentation: widget.presentation,
         embeddedNavigationHost: widget.embeddedNavigationHost,
+        onBackToPrimaryDestination: _handleBackToHome,
         onDraftSelected: (selection) =>
             unawaited(_handleDraftSelected(selection)),
       ),

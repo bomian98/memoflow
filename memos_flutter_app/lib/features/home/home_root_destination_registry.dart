@@ -5,6 +5,7 @@ import '../../i18n/strings.g.dart';
 import '../collections/collections_screen.dart';
 import '../explore/explore_screen.dart';
 import '../home/app_drawer.dart';
+import 'app_drawer_destination_builder.dart';
 import '../memos/draft_box_navigation_screen.dart';
 import '../memos/memos_list_screen.dart';
 import '../resources/resources_screen.dart';
@@ -186,10 +187,21 @@ Widget buildHomeRootScreen({
         embeddedNavigationHost: navigationHost,
       );
     case HomeRootDestination.draftBox:
-      return DraftBoxNavigationScreen(
-        presentation: presentation,
-        embeddedNavigationHost: navigationHost,
-      );
+      return shouldUseDesktopHomeUtilityDestination(
+            context: context,
+            presentation: presentation,
+            navigationHost: navigationHost,
+          )
+          ? buildDesktopHomeUtilityDestination(
+              context: context,
+              utility: DesktopHomeUtilityView.draftBox,
+              presentation: presentation,
+              navigationHost: navigationHost,
+            )
+          : DraftBoxNavigationScreen(
+              presentation: presentation,
+              embeddedNavigationHost: navigationHost,
+            );
     case HomeRootDestination.resources:
       return ResourcesScreen(
         presentation: presentation,

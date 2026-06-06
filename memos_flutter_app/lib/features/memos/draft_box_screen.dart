@@ -9,6 +9,7 @@ import '../../state/memos/compose_draft_provider.dart';
 import '../../state/memos/note_draft_provider.dart';
 import '../home/app_drawer.dart';
 import '../home/app_drawer_menu_button.dart';
+import '../home/desktop/desktop_embedded_utility_surface.dart';
 import '../home/desktop/desktop_destination_shell.dart';
 import '../home/home_navigation_host.dart';
 import 'widgets/draft_box_memo_card.dart';
@@ -47,6 +48,7 @@ class DraftBoxScreen extends ConsumerWidget {
     this.onOpenNotifications,
     this.presentation = HomeScreenPresentation.standalone,
     this.embeddedNavigationHost,
+    this.onBackToPrimaryDestination,
     this.onDraftSelected,
   });
 
@@ -58,6 +60,7 @@ class DraftBoxScreen extends ConsumerWidget {
   final VoidCallback? onOpenNotifications;
   final HomeScreenPresentation presentation;
   final HomeEmbeddedNavigationHost? embeddedNavigationHost;
+  final VoidCallback? onBackToPrimaryDestination;
   final ValueChanged<DraftBoxSelection>? onDraftSelected;
 
   static Future<DraftBoxSelection?> show(
@@ -76,10 +79,12 @@ class DraftBoxScreen extends ConsumerWidget {
     final draftsAsync = ref.watch(composeDraftsProvider);
     final title = context.t.strings.legacy.msg_draft_box_title;
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
-    final isWindowsDesktop =
-        Theme.of(context).platform == TargetPlatform.windows;
     final desktopPlatform = Theme.of(context).platform;
+    final isWindowsDesktop = desktopPlatform == TargetPlatform.windows;
+    final isMacosDesktop = desktopPlatform == TargetPlatform.macOS;
+    final isDesktopTarget = isDesktopTargetPlatform(desktopPlatform);
+    final useDesktopSidePane =
+        isDesktopTarget && screenWidth >= kMemoFlowDesktopSidePaneBreakpoint;
     final desktopNavigationMode = useDesktopSidePane
         ? DesktopTitlebarNavigationMode.expandedSidebar
         : DesktopTitlebarNavigationMode.hidden;
@@ -103,6 +108,9 @@ class DraftBoxScreen extends ConsumerWidget {
             embedded: useDesktopSidePane,
           )
         : null;
+    final useContentHeader =
+        isDesktopTarget &&
+        presentation != HomeScreenPresentation.desktopEmbedded;
 
     void selectDraft(ComposeDraftRecord draft) {
       final selection = DraftBoxSelection.fromDraft(draft);
@@ -117,7 +125,7 @@ class DraftBoxScreen extends ConsumerWidget {
     final body = draftsAsync.when(
       data: (drafts) {
         if (drafts.isEmpty) {
-          return _EmptyDraftBox(title: title);
+          return _EmptyDraftBox(title: title, showTitle: !useContentHeader);
         }
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -149,9 +157,25 @@ class DraftBoxScreen extends ConsumerWidget {
         ),
       ),
     );
+    final contentHeaderLeading = _resolveContentHeaderLeading(context);
+    final contentBody = useContentHeader
+        ? _DraftBoxContentPane(
+            title: title,
+            leading: contentHeaderLeading,
+            body: body,
+          )
+        : body;
 
-    if ((isWindowsDesktop || desktopPlatform == TargetPlatform.macOS) &&
-        showDrawer) {
+    if (presentation == HomeScreenPresentation.desktopEmbedded) {
+      return DesktopEmbeddedUtilitySurface(
+        title: Text(title),
+        onBack: onBackToPrimaryDestination,
+        backTooltip: context.t.strings.legacy.msg_back,
+        body: contentBody,
+      );
+    }
+
+    if ((isWindowsDesktop || isMacosDesktop) && showDrawer) {
       final bg = isDark
           ? MemoFlowPalette.backgroundDark
           : MemoFlowPalette.backgroundLight;
@@ -161,9 +185,44 @@ class DraftBoxScreen extends ConsumerWidget {
         onSelectTag: onSelectTag,
         onOpenNotifications: onOpenNotifications,
         backgroundColor: bg,
-        title: Text(title),
-        body: body,
+        title: const SizedBox.shrink(),
+        body: contentBody,
         fallback: const SizedBox.shrink(),
+      );
+    }
+
+    if (isDesktopTarget) {
+      return Scaffold(
+        appBar: AppBar(
+          toolbarHeight: resolveDesktopTopLevelToolbarHeight(
+            platform: desktopPlatform,
+            navigationMode: desktopNavigationMode,
+            navigationContext: desktopNavigationContext,
+          ),
+          automaticallyImplyLeading: false,
+          title: const SizedBox.shrink(),
+        ),
+        drawer: showDrawer && !useDesktopSidePane && !useEmbeddedBottomNav
+            ? drawerPanel
+            : null,
+        body: useDesktopSidePane && drawerPanel != null
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: kMemoFlowDesktopDrawerWidth,
+                    child: drawerPanel,
+                  ),
+                  VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.08),
+                  ),
+                  Expanded(child: contentBody),
+                ],
+              )
+            : contentBody,
       );
     }
 
@@ -223,10 +282,31 @@ class DraftBoxScreen extends ConsumerWidget {
                       ? Colors.white.withValues(alpha: 0.08)
                       : Colors.black.withValues(alpha: 0.08),
                 ),
-                Expanded(child: body),
+                Expanded(child: contentBody),
               ],
             )
-          : body,
+          : contentBody,
+    );
+  }
+
+  Widget? _resolveContentHeaderLeading(BuildContext context) {
+    if (showDrawer) {
+      final onBack = onBackToPrimaryDestination;
+      if (onBack == null) return null;
+      return IconButton(
+        key: const ValueKey<String>('draft-box-content-header-back'),
+        tooltip: context.t.strings.legacy.msg_back,
+        icon: const Icon(Icons.arrow_back),
+        onPressed: onBack,
+      );
+    }
+    final navigator = Navigator.of(context);
+    if (!navigator.canPop()) return null;
+    return IconButton(
+      key: const ValueKey<String>('draft-box-content-header-back'),
+      tooltip: context.t.strings.legacy.msg_back,
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => navigator.maybePop(),
     );
   }
 
@@ -315,10 +395,81 @@ class _DraftBoxCardSlot extends StatelessWidget {
   }
 }
 
-class _EmptyDraftBox extends StatelessWidget {
-  const _EmptyDraftBox({required this.title});
+class _DraftBoxContentPane extends StatelessWidget {
+  const _DraftBoxContentPane({
+    required this.title,
+    required this.leading,
+    required this.body,
+  });
 
   final String title;
+  final Widget? leading;
+  final Widget body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _DraftBoxContentHeader(title: title, leading: leading),
+        Expanded(child: body),
+      ],
+    );
+  }
+}
+
+class _DraftBoxContentHeader extends StatelessWidget {
+  const _DraftBoxContentHeader({required this.title, required this.leading});
+
+  final String title;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.08);
+    final textColor = Theme.of(context).colorScheme.onSurface;
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        key: const ValueKey<String>('draft-box-content-header'),
+        height: kToolbarHeight,
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: dividerColor)),
+        ),
+        padding: EdgeInsetsDirectional.only(
+          start: leading == null ? 16 : 4,
+          end: 16,
+        ),
+        child: Row(
+          children: [
+            if (leading != null) ...[leading!, const SizedBox(width: 4)],
+            Expanded(
+              child: Text(
+                title,
+                key: const ValueKey<String>('draft-box-content-header-title'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyDraftBox extends StatelessWidget {
+  const _EmptyDraftBox({required this.title, required this.showTitle});
+
+  final String title;
+  final bool showTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -329,13 +480,15 @@ class _EmptyDraftBox extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.inventory_2_outlined, size: 52),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-            ),
+            if (showTitle) ...[
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               context.t.strings.legacy.msg_draft_box_empty_desc,

@@ -104,6 +104,7 @@ import 'memos_list_desktop_presentation.dart';
 import 'memos_list_route_delegate.dart';
 import 'memos_list_screen_view_state.dart';
 import 'memos_list_viewport_coordinator.dart';
+import 'note_input_sheet.dart';
 import 'widgets/memos_list_animated_memo_item.dart';
 import 'widgets/memos_list_bootstrap_import_overlay.dart';
 import 'widgets/memos_list_desktop_preview_pane.dart';
@@ -140,6 +141,21 @@ class MemosListScreen extends ConsumerStatefulWidget {
     this.enableDrawerOpenDragGesture = true,
     this.initialDesktopUtilityView = DesktopHomeUtilityView.none,
   });
+
+  static final List<_MemosListScreenState> _activeStates =
+      <_MemosListScreenState>[];
+
+  static bool openDraftBoxInCurrentDesktopHome() {
+    for (final state in _activeStates.reversed) {
+      if (!state.mounted) continue;
+      final route = ModalRoute.of(state.context);
+      if (route?.isCurrent != true) continue;
+      if (state._showDesktopHomeUtilityView(DesktopHomeUtilityView.draftBox)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   final String title;
   final String state;
@@ -245,6 +261,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   bool _desktopComposeIgnoreDraft = false;
   String _floatingCollapseVisibleMemoSignature = '';
   late DesktopHomeUtilityView _desktopHomeUtilityView;
+  String? _desktopDraftBoxActiveDraftId;
   Timer? _scrollPerfIdleTimer;
   _MemosScrollPerfSession? _scrollPerfSession;
   late final VoidCallback _audioPlaybackCoordinatorListener;
@@ -786,6 +803,25 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     );
   }
 
+  Future<void> _showHomeNoteInputSheet(
+    BuildContext context, {
+    String? initialText,
+    List<String> initialAttachmentPaths = const <String>[],
+    bool ignoreDraft = false,
+  }) {
+    return NoteInputSheet.show(
+      context,
+      initialText: initialText,
+      initialAttachmentPaths: initialAttachmentPaths,
+      ignoreDraft: ignoreDraft,
+      onOpenDraftBoxInHomeUtility: (activeDraftId) =>
+          _showDesktopHomeUtilityView(
+            DesktopHomeUtilityView.draftBox,
+            activeDraftId: activeDraftId,
+          ),
+    );
+  }
+
   void _clearDesktopPaneSelection() {
     final paneState = ref.read(desktopHomePaneStateProvider);
     if (!paneState.hasSelection &&
@@ -1241,6 +1277,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   @override
   void initState() {
     super.initState();
+    MemosListScreen._activeStates.add(this);
     _desktopHomeUtilityView = widget.initialDesktopUtilityView;
     _inlineComposer = MemoComposerController();
     _headerController = MemosListHeaderController(initialTag: widget.tag);
@@ -1324,13 +1361,15 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       embeddedNavigationHost: widget.embeddedNavigationHost,
       desktopPresentationResolver: (_) =>
           _resolveCurrentMemosListDesktopPresentation(),
-      showNoteInputSheet: widget.showNoteInputSheet,
+      showNoteInputSheet: widget.showNoteInputSheet ?? _showHomeNoteInputSheet,
       showDesktopComposeSurface: _showDesktopComposeSurface,
       showVoiceRecordOverlay: widget.showVoiceRecordOverlay,
       openDesktopSyncQueue: () =>
           _showDesktopHomeUtilityView(DesktopHomeUtilityView.syncQueue),
       openDesktopNotifications: () =>
           _showDesktopHomeUtilityView(DesktopHomeUtilityView.notifications),
+      openDesktopDraftBox: () =>
+          _showDesktopHomeUtilityView(DesktopHomeUtilityView.draftBox),
     );
     _memoActionDelegate = MemosListMemoActionDelegate(
       contextResolver: () => context,
@@ -1566,6 +1605,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
 
   @override
   void dispose() {
+    MemosListScreen._activeStates.remove(this);
     if (Platform.isWindows) {
       windowManager.removeListener(this);
     }
@@ -2679,6 +2719,12 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     if (!widget.enableCompose || _inlineComposeBusy) return;
     final currentDraftId = await _saveInlineComposeDraft();
     if (!mounted) return;
+    if (_showDesktopHomeUtilityView(
+      DesktopHomeUtilityView.draftBox,
+      activeDraftId: _inlineComposeActiveDraftId,
+    )) {
+      return;
+    }
     final selection = await DraftBoxScreen.show(
       context,
       activeDraftId: _inlineComposeActiveDraftId,
@@ -2714,6 +2760,62 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         _clearInlineComposeState();
       }
     }
+  }
+
+  Future<void> _handleDesktopDraftBoxSelection(
+    DraftBoxSelection selection,
+  ) async {
+    if (selection.isCreateMemoDraft) {
+      final selectedDraft = await ref
+          .read(composeDraftRepositoryProvider)
+          .getByUid(selection.draftUid);
+      if (!mounted || selectedDraft == null) return;
+      _restoreInlineComposeDraft(selectedDraft);
+      _clearDesktopHomeUtilityView();
+      _inlineComposeFocusNode.requestFocus();
+      return;
+    }
+    if (!selection.isEditMemoDraft) return;
+    await _openEditDraftFromDraftBox(selection);
+  }
+
+  Future<void> _openEditDraftFromDraftBox(DraftBoxSelection selection) async {
+    final draft = await ref
+        .read(composeDraftRepositoryProvider)
+        .getByUid(selection.draftUid);
+    if (!mounted || draft == null) return;
+    final targetMemoUid = draft.targetMemoUid?.trim().isNotEmpty == true
+        ? draft.targetMemoUid!.trim()
+        : selection.targetMemoUid?.trim() ?? '';
+    if (targetMemoUid.isEmpty) {
+      _showDraftBoxEditTargetUnavailable();
+      return;
+    }
+    final resolved = await ref
+        .read(memosListControllerProvider)
+        .resolveMemoForOpen(uid: targetMemoUid);
+    if (!mounted) return;
+    final memo = resolved.memo;
+    if (memo == null) {
+      _showDraftBoxEditTargetUnavailable();
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            MemoEditorScreen(existing: memo, initialEditDraft: draft),
+      ),
+    );
+  }
+
+  void _showDraftBoxEditTargetUnavailable() {
+    showTopToast(
+      context,
+      context.tr(
+        zh: '原笔记暂时无法打开，编辑草稿仍保留在草稿箱',
+        en: 'The original memo cannot be opened right now. The edit draft remains in Draft Box.',
+      ),
+    );
   }
 
   Future<bool> _confirmDeleteMemo(LocalMemo memo) async {
@@ -2815,16 +2917,31 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         target == PlatformTarget.linux;
   }
 
-  bool _showDesktopHomeUtilityView(DesktopHomeUtilityView view) {
+  bool _showDesktopHomeUtilityView(
+    DesktopHomeUtilityView view, {
+    String? activeDraftId,
+  }) {
     if (!_supportsDesktopHomeUtilityEmbedding()) return false;
-    if (_desktopHomeUtilityView == view) return true;
-    setState(() => _desktopHomeUtilityView = view);
+    final nextDraftBoxActiveDraftId = view == DesktopHomeUtilityView.draftBox
+        ? activeDraftId
+        : null;
+    if (_desktopHomeUtilityView == view &&
+        _desktopDraftBoxActiveDraftId == nextDraftBoxActiveDraftId) {
+      return true;
+    }
+    setState(() {
+      _desktopHomeUtilityView = view;
+      _desktopDraftBoxActiveDraftId = nextDraftBoxActiveDraftId;
+    });
     return true;
   }
 
   void _clearDesktopHomeUtilityView() {
     if (_desktopHomeUtilityView == DesktopHomeUtilityView.none) return;
-    setState(() => _desktopHomeUtilityView = DesktopHomeUtilityView.none);
+    setState(() {
+      _desktopHomeUtilityView = DesktopHomeUtilityView.none;
+      _desktopDraftBoxActiveDraftId = null;
+    });
   }
 
   void _handleHomeDrawerDestination(AppDrawerDestination destination) {
@@ -3583,11 +3700,14 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         : DesktopHomeUtilityView.none;
     final desktopUtilityActive =
         desktopUtilityView != DesktopHomeUtilityView.none;
-    final selectedDrawerDestination = desktopUtilityActive
-        ? null
-        : (widget.state == 'ARCHIVED'
-              ? AppDrawerDestination.archived
-              : AppDrawerDestination.memos);
+    final selectedDrawerDestination = switch (desktopUtilityView) {
+      DesktopHomeUtilityView.draftBox => AppDrawerDestination.draftBox,
+      DesktopHomeUtilityView.none =>
+        widget.state == 'ARCHIVED'
+            ? AppDrawerDestination.archived
+            : AppDrawerDestination.memos,
+      _ => null,
+    };
     final selectedDrawerTagPath =
         desktopUtilityActive || resolvedTagPath.isEmpty
         ? null
@@ -4002,6 +4122,13 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       DesktopHomeUtilityView.notifications => NotificationsScreen(
         presentation: HomeScreenPresentation.desktopEmbedded,
         onDesktopEmbeddedBack: _clearDesktopHomeUtilityView,
+      ),
+      DesktopHomeUtilityView.draftBox => DraftBoxScreen(
+        activeDraftId: _desktopDraftBoxActiveDraftId,
+        presentation: HomeScreenPresentation.desktopEmbedded,
+        onBackToPrimaryDestination: _clearDesktopHomeUtilityView,
+        onDraftSelected: (selection) =>
+            unawaited(_handleDesktopDraftBoxSelection(selection)),
       ),
     };
     final desktopTrailingActions = <Widget>[

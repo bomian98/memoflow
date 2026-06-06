@@ -93,6 +93,9 @@ ImageThumbnailCacheTarget resolveNoteInputPendingImageThumbnailCacheTarget({
 
 enum _NoteInputSheetPresentationMode { compact, fullscreen }
 
+typedef NoteInputDraftBoxHomeUtilityOpener =
+    bool Function(String? activeDraftId);
+
 class NoteInputSheet extends ConsumerStatefulWidget {
   const NoteInputSheet({
     super.key,
@@ -110,6 +113,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
     this.shareInlineImageDownloadService,
     this.shareVideoDownloadService,
     this.shareVideoCompressionService,
+    this.onOpenDraftBoxInHomeUtility,
   });
 
   final String? initialText;
@@ -128,6 +132,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
   final ShareInlineImageDownloadService? shareInlineImageDownloadService;
   final ShareVideoDownloadService? shareVideoDownloadService;
   final ShareVideoCompressionService? shareVideoCompressionService;
+  final NoteInputDraftBoxHomeUtilityOpener? onOpenDraftBoxInHomeUtility;
 
   static Future<void> show(
     BuildContext context, {
@@ -148,6 +153,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
     ShareInlineImageDownloadService? shareInlineImageDownloadService,
     ShareVideoDownloadService? shareVideoDownloadService,
     ShareVideoCompressionService? shareVideoCompressionService,
+    NoteInputDraftBoxHomeUtilityOpener? onOpenDraftBoxInHomeUtility,
   }) {
     return showPlatformActionSheet<void>(
       context: context,
@@ -174,6 +180,7 @@ class NoteInputSheet extends ConsumerStatefulWidget {
         shareInlineImageDownloadService: shareInlineImageDownloadService,
         shareVideoDownloadService: shareVideoDownloadService,
         shareVideoCompressionService: shareVideoCompressionService,
+        onOpenDraftBoxInHomeUtility: onOpenDraftBoxInHomeUtility,
       ),
     );
   }
@@ -1090,6 +1097,10 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
 
     final currentDraftId = await _saveCurrentDraft();
     if (!mounted) return;
+    if (widget.onOpenDraftBoxInHomeUtility?.call(_activeDraftId) ?? false) {
+      await Navigator.of(context).maybePop();
+      return;
+    }
     final selection = await DraftBoxScreen.show(
       context,
       activeDraftId: _activeDraftId,

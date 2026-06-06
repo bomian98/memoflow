@@ -182,6 +182,7 @@ class MemosListRouteDelegate extends ChangeNotifier {
     MemosListRouteVoiceRecordOverlayPresenter? showVoiceRecordOverlay,
     MemosListRouteDesktopUtilityOpener? openDesktopSyncQueue,
     MemosListRouteDesktopUtilityOpener? openDesktopNotifications,
+    MemosListRouteDesktopUtilityOpener? openDesktopDraftBox,
   }) : _contextResolver = contextResolver,
        _read = read,
        _scaffoldKey = scaffoldKey,
@@ -216,7 +217,8 @@ class MemosListRouteDelegate extends ChangeNotifier {
        _showVoiceRecordOverlay =
            showVoiceRecordOverlay ?? _defaultShowVoiceRecordOverlay,
        _openDesktopSyncQueue = openDesktopSyncQueue,
-       _openDesktopNotifications = openDesktopNotifications;
+       _openDesktopNotifications = openDesktopNotifications,
+       _openDesktopDraftBox = openDesktopDraftBox;
 
   final BuildContext Function() _contextResolver;
   final MemosListRouteRead _read;
@@ -249,6 +251,7 @@ class MemosListRouteDelegate extends ChangeNotifier {
   final MemosListRouteVoiceRecordOverlayPresenter _showVoiceRecordOverlay;
   final MemosListRouteDesktopUtilityOpener? _openDesktopSyncQueue;
   final MemosListRouteDesktopUtilityOpener? _openDesktopNotifications;
+  final MemosListRouteDesktopUtilityOpener? _openDesktopDraftBox;
 
   final GlobalKey titleAnchorKey = GlobalKey();
 
@@ -357,6 +360,10 @@ class MemosListRouteDelegate extends ChangeNotifier {
     }
     if (dest == AppDrawerDestination.syncQueue &&
         (_openDesktopSyncQueue?.call() ?? false)) {
+      return;
+    }
+    if (dest == AppDrawerDestination.draftBox &&
+        (_openDesktopDraftBox?.call() ?? false)) {
       return;
     }
     closeDrawerThenPushReplacement(

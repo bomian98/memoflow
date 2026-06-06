@@ -168,10 +168,22 @@ Widget buildDrawerDestinationScreen({
     AppDrawerDestination.collections => CollectionsScreen(
       embeddedNavigationHost: navigationHost,
     ),
-    AppDrawerDestination.draftBox => DraftBoxNavigationScreen(
-      presentation: presentation,
-      embeddedNavigationHost: navigationHost,
-    ),
+    AppDrawerDestination.draftBox =>
+      shouldUseDesktopHomeUtilityDestination(
+            context: context,
+            presentation: presentation,
+            navigationHost: navigationHost,
+          )
+          ? buildDesktopHomeUtilityDestination(
+              context: context,
+              utility: DesktopHomeUtilityView.draftBox,
+              presentation: presentation,
+              navigationHost: navigationHost,
+            )
+          : DraftBoxNavigationScreen(
+              presentation: presentation,
+              embeddedNavigationHost: navigationHost,
+            ),
     AppDrawerDestination.tags => TagsScreen(
       presentation: presentation,
       embeddedNavigationHost: navigationHost,
