@@ -7,8 +7,13 @@ import 'package:memos_flutter_app/features/home/home_root_destination_registry.d
 import 'package:memos_flutter_app/features/memos/draft_box_navigation_screen.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_screen.dart';
 import 'package:memos_flutter_app/features/home/app_drawer.dart';
+import 'package:memos_flutter_app/platform/platform_target.dart';
 
 void main() {
+  tearDown(() {
+    debugPlatformTargetOverride = null;
+  });
+
   testWidgets('memos root screen enables resizable home inline compose', (
     tester,
   ) async {
@@ -150,6 +155,57 @@ void main() {
       built!.initialDesktopUtilityView,
       DesktopHomeUtilityView.notifications,
     );
+  });
+
+  testWidgets('desktop draft box route embeds in home utility content', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.windows;
+    Widget? built;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.windows),
+        home: Builder(
+          builder: (context) {
+            built = buildDrawerDestinationScreen(
+              context: context,
+              destination: AppDrawerDestination.draftBox,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(built, isA<MemosListScreen>());
+    expect(
+      (built! as MemosListScreen).initialDesktopUtilityView,
+      DesktopHomeUtilityView.draftBox,
+    );
+  });
+
+  testWidgets('mobile draft box route keeps standalone draft screen', (
+    tester,
+  ) async {
+    Widget? built;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.android),
+        home: Builder(
+          builder: (context) {
+            built = buildDrawerDestinationScreen(
+              context: context,
+              destination: AppDrawerDestination.draftBox,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(built, isA<DraftBoxNavigationScreen>());
   });
 
   testWidgets('Linux desktop memos routes keep resize disabled', (

@@ -35,8 +35,10 @@ import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/features/home/app_drawer.dart';
 import 'package:memos_flutter_app/features/home/home_entry_screen.dart';
 import 'package:memos_flutter_app/features/home/home_navigation_host.dart';
+import 'package:memos_flutter_app/features/home/desktop/desktop_destination_shell.dart';
 import 'package:memos_flutter_app/features/collections/collections_screen.dart';
 import 'package:memos_flutter_app/features/memos/draft_box_navigation_screen.dart';
+import 'package:memos_flutter_app/features/memos/draft_box_screen.dart';
 import 'package:memos_flutter_app/features/memos/memo_editor_screen.dart';
 import 'package:memos_flutter_app/features/memos/memo_markdown.dart';
 import 'package:memos_flutter_app/features/memos/note_input_sheet.dart';
@@ -346,6 +348,240 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
+  });
+
+  testWidgets('desktop embedded Draft Box renders in utility surface', (
+    tester,
+  ) async {
+    final repository = _FakeComposeDraftRepository([
+      _buildDraft(uid: 'draft-nav', content: 'Navigation draft content'),
+    ]);
+    addTearDown(repository.dispose);
+    final container = _buildNavigationContainer(repository);
+    addTearDown(container.dispose);
+    var backCount = 0;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: TranslationProvider(
+          child: MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.windows),
+            locale: AppLocale.en.flutterLocale,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: MediaQuery(
+              data: const MediaQueryData(size: Size(1400, 900)),
+              child: DraftBoxScreen(
+                presentation: HomeScreenPresentation.desktopEmbedded,
+                onBackToPrimaryDestination: () => backCount++,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await _pumpRouteFrames(tester);
+
+    final utilityFinder = find.byKey(
+      const ValueKey<String>('desktop-embedded-utility-surface'),
+    );
+    expect(utilityFinder, findsOneWidget);
+    expect(
+      find.descendant(of: utilityFinder, matching: find.text('Draft Box')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('draft-box-content-header')),
+      findsNothing,
+    );
+    expect(find.byType(DesktopDestinationShell), findsNothing);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('desktop-embedded-utility-back')),
+    );
+    await tester.pump();
+    expect(backCount, 1);
+  });
+
+  testWidgets('macOS selector Draft Box keeps Back/title in content header', (
+    tester,
+  ) async {
+    final repository = _FakeComposeDraftRepository([
+      _buildDraft(uid: 'draft-selector', content: 'Selector draft content'),
+    ]);
+    addTearDown(repository.dispose);
+    final container = _buildNavigationContainer(repository);
+    addTearDown(container.dispose);
+    DraftBoxSelection? selected;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: TranslationProvider(
+          child: MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.macOS),
+            locale: AppLocale.en.flutterLocale,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: MediaQuery(
+              data: const MediaQueryData(size: Size(900, 700)),
+              child: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () async {
+                    selected = await DraftBoxScreen.show(context);
+                  },
+                  child: const Text('Open Draft Box'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open Draft Box'));
+    await _pumpRouteFrames(tester);
+
+    final headerFinder = find.byKey(
+      const ValueKey<String>('draft-box-content-header'),
+    );
+    expect(headerFinder, findsOneWidget);
+    expect(
+      find.descendant(of: headerFinder, matching: find.text('Draft Box')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('draft-box-content-header-back')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Draft Box'),
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('draft-box-content-header-back')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(headerFinder, findsNothing);
+    expect(selected, isNull);
+  });
+
+  testWidgets('Windows selector Draft Box keeps Back/title in content header', (
+    tester,
+  ) async {
+    final repository = _FakeComposeDraftRepository([
+      _buildDraft(uid: 'draft-windows', content: 'Windows draft content'),
+    ]);
+    addTearDown(repository.dispose);
+    final container = _buildNavigationContainer(repository);
+    addTearDown(container.dispose);
+    DraftBoxSelection? selected;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: TranslationProvider(
+          child: MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.windows),
+            locale: AppLocale.en.flutterLocale,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: MediaQuery(
+              data: const MediaQueryData(size: Size(900, 700)),
+              child: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () async {
+                    selected = await DraftBoxScreen.show(context);
+                  },
+                  child: const Text('Open Draft Box'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open Draft Box'));
+    await _pumpRouteFrames(tester);
+
+    final headerFinder = find.byKey(
+      const ValueKey<String>('draft-box-content-header'),
+    );
+    expect(headerFinder, findsOneWidget);
+    expect(
+      find.descendant(of: headerFinder, matching: find.text('Draft Box')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('draft-box-content-header-back')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Draft Box'),
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('draft-box-content-header-back')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(headerFinder, findsNothing);
+    expect(selected, isNull);
+  });
+
+  testWidgets('mobile Draft Box keeps existing AppBar chrome', (tester) async {
+    final repository = _FakeComposeDraftRepository([
+      _buildDraft(uid: 'draft-mobile', content: 'Mobile draft content'),
+    ]);
+    addTearDown(repository.dispose);
+    final container = _buildNavigationContainer(repository);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: TranslationProvider(
+          child: MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.android),
+            locale: AppLocale.en.flutterLocale,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: const MediaQuery(
+              data: MediaQueryData(size: Size(390, 760)),
+              child: DraftBoxScreen(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await _pumpRouteFrames(tester);
+
+    expect(
+      find.byKey(const ValueKey<String>('draft-box-content-header')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('draft-box-content-header-back')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Draft Box'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('standalone Draft Box back returns to HomeEntryScreen', (

@@ -26,6 +26,7 @@ import 'package:memos_flutter_app/data/ai/ai_semantic_memo_search_service.dart';
 import 'package:memos_flutter_app/data/logs/sync_queue_progress_tracker.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
 import 'package:memos_flutter_app/data/models/attachment.dart';
+import 'package:memos_flutter_app/data/models/compose_draft.dart';
 import 'package:memos_flutter_app/data/models/content_fingerprint.dart';
 import 'package:memos_flutter_app/data/models/device_preferences.dart';
 import 'package:memos_flutter_app/data/models/home_navigation_preferences.dart';
@@ -46,11 +47,16 @@ import 'package:memos_flutter_app/data/repositories/memo_template_settings_repos
 import 'package:memos_flutter_app/data/repositories/scene_micro_guide_repository.dart';
 import 'package:memos_flutter_app/data/repositories/webdav_backup_state_repository.dart';
 import 'package:memos_flutter_app/features/home/home_navigation_host.dart';
+import 'package:memos_flutter_app/features/home/desktop/desktop_embedded_utility_surface.dart';
+import 'package:memos_flutter_app/features/home/desktop/desktop_shell_host.dart';
 import 'package:memos_flutter_app/application/desktop/desktop_resizable_panel_shell.dart';
+import 'package:memos_flutter_app/features/home/app_drawer.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_floating_collapse_controller.dart';
+import 'package:memos_flutter_app/features/memos/draft_box_navigation_screen.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_screen.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_route_delegate.dart';
 import 'package:memos_flutter_app/features/memos/memos_list_viewport_coordinator.dart';
+import 'package:memos_flutter_app/features/memos/widgets/draft_box_memo_card.dart';
 import 'package:memos_flutter_app/features/memos/memo_detail_screen.dart';
 import 'package:memos_flutter_app/features/memos/memo_editor_screen.dart';
 import 'package:memos_flutter_app/features/memos/widgets/floating_collapse_button.dart';
@@ -60,6 +66,7 @@ import 'package:memos_flutter_app/features/share/share_inline_image_content.dart
 import 'package:memos_flutter_app/features/voice/voice_record_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memos_list_providers.dart';
+import 'package:memos_flutter_app/state/memos/compose_draft_provider.dart';
 import 'package:memos_flutter_app/state/memos/desktop_memo_preview_session.dart';
 import 'package:memos_flutter_app/state/memos/desktop_home_pane_state.dart';
 import 'package:memos_flutter_app/state/memos/memo_composer_state.dart';
@@ -252,6 +259,146 @@ void main() {
     expect(find.byType(MemoFlowFab), findsNothing);
     debugDefaultTargetPlatformOverride = null;
   });
+
+  testWidgets('desktop draft box renders inside home primary content area', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+    final draftRepository = _TestComposeDraftRepository([
+      _buildComposeDraft(uid: 'draft-home', content: 'Home embedded draft'),
+    ]);
+    addTearDown(draftRepository.dispose);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+        enableCompose: true,
+        enableDesktopResizableHomeInlineCompose: true,
+        initialDesktopUtilityView: DesktopHomeUtilityView.draftBox,
+        overrides: [
+          composeDraftRepositoryProvider.overrideWith((ref) => draftRepository),
+        ],
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Home memo stays behind utility'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(const ValueKey<String>('windows-desktop-command-bar')),
+      findsOneWidget,
+    );
+    expect(find.byType(DesktopShellHost), findsOneWidget);
+    expect(find.byType(AppDrawer), findsOneWidget);
+    expect(find.byType(DesktopEmbeddedUtilitySurface), findsOneWidget);
+    expect(find.byType(DraftBoxMemoCard), findsOneWidget);
+    expect(
+      find.textContaining('Home embedded draft', findRichText: true),
+      findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(find.byType(DraftBoxMemoCard)).dx,
+      greaterThan(kMemoFlowDesktopDrawerWidth),
+    );
+    expect(
+      find.byKey(const ValueKey<String>('draft-box-content-header')),
+      findsNothing,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('desktop-embedded-utility-back')),
+    );
+    await _pumpScreenFrames(tester);
+
+    expect(find.byType(DesktopEmbeddedUtilitySurface), findsNothing);
+    expect(
+      find.textContaining('Home memo stays behind utility', findRichText: true),
+      findsOneWidget,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets(
+    'inline compose toolbar opens draft box in current desktop home',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1600, 1800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+      final draftRepository = _TestComposeDraftRepository([
+        _buildComposeDraft(
+          uid: 'draft-current-home',
+          content: 'Current home draft',
+        ),
+      ]);
+      addTearDown(draftRepository.dispose);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1600, 1800),
+          showDrawer: true,
+          enableCompose: true,
+          enableDesktopResizableHomeInlineCompose: true,
+          overrides: [
+            composeDraftRepositoryProvider.overrideWith(
+              (ref) => draftRepository,
+            ),
+          ],
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Current home memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      expect(find.byType(MemosListScreen), findsOneWidget);
+      expect(find.byType(DesktopShellHost), findsOneWidget);
+      expect(find.byType(AppDrawer), findsOneWidget);
+      expect(find.byType(DesktopEmbeddedUtilitySurface), findsNothing);
+
+      final inlineDraftBoxButton = find.byTooltip('Draft Box');
+      expect(inlineDraftBoxButton, findsOneWidget);
+
+      await tester.tap(inlineDraftBoxButton);
+      await _pumpScreenFrames(tester);
+
+      expect(find.byType(MemosListScreen), findsOneWidget);
+      expect(find.byType(DesktopShellHost), findsOneWidget);
+      expect(find.byType(AppDrawer), findsOneWidget);
+      expect(find.byType(DesktopEmbeddedUtilitySurface), findsOneWidget);
+      expect(find.byType(DraftBoxNavigationScreen), findsNothing);
+      expect(find.byType(DraftBoxMemoCard), findsOneWidget);
+      expect(
+        find.textContaining('Current home draft', findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('draft-box-content-header')),
+        findsNothing,
+      );
+      expect(
+        tester.getTopLeft(find.byType(DraftBoxMemoCard)).dx,
+        greaterThan(kMemoFlowDesktopDrawerWidth),
+      );
+
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
 
   testWidgets('windows wide layout opens desktop preview pane on memo tap', (
     tester,
@@ -2659,6 +2806,8 @@ Widget _buildHarness({
   bool seedDevicePreferencesSynchronously = false,
   MemosListRouteNoteInputPresenter? showNoteInputSheet,
   MemosListRouteVoiceRecordOverlayPresenter? showVoiceRecordOverlay,
+  DesktopHomeUtilityView initialDesktopUtilityView =
+      DesktopHomeUtilityView.none,
   List<Override> overrides = const <Override>[],
 }) {
   final resolvedDevicePreferencesRepository =
@@ -2744,6 +2893,7 @@ Widget _buildHarness({
             hidePrimaryComposeFab: hidePrimaryComposeFab,
             showNoteInputSheet: showNoteInputSheet,
             showVoiceRecordOverlay: showVoiceRecordOverlay,
+            initialDesktopUtilityView: initialDesktopUtilityView,
           ),
         ),
       ),
@@ -2767,6 +2917,26 @@ LocalMemo _buildMemo({required String uid, required String content}) {
     relationCount: 0,
     syncState: SyncState.synced,
     lastError: null,
+  );
+}
+
+ComposeDraftRecord _buildComposeDraft({
+  required String uid,
+  required String content,
+  ComposeDraftKind kind = ComposeDraftKind.createMemo,
+  String? targetMemoUid,
+}) {
+  final now = DateTime(2025, 1, 2, 3, 4, 5);
+  return ComposeDraftRecord(
+    uid: uid,
+    workspaceKey: 'test-account',
+    kind: kind,
+    targetMemoUid: targetMemoUid,
+    targetMemoContentFingerprint: null,
+    targetMemoUpdateTime: null,
+    snapshot: ComposeDraftSnapshot(content: content, visibility: 'PRIVATE'),
+    createdTime: now,
+    updatedTime: now,
   );
 }
 
@@ -2886,6 +3056,115 @@ class _MemorySecureStorage extends FlutterSecureStorage {
     WindowsOptions? wOptions,
   }) async {
     _values.remove(key);
+  }
+}
+
+class _TestComposeDraftRepository implements ComposeDraftRepository {
+  _TestComposeDraftRepository(List<ComposeDraftRecord> drafts)
+    : _drafts = List<ComposeDraftRecord>.of(drafts);
+
+  final _changes = StreamController<void>.broadcast();
+  final List<ComposeDraftRecord> _drafts;
+
+  Future<void> dispose() => _changes.close();
+
+  @override
+  Stream<void> get changes => _changes.stream;
+
+  @override
+  String get workspaceKey => 'test-account';
+
+  @override
+  Future<List<ComposeDraftRecord>> listDrafts({int? limit}) async {
+    final drafts = List<ComposeDraftRecord>.of(_drafts);
+    if (limit == null || limit >= drafts.length) return drafts;
+    return drafts.take(limit).toList(growable: false);
+  }
+
+  @override
+  Future<ComposeDraftRecord?> latestDraft() async =>
+      _drafts.isEmpty ? null : _drafts.first;
+
+  @override
+  Future<ComposeDraftRecord?> latestCreateDraft() async {
+    for (final draft in _drafts) {
+      if (draft.isCreateMemoDraft) return draft;
+    }
+    return null;
+  }
+
+  @override
+  Future<ComposeDraftRecord?> getByUid(String uid) async =>
+      getByUidWithoutLegacyImport(uid);
+
+  @override
+  Future<ComposeDraftRecord?> getByUidWithoutLegacyImport(String uid) async {
+    final normalized = uid.trim();
+    for (final draft in _drafts) {
+      if (draft.uid == normalized) return draft;
+    }
+    return null;
+  }
+
+  @override
+  Future<ComposeDraftRecord?> getEditDraftForMemo(String targetMemoUid) async {
+    final normalized = targetMemoUid.trim();
+    for (final draft in _drafts) {
+      if (draft.isEditMemoDraft && draft.targetMemoUid == normalized) {
+        return draft;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<String?> saveSnapshot({
+    String? draftUid,
+    required ComposeDraftSnapshot snapshot,
+  }) async {
+    return draftUid ?? 'saved-draft';
+  }
+
+  @override
+  Future<String?> saveEditDraft({
+    required String targetMemoUid,
+    required ComposeDraftSnapshot snapshot,
+    String? targetMemoContentFingerprint,
+    DateTime? targetMemoUpdateTime,
+  }) async {
+    return 'saved-edit-draft';
+  }
+
+  @override
+  Future<void> deleteDraft(
+    String uid, {
+    Set<String> keepPaths = const <String>{},
+  }) async {
+    _drafts.removeWhere((draft) => draft.uid == uid);
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> clearDrafts() async {
+    _drafts.clear();
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> deleteEditDraftForMemo(String targetMemoUid) async {
+    final normalized = targetMemoUid.trim();
+    _drafts.removeWhere(
+      (draft) => draft.isEditMemoDraft && draft.targetMemoUid == normalized,
+    );
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> replaceAllDrafts(Iterable<ComposeDraftRecord> drafts) async {
+    _drafts
+      ..clear()
+      ..addAll(drafts);
+    _changes.add(null);
   }
 }
 

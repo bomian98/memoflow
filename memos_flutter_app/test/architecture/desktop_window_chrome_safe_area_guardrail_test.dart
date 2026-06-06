@@ -173,6 +173,53 @@ void main() {
     }
   });
 
+  test('draft box desktop navigation embeds in home utility area', () async {
+    final source = await File(
+      'lib/features/memos/draft_box_screen.dart',
+    ).readAsString();
+    final memosList = await File(
+      'lib/features/memos/memos_list_screen.dart',
+    ).readAsString();
+    final destinationBuilder = await File(
+      'lib/features/home/app_drawer_destination_builder.dart',
+    ).readAsString();
+
+    expect(
+      source.contains('kMacosTrafficLightReservedWidth'),
+      isFalse,
+      reason: 'Draft Box must not hardcode macOS traffic-light padding.',
+    );
+    expect(
+      source.contains('resolveDesktopWindowChromeInsets'),
+      isFalse,
+      reason:
+          'Draft Box should not own desktop window-control geometry directly.',
+    );
+    expect(
+      source.contains('HomeScreenPresentation.desktopEmbedded'),
+      isTrue,
+      reason:
+          'Desktop navigation Draft Box should render as an embedded home utility.',
+    );
+    expect(
+      source.contains('DesktopEmbeddedUtilitySurface'),
+      isTrue,
+      reason: 'Desktop embedded Draft Box should not create its own shell.',
+    );
+    expect(
+      memosList.contains('DesktopHomeUtilityView.draftBox') &&
+          memosList.contains('desktopPrimaryContentOverride'),
+      isTrue,
+      reason:
+          'Home desktop utility routing should own the red-box primary content replacement.',
+    );
+    expect(
+      destinationBuilder.contains('DesktopHomeUtilityView.draftBox'),
+      isTrue,
+      reason: 'Desktop drawer Draft Box should route through home utility.',
+    );
+  });
+
   test('collection reader overlay uses shared chrome safe-area seam', () async {
     final overlay = await File(
       'lib/features/collections/collection_reader_overlay.dart',
