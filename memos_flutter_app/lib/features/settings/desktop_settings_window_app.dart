@@ -1211,8 +1211,8 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
       ),
       _DesktopPaneItem(
         pane: _DesktopSettingsPane.feedback,
-        icon: Icons.chat_bubble_outline,
-        label: context.t.strings.legacy.msg_feedback,
+        icon: Icons.help_outline,
+        label: context.t.strings.legacy.msg_help_diagnostics,
       ),
       _DesktopPaneItem(
         pane: _DesktopSettingsPane.importExport,

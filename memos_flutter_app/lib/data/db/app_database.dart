@@ -2784,6 +2784,13 @@ class AppDatabase {
     return MemoQueryDbPersistence.listMemoAttachmentRows(db, state: state);
   }
 
+  Future<List<Map<String, dynamic>>> listMemoStorageSummaryRows({
+    String? state,
+  }) async {
+    final db = await this.db;
+    return MemoQueryDbPersistence.listMemoStorageSummaryRows(db, state: state);
+  }
+
   Future<List<Map<String, dynamic>>> listMemos({
     String? searchQuery,
     String? state,

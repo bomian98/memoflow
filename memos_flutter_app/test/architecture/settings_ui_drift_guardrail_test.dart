@@ -60,6 +60,7 @@ void main() {
       'lib/features/settings/settings_ui.dart',
       'lib/features/settings/shortcut_editor_screen.dart',
       'lib/features/settings/shortcuts_settings_screen.dart',
+      'lib/features/settings/storage_space_screen.dart',
       'lib/features/settings/template_settings_screen.dart',
       'lib/features/settings/user_general_settings_screen.dart',
       'lib/features/settings/user_guide_screen.dart',

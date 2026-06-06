@@ -453,11 +453,11 @@ class SettingsScreen extends ConsumerWidget
                     children: [
                       SettingsNavigationRow(
                         leading: Icon(
-                          Icons.chat_bubble_outline,
+                          Icons.help_outline,
                           size: 20,
                           color: textMuted,
                         ),
-                        label: context.t.strings.legacy.msg_feedback,
+                        label: context.t.strings.legacy.msg_help_diagnostics,
                         onTap: () {
                           haptic();
                           pushSettingsPage((_) => const FeedbackScreen());

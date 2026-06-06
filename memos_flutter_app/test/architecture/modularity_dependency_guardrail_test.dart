@@ -222,6 +222,7 @@ void main() {
       final files = <File>[
         File('lib/features/settings/feedback_screen.dart'),
         File('lib/features/settings/self_repair_screen.dart'),
+        File('lib/features/settings/storage_space_screen.dart'),
       ];
       final forbiddenImports = <String>{
         'memo_search_db_persistence.dart',
@@ -251,6 +252,70 @@ void main() {
             ? null
             : 'Self-repair UI must route through service/facade seams:\n'
                   '${violations.join('\n')}',
+      );
+    },
+  );
+
+  test(
+    'settings maintenance UI does not own storage cleanup internals',
+    () async {
+      final files = <File>[
+        File('lib/features/settings/self_repair_screen.dart'),
+        File('lib/features/settings/storage_space_screen.dart'),
+      ];
+      final violations = <String>[];
+
+      for (final file in files) {
+        final contents = await file.readAsString();
+        final relative = p
+            .relative(file.path, from: Directory.current.path)
+            .replaceAll('\\', '/');
+
+        for (final match in RegExp(
+          r"^import '([^']+)';",
+          multiLine: true,
+        ).allMatches(contents)) {
+          final importPath = match.group(1)!.replaceAll('\\', '/');
+          if (importPath == 'dart:io' ||
+              importPath.contains('flutter_cache_manager') ||
+              importPath.contains('path_provider') ||
+              importPath.endsWith('video_thumbnail_cache.dart') ||
+              importPath.endsWith('compression_cache_store.dart') ||
+              importPath.endsWith('media_cache_file_system.dart') ||
+              importPath.endsWith('media_cache_maintenance_service.dart') ||
+              importPath.endsWith('storage_space_summary_service.dart') ||
+              importPath.endsWith('memo_query_db_persistence.dart')) {
+            violations.add('$relative import: $importPath');
+          }
+        }
+
+        const forbiddenPatterns = <String>{
+          'DefaultCacheManager',
+          'PaintingBinding',
+          'getTemporaryDirectory',
+          'getApplicationSupportDirectory',
+          'Directory(',
+          '.list(recursive:',
+          'VideoThumbnailCache',
+          'CompressionCacheStore',
+          'emptyCache()',
+          'MediaCacheMaintenanceService',
+          'MemoQueryDbPersistence',
+        };
+        for (final pattern in forbiddenPatterns) {
+          if (contents.contains(pattern)) {
+            violations.add('$relative pattern: $pattern');
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason: violations.isEmpty
+            ? null
+            : 'Settings maintenance UI must route storage cleanup through '
+                  'maintenance seams:\n${violations.join('\n')}',
       );
     },
   );

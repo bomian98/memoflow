@@ -889,7 +889,7 @@ void main() {
 
       expect(find.byType(FeedbackScreen), findsOneWidget);
       expect(find.byType(SelfRepairScreen), findsNothing);
-      expect(find.text('Feedback'), findsWidgets);
+      expect(find.text('Help & Diagnostics'), findsWidgets);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
@@ -936,7 +936,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(milliseconds: 400));
 
       expect(find.byType(SelfRepairScreen), findsOneWidget);
-      expect(find.text('Feedback'), findsWidgets);
+      expect(find.text('Help & Diagnostics'), findsWidgets);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }

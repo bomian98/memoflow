@@ -103,6 +103,20 @@ final class MemoQueryDbPersistence {
     );
   }
 
+  static Future<List<Map<String, dynamic>>> listMemoStorageSummaryRows(
+    DatabaseExecutor executor, {
+    String? state,
+  }) {
+    final normalizedState = (state ?? '').trim();
+    return executor.query(
+      'memos',
+      columns: const ['uid', 'content', 'attachments_json'],
+      where: normalizedState.isEmpty ? null : 'state = ?',
+      whereArgs: normalizedState.isEmpty ? null : [normalizedState],
+      orderBy: 'id ASC',
+    );
+  }
+
   static Future<List<Map<String, dynamic>>> listMemoUidSyncStates(
     DatabaseExecutor executor, {
     String? state,

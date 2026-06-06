@@ -865,6 +865,9 @@ legacy:
   msg_save_settings: Salvar configurações
   msg_date_range_2: Período
   msg_feedback: Comentários
+  msg_help_diagnostics: Ajuda e diagnostico
+  msg_storage_space: Espaço de armazenamento
+  msg_storage_space_subtitle: Revise o uso conhecido do MemoFlow e limpe o cache.
   msg_image_bed_2: Cama de imagem
   msg_image_compression: Compressão de imagem
   msg_enable_image_compression: Habilitar compactação de imagem
@@ -922,9 +925,10 @@ legacy:
   msg_format_png: PNG
   msg_format_webp: WebP
   msg_format_tiff: TIFF
-  msg_bytes: Bytes
+  msg_bytes: B
   msg_kb: KB
   msg_mb: MB
+  msg_gb: GB
   msg_percentage: Porcentagem
   msg_lossless_warning: A conversão para um novo formato ou redimensionamento pode degradar a qualidade mesmo quando o modo sem perdas está ativado.
   msg_restoring: Restaurando…
@@ -1016,6 +1020,15 @@ legacy:
   msg_rebuild_search_index_subtitle: Reconstruir a busca local sem apagar notas.
   msg_rebuild_stats_cache: Reconstruir cache de estatisticas
   msg_rebuild_stats_cache_subtitle: Reconstruir mapa de calor, estatisticas de tags e contadores.
+  msg_clear_media_cache: Limpar cache de midia
+  msg_clear_media_cache_subtitle: Limpar cache de imagens baixadas, cache de imagens em memoria, miniaturas de video e arquivos temporarios de compactacao de imagem.
+  msg_media_cache_total: Total do cache de midia
+  msg_media_cache_network_images: Cache de imagens da rede
+  msg_media_cache_memory_images: Cache de imagens em memoria
+  msg_media_cache_video_thumbnails: Cache de miniaturas de video
+  msg_media_cache_image_compression_temp: Cache temporario de compactacao de imagem
+  msg_media_cache_calculating: Calculando...
+  msg_media_cache_size_unavailable: Indisponivel
   msg_self_repair_local_only_note: Estas acoes reparam apenas dados locais derivados. Elas nao apagam notas, contas, anexos, preferencias, backups WebDAV ou dados do servidor.
   msg_confirm_repair_abnormal_tags: Reparar tags anormais?
   msg_repair_abnormal_tags_confirm_message: "As tags das notas serao reconstruidas a partir do texto #tag atual no corpo da nota. Tags salvas que nao aparecem no corpo da nota podem ser removidas. O conteudo das notas nao sera apagado."
@@ -1023,10 +1036,28 @@ legacy:
   msg_rebuild_search_index_confirm_message: Os dados locais de busca serao reconstruidos. Conteudo das notas, contas, anexos, preferencias e dados do servidor nao serao apagados.
   msg_confirm_rebuild_stats_cache: Reconstruir cache de estatisticas?
   msg_rebuild_stats_cache_confirm_message: Mapa de calor, estatisticas de tags e contadores serao reconstruidos a partir das notas locais. O conteudo das notas nao sera apagado.
+  msg_confirm_clear_media_cache: Limpar cache de midia?
+  msg_clear_media_cache_confirm_message: Imagens baixadas, cache de imagens em memoria, miniaturas de video e arquivos temporarios de compactacao de imagem serao limpos. Notas, contas, arquivos de origem da LocalLibrary, arquivos de origem de anexos, preferencias, backups WebDAV, filas de sincronizacao pendentes e dados do servidor nao serao apagados. A midia em cache pode ser baixada ou gerada novamente depois.
   msg_repair_abnormal_tags_success: Tags anormais reparadas
   msg_rebuild_search_index_success: Indice de busca reconstruido
   msg_rebuild_stats_cache_success: Cache de estatisticas reconstruido
+  msg_clear_media_cache_success: Cache de midia limpo
+  msg_clear_media_cache_failed: Falha ao limpar cache de midia
+  msg_clear_media_cache_partial_failure: Limpeza do cache de midia parcialmente concluida
   msg_self_repair_failed: "Auto-reparo falhou: $e"
+  msg_memoflow_known_usage: Uso conhecido do MemoFlow
+  msg_storage_device_capacity_unavailable: A capacidade do dispositivo nao esta disponivel. O uso conhecido do MemoFlow e as categorias ainda sao mostrados.
+  msg_storage_memoflow_device_usage_less_than_one_percent: MemoFlow usa menos de 1% da capacidade do dispositivo
+  msg_storage_memoflow_device_usage_percent: MemoFlow usa $percent% da capacidade do dispositivo
+  msg_storage_cache: Cache
+  msg_storage_note_content: Conteudo das notas
+  msg_storage_note_images: Imagens das notas
+  msg_storage_note_videos: Videos das notas
+  msg_storage_note_audio: Audio das notas
+  msg_storage_note_files: Arquivos das notas
+  msg_storage_cache_description: Dados temporarios derivados de midia. Limpar nao apaga notas nem arquivos de origem dos anexos.
+  msg_storage_note_content_description: Estimativa do texto local armazenado nas notas.
+  msg_storage_attachment_read_only_description: Somente exibicao. Exclua as notas relacionadas ou os anexos de origem para remover este conteudo.
   msg_these_settings_changed_locally_remotely_choose: Essas configurações foram alteradas local e remotamente. Escolha qual versão manter.
   msg_not_authenticated_2: Não autenticado.
   msg_action_failed: 'Ação falhou: $e'

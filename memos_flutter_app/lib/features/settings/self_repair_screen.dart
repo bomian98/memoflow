@@ -36,23 +36,25 @@ class _SelfRepairScreenState extends ConsumerState<SelfRepairScreen> {
     if (!confirmed || !mounted) return;
 
     setState(() => _runningAction = action);
-    final service = ref.read(selfRepairMutationServiceProvider);
     try {
       switch (action) {
         case _RepairAction.tags:
+          final service = ref.read(selfRepairMutationServiceProvider);
           await service.repairTagsFromContent();
           break;
         case _RepairAction.search:
+          final service = ref.read(selfRepairMutationServiceProvider);
           await service.rebuildSearchIndex();
           break;
         case _RepairAction.stats:
+          final service = ref.read(selfRepairMutationServiceProvider);
           await service.rebuildStatsCache();
           break;
       }
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(_successMessage(context, action))));
+      ).showSnackBar(SnackBar(content: Text(_resultMessage(context, action))));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -181,7 +183,7 @@ String _confirmMessage(BuildContext context, _RepairAction action) {
   };
 }
 
-String _successMessage(BuildContext context, _RepairAction action) {
+String _resultMessage(BuildContext context, _RepairAction action) {
   return switch (action) {
     _RepairAction.tags =>
       context.t.strings.legacy.msg_repair_abnormal_tags_success,

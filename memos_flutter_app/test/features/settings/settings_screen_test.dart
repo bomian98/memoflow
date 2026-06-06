@@ -11,6 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/access_boundary/access_boundary.dart';
 import 'package:memos_flutter_app/access_boundary/access_decision.dart';
 import 'package:memos_flutter_app/access_boundary/app_capability.dart';
+import 'package:memos_flutter_app/application/maintenance/media_cache_maintenance_models.dart';
+import 'package:memos_flutter_app/application/maintenance/storage_space_summary_models.dart';
+import 'package:memos_flutter_app/application/maintenance/storage_space_summary_service.dart';
 import 'package:memos_flutter_app/application/sync/sync_coordinator.dart';
 import 'package:memos_flutter_app/application/sync/sync_error.dart';
 import 'package:memos_flutter_app/application/sync/sync_request.dart';
@@ -44,6 +47,7 @@ import 'package:memos_flutter_app/features/settings/password_lock_screen.dart';
 import 'package:memos_flutter_app/features/settings/server_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/settings_ui.dart';
+import 'package:memos_flutter_app/features/settings/storage_space_screen.dart';
 import 'package:memos_flutter_app/features/settings/user_general_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/webdav_sync_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
@@ -60,6 +64,7 @@ import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/server_settings_provider.dart';
 import 'package:memos_flutter_app/state/settings/user_settings_provider.dart';
 import 'package:memos_flutter_app/state/settings/workspace_preferences_provider.dart';
+import 'package:memos_flutter_app/state/maintenance/storage_space_controller.dart';
 import 'package:memos_flutter_app/state/sync/sync_coordinator_provider.dart';
 import 'package:memos_flutter_app/state/system/local_library_provider.dart';
 import 'package:memos_flutter_app/state/system/notifications_provider.dart';
@@ -230,13 +235,17 @@ void main() {
     expect(find.text('About'), findsOneWidget);
   });
 
-  testWidgets('feedback screen uses settings semantic rows', (tester) async {
+  testWidgets('help diagnostics screen uses settings semantic rows', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildTestApp(home: const FeedbackScreen()));
     await tester.pumpAndSettle();
 
     expect(find.byType(SettingsPage), findsOneWidget);
     expect(find.byType(SettingsSection), findsOneWidget);
-    expect(find.byType(SettingsNavigationRow), findsNWidgets(3));
+    expect(find.byType(SettingsNavigationRow), findsNWidgets(4));
+    expect(find.text('Help & Diagnostics'), findsOneWidget);
+    expect(find.text('Storage Space'), findsOneWidget);
     expect(find.text('Export Logs'), findsOneWidget);
     expect(find.text('Self Repair'), findsOneWidget);
     expect(find.text('How to report?'), findsOneWidget);
@@ -244,6 +253,41 @@ void main() {
     final rows = tester.widgetList<ListTile>(find.byType(ListTile)).toList();
     expect(rows, isNotEmpty);
     expect(rows.every((row) => row.minTileHeight == null), isTrue);
+  });
+
+  testWidgets('settings home opens storage space through help diagnostics', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestApp(
+        overrides: [
+          storageSpaceSummaryServiceProvider.overrideWithValue(
+            _FakeStorageSpaceSummaryService(),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final helpFinder = find.text('Help & Diagnostics');
+    await tester.scrollUntilVisible(
+      helpFinder,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(helpFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(helpFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FeedbackScreen), findsOneWidget);
+    expect(find.text('Storage Space'), findsOneWidget);
+
+    await tester.tap(find.text('Storage Space'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StorageSpaceScreen), findsOneWidget);
+    expect(find.text('MemoFlow known usage'), findsOneWidget);
   });
 
   testWidgets(
@@ -1820,6 +1864,53 @@ class _TestEmbeddedNavigationHost implements HomeEmbeddedNavigationHost {
 
   @override
   void clearGlobalSwipeExclusionRects(HomeRootDestination destination) {}
+}
+
+class _FakeStorageSpaceSummaryService implements StorageSpaceSummaryService {
+  @override
+  Future<StorageSpaceSummary> loadSummary() async {
+    return const StorageSpaceSummary(
+      categories: [
+        StorageSpaceCategorySummary(
+          categoryId: StorageSpaceCategoryId.cache,
+          sizeBytes: 0,
+          clearable: true,
+        ),
+        StorageSpaceCategorySummary(
+          categoryId: StorageSpaceCategoryId.noteContent,
+          sizeBytes: 0,
+        ),
+        StorageSpaceCategorySummary(
+          categoryId: StorageSpaceCategoryId.noteImages,
+          sizeBytes: 0,
+        ),
+        StorageSpaceCategorySummary(
+          categoryId: StorageSpaceCategoryId.noteVideos,
+          sizeBytes: 0,
+        ),
+        StorageSpaceCategorySummary(
+          categoryId: StorageSpaceCategoryId.noteAudio,
+          sizeBytes: 0,
+        ),
+        StorageSpaceCategorySummary(
+          categoryId: StorageSpaceCategoryId.noteFiles,
+          sizeBytes: 0,
+        ),
+      ],
+      deviceCapacity: DeviceStorageCapacitySummary.unavailable(),
+      mediaCacheSummary: MediaCacheSummary(categories: []),
+    );
+  }
+
+  @override
+  Future<MemoStorageUsageSummary> loadMemoUsageSummary() async {
+    return const MemoStorageUsageSummary.empty();
+  }
+
+  @override
+  Future<MediaCacheClearResult> clearCache() async {
+    return const MediaCacheClearResult(categories: []);
+  }
 }
 
 const _testAccountKey = 'account-1';

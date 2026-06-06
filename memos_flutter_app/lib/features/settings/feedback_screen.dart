@@ -7,6 +7,7 @@ import '../../platform/platform_route.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import 'export_logs_screen.dart';
 import 'self_repair_screen.dart';
+import 'storage_space_screen.dart';
 import '../../i18n/strings.g.dart';
 import 'settings_ui.dart';
 
@@ -30,13 +31,31 @@ class FeedbackScreen extends ConsumerWidget {
 
     return SettingsPage(
       showBackButton: showBackButton,
-      title: Text(context.t.strings.legacy.msg_feedback),
+      title: Text(context.t.strings.legacy.msg_help_diagnostics),
       children: [
         SettingsSection(
           footer: Text(
             context.t.strings.legacy.msg_note_some_tokens_returned_only_once,
           ),
           children: [
+            SettingsNavigationRow(
+              leading: Icon(
+                Icons.storage_outlined,
+                size: 20,
+                color: tokens.textMuted,
+              ),
+              label: context.t.strings.legacy.msg_storage_space,
+              description: context.t.strings.legacy.msg_storage_space_subtitle,
+              onTap: () {
+                haptic();
+                Navigator.of(context).push(
+                  buildPlatformPageRoute<void>(
+                    context: context,
+                    builder: (_) => const StorageSpaceScreen(),
+                  ),
+                );
+              },
+            ),
             SettingsNavigationRow(
               leading: Icon(
                 Icons.bug_report_outlined,

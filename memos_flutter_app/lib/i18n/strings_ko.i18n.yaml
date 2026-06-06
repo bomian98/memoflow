@@ -870,6 +870,9 @@ legacy:
   msg_save_settings: 설정 저장
   msg_date_range_2: 기간
   msg_feedback: 피드백
+  msg_help_diagnostics: 도움말 및 진단
+  msg_storage_space: 저장 공간
+  msg_storage_space_subtitle: MemoFlow의 알려진 사용량을 확인하고 캐시를 지웁니다.
   msg_image_bed_2: 이미지베드
   msg_image_compression: 이미지 압축
   msg_enable_image_compression: 이미지 압축 활성화
@@ -927,9 +930,10 @@ legacy:
   msg_format_png: PNG
   msg_format_webp: 웹P
   msg_format_tiff: 사소한 말다툼
-  msg_bytes: 바이트
+  msg_bytes: B
   msg_kb: KB
   msg_mb: MB
+  msg_gb: GB
   msg_percentage: 백분율
   msg_lossless_warning: 무손실이 활성화된 경우에도 새 형식으로 변환하거나 크기를 조정하면 품질이 저하될 수 있습니다.
   msg_restoring: 복원 중…
@@ -1014,13 +1018,22 @@ legacy:
   msg_location_permission_denied: 위치 권한이 거부되었습니다.
   msg_self_repair_reset_heatmap: '자가 수리: 히트맵 재설정'
   msg_self_repair: "\uc790\uac00 \uc218\ub9ac"
-  msg_self_repair_subtitle: "\ub85c\uceec \ud0dc\uadf8, \uac80\uc0c9, \ud1b5\uacc4 \uc218\ub9ac"
+  msg_self_repair_subtitle: "로컬 태그, 검색, 통계를 수리합니다"
   msg_repair_abnormal_tags: "\uc774\uc0c1 \ud0dc\uadf8 \uc218\ub9ac"
   msg_repair_abnormal_tags_subtitle: "\ud604\uc7ac \uba54\ubaa8 \ubcf8\ubb38\uc758 #tag \ud14d\uc2a4\ud2b8\ub85c \uba54\ubaa8 \ud0dc\uadf8\ub97c \ub2e4\uc2dc \uc0dd\uc131\ud569\ub2c8\ub2e4."
   msg_rebuild_search_index: "\uac80\uc0c9 \uc778\ub371\uc2a4 \ub2e4\uc2dc \uc0dd\uc131"
   msg_rebuild_search_index_subtitle: "\uba54\ubaa8\ub97c \uc0ad\uc81c\ud558\uc9c0 \uc54a\uace0 \ub85c\uceec \ud0a4\uc6cc\ub4dc \uac80\uc0c9 \ub370\uc774\ud130\ub97c \ub2e4\uc2dc \uc0dd\uc131\ud569\ub2c8\ub2e4."
   msg_rebuild_stats_cache: "\ud1b5\uacc4 \uce90\uc2dc \ub2e4\uc2dc \uc0dd\uc131"
   msg_rebuild_stats_cache_subtitle: "\ud788\ud2b8\ub9f5, \ud0dc\uadf8 \ud1b5\uacc4, \uc694\uc57d \uce74\uc6b4\ud130\ub97c \ub2e4\uc2dc \uc0dd\uc131\ud569\ub2c8\ub2e4."
+  msg_clear_media_cache: "미디어 캐시 지우기"
+  msg_clear_media_cache_subtitle: "다운로드한 이미지 캐시, 이미지 메모리 캐시, 비디오 썸네일, 임시 이미지 압축 파일을 지웁니다."
+  msg_media_cache_total: "미디어 캐시 합계"
+  msg_media_cache_network_images: "네트워크 이미지 캐시"
+  msg_media_cache_memory_images: "이미지 메모리 캐시"
+  msg_media_cache_video_thumbnails: "비디오 썸네일 캐시"
+  msg_media_cache_image_compression_temp: "이미지 압축 임시 캐시"
+  msg_media_cache_calculating: "계산 중..."
+  msg_media_cache_size_unavailable: "사용할 수 없음"
   msg_self_repair_local_only_note: "\uc774 \uc791\uc5c5\uc740 \ub85c\uceec \ud30c\uc0dd \ub370\uc774\ud130\ub9cc \uc218\ub9ac\ud569\ub2c8\ub2e4. \uba54\ubaa8, \uacc4\uc815, \ucca8\ubd80, \ud658\uacbd\uc124\uc815, WebDAV \ubc31\uc5c5, \uc6d0\uaca9 \uc11c\ubc84 \ub370\uc774\ud130\ub294 \uc0ad\uc81c\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
   msg_confirm_repair_abnormal_tags: "\uc774\uc0c1 \ud0dc\uadf8\ub97c \uc218\ub9ac\ud560\uae4c\uc694?"
   msg_repair_abnormal_tags_confirm_message: "\uba54\ubaa8 \ud0dc\uadf8\ub294 \ud604\uc7ac \uba54\ubaa8 \ubcf8\ubb38\uc758 #tag \ud14d\uc2a4\ud2b8\ub85c \ub2e4\uc2dc \uc0dd\uc131\ub429\ub2c8\ub2e4. \ubcf8\ubb38\uc5d0 \uc5c6\ub294 \uc800\uc7a5\ub41c \ud0dc\uadf8\ub294 \uc81c\uac70\ub420 \uc218 \uc788\uc2b5\ub2c8\ub2e4. \uba54\ubaa8 \ub0b4\uc6a9\uc740 \uc0ad\uc81c\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
@@ -1028,10 +1041,28 @@ legacy:
   msg_rebuild_search_index_confirm_message: "\ub85c\uceec \ud0a4\uc6cc\ub4dc \uac80\uc0c9 \ub370\uc774\ud130\ub97c \ub2e4\uc2dc \uc0dd\uc131\ud569\ub2c8\ub2e4. \uba54\ubaa8 \ub0b4\uc6a9, \uacc4\uc815, \ucca8\ubd80, \ud658\uacbd\uc124\uc815, \uc6d0\uaca9 \uc11c\ubc84 \ub370\uc774\ud130\ub294 \uc0ad\uc81c\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
   msg_confirm_rebuild_stats_cache: "\ud1b5\uacc4 \uce90\uc2dc\ub97c \ub2e4\uc2dc \uc0dd\uc131\ud560\uae4c\uc694?"
   msg_rebuild_stats_cache_confirm_message: "\ud788\ud2b8\ub9f5, \ud0dc\uadf8 \ud1b5\uacc4, \uc694\uc57d \uce74\uc6b4\ud130\ub97c \ub85c\uceec \uba54\ubaa8\uc5d0\uc11c \ub2e4\uc2dc \uc0dd\uc131\ud569\ub2c8\ub2e4. \uba54\ubaa8 \ub0b4\uc6a9\uc740 \uc0ad\uc81c\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+  msg_confirm_clear_media_cache: "미디어 캐시를 지울까요?"
+  msg_clear_media_cache_confirm_message: "다운로드한 이미지 캐시, 이미지 메모리 캐시, 비디오 썸네일, 임시 이미지 압축 파일이 지워집니다. 메모, 계정, LocalLibrary 원본 파일, 첨부 원본 파일, 환경설정, WebDAV 백업, 대기 중인 동기화 큐, 원격 서버 데이터는 삭제되지 않습니다. 캐시된 미디어는 나중에 다시 다운로드되거나 생성될 수 있습니다."
   msg_repair_abnormal_tags_success: "\uc774\uc0c1 \ud0dc\uadf8\ub97c \uc218\ub9ac\ud588\uc2b5\ub2c8\ub2e4"
   msg_rebuild_search_index_success: "\uac80\uc0c9 \uc778\ub371\uc2a4\ub97c \ub2e4\uc2dc \uc0dd\uc131\ud588\uc2b5\ub2c8\ub2e4"
   msg_rebuild_stats_cache_success: "\ud1b5\uacc4 \uce90\uc2dc\ub97c \ub2e4\uc2dc \uc0dd\uc131\ud588\uc2b5\ub2c8\ub2e4"
+  msg_clear_media_cache_success: "미디어 캐시를 지웠습니다"
+  msg_clear_media_cache_failed: "미디어 캐시 정리에 실패했습니다"
+  msg_clear_media_cache_partial_failure: "미디어 캐시 정리가 일부 완료되었습니다"
   msg_self_repair_failed: "\uc790\uac00 \uc218\ub9ac \uc2e4\ud328: $e"
+  msg_memoflow_known_usage: MemoFlow 알려진 사용량
+  msg_storage_device_capacity_unavailable: 기기 용량을 사용할 수 없습니다. MemoFlow 알려진 사용량과 분류는 계속 표시됩니다.
+  msg_storage_memoflow_device_usage_less_than_one_percent: MemoFlow가 기기 용량의 1% 미만을 사용합니다
+  msg_storage_memoflow_device_usage_percent: MemoFlow가 기기 용량의 $percent%를 사용합니다
+  msg_storage_cache: 캐시
+  msg_storage_note_content: 노트 내용
+  msg_storage_note_images: 노트 이미지
+  msg_storage_note_videos: 노트 동영상
+  msg_storage_note_audio: 노트 오디오
+  msg_storage_note_files: 노트 파일
+  msg_storage_cache_description: 임시 파생 미디어 데이터입니다. 지워도 노트나 첨부 원본 파일은 삭제되지 않습니다.
+  msg_storage_note_content_description: 노트에 저장된 로컬 텍스트 내용의 예상 크기입니다.
+  msg_storage_attachment_read_only_description: 보기 전용입니다. 제거하려면 관련 노트나 첨부 원본 파일을 삭제하세요.
   msg_these_settings_changed_locally_remotely_choose: 이러한 설정은 로컬 및 원격으로 변경되었습니다. 유지할 버전을 선택하세요.
   msg_not_authenticated_2: 인증되지 않았습니다.
   msg_action_failed: '작업 실패: $e'
