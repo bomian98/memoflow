@@ -3287,9 +3287,11 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
               .toInt()
         : normalMemoCount;
     final hasProviderValue = memosValue != null;
+    final showBlankSearchWaiting =
+        queryState.useRemoteSearch && memosLoading && !hasProviderValue;
     final nextResultCount = hasProviderValue
         ? memosValue.length
-        : _animatedMemos.length;
+        : (showBlankSearchWaiting ? 0 : _animatedMemos.length);
     final previousCount = _lastResultCount;
     final wasLoadingMore = _loadingMore;
     final requestId = _activeLoadMoreRequestId;
@@ -3383,7 +3385,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       );
     }
 
-    final visibleMemos = _animatedMemos;
+    final visibleMemos = showBlankSearchWaiting
+        ? const <LocalMemo>[]
+        : _animatedMemos;
     _scrollPerfSession?.recordBuild(visibleMemos.length);
     _animatedListController.syncMemoCardKeys(visibleMemos);
     _scheduleFloatingCollapseVisibleMemoPrune(visibleMemos);
@@ -3539,6 +3543,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
 
     final showLoadMoreHint =
         memosError == null &&
+        !showBlankSearchWaiting &&
         visibleMemos.isNotEmpty &&
         !viewState.query.showSearchLanding;
     final loadMoreBusy = _loadingMore || _currentLoading;
@@ -4075,6 +4080,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           memosLoading: memosLoading,
           memosError: memosError,
           visibleMemos: visibleMemos,
+          showBlankSearchWaiting: showBlankSearchWaiting,
           showLoadMoreHint: showLoadMoreHint,
           loadMoreHintDisplayText: loadMoreHintDisplayText,
           loadMoreHintTextColor: loadMoreHintTextColor,

@@ -218,6 +218,62 @@ void main() {
     },
   );
 
+  testWidgets('blank search waiting hides stale results and status UI', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              memosLoading: true,
+              showBlankSearchWaiting: true,
+              visibleMemos: <LocalMemo>[_buildMemo('memo-stale')],
+              query: _buildQueryState(searchQuery: 'needle'),
+            ),
+            animatedItemBuilder: (_, _, _) => const Text('stale memo card'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('stale memo card'), findsNothing);
+    expect(find.byType(SliverAnimatedList), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('No content yet'), findsNothing);
+  });
+
+  testWidgets('same-query loading can preserve visible search results', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          locale: AppLocale.en.flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          home: _buildBodyScreen(
+            data: _buildBodyData(
+              memosLoading: true,
+              visibleMemos: <LocalMemo>[_buildMemo('memo-current')],
+              query: _buildQueryState(searchQuery: 'needle'),
+            ),
+            animatedItemBuilder: (_, _, _) => const Text('current memo card'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('current memo card'), findsOneWidget);
+    expect(find.byType(SliverAnimatedList), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+  });
+
   testWidgets('overlay buttons react to listenable changes', (tester) async {
     MemoFlowPalette.applyThemeColor(AppThemeColor.cypressGreen);
     final showBackToTop = ValueNotifier<bool>(false);
@@ -1000,6 +1056,7 @@ MemosListScreenBodyData _buildBodyData({
   Object? memosError,
   List<LocalMemo> visibleMemos = const <LocalMemo>[],
   bool searching = false,
+  bool showBlankSearchWaiting = false,
   MemosListScreenQueryState? query,
   MemosListScreenLayoutState? layout,
   bool desktopPreviewVisible = false,
@@ -1032,6 +1089,7 @@ MemosListScreenBodyData _buildBodyData({
     memosLoading: memosLoading,
     memosError: memosError,
     visibleMemos: visibleMemos,
+    showBlankSearchWaiting: showBlankSearchWaiting,
     showLoadMoreHint: false,
     loadMoreHintDisplayText: '',
     loadMoreHintTextColor: Colors.black,

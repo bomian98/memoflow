@@ -117,6 +117,7 @@ class MemosListScreenBodyData {
     required this.memosLoading,
     required this.memosError,
     required this.visibleMemos,
+    required this.showBlankSearchWaiting,
     required this.showLoadMoreHint,
     required this.loadMoreHintDisplayText,
     required this.loadMoreHintTextColor,
@@ -141,6 +142,7 @@ class MemosListScreenBodyData {
   final bool memosLoading;
   final Object? memosError;
   final List<LocalMemo> visibleMemos;
+  final bool showBlankSearchWaiting;
   final bool showLoadMoreHint;
   final String loadMoreHintDisplayText;
   final Color loadMoreHintTextColor;
@@ -564,7 +566,8 @@ class MemosListScreenBody extends StatelessWidget {
       AppMotion.medium,
     );
     final query = data.viewState.query;
-    final statusChild = data.viewState.query.showSearchLanding
+    final statusChild =
+        data.showBlankSearchWaiting || data.viewState.query.showSearchLanding
         ? null
         : data.memosError != null
         ? _buildErrorStatus(context, data.memosError!, query.useAiSearch)
@@ -573,7 +576,8 @@ class MemosListScreenBody extends StatelessWidget {
         : (data.visibleMemos.isEmpty)
         ? _buildEmptyStatus(context, data)
         : null;
-    final statusKey = data.viewState.query.showSearchLanding
+    final statusKey =
+        data.showBlankSearchWaiting || data.viewState.query.showSearchLanding
         ? null
         : data.memosError != null
         ? (query.useAiSearch ? 'ai-error' : 'error')
@@ -828,7 +832,8 @@ class MemosListScreenBody extends StatelessWidget {
                               if (!desktopPrimaryContentOverridden &&
                                   advancedFilterSliver != null)
                                 advancedFilterSliver!,
-                              if (data.memosLoading &&
+                              if (!data.showBlankSearchWaiting &&
+                                  data.memosLoading &&
                                   data.visibleMemos.isNotEmpty)
                                 const SliverToBoxAdapter(
                                   child: Padding(
@@ -838,7 +843,12 @@ class MemosListScreenBody extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                              if (statusChild != null)
+                              if (data.showBlankSearchWaiting)
+                                const SliverFillRemaining(
+                                  hasScrollBody: false,
+                                  child: SizedBox.shrink(),
+                                )
+                              else if (statusChild != null)
                                 SliverFillRemaining(
                                   hasScrollBody: false,
                                   child: AnimatedSwitcher(
