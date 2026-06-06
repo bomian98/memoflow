@@ -35,13 +35,13 @@ import 'ai_settings_screen.dart';
 import 'api_plugins_screen.dart';
 import 'components_settings_screen.dart';
 import 'desktop_settings_screen.dart';
-import 'donation_dialog.dart';
 import 'feedback_screen.dart';
 import 'import_export_screen.dart';
 import 'laboratory_screen.dart';
 import 'password_lock_screen.dart';
 import 'preferences_settings_screen.dart';
 import 'settings_ui.dart';
+import 'support_memoflow_screen.dart';
 import 'user_guide_screen.dart';
 import 'widgets_screen.dart';
 import '../../i18n/strings.g.dart';
@@ -465,14 +465,19 @@ class SettingsScreen extends ConsumerWidget
                       ),
                       SettingsNavigationRow(
                         leading: Icon(
-                          Icons.bolt_outlined,
+                          Icons.favorite_border,
                           size: 20,
                           color: textMuted,
                         ),
-                        label: context.t.strings.legacy.msg_charging_station,
+                        label: context.tr(
+                          zh: '支持 MemoFlow',
+                          en: 'Support MemoFlow',
+                        ),
                         onTap: () {
                           haptic();
-                          DonationDialog.show(context);
+                          pushSettingsPage(
+                            (_) => const SupportMemoFlowScreen(),
+                          );
                         },
                       ),
                       SettingsNavigationRow(
