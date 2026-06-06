@@ -30,9 +30,10 @@ void main() {
   });
 
   test('public settings shell does not read commercial state', () {
-    final settingsContent = readRepoFile(
+    final settingsFiles = <String>[
       'memos_flutter_app/lib/features/settings/settings_screen.dart',
-    );
+      'memos_flutter_app/lib/features/settings/support_memoflow_screen.dart',
+    ];
 
     const forbiddenTerms = <String>[
       'access_boundary/',
@@ -41,17 +42,26 @@ void main() {
       'Store'
           'Kit',
       'productId',
+      'price',
+      'purchase',
+      'restore',
       'receipt',
+      'transaction',
       'buyout',
       'familySharing',
       'entitlement',
       'paywall',
     ];
 
-    final violations = <String>[
-      for (final term in forbiddenTerms)
-        if (settingsContent.contains(term)) term,
-    ];
+    final violations = <String>[];
+    for (final path in settingsFiles) {
+      final content = readRepoFile(path);
+      for (final term in forbiddenTerms) {
+        if (content.contains(term)) {
+          violations.add('$path contains $term');
+        }
+      }
+    }
 
     expect(
       violations,
@@ -60,6 +70,19 @@ void main() {
           ? null
           : 'settings_screen.dart must render private bundle contributions '
                 'without commercial branching: ${violations.join(', ')}',
+    );
+  });
+
+  test('public support page does not use QR payment assets', () {
+    final supportContent = readRepoFile(
+      'memos_flutter_app/lib/features/settings/support_memoflow_screen.dart',
+    );
+
+    expect(supportContent.contains('donation_qr.png'), isFalse);
+    expect(supportContent.contains('assets/images/donation_qr.png'), isFalse);
+    expect(
+      supportContent.contains('https://qr.alipay.com/tsx16856ygfke5rugz1ao4a'),
+      isTrue,
     );
   });
 
@@ -87,7 +110,11 @@ void main() {
       'Store'
           'Kit',
       'productId',
+      'price',
+      'purchase',
+      'restore',
       'receipt',
+      'transaction',
       'buyout',
       'familySharing',
       'entitlement',

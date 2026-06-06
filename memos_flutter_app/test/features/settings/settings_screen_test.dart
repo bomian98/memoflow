@@ -48,6 +48,7 @@ import 'package:memos_flutter_app/features/settings/server_settings_screen.dart'
 import 'package:memos_flutter_app/features/settings/settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/settings_ui.dart';
 import 'package:memos_flutter_app/features/settings/storage_space_screen.dart';
+import 'package:memos_flutter_app/features/settings/support_memoflow_screen.dart';
 import 'package:memos_flutter_app/features/settings/user_general_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/webdav_sync_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
@@ -129,20 +130,21 @@ void main() {
     );
   }
 
-  testWidgets('keeps donation entry and removes crown UI by default', (
+  testWidgets('keeps support entry and removes crown UI by default', (
     tester,
   ) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    final donationFinder = find.byIcon(Icons.bolt_outlined);
+    final supportFinder = find.byIcon(Icons.favorite_border);
     await tester.scrollUntilVisible(
-      donationFinder,
+      supportFinder,
       300,
       scrollable: find.byType(Scrollable).first,
     );
 
-    expect(donationFinder, findsOneWidget);
+    expect(supportFinder, findsWidgets);
+    expect(find.text('Support MemoFlow'), findsOneWidget);
     expect(find.byIcon(Icons.workspace_premium_rounded), findsNothing);
     expect(find.text('Private Entry'), findsNothing);
   });
@@ -288,6 +290,26 @@ void main() {
 
     expect(find.byType(StorageSpaceScreen), findsOneWidget);
     expect(find.text('MemoFlow known usage'), findsOneWidget);
+  });
+
+  testWidgets('settings home opens Support MemoFlow page', (tester) async {
+    await tester.pumpWidget(buildTestApp());
+    await tester.pumpAndSettle();
+
+    final supportFinder = find.text('Support MemoFlow');
+    await tester.scrollUntilVisible(
+      supportFinder,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(supportFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(supportFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SupportMemoFlowScreen), findsOneWidget);
+    expect(find.text('Open support link'), findsOneWidget);
+    expect(find.text('Save and open Alipay to scan'), findsNothing);
   });
 
   testWidgets(
@@ -449,9 +471,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final donationFinder = find.byIcon(Icons.bolt_outlined);
+      final supportFinder = find.byIcon(Icons.favorite_border);
       await tester.scrollUntilVisible(
-        donationFinder,
+        supportFinder,
         300,
         scrollable: find.byType(Scrollable).first,
       );
@@ -461,7 +483,7 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
 
-      expect(donationFinder, findsOneWidget);
+      expect(supportFinder, findsWidgets);
       expect(find.text('Private Entry'), findsOneWidget);
       expect(find.text('Bundle supplied entry'), findsOneWidget);
       expect(find.byIcon(Icons.workspace_premium_rounded), findsNothing);

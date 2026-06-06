@@ -184,6 +184,7 @@ void main() {
   test('settings public shell stays free of commercial branching terms', () {
     const files = [
       'lib/features/settings/settings_screen.dart',
+      'lib/features/settings/support_memoflow_screen.dart',
       'lib/features/settings/preferences_settings_screen.dart',
     ];
     const blocked = [
@@ -194,6 +195,10 @@ void main() {
       'receipt',
       'paywall',
       'productId',
+      'price',
+      'purchase',
+      'restore',
+      'transaction',
     ];
 
     for (final path in files) {
