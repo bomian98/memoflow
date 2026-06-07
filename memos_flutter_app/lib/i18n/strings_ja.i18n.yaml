@@ -82,6 +82,15 @@ login:
     httpsHandshakeFailedTitle: "HTTPS 接続に失敗しました"
     httpsHandshakeFailedMessage: "現在 HTTPS で接続しています。サーバーが HTTP のみをサポートしている場合は、HTTP でもう一度お試しください。サーバーが本来 HTTPS をサポートしているはずなら、証明書またはリバースプロキシの設定を確認してください。"
     switchToHttp: "HTTP で再試行"
+  protocol:
+    selectorTitle: "接続プロトコルを選択"
+    httpsTitle: "HTTPS"
+    httpsDescription: "暗号化された接続です。推奨されます"
+    httpTitle: "HTTP"
+    httpDescription: "暗号化されていません。ローカル、LAN、一時的なテストでのみ使用してください。"
+    useSelected: "選択したプロトコルを使用"
+    encrypted: "暗号化"
+    unencrypted: "未暗号化"
   compatibility:
     title: "互換モード"
     description: "旧版 Memos 用のレガシーエンドポイントを使用します"

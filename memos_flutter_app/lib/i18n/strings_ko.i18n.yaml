@@ -83,6 +83,15 @@ login:
     httpsHandshakeFailedMessage: 현재 HTTPS를 사용하고 계십니다. 서버가 HTTP만 지원하는 경우 HTTP를 사용하고 다시 시도할 수 있습니다. 서버가 HTTPS를 지원해야 하는 경우 해당
       인증서 또는 역방향 프록시 구성을 확인하세요.
     switchToHttp: HTTP를 사용하고 다시 시도하세요.
+  protocol:
+    selectorTitle: 연결 프로토콜 선택
+    httpsTitle: HTTPS
+    httpsDescription: 암호화된 연결, 권장
+    httpTitle: HTTP
+    httpDescription: 암호화되지 않음. 로컬, LAN 또는 임시 테스트에만 사용하세요.
+    useSelected: 선택한 프로토콜 사용
+    encrypted: 암호화됨
+    unencrypted: 암호화되지 않음
   compatibility:
     title: 호환 모드
     description: 레거시 엔드포인트 사용(이전 Memos 서버의 경우)

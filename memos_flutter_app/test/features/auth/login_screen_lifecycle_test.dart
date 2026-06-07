@@ -12,6 +12,7 @@ import 'package:memos_flutter_app/data/models/user.dart';
 import 'package:memos_flutter_app/features/auth/login_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/login_provider.dart';
+import 'package:memos_flutter_app/state/system/login_draft_provider.dart';
 import 'package:memos_flutter_app/state/system/session_provider.dart';
 
 class _RecordingNavigatorObserver extends NavigatorObserver {
@@ -78,10 +79,12 @@ class _TestSessionController extends AppSessionController {
     List<Object>? passwordErrors,
     List<Object>? passwordStateErrors,
   }) : _passwordErrors = List<Object>.from(passwordErrors ?? const []),
-       _passwordStateErrors = List<Object>.from(passwordStateErrors ?? const []),
+       _passwordStateErrors = List<Object>.from(
+         passwordStateErrors ?? const [],
+       ),
        super(
-        const AsyncValue.data(AppSessionState(accounts: [], currentKey: null)),
-      );
+         const AsyncValue.data(AppSessionState(accounts: [], currentKey: null)),
+       );
 
   final Completer<void>? passwordCompleter;
   final Object? passwordError;
@@ -152,7 +155,10 @@ class _TestSessionController extends AppSessionController {
       throw _passwordErrors.removeAt(0);
     }
     if (_passwordStateErrors.isNotEmpty) {
-      state = AsyncValue.error(_passwordStateErrors.removeAt(0), StackTrace.empty);
+      state = AsyncValue.error(
+        _passwordStateErrors.removeAt(0),
+        StackTrace.empty,
+      );
       return;
     }
     if (passwordError != null) {
@@ -430,7 +436,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('canceling insecure protocol dialog keeps https', (tester) async {
+  testWidgets('canceling protocol dialog keeps https', (tester) async {
     prepareViewport(tester);
     final observer = _RecordingNavigatorObserver();
     final sessionController = _TestSessionController();
@@ -449,11 +455,15 @@ void main() {
     await tester.pumpAndSettle();
 
     final loginContext = tester.element(find.byType(LoginScreen));
-    await tester.tap(find.byIcon(Icons.shield_outlined));
+    await tester.tap(find.text('HTTPS'));
     await tester.pumpAndSettle();
 
     expect(
-      find.text(loginContext.t.strings.login.dialogs.insecureHttpTitle),
+      find.text(loginContext.t.strings.login.protocol.selectorTitle),
+      findsOneWidget,
+    );
+    expect(
+      find.text(loginContext.t.strings.login.protocol.httpDescription),
       findsOneWidget,
     );
 
@@ -473,9 +483,7 @@ void main() {
     expect(sessionController.lastPasswordBaseUrl?.host, 'example.com');
   });
 
-  testWidgets('confirming insecure protocol dialog switches to http', (
-    tester,
-  ) async {
+  testWidgets('confirming protocol dialog switches to http', (tester) async {
     prepareViewport(tester);
     final observer = _RecordingNavigatorObserver();
     final sessionController = _TestSessionController();
@@ -494,10 +502,14 @@ void main() {
     await tester.pumpAndSettle();
 
     final loginContext = tester.element(find.byType(LoginScreen));
-    await tester.tap(find.byIcon(Icons.shield_outlined));
+    await tester.tap(find.text('HTTPS'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text(loginContext.t.strings.common.confirm));
+    await tester.tap(find.text('HTTP'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.text(loginContext.t.strings.login.protocol.useSelected),
+    );
     await tester.pumpAndSettle();
 
     final fields = find.byType(TextFormField);
@@ -513,14 +525,12 @@ void main() {
     expect(sessionController.lastPasswordBaseUrl?.host, 'example.com');
   });
 
-  testWidgets('http switch hint stays visible and updates with protocol', (
+  testWidgets('transport status stays visible and updates with protocol', (
     tester,
   ) async {
     prepareViewport(tester);
     final observer = _RecordingNavigatorObserver();
     final sessionController = _TestSessionController();
-    const protocolHint =
-        'Use the shield icon on the right to switch connection protocols.';
 
     await tester.pumpWidget(
       ProviderScope(
@@ -535,18 +545,34 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text(protocolHint), findsOneWidget);
-
     final loginContext = tester.element(find.byType(LoginScreen));
-    await tester.tap(find.byIcon(Icons.shield_outlined));
+    expect(
+      find.text(loginContext.t.strings.login.protocol.encrypted),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'Use the shield icon on the right to switch connection protocols.',
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(find.text('HTTPS'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(loginContext.t.strings.common.confirm));
+    await tester.tap(find.text('HTTP'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.text(loginContext.t.strings.login.protocol.useSelected),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text(protocolHint), findsOneWidget);
+    expect(
+      find.text(loginContext.t.strings.login.protocol.unencrypted),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('server url prefix reflects protocol toggle', (tester) async {
+  testWidgets('server url control reflects protocol selection', (tester) async {
     prepareViewport(tester);
     final observer = _RecordingNavigatorObserver();
     final sessionController = _TestSessionController();
@@ -564,31 +590,90 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('https://'), findsOneWidget);
-    expect(find.text('http://'), findsNothing);
+    final loginContext = tester.element(find.byType(LoginScreen));
+    expect(find.text('HTTPS'), findsOneWidget);
+    expect(find.text('https://'), findsNothing);
+    expect(
+      find.text(loginContext.t.strings.login.protocol.encrypted),
+      findsOneWidget,
+    );
 
     final fields = find.byType(TextFormField);
     await tester.tap(fields.at(1));
     await tester.pumpAndSettle();
 
-    expect(find.text('https://'), findsOneWidget);
-    expect(find.text('http://'), findsNothing);
-
-    final loginContext = tester.element(find.byType(LoginScreen));
-    await tester.tap(find.byIcon(Icons.shield_outlined));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(loginContext.t.strings.common.confirm));
-    await tester.pumpAndSettle();
-
+    expect(find.text('HTTPS'), findsOneWidget);
     expect(find.text('https://'), findsNothing);
-    expect(find.text('http://'), findsOneWidget);
+
+    await tester.tap(find.text('HTTPS'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('HTTP'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.text(loginContext.t.strings.login.protocol.useSelected),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('HTTPS'), findsNothing);
+    expect(find.text('HTTP'), findsOneWidget);
+    expect(
+      find.text(loginContext.t.strings.login.protocol.unencrypted),
+      findsOneWidget,
+    );
 
     await tester.tap(fields.at(1));
     await tester.pumpAndSettle();
 
-    expect(find.text('https://'), findsNothing);
-    expect(find.text('http://'), findsOneWidget);
+    expect(find.text('HTTP'), findsOneWidget);
+    expect(find.text('http://'), findsNothing);
   });
+
+  testWidgets(
+    'fullwidth colon normalizes visible address draft and login URL',
+    (tester) async {
+      prepareViewport(tester);
+      final observer = _RecordingNavigatorObserver();
+      final sessionController = _TestSessionController();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appSessionProvider.overrideWith((ref) => sessionController),
+            loginControllerProvider.overrideWith(
+              (ref) => _FakeLoginController(ref),
+            ),
+          ],
+          child: _LoginTestHost(observer: observer),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final loginContext = tester.element(find.byType(LoginScreen));
+      final container = ProviderScope.containerOf(loginContext);
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'localhost：5230');
+      await tester.pumpAndSettle();
+
+      final serverEditable = tester.widget<EditableText>(
+        find.byType(EditableText).at(0),
+      );
+      expect(serverEditable.controller.text, 'localhost:5230');
+      expect(
+        container.read(loginBaseUrlDraftProvider),
+        'https://localhost:5230',
+      );
+
+      await tester.enterText(fields.at(1), 'user');
+      await tester.enterText(fields.at(2), 'secret');
+      await tester.tap(connectButtonFinder(loginContext));
+      await tester.pumpAndSettle();
+
+      expect(sessionController.addPasswordCalls, 1);
+      expect(sessionController.lastPasswordBaseUrl?.scheme, 'https');
+      expect(sessionController.lastPasswordBaseUrl?.host, 'localhost');
+      expect(sessionController.lastPasswordBaseUrl?.port, 5230);
+    },
+  );
 
   testWidgets('https handshake failure dialog can switch protocol to http', (
     tester,
@@ -641,8 +726,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('https://'), findsNothing);
-    expect(find.text('http://'), findsOneWidget);
+    expect(find.text('HTTP'), findsOneWidget);
+    expect(
+      find.text(loginContext.t.strings.login.protocol.unencrypted),
+      findsOneWidget,
+    );
 
     expect(sessionController.addPasswordCalls, 2);
     expect(sessionController.lastPasswordBaseUrl?.scheme, 'http');
@@ -696,8 +784,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('https://'), findsNothing);
-    expect(find.text('http://'), findsOneWidget);
+    expect(find.text('HTTP'), findsOneWidget);
+    expect(
+      find.text(loginContext.t.strings.login.protocol.unencrypted),
+      findsOneWidget,
+    );
     expect(sessionController.addPasswordCalls, 2);
     expect(sessionController.lastPasswordBaseUrl?.scheme, 'http');
     expect(sessionController.lastPasswordBaseUrl?.host, 'example.com');

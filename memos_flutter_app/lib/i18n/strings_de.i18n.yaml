@@ -82,6 +82,15 @@ login:
     httpsHandshakeFailedTitle: "HTTPS-Verbindung fehlgeschlagen"
     httpsHandshakeFailedMessage: "Du verwendest derzeit HTTPS. Wenn dein Server nur HTTP unterstützt, kannst du es mit HTTP erneut versuchen. Wenn der Server eigentlich HTTPS unterstützen sollte, prüfe das Zertifikat oder die Reverse-Proxy-Konfiguration."
     switchToHttp: "HTTP verwenden und erneut versuchen"
+  protocol:
+    selectorTitle: "Verbindungsprotokoll wählen"
+    httpsTitle: "HTTPS"
+    httpsDescription: "Verschlüsselte Verbindung, empfohlen"
+    httpTitle: "HTTP"
+    httpDescription: "Unverschlüsselt. Nur für lokal, LAN oder temporäre Tests verwenden."
+    useSelected: "Ausgewähltes Protokoll verwenden"
+    encrypted: "Verschlüsselt"
+    unencrypted: "Unverschlüsselt"
   compatibility:
     title: "Kompatibilitätsmodus"
     description: "Legacy-Endpunkte verwenden (für ältere Memos-Server)"

@@ -19,6 +19,7 @@ import '../../state/system/home_loading_overlay_provider.dart';
 import '../../state/memos/login_provider.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/system/session_provider.dart';
+import 'login_server_url_input.dart';
 
 enum _LoginMode { token, password }
 
@@ -257,49 +258,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _restoreBaseUrlDraft(String draft) {
-    final trimmed = draft.trim();
-    if (trimmed.isEmpty) {
-      _useHttps = true;
-      _baseUrlController.text = '';
-      return;
-    }
-
-    final parsed = Uri.tryParse(trimmed);
-    if (parsed != null && parsed.hasScheme && parsed.hasAuthority) {
-      _useHttps = parsed.scheme.toLowerCase() != 'http';
-      _baseUrlController.text = _baseUrlSuffixFromUri(parsed);
-      return;
-    }
-
-    _useHttps = true;
-    _baseUrlController.text = _normalizeBaseUrlSuffix(trimmed);
-  }
-
-  String _normalizeBaseUrlSuffix(String raw) {
-    return raw.trim().replaceFirst(
-      RegExp(r'^(?:https?:)?//', caseSensitive: false),
-      '',
-    );
-  }
-
-  String _baseUrlSuffixFromUri(Uri uri) {
-    final buffer = StringBuffer();
-    if (uri.authority.isNotEmpty) {
-      buffer.write(uri.authority);
-    }
-    if (uri.path.isNotEmpty && uri.path != '/') {
-      buffer.write(uri.path);
-    }
-    return buffer.toString();
+    final restored = restoreLoginServerUrlDraft(draft);
+    _useHttps = restored.useHttps;
+    _baseUrlController.text = restored.suffix;
   }
 
   String _composeBaseUrlString([String? rawSuffix]) {
-    final suffix = _normalizeBaseUrlSuffix(
-      rawSuffix ?? _baseUrlController.text,
+    return composeLoginServerBaseUrl(
+      useHttps: _useHttps,
+      rawSuffix: rawSuffix ?? _baseUrlController.text,
     );
-    if (suffix.isEmpty) return '';
-    final scheme = _useHttps ? 'https' : 'http';
-    return '$scheme://$suffix';
   }
 
   void _syncBaseUrlDraft([String? rawSuffix]) {
@@ -308,36 +276,145 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Future<void> _handleProtocolChanged(bool nextUseHttps) async {
-    if (_useHttps == nextUseHttps) return;
-    if (nextUseHttps) {
-      setState(() => _useHttps = true);
-      _syncBaseUrlDraft();
+  void _setBaseUrlSuffix(String suffix) {
+    _baseUrlController.value = TextEditingValue(
+      text: suffix,
+      selection: TextSelection.collapsed(offset: suffix.length),
+    );
+  }
+
+  void _handleBaseUrlChanged(String raw) {
+    final suffix = normalizeLoginServerUrlSuffix(raw);
+    if (suffix != _baseUrlController.text) {
+      _setBaseUrlSuffix(suffix);
+    }
+    _syncBaseUrlDraft(suffix);
+  }
+
+  Future<void> _showProtocolSelector() async {
+    var selectedUseHttps = _useHttps;
+    final nextUseHttps = await showPlatformDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Widget buildOption({
+              required bool useHttps,
+              required IconData icon,
+              required String title,
+              required String description,
+              required Color color,
+            }) {
+              final selected = selectedUseHttps == useHttps;
+              return InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => setDialogState(() => selectedUseHttps = useHttps),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? color.withValues(alpha: 0.10)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: selected
+                          ? color.withValues(alpha: 0.65)
+                          : Theme.of(context).dividerColor,
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(icon, color: color),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              description,
+                              style: TextStyle(
+                                fontSize: 13,
+                                height: 1.35,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.72),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        selected
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        color: selected
+                            ? color
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return AlertDialog(
+              title: Text(context.t.strings.login.protocol.selectorTitle),
+              content: SizedBox(
+                width: 440,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    buildOption(
+                      useHttps: true,
+                      icon: Icons.verified_user_outlined,
+                      title: context.t.strings.login.protocol.httpsTitle,
+                      description:
+                          context.t.strings.login.protocol.httpsDescription,
+                      color: Colors.green.shade600,
+                    ),
+                    const SizedBox(height: 10),
+                    buildOption(
+                      useHttps: false,
+                      icon: Icons.warning_amber_rounded,
+                      title: context.t.strings.login.protocol.httpTitle,
+                      description:
+                          context.t.strings.login.protocol.httpDescription,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(context.t.strings.common.cancel),
+                ),
+                FilledButton(
+                  onPressed: () =>
+                      Navigator.of(dialogContext).pop(selectedUseHttps),
+                  child: Text(context.t.strings.login.protocol.useSelected),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (!mounted || nextUseHttps == null || nextUseHttps == _useHttps) {
       return;
     }
-
-    final confirmed =
-        await showPlatformDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(context.t.strings.login.dialogs.insecureHttpTitle),
-            content: Text(context.t.strings.login.dialogs.insecureHttpMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(context.t.strings.common.cancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(context.t.strings.common.confirm),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-    if (!mounted || !confirmed) return;
-
-    setState(() => _useHttps = false);
+    setState(() => _useHttps = nextUseHttps);
     _syncBaseUrlDraft();
   }
 
@@ -356,11 +433,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final sanitizedBaseUrl = sanitizeUserBaseUrl(baseUrl);
     if (sanitizedBaseUrl.toString() != baseUrl.toString()) {
       final sanitizedScheme = sanitizedBaseUrl.scheme.toLowerCase();
-      final sanitizedSuffix = _baseUrlSuffixFromUri(sanitizedBaseUrl);
-      _baseUrlController.text = sanitizedSuffix;
-      _baseUrlController.selection = TextSelection.collapsed(
-        offset: _baseUrlController.text.length,
-      );
+      final sanitizedSuffix = loginServerUrlSuffixFromUri(sanitizedBaseUrl);
+      _setBaseUrlSuffix(sanitizedSuffix);
       _useHttps = sanitizedScheme != 'http';
       ref.read(loginBaseUrlDraftProvider.notifier).state = sanitizedBaseUrl
           .toString();
@@ -964,76 +1038,186 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildProtocolShieldButton({
+  Widget _buildServerUrlField({
     required bool enabled,
+    required bool isDark,
+    required Color card,
+    required Color textMain,
     required Color textMuted,
+    required String? Function(String?) validator,
   }) {
-    final iconColor = _useHttps
-        ? Colors.green.shade600
-        : textMuted.withValues(alpha: 0.75);
-    final backgroundColor = _useHttps
+    final statusColor = _useHttps
         ? Colors.green.withValues(alpha: 0.10)
-        : textMuted.withValues(alpha: 0.10);
+        : Theme.of(context).colorScheme.error.withValues(alpha: 0.10);
+    final statusForeground = _useHttps
+        ? Colors.green.shade700
+        : Theme.of(context).colorScheme.error;
+    final statusLabel = _useHttps
+        ? context.t.strings.login.protocol.encrypted
+        : context.t.strings.login.protocol.unencrypted;
+    final statusIcon = _useHttps
+        ? Icons.shield_outlined
+        : Icons.warning_amber_rounded;
 
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Tooltip(
-        message: _useHttps ? 'HTTPS' : 'HTTP',
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: enabled ? () => _handleProtocolChanged(!_useHttps) : null,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.shield_outlined, size: 20, color: iconColor),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.t.strings.login.field.serverUrlLabel,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: textMuted,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildHttpSwitchHint({required Color textMuted}) {
-    final message = context.tr(
-      zh: '\u53f3\u4fa7\u76fe\u724c\u56fe\u6807\u53ef\u7528\u4e8e\u5207\u6362\u8fde\u63a5\u534f\u8bae\u3002',
-      en: 'Use the shield icon on the right to switch connection protocols.',
-    );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: textMuted.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline_rounded,
-            size: 16,
-            color: textMuted.withValues(alpha: 0.9),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: card,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: isDark
+                ? null
+                : [
+                    BoxShadow(
+                      blurRadius: 18,
+                      offset: const Offset(0, 10),
+                      color: Colors.black.withValues(alpha: 0.08),
+                    ),
+                  ],
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.4,
-                color: textMuted,
-                fontWeight: FontWeight.w500,
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Tooltip(
+                  message: context.t.strings.login.field.protocolLabel,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: enabled ? _showProtocolSelector : null,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        height: 40,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: _useHttps
+                              ? Colors.green.withValues(alpha: 0.10)
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.error.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _useHttps
+                                ? Colors.green.withValues(alpha: 0.32)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.error.withValues(alpha: 0.32),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _useHttps ? 'HTTPS' : 'HTTP',
+                              style: TextStyle(
+                                color: _useHttps
+                                    ? Colors.green.shade700
+                                    : Theme.of(context).colorScheme.error,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 18,
+                              color: _useHttps
+                                  ? Colors.green.shade700
+                                  : Theme.of(context).colorScheme.error,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              Expanded(
+                child: TextFormField(
+                  controller: _baseUrlController,
+                  enabled: enabled,
+                  keyboardType: TextInputType.url,
+                  inputFormatters: const [LoginServerUrlTextInputFormatter()],
+                  style: TextStyle(
+                    color: textMain,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  onChanged: _handleBaseUrlChanged,
+                  decoration: InputDecoration(
+                    hintText: context.t.strings.login.field.serverUrlHint,
+                    hintStyle: TextStyle(
+                      color: textMuted.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
+                  ),
+                  validator: validator,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Tooltip(
+                  message: statusLabel,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 44,
+                      maxWidth: 104,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: statusForeground.withValues(alpha: 0.24),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 15, color: statusForeground),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              statusLabel,
+                              maxLines: 1,
+                              style: TextStyle(
+                                color: statusForeground,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1279,25 +1463,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textMain: textMain,
                     ),
                     const SizedBox(height: 14),
-                    _buildField(
-                      controller: _baseUrlController,
-                      label: context.t.strings.login.field.serverUrlLabel,
-                      hint: context.t.strings.login.field.serverUrlHint,
+                    _buildServerUrlField(
                       enabled: !isBusy,
-                      obscureText: false,
-                      keyboardType: TextInputType.url,
                       isDark: isDark,
                       card: card,
                       textMain: textMain,
                       textMuted: textMuted,
-                      prefixText: _useHttps ? 'https://' : 'http://',
-                      suffixIcon: _buildProtocolShieldButton(
-                        enabled: !isBusy,
-                        textMuted: textMuted,
-                      ),
-                      onChanged: _syncBaseUrlDraft,
                       validator: (v) {
-                        final raw = _normalizeBaseUrlSuffix(v ?? '');
+                        final raw = normalizeLoginServerUrlSuffix(v ?? '');
                         if (raw.isEmpty) {
                           return context
                               .t
@@ -1318,10 +1491,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }
                         return null;
                       },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: _buildHttpSwitchHint(textMuted: textMuted),
                     ),
                     const SizedBox(height: 14),
                     if (_loginMode == _LoginMode.password) ...[

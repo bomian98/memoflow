@@ -82,6 +82,15 @@ login:
     httpsHandshakeFailedTitle: "HTTPS connection failed"
     httpsHandshakeFailedMessage: "You are currently using HTTPS. If your server only supports HTTP, you can use HTTP and try again. If the server should support HTTPS, check its certificate or reverse proxy configuration."
     switchToHttp: "Use HTTP and try again"
+  protocol:
+    selectorTitle: "Choose connection protocol"
+    httpsTitle: "HTTPS"
+    httpsDescription: "Encrypted connection, recommended"
+    httpTitle: "HTTP"
+    httpDescription: "Unencrypted. Use only for local, LAN, or temporary testing."
+    useSelected: "Use selected protocol"
+    encrypted: "Encrypted"
+    unencrypted: "Unencrypted"
   compatibility:
     title: "Compatibility Mode"
     description: "Use legacy endpoints (for older Memos servers)"

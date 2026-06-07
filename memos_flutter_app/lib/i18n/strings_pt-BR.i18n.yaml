@@ -82,6 +82,15 @@ login:
     httpsHandshakeFailedTitle: Falha na conexão HTTPS
     httpsHandshakeFailedMessage: Você está usando atualmente HTTPS. Se o seu servidor suportar apenas HTTP, você poderá usar HTTP e tentar novamente. Se o servidor suportar HTTPS, verifique seu certificado ou configuração de proxy reverso.
     switchToHttp: Use HTTP e tente novamente
+  protocol:
+    selectorTitle: Escolher protocolo de conexão
+    httpsTitle: HTTPS
+    httpsDescription: Conexão criptografada, recomendada
+    httpTitle: HTTP
+    httpDescription: Sem criptografia. Use apenas para local, LAN ou testes temporários.
+    useSelected: Usar protocolo selecionado
+    encrypted: Criptografado
+    unencrypted: Sem criptografia
   compatibility:
     title: Modo de compatibilidade
     description: Use endpoints legados (para servidores Memos mais antigos)

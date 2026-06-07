@@ -4,9 +4,9 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 7
-/// Strings: 14840 (2120 per locale)
+/// Strings: 14896 (2128 per locale)
 ///
-/// Built on 2026-06-06 at 02:08 UTC
+/// Built on 2026-06-07 at 05:12 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -285,6 +285,7 @@ class _StringsStringsLoginEn {
 	late final _StringsStringsLoginFieldEn field = _StringsStringsLoginFieldEn._(_root);
 	late final _StringsStringsLoginValidationEn validation = _StringsStringsLoginValidationEn._(_root);
 	late final _StringsStringsLoginDialogsEn dialogs = _StringsStringsLoginDialogsEn._(_root);
+	late final _StringsStringsLoginProtocolEn protocol = _StringsStringsLoginProtocolEn._(_root);
 	late final _StringsStringsLoginCompatibilityEn compatibility = _StringsStringsLoginCompatibilityEn._(_root);
 	late final _StringsStringsLoginConnectEn connect = _StringsStringsLoginConnectEn._(_root);
 	late final _StringsStringsLoginErrorsEn errors = _StringsStringsLoginErrorsEn._(_root);
@@ -2078,6 +2079,23 @@ class _StringsStringsLoginDialogsEn {
 	String get switchToHttp => 'Use HTTP and try again';
 }
 
+// Path: strings.login.protocol
+class _StringsStringsLoginProtocolEn {
+	_StringsStringsLoginProtocolEn._(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get selectorTitle => 'Choose connection protocol';
+	String get httpsTitle => 'HTTPS';
+	String get httpsDescription => 'Encrypted connection, recommended';
+	String get httpTitle => 'HTTP';
+	String get httpDescription => 'Unencrypted. Use only for local, LAN, or temporary testing.';
+	String get useSelected => 'Use selected protocol';
+	String get encrypted => 'Encrypted';
+	String get unencrypted => 'Unencrypted';
+}
+
 // Path: strings.login.compatibility
 class _StringsStringsLoginCompatibilityEn {
 	_StringsStringsLoginCompatibilityEn._(this._root);
@@ -3041,6 +3059,7 @@ class _StringsStringsLoginDe extends _StringsStringsLoginEn {
 	@override late final _StringsStringsLoginFieldDe field = _StringsStringsLoginFieldDe._(_root);
 	@override late final _StringsStringsLoginValidationDe validation = _StringsStringsLoginValidationDe._(_root);
 	@override late final _StringsStringsLoginDialogsDe dialogs = _StringsStringsLoginDialogsDe._(_root);
+	@override late final _StringsStringsLoginProtocolDe protocol = _StringsStringsLoginProtocolDe._(_root);
 	@override late final _StringsStringsLoginCompatibilityDe compatibility = _StringsStringsLoginCompatibilityDe._(_root);
 	@override late final _StringsStringsLoginConnectDe connect = _StringsStringsLoginConnectDe._(_root);
 	@override late final _StringsStringsLoginErrorsDe errors = _StringsStringsLoginErrorsDe._(_root);
@@ -4741,6 +4760,23 @@ class _StringsStringsLoginDialogsDe extends _StringsStringsLoginDialogsEn {
 	@override String get switchToHttp => 'HTTP verwenden und erneut versuchen';
 }
 
+// Path: strings.login.protocol
+class _StringsStringsLoginProtocolDe extends _StringsStringsLoginProtocolEn {
+	_StringsStringsLoginProtocolDe._(_StringsDe root) : this._root = root, super._(root);
+
+	@override final _StringsDe _root; // ignore: unused_field
+
+	// Translations
+	@override String get selectorTitle => 'Verbindungsprotokoll wählen';
+	@override String get httpsTitle => 'HTTPS';
+	@override String get httpsDescription => 'Verschlüsselte Verbindung, empfohlen';
+	@override String get httpTitle => 'HTTP';
+	@override String get httpDescription => 'Unverschlüsselt. Nur für lokal, LAN oder temporäre Tests verwenden.';
+	@override String get useSelected => 'Ausgewähltes Protokoll verwenden';
+	@override String get encrypted => 'Verschlüsselt';
+	@override String get unencrypted => 'Unverschlüsselt';
+}
+
 // Path: strings.login.compatibility
 class _StringsStringsLoginCompatibilityDe extends _StringsStringsLoginCompatibilityEn {
 	_StringsStringsLoginCompatibilityDe._(_StringsDe root) : this._root = root, super._(root);
@@ -5679,6 +5715,7 @@ class _StringsStringsLoginJa extends _StringsStringsLoginEn {
 	@override late final _StringsStringsLoginFieldJa field = _StringsStringsLoginFieldJa._(_root);
 	@override late final _StringsStringsLoginValidationJa validation = _StringsStringsLoginValidationJa._(_root);
 	@override late final _StringsStringsLoginDialogsJa dialogs = _StringsStringsLoginDialogsJa._(_root);
+	@override late final _StringsStringsLoginProtocolJa protocol = _StringsStringsLoginProtocolJa._(_root);
 	@override late final _StringsStringsLoginCompatibilityJa compatibility = _StringsStringsLoginCompatibilityJa._(_root);
 	@override late final _StringsStringsLoginConnectJa connect = _StringsStringsLoginConnectJa._(_root);
 	@override late final _StringsStringsLoginErrorsJa errors = _StringsStringsLoginErrorsJa._(_root);
@@ -7379,6 +7416,23 @@ class _StringsStringsLoginDialogsJa extends _StringsStringsLoginDialogsEn {
 	@override String get switchToHttp => 'HTTP で再試行';
 }
 
+// Path: strings.login.protocol
+class _StringsStringsLoginProtocolJa extends _StringsStringsLoginProtocolEn {
+	_StringsStringsLoginProtocolJa._(_StringsJa root) : this._root = root, super._(root);
+
+	@override final _StringsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get selectorTitle => '接続プロトコルを選択';
+	@override String get httpsTitle => 'HTTPS';
+	@override String get httpsDescription => '暗号化された接続です。推奨されます';
+	@override String get httpTitle => 'HTTP';
+	@override String get httpDescription => '暗号化されていません。ローカル、LAN、一時的なテストでのみ使用してください。';
+	@override String get useSelected => '選択したプロトコルを使用';
+	@override String get encrypted => '暗号化';
+	@override String get unencrypted => '未暗号化';
+}
+
 // Path: strings.login.compatibility
 class _StringsStringsLoginCompatibilityJa extends _StringsStringsLoginCompatibilityEn {
 	_StringsStringsLoginCompatibilityJa._(_StringsJa root) : this._root = root, super._(root);
@@ -8317,6 +8371,7 @@ class _StringsStringsLoginKo extends _StringsStringsLoginEn {
 	@override late final _StringsStringsLoginFieldKo field = _StringsStringsLoginFieldKo._(_root);
 	@override late final _StringsStringsLoginValidationKo validation = _StringsStringsLoginValidationKo._(_root);
 	@override late final _StringsStringsLoginDialogsKo dialogs = _StringsStringsLoginDialogsKo._(_root);
+	@override late final _StringsStringsLoginProtocolKo protocol = _StringsStringsLoginProtocolKo._(_root);
 	@override late final _StringsStringsLoginCompatibilityKo compatibility = _StringsStringsLoginCompatibilityKo._(_root);
 	@override late final _StringsStringsLoginConnectKo connect = _StringsStringsLoginConnectKo._(_root);
 	@override late final _StringsStringsLoginErrorsKo errors = _StringsStringsLoginErrorsKo._(_root);
@@ -10108,6 +10163,23 @@ class _StringsStringsLoginDialogsKo extends _StringsStringsLoginDialogsEn {
 	@override String get switchToHttp => 'HTTP를 사용하고 다시 시도하세요.';
 }
 
+// Path: strings.login.protocol
+class _StringsStringsLoginProtocolKo extends _StringsStringsLoginProtocolEn {
+	_StringsStringsLoginProtocolKo._(_StringsKo root) : this._root = root, super._(root);
+
+	@override final _StringsKo _root; // ignore: unused_field
+
+	// Translations
+	@override String get selectorTitle => '연결 프로토콜 선택';
+	@override String get httpsTitle => 'HTTPS';
+	@override String get httpsDescription => '암호화된 연결, 권장';
+	@override String get httpTitle => 'HTTP';
+	@override String get httpDescription => '암호화되지 않음. 로컬, LAN 또는 임시 테스트에만 사용하세요.';
+	@override String get useSelected => '선택한 프로토콜 사용';
+	@override String get encrypted => '암호화됨';
+	@override String get unencrypted => '암호화되지 않음';
+}
+
 // Path: strings.login.compatibility
 class _StringsStringsLoginCompatibilityKo extends _StringsStringsLoginCompatibilityEn {
 	_StringsStringsLoginCompatibilityKo._(_StringsKo root) : this._root = root, super._(root);
@@ -11071,6 +11143,7 @@ class _StringsStringsLoginPtBr extends _StringsStringsLoginEn {
 	@override late final _StringsStringsLoginFieldPtBr field = _StringsStringsLoginFieldPtBr._(_root);
 	@override late final _StringsStringsLoginValidationPtBr validation = _StringsStringsLoginValidationPtBr._(_root);
 	@override late final _StringsStringsLoginDialogsPtBr dialogs = _StringsStringsLoginDialogsPtBr._(_root);
+	@override late final _StringsStringsLoginProtocolPtBr protocol = _StringsStringsLoginProtocolPtBr._(_root);
 	@override late final _StringsStringsLoginCompatibilityPtBr compatibility = _StringsStringsLoginCompatibilityPtBr._(_root);
 	@override late final _StringsStringsLoginConnectPtBr connect = _StringsStringsLoginConnectPtBr._(_root);
 	@override late final _StringsStringsLoginErrorsPtBr errors = _StringsStringsLoginErrorsPtBr._(_root);
@@ -12862,6 +12935,23 @@ class _StringsStringsLoginDialogsPtBr extends _StringsStringsLoginDialogsEn {
 	@override String get switchToHttp => 'Use HTTP e tente novamente';
 }
 
+// Path: strings.login.protocol
+class _StringsStringsLoginProtocolPtBr extends _StringsStringsLoginProtocolEn {
+	_StringsStringsLoginProtocolPtBr._(_StringsPtBr root) : this._root = root, super._(root);
+
+	@override final _StringsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get selectorTitle => 'Escolher protocolo de conexão';
+	@override String get httpsTitle => 'HTTPS';
+	@override String get httpsDescription => 'Conexão criptografada, recomendada';
+	@override String get httpTitle => 'HTTP';
+	@override String get httpDescription => 'Sem criptografia. Use apenas para local, LAN ou testes temporários.';
+	@override String get useSelected => 'Usar protocolo selecionado';
+	@override String get encrypted => 'Criptografado';
+	@override String get unencrypted => 'Sem criptografia';
+}
+
 // Path: strings.login.compatibility
 class _StringsStringsLoginCompatibilityPtBr extends _StringsStringsLoginCompatibilityEn {
 	_StringsStringsLoginCompatibilityPtBr._(_StringsPtBr root) : this._root = root, super._(root);
@@ -13825,6 +13915,7 @@ class _StringsStringsLoginZhHans extends _StringsStringsLoginEn {
 	@override late final _StringsStringsLoginFieldZhHans field = _StringsStringsLoginFieldZhHans._(_root);
 	@override late final _StringsStringsLoginValidationZhHans validation = _StringsStringsLoginValidationZhHans._(_root);
 	@override late final _StringsStringsLoginDialogsZhHans dialogs = _StringsStringsLoginDialogsZhHans._(_root);
+	@override late final _StringsStringsLoginProtocolZhHans protocol = _StringsStringsLoginProtocolZhHans._(_root);
 	@override late final _StringsStringsLoginCompatibilityZhHans compatibility = _StringsStringsLoginCompatibilityZhHans._(_root);
 	@override late final _StringsStringsLoginConnectZhHans connect = _StringsStringsLoginConnectZhHans._(_root);
 	@override late final _StringsStringsLoginErrorsZhHans errors = _StringsStringsLoginErrorsZhHans._(_root);
@@ -15618,6 +15709,23 @@ class _StringsStringsLoginDialogsZhHans extends _StringsStringsLoginDialogsEn {
 	@override String get switchToHttp => '使用 HTTP 再试一次';
 }
 
+// Path: strings.login.protocol
+class _StringsStringsLoginProtocolZhHans extends _StringsStringsLoginProtocolEn {
+	_StringsStringsLoginProtocolZhHans._(_StringsZhHans root) : this._root = root, super._(root);
+
+	@override final _StringsZhHans _root; // ignore: unused_field
+
+	// Translations
+	@override String get selectorTitle => '选择连接协议';
+	@override String get httpsTitle => 'HTTPS';
+	@override String get httpsDescription => '加密连接，推荐使用';
+	@override String get httpTitle => 'HTTP';
+	@override String get httpDescription => '未加密，仅建议用于本机、局域网或临时测试。';
+	@override String get useSelected => '使用所选协议';
+	@override String get encrypted => '加密';
+	@override String get unencrypted => '未加密';
+}
+
 // Path: strings.login.compatibility
 class _StringsStringsLoginCompatibilityZhHans extends _StringsStringsLoginCompatibilityEn {
 	_StringsStringsLoginCompatibilityZhHans._(_StringsZhHans root) : this._root = root, super._(root);
@@ -16581,6 +16689,7 @@ class _StringsStringsLoginZhHantTw extends _StringsStringsLoginEn {
 	@override late final _StringsStringsLoginFieldZhHantTw field = _StringsStringsLoginFieldZhHantTw._(_root);
 	@override late final _StringsStringsLoginValidationZhHantTw validation = _StringsStringsLoginValidationZhHantTw._(_root);
 	@override late final _StringsStringsLoginDialogsZhHantTw dialogs = _StringsStringsLoginDialogsZhHantTw._(_root);
+	@override late final _StringsStringsLoginProtocolZhHantTw protocol = _StringsStringsLoginProtocolZhHantTw._(_root);
 	@override late final _StringsStringsLoginCompatibilityZhHantTw compatibility = _StringsStringsLoginCompatibilityZhHantTw._(_root);
 	@override late final _StringsStringsLoginConnectZhHantTw connect = _StringsStringsLoginConnectZhHantTw._(_root);
 	@override late final _StringsStringsLoginErrorsZhHantTw errors = _StringsStringsLoginErrorsZhHantTw._(_root);
@@ -18343,6 +18452,23 @@ class _StringsStringsLoginDialogsZhHantTw extends _StringsStringsLoginDialogsEn 
 	@override String get switchToHttp => '使用 HTTP 再試一次';
 }
 
+// Path: strings.login.protocol
+class _StringsStringsLoginProtocolZhHantTw extends _StringsStringsLoginProtocolEn {
+	_StringsStringsLoginProtocolZhHantTw._(_StringsZhHantTw root) : this._root = root, super._(root);
+
+	@override final _StringsZhHantTw _root; // ignore: unused_field
+
+	// Translations
+	@override String get selectorTitle => '選擇連線協定';
+	@override String get httpsTitle => 'HTTPS';
+	@override String get httpsDescription => '加密連線，建議使用';
+	@override String get httpTitle => 'HTTP';
+	@override String get httpDescription => '未加密，僅建議用於本機、區域網路或臨時測試。';
+	@override String get useSelected => '使用所選協定';
+	@override String get encrypted => '加密';
+	@override String get unencrypted => '未加密';
+}
+
 // Path: strings.login.compatibility
 class _StringsStringsLoginCompatibilityZhHantTw extends _StringsStringsLoginCompatibilityEn {
 	_StringsStringsLoginCompatibilityZhHantTw._(_StringsZhHantTw root) : this._root = root, super._(root);
@@ -19203,6 +19329,14 @@ extension on Translations {
 			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'HTTPS connection failed';
 			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return 'You are currently using HTTPS. If your server only supports HTTP, you can use HTTP and try again. If the server should support HTTPS, check its certificate or reverse proxy configuration.';
 			case 'strings.login.dialogs.switchToHttp': return 'Use HTTP and try again';
+			case 'strings.login.protocol.selectorTitle': return 'Choose connection protocol';
+			case 'strings.login.protocol.httpsTitle': return 'HTTPS';
+			case 'strings.login.protocol.httpsDescription': return 'Encrypted connection, recommended';
+			case 'strings.login.protocol.httpTitle': return 'HTTP';
+			case 'strings.login.protocol.httpDescription': return 'Unencrypted. Use only for local, LAN, or temporary testing.';
+			case 'strings.login.protocol.useSelected': return 'Use selected protocol';
+			case 'strings.login.protocol.encrypted': return 'Encrypted';
+			case 'strings.login.protocol.unencrypted': return 'Unencrypted';
 			case 'strings.login.compatibility.title': return 'Compatibility Mode';
 			case 'strings.login.compatibility.description': return 'Use legacy endpoints (for older Memos servers)';
 			case 'strings.login.connect.connecting': return 'Connecting…';
@@ -21369,6 +21503,14 @@ extension on _StringsDe {
 			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'HTTPS-Verbindung fehlgeschlagen';
 			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return 'Du verwendest derzeit HTTPS. Wenn dein Server nur HTTP unterstützt, kannst du es mit HTTP erneut versuchen. Wenn der Server eigentlich HTTPS unterstützen sollte, prüfe das Zertifikat oder die Reverse-Proxy-Konfiguration.';
 			case 'strings.login.dialogs.switchToHttp': return 'HTTP verwenden und erneut versuchen';
+			case 'strings.login.protocol.selectorTitle': return 'Verbindungsprotokoll wählen';
+			case 'strings.login.protocol.httpsTitle': return 'HTTPS';
+			case 'strings.login.protocol.httpsDescription': return 'Verschlüsselte Verbindung, empfohlen';
+			case 'strings.login.protocol.httpTitle': return 'HTTP';
+			case 'strings.login.protocol.httpDescription': return 'Unverschlüsselt. Nur für lokal, LAN oder temporäre Tests verwenden.';
+			case 'strings.login.protocol.useSelected': return 'Ausgewähltes Protokoll verwenden';
+			case 'strings.login.protocol.encrypted': return 'Verschlüsselt';
+			case 'strings.login.protocol.unencrypted': return 'Unverschlüsselt';
 			case 'strings.login.compatibility.title': return 'Kompatibilitätsmodus';
 			case 'strings.login.compatibility.description': return 'Legacy-Endpunkte verwenden (für ältere Memos-Server)';
 			case 'strings.login.connect.connecting': return 'Verbindung wird hergestellt…';
@@ -23427,6 +23569,14 @@ extension on _StringsJa {
 			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'HTTPS 接続に失敗しました';
 			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return '現在 HTTPS で接続しています。サーバーが HTTP のみをサポートしている場合は、HTTP でもう一度お試しください。サーバーが本来 HTTPS をサポートしているはずなら、証明書またはリバースプロキシの設定を確認してください。';
 			case 'strings.login.dialogs.switchToHttp': return 'HTTP で再試行';
+			case 'strings.login.protocol.selectorTitle': return '接続プロトコルを選択';
+			case 'strings.login.protocol.httpsTitle': return 'HTTPS';
+			case 'strings.login.protocol.httpsDescription': return '暗号化された接続です。推奨されます';
+			case 'strings.login.protocol.httpTitle': return 'HTTP';
+			case 'strings.login.protocol.httpDescription': return '暗号化されていません。ローカル、LAN、一時的なテストでのみ使用してください。';
+			case 'strings.login.protocol.useSelected': return '選択したプロトコルを使用';
+			case 'strings.login.protocol.encrypted': return '暗号化';
+			case 'strings.login.protocol.unencrypted': return '未暗号化';
 			case 'strings.login.compatibility.title': return '互換モード';
 			case 'strings.login.compatibility.description': return '旧版 Memos 用のレガシーエンドポイントを使用します';
 			case 'strings.login.connect.connecting': return '接続中…';
@@ -25485,6 +25635,14 @@ extension on _StringsKo {
 			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'HTTPS 연결 실패';
 			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return '현재 HTTPS를 사용하고 계십니다. 서버가 HTTP만 지원하는 경우 HTTP를 사용하고 다시 시도할 수 있습니다. 서버가 HTTPS를 지원해야 하는 경우 해당 인증서 또는 역방향 프록시 구성을 확인하세요.';
 			case 'strings.login.dialogs.switchToHttp': return 'HTTP를 사용하고 다시 시도하세요.';
+			case 'strings.login.protocol.selectorTitle': return '연결 프로토콜 선택';
+			case 'strings.login.protocol.httpsTitle': return 'HTTPS';
+			case 'strings.login.protocol.httpsDescription': return '암호화된 연결, 권장';
+			case 'strings.login.protocol.httpTitle': return 'HTTP';
+			case 'strings.login.protocol.httpDescription': return '암호화되지 않음. 로컬, LAN 또는 임시 테스트에만 사용하세요.';
+			case 'strings.login.protocol.useSelected': return '선택한 프로토콜 사용';
+			case 'strings.login.protocol.encrypted': return '암호화됨';
+			case 'strings.login.protocol.unencrypted': return '암호화되지 않음';
 			case 'strings.login.compatibility.title': return '호환 모드';
 			case 'strings.login.compatibility.description': return '레거시 엔드포인트 사용(이전 Memos 서버의 경우)';
 			case 'strings.login.connect.connecting': return '연결 중…';
@@ -27649,6 +27807,14 @@ extension on _StringsPtBr {
 			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'Falha na conexão HTTPS';
 			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return 'Você está usando atualmente HTTPS. Se o seu servidor suportar apenas HTTP, você poderá usar HTTP e tentar novamente. Se o servidor suportar HTTPS, verifique seu certificado ou configuração de proxy reverso.';
 			case 'strings.login.dialogs.switchToHttp': return 'Use HTTP e tente novamente';
+			case 'strings.login.protocol.selectorTitle': return 'Escolher protocolo de conexão';
+			case 'strings.login.protocol.httpsTitle': return 'HTTPS';
+			case 'strings.login.protocol.httpsDescription': return 'Conexão criptografada, recomendada';
+			case 'strings.login.protocol.httpTitle': return 'HTTP';
+			case 'strings.login.protocol.httpDescription': return 'Sem criptografia. Use apenas para local, LAN ou testes temporários.';
+			case 'strings.login.protocol.useSelected': return 'Usar protocolo selecionado';
+			case 'strings.login.protocol.encrypted': return 'Criptografado';
+			case 'strings.login.protocol.unencrypted': return 'Sem criptografia';
 			case 'strings.login.compatibility.title': return 'Modo de compatibilidade';
 			case 'strings.login.compatibility.description': return 'Use endpoints legados (para servidores Memos mais antigos)';
 			case 'strings.login.connect.connecting': return 'Conectando…';
@@ -29813,6 +29979,14 @@ extension on _StringsZhHans {
 			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'HTTPS 连接失败';
 			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return '当前正在使用 HTTPS 连接。如果你的服务器只支持 HTTP，可以使用 HTTP 再试一次。如果服务器本应支持 HTTPS，请检查证书或反向代理配置。';
 			case 'strings.login.dialogs.switchToHttp': return '使用 HTTP 再试一次';
+			case 'strings.login.protocol.selectorTitle': return '选择连接协议';
+			case 'strings.login.protocol.httpsTitle': return 'HTTPS';
+			case 'strings.login.protocol.httpsDescription': return '加密连接，推荐使用';
+			case 'strings.login.protocol.httpTitle': return 'HTTP';
+			case 'strings.login.protocol.httpDescription': return '未加密，仅建议用于本机、局域网或临时测试。';
+			case 'strings.login.protocol.useSelected': return '使用所选协议';
+			case 'strings.login.protocol.encrypted': return '加密';
+			case 'strings.login.protocol.unencrypted': return '未加密';
 			case 'strings.login.compatibility.title': return '兼容模式';
 			case 'strings.login.compatibility.description': return '使用旧版接口（适配旧版 Memos）';
 			case 'strings.login.connect.connecting': return '连接中…';
@@ -31979,6 +32153,14 @@ extension on _StringsZhHantTw {
 			case 'strings.login.dialogs.httpsHandshakeFailedTitle': return 'HTTPS 連線失敗';
 			case 'strings.login.dialogs.httpsHandshakeFailedMessage': return '目前正在使用 HTTPS 連線。如果你的伺服器只支援 HTTP，可以使用 HTTP 再試一次。如果伺服器本來應該支援 HTTPS，請檢查憑證或反向代理設定。';
 			case 'strings.login.dialogs.switchToHttp': return '使用 HTTP 再試一次';
+			case 'strings.login.protocol.selectorTitle': return '選擇連線協定';
+			case 'strings.login.protocol.httpsTitle': return 'HTTPS';
+			case 'strings.login.protocol.httpsDescription': return '加密連線，建議使用';
+			case 'strings.login.protocol.httpTitle': return 'HTTP';
+			case 'strings.login.protocol.httpDescription': return '未加密，僅建議用於本機、區域網路或臨時測試。';
+			case 'strings.login.protocol.useSelected': return '使用所選協定';
+			case 'strings.login.protocol.encrypted': return '加密';
+			case 'strings.login.protocol.unencrypted': return '未加密';
 			case 'strings.login.compatibility.title': return '相容模式';
 			case 'strings.login.compatibility.description': return '使用舊版端點（適配舊版 Memos）';
 			case 'strings.login.connect.connecting': return '連線中…';
