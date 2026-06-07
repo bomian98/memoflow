@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/app_localization.dart';
 import '../../module_boundary/support_memo_flow_contribution.dart';
+import '../../platform/platform_experience.dart';
 import '../../private_hooks/private_extension_bundle.dart';
 import '../../private_hooks/private_extension_bundle_provider.dart';
 import '../../state/settings/device_preferences_provider.dart';
@@ -28,6 +30,7 @@ class SupportMemoFlowScreen extends ConsumerWidget {
     final bundle = ref.watch(privateExtensionBundleProvider);
     final contributions = _resolvePrivateContributions(context, ref, bundle);
     final hasPrivateSupport = contributions.isNotEmpty;
+    final showPublicSupportQr = resolvePlatformExperience(context).isDesktop;
 
     void haptic() {
       if (hapticsEnabled) {
@@ -83,6 +86,7 @@ class SupportMemoFlowScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           _PublicAppreciationSection(
+            showQr: showPublicSupportQr,
             onOpenSupport: () =>
                 openExternal(supportMemoFlowExternalSupportUrl),
           ),
@@ -295,8 +299,12 @@ class _PublicGoodSection extends StatelessWidget {
 }
 
 class _PublicAppreciationSection extends StatelessWidget {
-  const _PublicAppreciationSection({required this.onOpenSupport});
+  const _PublicAppreciationSection({
+    required this.showQr,
+    required this.onOpenSupport,
+  });
 
+  final bool showQr;
   final VoidCallback onOpenSupport;
 
   @override
@@ -319,27 +327,34 @@ class _PublicAppreciationSection extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             context.tr(
-              zh: '点击下方按钮后，将在浏览器中打开赞赏链接。',
-              en: 'Tap the button below to open the support link in a browser.',
+              zh: showQr ? '使用手机支付宝扫码完成赞赏。' : '点击下方按钮后，将在浏览器中打开赞赏链接。',
+              en: showQr
+                  ? 'Scan with Alipay on your phone to support MemoFlow.'
+                  : 'Tap the button below to open the support link in a browser.',
             ),
             textAlign: TextAlign.center,
             style: TextStyle(height: 1.45, color: tokens.textMuted),
           ),
           const SizedBox(height: 18),
-          SettingsAction(
-            key: const ValueKey<String>('supportMemoFlow.openSupportLink'),
-            onPressed: onOpenSupport,
-            icon: const Icon(Icons.open_in_new, size: 20),
-            label: Text(
-              context.tr(zh: '打开赞赏链接', en: 'Open support link'),
-              style: const TextStyle(fontWeight: FontWeight.w800),
+          if (showQr)
+            const _SupportQrCode(data: supportMemoFlowExternalSupportUrl)
+          else
+            SettingsAction(
+              key: const ValueKey<String>('supportMemoFlow.openSupportLink'),
+              onPressed: onOpenSupport,
+              icon: const Icon(Icons.open_in_new, size: 20),
+              label: Text(
+                context.tr(zh: '打开赞赏链接', en: 'Open support link'),
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
             ),
-          ),
           const SizedBox(height: 14),
           Text(
             context.tr(
-              zh: '赞赏金额将在打开的页面中完成。',
-              en: 'The support amount is completed on the page that opens.',
+              zh: showQr ? '二维码仅用于自愿赞赏，不影响基础功能使用。' : '赞赏金额将在打开的页面中完成。',
+              en: showQr
+                  ? 'The QR code is only for voluntary support and does not affect basic features.'
+                  : 'The support amount is completed on the page that opens.',
             ),
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -349,6 +364,43 @@ class _PublicAppreciationSection extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SupportQrCode extends StatelessWidget {
+  const _SupportQrCode({required this.data});
+
+  static const double _maxSize = 240;
+
+  final String data;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = settingsPageTokens(context);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _maxSize),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: DecoratedBox(
+            key: const ValueKey<String>('supportMemoFlow.supportQr'),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: tokens.border.withValues(alpha: 0.6)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: PrettyQrView.data(
+                data: data,
+                decoration: const PrettyQrDecoration(),
+                errorCorrectLevel: QrErrorCorrectLevel.M,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

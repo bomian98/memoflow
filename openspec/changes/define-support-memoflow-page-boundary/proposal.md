@@ -5,7 +5,7 @@
 这个入口未来会同时服务两类支持关系：
 
 - Apple 平台私有商业版：macOS 现阶段，以及未来 iOS / iPadOS，用户通过成为支持者获得 Apple 平台特有优化和支持，真实购买、恢复购买、价格、StoreKit 和权益判断由私有仓 `memoflow-macos-private` 负责。
-- 桌面端 / Android / 公开构建：Windows 和 macOS 的桌面设置窗口也应能直接查看“支持 MemoFlow”页面；公开构建保留自愿赞赏路径，但从弹窗升级为与“支持 MemoFlow”一致的独立页面，表达为公开赞赏和项目维护支持，不提供商业解锁或权益判断。现有二维码支持方式将被外部赞赏链接替代，首版使用用户确认的支付宝外部支持链接。
+- 桌面端 / Android / 公开构建：Windows 和 macOS 的桌面设置窗口也应能直接查看“支持 MemoFlow”页面；公开构建保留自愿赞赏路径，但从弹窗升级为与“支持 MemoFlow”一致的独立页面，表达为公开赞赏和项目维护支持，不提供商业解锁或权益判断。旧二维码资产和保存流程将被移除，首版统一使用用户确认的支付宝外部支持链接作为数据源：移动端直接打开链接，桌面端显示由该链接动态生成的二维码。
 
 需要先把规则写清楚，避免后续实现时把商业逻辑、价格、权益状态或平台付费分支写入公开仓。
 
@@ -16,7 +16,7 @@
 - 定义平台和仓库边界：
   - Apple 私有版的“成为支持者”、Apple 平台优化、购买、恢复购买、价格、权益状态和 StoreKit MUST 属于 private overlay。
   - Windows / macOS 桌面设置窗口 MUST 通过通用 desktop settings surface 暴露“支持 MemoFlow”页面，不得做成 Windows 专属入口；没有 private overlay 时 macOS 也 MUST 走公开赞赏 fallback。
-  - Windows / Android / 公开构建的支持页面 MUST 走公开赞赏 fallback，移除现有二维码展示与保存流程，改为打开外部赞赏链接。
+  - Windows / Android / 公开构建的支持页面 MUST 走公开赞赏 fallback，移除旧二维码资产展示与保存流程；移动端打开外部赞赏链接，桌面端显示由该链接动态生成的二维码。
   - 首版公开赞赏链接 SHALL 使用用户确认的支付宝外部支持链接 `https://qr.alipay.com/tsx16856ygfke5rugz1ao4a`。
   - 公开仓 MUST NOT 根据 macOS / iOS 平台本身直接显示商业价格、商品、权益或购买 UI。
 - 定义 private bundle seam 方向：公开页面可以提供一个支持页贡献区域，但真实商业支持内容必须由 `PrivateExtensionBundle` 或等价批准 seam 贡献。

@@ -36,9 +36,10 @@ Windows 和 macOS 的桌面设置窗口 SHALL expose a platform-neutral “支�
 #### Scenario: Public build renders support page
 - **WHEN** the public repository runs without private overlay
 - **THEN** the support page SHALL render a public appreciation fallback or non-commercial support explanation
-- **AND** it SHALL use an external support link as the primary action
 - **AND** the initial external support link SHALL be `https://qr.alipay.com/tsx16856ygfke5rugz1ao4a`
-- **AND** it SHALL NOT show public donation QR assets such as `assets/images/donation_qr.png` as the support page payment method
+- **AND** phone and tablet surfaces SHALL use the external support link as the primary support action
+- **AND** desktop surfaces SHALL show a generated QR code based on the external support link instead of opening the support link as the primary support action
+- **AND** it SHALL NOT show public donation QR assets such as `assets/images/donation_qr.png` as the support page support method
 - **AND** it SHALL NOT show StoreKit purchase, restore purchase, product ID, subscription group, receipt validation, entitlement state, Family Sharing state, buyout state, trial state, or hardcoded commercial price
 
 #### Scenario: Public appreciation remains voluntary

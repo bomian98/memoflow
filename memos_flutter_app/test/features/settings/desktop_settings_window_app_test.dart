@@ -629,6 +629,16 @@ void main() {
 
       expect(find.byIcon(Icons.favorite_border), findsOneWidget);
       expect(find.text('Support MemoFlow'), findsOneWidget);
+      expect(find.text('Import / Export'), findsOneWidget);
+      expect(find.text('About'), findsOneWidget);
+
+      final supportTop = tester.getTopLeft(find.text('Support MemoFlow')).dy;
+      final importExportTop = tester
+          .getTopLeft(find.text('Import / Export'))
+          .dy;
+      final aboutTop = tester.getTopLeft(find.text('About')).dy;
+      expect(supportTop, lessThan(importExportTop));
+      expect(importExportTop, lessThan(aboutTop));
 
       await tester.tap(find.text('Support MemoFlow'));
       await tester.pumpAndSettle();
@@ -640,7 +650,14 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Open support link'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('supportMemoFlow.supportQr')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('supportMemoFlow.openSupportLink')),
+        findsNothing,
+      );
       expect(find.text('Purchase'), findsNothing);
       expect(find.text('Restore purchase'), findsNothing);
       expect(find.text('MemoFlow Pro'), findsNothing);
@@ -708,7 +725,14 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Open support link'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('supportMemoFlow.supportQr')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('supportMemoFlow.openSupportLink')),
+        findsNothing,
+      );
       expect(find.text('Purchase'), findsNothing);
       expect(find.text('Restore purchase'), findsNothing);
       expect(find.text('MemoFlow Pro'), findsNothing);

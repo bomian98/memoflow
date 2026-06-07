@@ -13,6 +13,7 @@ import 'package:memos_flutter_app/features/settings/support_memoflow_screen.dart
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/module_boundary/settings_entry_contribution.dart';
 import 'package:memos_flutter_app/module_boundary/support_memo_flow_contribution.dart';
+import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/private_hooks/private_extension_bundle.dart';
 import 'package:memos_flutter_app/private_hooks/private_extension_bundle_provider.dart';
 import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
@@ -22,9 +23,14 @@ import 'package:memos_flutter_app/core/storage_read.dart';
 void main() {
   setUp(() {
     LocaleSettings.setLocale(AppLocale.en);
+    debugPlatformTargetOverride = TargetPlatform.android;
   });
 
-  testWidgets('public support page renders appreciation fallback without QR', (
+  tearDown(() {
+    debugPlatformTargetOverride = null;
+  });
+
+  testWidgets('mobile public support page opens appreciation link without QR', (
     tester,
   ) async {
     await tester.pumpWidget(_buildApp());
@@ -37,9 +43,36 @@ void main() {
     expect(find.text('Public-good note'), findsOneWidget);
     expect(find.text('Support the developer'), findsOneWidget);
     expect(find.text('Open support link'), findsOneWidget);
-    expect(find.text('Save and open Alipay to scan'), findsNothing);
-    expect(find.byKey(const ValueKey<String>('donationQr')), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('supportMemoFlow.supportQr')),
+      findsNothing,
+    );
     expect(supportMemoFlowExternalSupportUrl, contains('qr.alipay.com'));
+  });
+
+  testWidgets('desktop public support page shows QR instead of link action', (
+    tester,
+  ) async {
+    debugPlatformTargetOverride = TargetPlatform.windows;
+
+    await tester.pumpWidget(_buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SupportMemoFlowScreen), findsOneWidget);
+    expect(find.text('Support the developer'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('supportMemoFlow.supportQr')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('supportMemoFlow.openSupportLink')),
+      findsNothing,
+    );
+    expect(find.text('Open support link'), findsNothing);
+    expect(
+      find.text('Scan with Alipay on your phone to support MemoFlow.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('private support contribution replaces public fallback', (

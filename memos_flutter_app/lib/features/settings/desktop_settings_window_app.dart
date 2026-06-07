@@ -1227,6 +1227,12 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
         icon: Icons.help_outline,
         label: context.t.strings.legacy.msg_help_diagnostics,
       ),
+      if (showDesktopSettingsPane)
+        _DesktopPaneItem(
+          pane: _DesktopSettingsPane.supportMemoFlow,
+          icon: Icons.favorite_border,
+          label: context.tr(zh: '支持 MemoFlow', en: 'Support MemoFlow'),
+        ),
       _DesktopPaneItem(
         pane: _DesktopSettingsPane.importExport,
         icon: Icons.import_export,
@@ -1237,12 +1243,6 @@ class _DesktopSettingsWorkbenchState extends State<_DesktopSettingsWorkbench> {
         icon: Icons.info_outline,
         label: context.t.strings.legacy.msg_about,
       ),
-      if (showDesktopSettingsPane)
-        _DesktopPaneItem(
-          pane: _DesktopSettingsPane.supportMemoFlow,
-          icon: Icons.favorite_border,
-          label: context.tr(zh: '支持 MemoFlow', en: 'Support MemoFlow'),
-        ),
     ];
 
     return Focus(
