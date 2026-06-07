@@ -127,6 +127,14 @@ void main() {
       );
       expect((await db.getMemoByUid('memo-1'))?['tags'], 'include real');
       expect(await _memoTagPaths(db, 'memo-1'), const ['include', 'real']);
+      final includeTagId = await _tagIdByPath(db, 'include');
+      expect(includeTagId, isNotNull);
+      final sqlite = await db.db;
+      await sqlite.insert('tag_aliases', {
+        'tag_id': includeTagId!,
+        'alias': 'legacy-include',
+        'created_time': 1735689600,
+      });
 
       await SelfRepairMutationService(db: db).repairTagsFromContent();
 
@@ -135,8 +143,73 @@ void main() {
       expect(await _memoUidsForTag(db, 'include'), isEmpty);
       expect(await _memoUidsForSearch(db, 'real'), const ['memo-1']);
       expect(await _ftsTagsForMemo(db, 'memo-1'), 'real');
-      expect(await _tagStats(db), isNot(containsPair('include', 1)));
+      expect((await _tagStats(db)).containsKey('include'), isFalse);
+      expect(await _tagIdByPath(db, 'include'), isNull);
+      expect(await _tagAliasCountByTagId(db, includeTagId), 0);
       expect(await _tagStats(db), containsPair('real', 1));
+    },
+  );
+
+  test('self repair recursively prunes hierarchical orphan tags', () async {
+    final dbName = uniqueDbName('self_repair_prunes_orphan_tag_hierarchy');
+    final db = AppDatabase(dbName: dbName);
+    final repository = TagRepository(db: db);
+    addTearDown(() async {
+      await db.close();
+      await deleteTestDatabase(dbName);
+    });
+
+    final parent = await repository.createTag(name: 'area');
+    final child = await repository.createTag(
+      name: 'project',
+      parentId: parent.id,
+    );
+    await repository.createTag(name: 'phase', parentId: child.id);
+
+    expect(await _allTagPaths(db), const [
+      'area',
+      'area/project',
+      'area/project/phase',
+    ]);
+
+    await SelfRepairMutationService(db: db).repairTagsFromContent();
+
+    expect(await _allTagPaths(db), isEmpty);
+    expect(await _tagStats(db), isEmpty);
+  });
+
+  test(
+    'self repair preserves referenced tags while pruning unrelated orphans',
+    () async {
+      final dbName = uniqueDbName('self_repair_preserves_referenced_tags');
+      final db = AppDatabase(dbName: dbName);
+      final repository = TagRepository(db: db);
+      addTearDown(() async {
+        await db.close();
+        await deleteTestDatabase(dbName);
+      });
+
+      await _upsertMemo(
+        db,
+        uid: 'memo-1',
+        content: 'tracked #keep',
+        tags: const ['keep'],
+      );
+      await repository.createTag(name: 'unused');
+
+      expect(await _tagIdByPath(db, 'keep'), isNotNull);
+      expect(await _tagIdByPath(db, 'unused'), isNotNull);
+
+      await SelfRepairMutationService(db: db).repairTagsFromContent();
+
+      expect((await db.getMemoByUid('memo-1'))?['tags'], 'keep');
+      expect(await _memoTagPaths(db, 'memo-1'), const ['keep']);
+      expect(await _memoUidsForSearch(db, 'keep'), const ['memo-1']);
+      expect(await _ftsTagsForMemo(db, 'memo-1'), 'keep');
+      expect(await _tagIdByPath(db, 'keep'), isNotNull);
+      expect(await _tagIdByPath(db, 'unused'), isNull);
+      expect(await _tagStats(db), containsPair('keep', 1));
+      expect((await _tagStats(db)).containsKey('unused'), isFalse);
     },
   );
 
@@ -252,4 +325,47 @@ Future<Map<String, int>> _tagStats(AppDatabase db) async {
           final value => int.tryParse(value.toString()) ?? 0,
         },
   };
+}
+
+Future<int?> _tagIdByPath(AppDatabase db, String path) async {
+  final sqlite = await db.db;
+  final rows = await sqlite.query(
+    'tags',
+    columns: const ['id'],
+    where: 'path = ?',
+    whereArgs: [path],
+    limit: 1,
+  );
+  if (rows.isEmpty) return null;
+  final id = rows.single['id'];
+  if (id is int) return id;
+  if (id is num) return id.toInt();
+  if (id is String) return int.tryParse(id.trim());
+  return null;
+}
+
+Future<List<String>> _allTagPaths(AppDatabase db) async {
+  final sqlite = await db.db;
+  final rows = await sqlite.query(
+    'tags',
+    columns: const ['path'],
+    orderBy: 'path ASC',
+  );
+  return rows
+      .map((row) => row['path'])
+      .whereType<String>()
+      .toList(growable: false);
+}
+
+Future<int> _tagAliasCountByTagId(AppDatabase db, int tagId) async {
+  final sqlite = await db.db;
+  final rows = await sqlite.rawQuery(
+    'SELECT COUNT(*) AS count FROM tag_aliases WHERE tag_id = ?;',
+    [tagId],
+  );
+  final count = rows.single['count'];
+  if (count is int) return count;
+  if (count is num) return count.toInt();
+  if (count is String) return int.tryParse(count.trim()) ?? 0;
+  return 0;
 }

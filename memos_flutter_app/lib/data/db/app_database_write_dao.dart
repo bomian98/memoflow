@@ -481,6 +481,18 @@ class AppDatabaseWriteDao {
     }
   }
 
+  Future<int> pruneOrphanTags() async {
+    final sqlite = await _db.db;
+    late final int prunedCount;
+    await sqlite.transaction((txn) async {
+      prunedCount = await TagDbPersistence.pruneOrphanTags(txn);
+    });
+    if (prunedCount > 0) {
+      _db.notifyDataChanged();
+    }
+    return prunedCount;
+  }
+
   Future<void> deleteMemoDeleteTombstone(String memoUid) async {
     final sqlite = await _db.db;
     await MemoLifecycleDbPersistence.deleteMemoDeleteTombstone(sqlite, memoUid);

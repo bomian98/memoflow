@@ -552,6 +552,40 @@ WHERE mt.memo_uid = ?;
     await executor.delete('tags', where: 'id = ?', whereArgs: [id]);
   }
 
+  static Future<int> pruneOrphanTags(DatabaseExecutor executor) async {
+    var totalCount = 0;
+    while (true) {
+      final rows = await executor.rawQuery('''
+SELECT t.id
+FROM tags t
+WHERE NOT EXISTS (
+  SELECT 1 FROM memo_tags mt WHERE mt.tag_id = t.id
+)
+AND NOT EXISTS (
+  SELECT 1 FROM tags child WHERE child.parent_id = t.id
+);
+''');
+      if (rows.isEmpty) break;
+
+      var deletedThisRound = 0;
+      for (final row in rows) {
+        final id = _readInt(row['id']);
+        if (id == null || id <= 0) continue;
+        await executor.delete(
+          'tag_aliases',
+          where: 'tag_id = ?',
+          whereArgs: [id],
+        );
+        await executor.delete('tags', where: 'id = ?', whereArgs: [id]);
+        totalCount++;
+        deletedThisRound++;
+      }
+
+      if (deletedThisRound == 0) break;
+    }
+    return totalCount;
+  }
+
   static int? readInt(Object? value) => _readInt(value);
 
   static int? _readInt(Object? value) {

@@ -16,7 +16,10 @@ class SelfRepairMutationService {
   Future<void>? _running;
 
   Future<void> repairTagsFromContent() {
-    return _runExclusive(db.rebuildMemoTagsFromContent);
+    return _runExclusive(() async {
+      await db.rebuildMemoTagsFromContent();
+      await db.pruneOrphanTags();
+    });
   }
 
   Future<void> rebuildSearchIndex() {

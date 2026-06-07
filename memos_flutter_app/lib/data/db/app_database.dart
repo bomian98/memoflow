@@ -501,6 +501,8 @@ class AppDatabase {
       case 'rebuildMemoTagsFromContent':
         await _runLocalWrite(rebuildMemoTagsFromContent);
         return null;
+      case 'pruneOrphanTags':
+        return _runLocalWrite(pruneOrphanTags);
       case 'rebuildMemoSearchIndex':
         await _runLocalWrite(rebuildMemoSearchIndex);
         return null;
@@ -1651,6 +1653,17 @@ class AppDatabase {
       return;
     }
     await _writeDao.rebuildMemoTagsFromContent();
+  }
+
+  Future<int> pruneOrphanTags() async {
+    if (_writeProxyEnabled && _localWriteDepth == 0) {
+      return _dispatchWriteCommand<int>(
+        operation: 'pruneOrphanTags',
+        payload: const <String, dynamic>{},
+        decode: _decodeIntResult,
+      );
+    }
+    return _writeDao.pruneOrphanTags();
   }
 
   Future<void> rebuildMemoSearchIndex() async {
