@@ -269,10 +269,23 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: HomeScreenPresentation.standalone,
+          navigationHost: widget.embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            navigationHost: widget.embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.collections,
       onSelect: (destination) => _navigate(context, destination),
       onSelectTag: (tag) => _openTag(context, tag),
+      onSelectDay: onSelectDay,
       onOpenNotifications: () => _openNotifications(context),
       embedded: useDesktopSidePane,
     );
@@ -412,6 +425,7 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
           selectedDestination: AppDrawerDestination.collections,
           onSelectDestination: (destination) => _navigate(context, destination),
           onSelectTag: (tag) => _openTag(context, tag),
+          onSelectDay: onSelectDay,
           onOpenNotifications: () => _openNotifications(context),
           backgroundColor: bg,
           title: Text(context.t.strings.collections.title),

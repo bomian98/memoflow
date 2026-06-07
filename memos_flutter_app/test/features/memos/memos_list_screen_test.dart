@@ -63,6 +63,7 @@ import 'package:memos_flutter_app/features/memos/widgets/floating_collapse_butto
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_floating_actions.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_memo_card.dart';
 import 'package:memos_flutter_app/features/share/share_inline_image_content.dart';
+import 'package:memos_flutter_app/features/stats/stats_screen.dart';
 import 'package:memos_flutter_app/features/voice/voice_record_screen.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memos_list_providers.dart';
@@ -71,6 +72,7 @@ import 'package:memos_flutter_app/state/memos/desktop_memo_preview_session.dart'
 import 'package:memos_flutter_app/state/memos/desktop_home_pane_state.dart';
 import 'package:memos_flutter_app/state/memos/memo_composer_state.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
+import 'package:memos_flutter_app/state/memos/stats_providers.dart';
 import 'package:memos_flutter_app/state/memos/sync_queue_provider.dart';
 import 'package:memos_flutter_app/state/settings/location_settings_provider.dart';
 import 'package:memos_flutter_app/state/settings/memo_template_settings_provider.dart';
@@ -399,6 +401,65 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     },
   );
+
+  testWidgets('desktop stats renders inside home primary content area', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+        enableCompose: true,
+        enableDesktopResizableHomeInlineCompose: true,
+        initialDesktopUtilityView: DesktopHomeUtilityView.stats,
+        overrides: [
+          localStatsProvider.overrideWith(
+            (ref) => const Stream<LocalStats>.empty(),
+          ),
+        ],
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Memo hidden behind stats utility'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    expect(find.byType(MemosListScreen), findsOneWidget);
+    expect(find.byType(DesktopShellHost), findsOneWidget);
+    expect(find.byType(AppDrawer), findsOneWidget);
+    expect(find.byType(StatsScreen), findsOneWidget);
+    expect(find.text('Memo stats'), findsOneWidget);
+    expect(
+      find.textContaining(
+        'Memo hidden behind stats utility',
+        findRichText: true,
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(find.byTooltip('Back'));
+    await _pumpScreenFrames(tester);
+
+    expect(find.byType(StatsScreen), findsNothing);
+    expect(
+      find.textContaining(
+        'Memo hidden behind stats utility',
+        findRichText: true,
+      ),
+      findsOneWidget,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   testWidgets('windows wide layout opens desktop preview pane on memo tap', (
     tester,
@@ -2430,6 +2491,117 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets('desktop local day filter preserves inline compose draft state', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1280, 1200),
+        showDrawer: true,
+        enableCompose: true,
+        enableDesktopResizableHomeInlineCompose: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    final screenState = _screenState(tester);
+    screenState.debugInlineComposer.replaceText('Draft survives filter');
+    screenState.debugInlineComposer.addPendingAttachments([
+      const MemoComposerPendingAttachment(
+        uid: 'att-filter',
+        filePath: 'Z:/does-not-exist.png',
+        filename: 'filter.png',
+        mimeType: 'image/png',
+        size: 42,
+      ),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    expect(screenState.debugInlineComposer.text, 'Draft survives filter');
+    expect(
+      find.byKey(const ValueKey<String>('inline-attachment-att-filter')),
+      findsOneWidget,
+    );
+    expect(find.byType(DesktopResizablePanelShell), findsOneWidget);
+
+    final selectedDay = DateTime(2026, 6, 7);
+    screenState.debugSetDesktopHomeDayFilter(selectedDay);
+    await _pumpScreenFrames(tester);
+
+    expect(screenState.debugEffectiveDayFilter, selectedDay);
+    expect(screenState.debugHasDesktopHomeLocalDayFilter, isTrue);
+    expect(screenState.debugInlineComposer.text, 'Draft survives filter');
+    expect(screenState.debugInlineComposer.pendingAttachments, hasLength(1));
+    expect(
+      find.byKey(const ValueKey<String>('inline-attachment-att-filter')),
+      findsOneWidget,
+    );
+    expect(find.byType(DesktopResizablePanelShell), findsOneWidget);
+
+    screenState.debugClearDesktopHomeDayFilter();
+    await _pumpScreenFrames(tester);
+
+    expect(screenState.debugEffectiveDayFilter, isNull);
+    expect(screenState.debugHasDesktopHomeLocalDayFilter, isFalse);
+    expect(screenState.debugInlineComposer.text, 'Draft survives filter');
+    expect(screenState.debugInlineComposer.pendingAttachments, hasLength(1));
+    expect(
+      find.byKey(const ValueKey<String>('inline-attachment-att-filter')),
+      findsOneWidget,
+    );
+    expect(find.byType(DesktopResizablePanelShell), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets(
+    'desktop home day destination initializes local filter and resize capability',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1280, 1200);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+      final selectedDay = DateTime(2026, 6, 7, 15, 30);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1280, 1200),
+          showDrawer: true,
+          enableCompose: true,
+          enableDesktopResizableHomeInlineCompose: true,
+          initialDesktopHomeDayFilter: selectedDay,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      final screenState = _screenState(tester);
+      expect(screenState.debugEffectiveDayFilter, DateTime(2026, 6, 7));
+      expect(screenState.debugHasDesktopHomeLocalDayFilter, isTrue);
+      expect(find.byType(DesktopResizablePanelShell), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
   testWidgets(
     'home compose handle drag persists layout and restores on rebuild',
     (tester) async {
@@ -2808,6 +2980,7 @@ Widget _buildHarness({
   MemosListRouteVoiceRecordOverlayPresenter? showVoiceRecordOverlay,
   DesktopHomeUtilityView initialDesktopUtilityView =
       DesktopHomeUtilityView.none,
+  DateTime? initialDesktopHomeDayFilter,
   List<Override> overrides = const <Override>[],
 }) {
   final resolvedDevicePreferencesRepository =
@@ -2894,6 +3067,7 @@ Widget _buildHarness({
             showNoteInputSheet: showNoteInputSheet,
             showVoiceRecordOverlay: showVoiceRecordOverlay,
             initialDesktopUtilityView: initialDesktopUtilityView,
+            initialDesktopHomeDayFilter: initialDesktopHomeDayFilter,
           ),
         ),
       ),

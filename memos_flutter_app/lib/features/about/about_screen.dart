@@ -95,10 +95,24 @@ class AboutScreen extends StatelessWidget {
     final enableWindowsDragToMove = isWindowsDesktop;
     final useEmbeddedBottomNav =
         presentation == HomeScreenPresentation.embeddedBottomNav;
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: presentation,
+          navigationHost: embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: presentation,
+            navigationHost: embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.about,
       onSelect: (d) => _navigate(context, d),
       onSelectTag: (t) => _openTag(context, t),
+      onSelectDay: onSelectDay,
       onOpenNotifications: () => _openNotifications(context),
       embedded: useDesktopSidePane,
     );
@@ -113,6 +127,7 @@ class AboutScreen extends StatelessWidget {
         selectedDestination: AppDrawerDestination.about,
         onSelectDestination: (d) => _navigate(context, d),
         onSelectTag: (t) => _openTag(context, t),
+        onSelectDay: onSelectDay,
         onOpenNotifications: () => _openNotifications(context),
         backgroundColor: bg,
         title: Text(

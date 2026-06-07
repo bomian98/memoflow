@@ -31,6 +31,7 @@ bool shouldEnableDesktopHomeInlineComposeResizeForMemosList({
   required String state,
   required String? tag,
   required DateTime? dayFilter,
+  bool allowFilteredHomeInlineComposeResize = false,
 }) {
   if (!shouldEnableDesktopHomeInlineComposeResize(
     platform: platform,
@@ -44,5 +45,5 @@ bool shouldEnableDesktopHomeInlineComposeResizeForMemosList({
       enableCompose &&
       state == 'NORMAL' &&
       (tag == null || tag.trim().isEmpty) &&
-      dayFilter == null;
+      (dayFilter == null || allowFilteredHomeInlineComposeResize);
 }

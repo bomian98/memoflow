@@ -800,6 +800,24 @@ class MemosListScreenBody extends StatelessWidget {
                                                   )
                                                 : null)),
                               ),
+                              if (useWindowsDesktopHeader &&
+                                  !data.searching &&
+                                  data.showFilterTagChip &&
+                                  resolvedTagChip != null)
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      10,
+                                      16,
+                                      0,
+                                    ),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: resolvedTagChip!,
+                                    ),
+                                  ),
+                                ),
                               if (data.activeListGuideId != null &&
                                   data.activeListGuideMessage != null)
                                 SliverToBoxAdapter(
@@ -1103,9 +1121,13 @@ class MemosListScreenBody extends StatelessWidget {
             : searchFieldChild,
         trailing: isMacosDesktop
             ? null
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: desktopTrailingActions,
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: desktopTrailingActions,
+                ),
               ),
         body: desktopBodyContent,
         secondaryPane: desktopPreviewPane,

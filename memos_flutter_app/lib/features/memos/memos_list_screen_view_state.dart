@@ -283,6 +283,7 @@ MemosListScreenLayoutState buildMemosListScreenLayoutState({
   required bool showDrawer,
   required bool showPillActions,
   required bool showFilterTagChip,
+  bool hasFilterChip = false,
   required bool enableCompose,
   required bool hidePrimaryComposeFab,
   required bool searching,
@@ -313,16 +314,16 @@ MemosListScreenLayoutState buildMemosListScreenLayoutState({
       (useWindowsDesktopHeader && !searching) || useMacosDesktopTitleBar
       ? 0.0
       : kToolbarHeight;
+  final hasVisibleFilterChip =
+      hasFilterChip || (query.resolvedTag?.trim().isNotEmpty ?? false);
+  final showFilterChipRow = showFilterTagChip || hasFilterChip;
   final headerBottomHeight = useWindowsDesktopHeader && !searching
       ? 0.0
       : searching
       ? (query.useShortcutFilter ? 0.0 : 46.0)
       : (showHeaderPillActionsInScroll
             ? 46.0
-            : (showFilterTagChip &&
-                      (query.resolvedTag?.trim().isNotEmpty ?? false)
-                  ? 48.0
-                  : 0.0));
+            : (showFilterChipRow && hasVisibleFilterChip ? 48.0 : 0.0));
   final floatingCollapseTopPadding =
       headerToolbarHeight +
       headerBottomHeight +

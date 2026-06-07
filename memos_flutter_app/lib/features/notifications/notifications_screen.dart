@@ -117,10 +117,24 @@ class NotificationsScreen extends ConsumerWidget {
     final useEmbeddedBottomNav =
         presentation == HomeScreenPresentation.embeddedBottomNav;
     final shouldInterceptPop = !useEmbeddedBottomNav;
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: presentation,
+          navigationHost: embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: presentation,
+            navigationHost: embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.memos,
       onSelect: (d) => _navigate(context, d),
       onSelectTag: (t) => _openTag(context, t),
+      onSelectDay: onSelectDay,
       onOpenNotifications: () => _openNotifications(context),
       embedded: useDesktopSidePane,
     );
@@ -226,6 +240,7 @@ class NotificationsScreen extends ConsumerWidget {
         selectedDestination: AppDrawerDestination.memos,
         onSelectDestination: (destination) => _navigate(context, destination),
         onSelectTag: (tag) => _openTag(context, tag),
+        onSelectDay: onSelectDay,
         onOpenNotifications: () => _openNotifications(context),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(context.t.strings.legacy.msg_notifications),

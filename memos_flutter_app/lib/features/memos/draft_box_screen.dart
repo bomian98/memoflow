@@ -8,6 +8,7 @@ import '../../i18n/strings.g.dart';
 import '../../state/memos/compose_draft_provider.dart';
 import '../../state/memos/note_draft_provider.dart';
 import '../home/app_drawer.dart';
+import '../home/app_drawer_destination_builder.dart';
 import '../home/app_drawer_menu_button.dart';
 import '../home/desktop/desktop_embedded_utility_surface.dart';
 import '../home/desktop/desktop_destination_shell.dart';
@@ -99,11 +100,25 @@ class DraftBoxScreen extends ConsumerWidget {
     final useEmbeddedBottomNav =
         presentation == HomeScreenPresentation.embeddedBottomNav;
     final effectiveSelected = selected ?? AppDrawerDestination.draftBox;
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: presentation,
+          navigationHost: embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: presentation,
+            navigationHost: embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = showDrawer
         ? AppDrawer(
             selected: effectiveSelected,
             onSelect: onSelect ?? (_) {},
             onSelectTag: onSelectTag,
+            onSelectDay: onSelectDay,
             onOpenNotifications: onOpenNotifications,
             embedded: useDesktopSidePane,
           )
@@ -183,6 +198,7 @@ class DraftBoxScreen extends ConsumerWidget {
         selectedDestination: effectiveSelected,
         onSelectDestination: onSelect ?? (_) {},
         onSelectTag: onSelectTag,
+        onSelectDay: onSelectDay,
         onOpenNotifications: onOpenNotifications,
         backgroundColor: bg,
         title: const SizedBox.shrink(),

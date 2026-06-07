@@ -1413,10 +1413,24 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     final useDesktopResourcesTable = isDesktopTargetPlatform(platform);
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: widget.presentation,
+          navigationHost: widget.embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: widget.presentation,
+            navigationHost: widget.embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.resources,
       onSelect: (d) => _navigate(context, d),
       onSelectTag: (t) => _openTag(context, t),
+      onSelectDay: onSelectDay,
       onOpenNotifications: () => _openNotifications(context),
       embedded: useDesktopSidePane,
     );
@@ -1496,6 +1510,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         selectedDestination: AppDrawerDestination.resources,
         onSelectDestination: (d) => _navigate(context, d),
         onSelectTag: (t) => _openTag(context, t),
+        onSelectDay: onSelectDay,
         onOpenNotifications: () => _openNotifications(context),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(

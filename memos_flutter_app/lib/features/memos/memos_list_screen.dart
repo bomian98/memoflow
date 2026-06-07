@@ -70,6 +70,7 @@ import '../explore/explore_screen.dart';
 import '../home/app_drawer.dart';
 import '../home/desktop_home_inline_compose_resize_capability.dart';
 import '../home/home_navigation_host.dart';
+import '../home/home_quick_action_navigation.dart';
 import '../notifications/notifications_screen.dart';
 import '../reminders/memo_reminder_editor_screen.dart';
 import '../resources/resources_screen.dart';
@@ -140,6 +141,7 @@ class MemosListScreen extends ConsumerStatefulWidget {
     this.enableDesktopResizableHomeInlineCompose = false,
     this.enableDrawerOpenDragGesture = true,
     this.initialDesktopUtilityView = DesktopHomeUtilityView.none,
+    this.initialDesktopHomeDayFilter,
   });
 
   static final List<_MemosListScreenState> _activeStates =
@@ -178,6 +180,7 @@ class MemosListScreen extends ConsumerStatefulWidget {
   final bool enableDesktopResizableHomeInlineCompose;
   final bool enableDrawerOpenDragGesture;
   final DesktopHomeUtilityView initialDesktopUtilityView;
+  final DateTime? initialDesktopHomeDayFilter;
 
   @override
   ConsumerState<MemosListScreen> createState() => _MemosListScreenState();
@@ -262,6 +265,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   String _floatingCollapseVisibleMemoSignature = '';
   late DesktopHomeUtilityView _desktopHomeUtilityView;
   String? _desktopDraftBoxActiveDraftId;
+  DateTime? _desktopHomeDayFilter;
   Timer? _scrollPerfIdleTimer;
   _MemosScrollPerfSession? _scrollPerfSession;
   late final VoidCallback _audioPlaybackCoordinatorListener;
@@ -296,11 +300,24 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   void debugStartAiSearch() => _startAiSearch();
 
   @visibleForTesting
+  DateTime? get debugEffectiveDayFilter => _effectiveDayFilter;
+
+  @visibleForTesting
+  bool get debugHasDesktopHomeLocalDayFilter => _hasDesktopHomeLocalDayFilter;
+
+  @visibleForTesting
+  void debugSetDesktopHomeDayFilter(DateTime day) =>
+      _setDesktopHomeDayFilter(day);
+
+  @visibleForTesting
+  void debugClearDesktopHomeDayFilter() => _clearDesktopHomeDayFilter();
+
+  @visibleForTesting
   MemosListScreenLayoutState debugBuildCurrentLayoutState() {
     final mediaQuery = MediaQuery.of(context);
     final queryState = buildMemosListScreenQueryState(
       searchQuery: _searchController.text,
-      filterDay: widget.dayFilter,
+      filterDay: _effectiveDayFilter,
       state: widget.state,
       pageSize: _pageSize,
       shortcuts: const <Shortcut>[],
@@ -322,6 +339,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       showDrawer: widget.showDrawer,
       showPillActions: widget.showPillActions,
       showFilterTagChip: widget.showFilterTagChip,
+      hasFilterChip: _hasDesktopHomeLocalDayFilter,
       enableCompose: widget.enableCompose,
       hidePrimaryComposeFab: widget.hidePrimaryComposeFab,
       searching: _searching,
@@ -365,9 +383,16 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   List<LocalMemo> get _animatedMemos => _animatedListController.animatedMemos;
   bool get _desktopWindowMaximized => _routeDelegate.desktopWindowMaximized;
 
+  DateTime? get _effectiveDayFilter =>
+      _desktopHomeDayFilter ?? widget.dayFilter;
+
+  bool get _hasDesktopHomeLocalDayFilter => _desktopHomeDayFilter != null;
+
   bool get _isAllMemos {
     final tag = _activeTagFilter;
-    return widget.state == 'NORMAL' && (tag == null || tag.isEmpty);
+    return widget.state == 'NORMAL' &&
+        (tag == null || tag.isEmpty) &&
+        _effectiveDayFilter == null;
   }
 
   bool get _enableScrollPerfDiagnostics =>
@@ -385,7 +410,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         enableCompose: widget.enableCompose,
         state: widget.state,
         tag: widget.tag,
-        dayFilter: widget.dayFilter,
+        dayFilter: _effectiveDayFilter,
+        allowFilteredHomeInlineComposeResize: _hasDesktopHomeLocalDayFilter,
       );
 
   bool get _isDesktopContextMenuTarget =>
@@ -1279,6 +1305,14 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     super.initState();
     MemosListScreen._activeStates.add(this);
     _desktopHomeUtilityView = widget.initialDesktopUtilityView;
+    final initialDayFilter = widget.initialDesktopHomeDayFilter;
+    _desktopHomeDayFilter = initialDayFilter == null
+        ? null
+        : DateTime(
+            initialDayFilter.year,
+            initialDayFilter.month,
+            initialDayFilter.day,
+          );
     _inlineComposer = MemoComposerController();
     _headerController = MemosListHeaderController(initialTag: widget.tag);
     _inlineComposeCoordinator = MemosListInlineComposeCoordinator(
@@ -1873,6 +1907,30 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           );
           return;
       }
+    }
+
+    final target = resolveHomeQuickActionNavigationTarget(
+      action: action,
+      useDesktopHomeNavigation: _supportsDesktopHomeUtilityEmbedding(),
+    );
+    switch (target.kind) {
+      case HomeQuickActionNavigationKind.none:
+        return;
+      case HomeQuickActionNavigationKind.desktopUtility:
+        final utility = target.desktopUtilityView;
+        if (utility != null && _showDesktopHomeUtilityView(utility)) {
+          return;
+        }
+        break;
+      case HomeQuickActionNavigationKind.drawerDestination:
+        final destination = target.drawerDestination;
+        if (destination != null) {
+          _routeDelegate.navigateDrawer(destination);
+          return;
+        }
+        break;
+      case HomeQuickActionNavigationKind.standaloneRoute:
+        break;
     }
 
     final Widget? route = switch (action) {
@@ -2584,7 +2642,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   AiSearchMemosQuery? _buildAiSearchPreflightQuery(String query) {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return null;
-    final dayRange = _aiSearchDayRangeSeconds(widget.dayFilter);
+    final dayRange = _aiSearchDayRangeSeconds(_effectiveDayFilter);
     return (
       searchQuery: trimmed,
       state: widget.state,
@@ -2651,7 +2709,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     final result = await AdvancedSearchSheet.show(
       context,
       initial: _advancedSearchFilters,
-      showCreatedDateFilter: widget.dayFilter == null,
+      showCreatedDateFilter: _effectiveDayFilter == null,
     );
     if (!mounted || result == null) return;
     _headerController.setAdvancedSearchFilters(result);
@@ -2944,10 +3002,40 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     });
   }
 
+  void _setDesktopHomeDayFilter(DateTime day) {
+    if (!_supportsDesktopHomeUtilityEmbedding()) return;
+    final normalized = DateTime(day.year, day.month, day.day);
+    if (DateUtils.isSameDay(_desktopHomeDayFilter, normalized)) {
+      return;
+    }
+    setState(() {
+      _desktopHomeDayFilter = normalized;
+      _desktopHomeUtilityView = DesktopHomeUtilityView.none;
+      _desktopDraftBoxActiveDraftId = null;
+    });
+    _clearDesktopPaneSelection();
+    unawaited(_handleScrollToTop());
+  }
+
+  void _clearDesktopHomeDayFilter() {
+    if (_desktopHomeDayFilter == null) return;
+    setState(() => _desktopHomeDayFilter = null);
+  }
+
   void _handleHomeDrawerDestination(AppDrawerDestination destination) {
     final currentDestination = widget.state == 'ARCHIVED'
         ? AppDrawerDestination.archived
         : AppDrawerDestination.memos;
+    if (destination == AppDrawerDestination.memos) {
+      _clearDesktopHomeDayFilter();
+    }
+    if (destination == AppDrawerDestination.stats &&
+        _showDesktopHomeUtilityView(DesktopHomeUtilityView.stats)) {
+      if (ref.read(devicePreferencesProvider).hapticsEnabled) {
+        HapticFeedback.selectionClick();
+      }
+      return;
+    }
     if (destination == currentDestination &&
         _desktopHomeUtilityView != DesktopHomeUtilityView.none) {
       if (ref.read(devicePreferencesProvider).hapticsEnabled) {
@@ -3277,7 +3365,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     _inlineComposeDefaultVisibility = _inlineComposeCoordinator
         .normalizeVisibility(userSettings?.memoVisibility ?? 'PRIVATE');
     final searchQuery = _searchController.text;
-    final filterDay = widget.dayFilter;
+    final filterDay = _effectiveDayFilter;
     final shortcutsAsync = ref.watch(shortcutsProvider);
     final shortcuts = shortcutsAsync.valueOrNull ?? const <Shortcut>[];
     final mediaQuery = MediaQuery.of(context);
@@ -3308,6 +3396,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       showDrawer: widget.showDrawer,
       showPillActions: widget.showPillActions,
       showFilterTagChip: widget.showFilterTagChip,
+      hasFilterChip: _hasDesktopHomeLocalDayFilter,
       enableCompose: widget.enableCompose,
       hidePrimaryComposeFab: widget.hidePrimaryComposeFab,
       searching: _searching,
@@ -3717,6 +3806,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
             selected: selectedDrawerDestination,
             onSelect: _handleHomeDrawerDestination,
             onSelectTag: _openTagFromDrawer,
+            onSelectDay: _supportsDesktopHomeUtilityEmbedding()
+                ? _setDesktopHomeDayFilter
+                : null,
             onOpenNotifications: _handleHomeOpenNotifications,
             embedded: viewState.layout.useDesktopSidePane,
             selectedTagPath: selectedDrawerTagPath,
@@ -3727,6 +3819,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
             selected: selectedDrawerDestination,
             onSelect: _handleHomeDrawerDestination,
             onSelectTag: _openTagFromDrawer,
+            onSelectDay: _supportsDesktopHomeUtilityEmbedding()
+                ? _setDesktopHomeDayFilter
+                : null,
             onOpenNotifications: _handleHomeOpenNotifications,
             embedded: embedded,
             viewMode: viewMode,
@@ -3793,8 +3888,16 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
             onRemoveSingle: _headerController.removeSingleAdvancedFilter,
           )
         : null;
-    final resolvedTagChip =
-        widget.showFilterTagChip && resolvedTagPath.isNotEmpty
+    final localDayFilter = _desktopHomeDayFilter;
+    final resolvedFilterChip = localDayFilter != null
+        ? MemosListFilterTagChip(
+            label: context.tr(
+              zh: '\u65e5\u671f: ${_dayDateFmt.format(localDayFilter)}',
+              en: 'Date: ${_dayDateFmt.format(localDayFilter)}',
+            ),
+            onClear: _clearDesktopHomeDayFilter,
+          )
+        : widget.showFilterTagChip && resolvedTagPath.isNotEmpty
         ? MemosListFilterTagChip(
             label: '#$resolvedTagPath',
             colors: tagColorLookup.resolveChipColorsByPath(
@@ -3809,6 +3912,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
                       : () => Navigator.of(context).maybePop()),
           )
         : null;
+    final showHeaderFilterChip =
+        widget.showFilterTagChip || localDayFilter != null;
     final tagFilterBarChild =
         widget.showTagFilters &&
             !_searching &&
@@ -4130,6 +4235,11 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         onDraftSelected: (selection) =>
             unawaited(_handleDesktopDraftBoxSelection(selection)),
       ),
+      DesktopHomeUtilityView.stats => StatsScreen(
+        showBackButton: false,
+        presentation: HomeScreenPresentation.desktopEmbedded,
+        onDesktopEmbeddedBack: _clearDesktopHomeUtilityView,
+      ),
     };
     final desktopTrailingActions = <Widget>[
       if (!desktopUtilityActive && sortButton != null) sortButton,
@@ -4173,6 +4283,10 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           _clearDesktopHomeUtilityView();
           return;
         }
+        if (_hasDesktopHomeLocalDayFilter) {
+          _clearDesktopHomeDayFilter();
+          return;
+        }
         final shouldPop = await _routeDelegate.handleWillPop();
         if (!context.mounted) return;
         if (!shouldPop) return;
@@ -4195,7 +4309,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         data: MemosListScreenBodyData(
           viewState: viewState,
           searching: _searching,
-          showFilterTagChip: widget.showFilterTagChip,
+          showFilterTagChip: showHeaderFilterChip,
           enableSearch: widget.enableSearch,
           enableTitleMenu: widget.enableTitleMenu,
           screenshotModeEnabled: screenshotModeEnabled,
@@ -4221,7 +4335,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         titleChild: titleChild,
         searchFieldChild: searchFieldChild,
         sortButton: sortButton,
-        resolvedTagChip: resolvedTagChip,
+        resolvedTagChip: resolvedFilterChip,
         advancedFilterSliver: advancedFilterSliver,
         inlineComposeChild: inlineComposeChild,
         inlineComposePadding: inlineComposePadding,

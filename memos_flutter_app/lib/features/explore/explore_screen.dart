@@ -1623,10 +1623,24 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final previewPaneVisible =
         supportsDesktopPreviewPane && selectedPreviewMemo != null;
     final enableWindowsDragToMove = isWindowsDesktop;
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: widget.presentation,
+          navigationHost: widget.embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: widget.presentation,
+            navigationHost: widget.embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.explore,
       onSelect: (d) => _navigate(context, d),
       onSelectTag: (t) => _openTag(context, t),
+      onSelectDay: onSelectDay,
       onOpenNotifications: () => _openNotifications(context),
       embedded: useDesktopSidePane,
     );
@@ -1699,6 +1713,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         selectedDestination: AppDrawerDestination.explore,
         onSelectDestination: (d) => _navigate(context, d),
         onSelectTag: (t) => _openTag(context, t),
+        onSelectDay: onSelectDay,
         onOpenNotifications: () => _openNotifications(context),
         backgroundColor: bg,
         title: Text(

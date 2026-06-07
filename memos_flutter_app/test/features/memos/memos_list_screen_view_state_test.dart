@@ -572,6 +572,43 @@ void main() {
     );
   });
 
+  test(
+    'local filter chip can reserve header space without a tag route chip',
+    () {
+      final queryState = buildMemosListScreenQueryState(
+        searchQuery: '',
+        filterDay: DateTime(2026, 6, 7),
+        state: 'NORMAL',
+        pageSize: 40,
+        shortcuts: const <Shortcut>[],
+        selectedShortcutId: null,
+        selectedQuickSearchKind: null,
+        resolvedTag: null,
+        advancedFilters: AdvancedSearchFilters.empty,
+        searching: false,
+        showDrawer: true,
+      );
+      final layoutState = buildMemosListScreenLayoutState(
+        query: queryState,
+        desktopPresentation: resolveMemosListDesktopPresentation(
+          screenWidth: 720,
+          showDrawer: true,
+          platform: TargetPlatform.android,
+        ),
+        state: 'NORMAL',
+        showDrawer: true,
+        showPillActions: false,
+        showFilterTagChip: false,
+        hasFilterChip: true,
+        enableCompose: true,
+        hidePrimaryComposeFab: false,
+        searching: false,
+      );
+
+      expect(layoutState.headerBottomHeight, 48);
+    },
+  );
+
   test('view state aggregates templates, recommended tags and active tag', () {
     final queryState = buildMemosListScreenQueryState(
       searchQuery: '',

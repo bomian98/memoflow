@@ -39,6 +39,7 @@ class DesktopDestinationShell extends StatelessWidget {
     required this.body,
     required this.fallback,
     this.onSelectTag,
+    this.onSelectDay,
     this.onOpenNotifications,
     this.actions = const <Widget>[],
     this.trailing,
@@ -66,6 +67,7 @@ class DesktopDestinationShell extends StatelessWidget {
   final AppDrawerDestination selectedDestination;
   final ValueChanged<AppDrawerDestination> onSelectDestination;
   final ValueChanged<String>? onSelectTag;
+  final ValueChanged<DateTime>? onSelectDay;
   final VoidCallback? onOpenNotifications;
   final Widget title;
   final Widget body;
@@ -104,6 +106,7 @@ class DesktopDestinationShell extends StatelessWidget {
         selected: selectedDestination,
         onSelect: onSelectDestination,
         onSelectTag: onSelectTag,
+        onSelectDay: onSelectDay,
         onOpenNotifications: onOpenNotifications,
         embedded: embedded,
         viewMode: viewMode,

@@ -55,6 +55,7 @@ class AppDrawer extends ConsumerStatefulWidget {
     required this.selected,
     required this.onSelect,
     this.onSelectTag,
+    this.onSelectDay,
     this.onOpenNotifications,
     this.embedded = false,
     this.selectedTagPath,
@@ -64,6 +65,7 @@ class AppDrawer extends ConsumerStatefulWidget {
   final AppDrawerDestination? selected;
   final ValueChanged<AppDrawerDestination> onSelect;
   final ValueChanged<String>? onSelectTag;
+  final ValueChanged<DateTime>? onSelectDay;
   final VoidCallback? onOpenNotifications;
   final bool embedded;
   final String? selectedTagPath;
@@ -245,6 +247,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     final selected = widget.selected;
     final onSelect = widget.onSelect;
     final onSelectTag = widget.onSelectTag;
+    final onSelectDay = widget.onSelectDay;
     final onOpenNotifications = widget.onOpenNotifications;
     final embedded = widget.embedded;
     final selectedTagPath = widget.selectedTagPath;
@@ -947,6 +950,8 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                   data: (stats) => _DrawerHeatmap(
                     dailyCounts: stats.dailyCounts,
                     isDark: isDark,
+                    embedded: embedded,
+                    onSelectDay: onSelectDay,
                   ),
                   loading: () => const SizedBox(height: 84),
                   error: (_, _) => const SizedBox(height: 84),
@@ -1292,10 +1297,17 @@ class _BottomNavRow extends StatelessWidget {
 }
 
 class _DrawerHeatmap extends StatelessWidget {
-  const _DrawerHeatmap({required this.dailyCounts, required this.isDark});
+  const _DrawerHeatmap({
+    required this.dailyCounts,
+    required this.isDark,
+    required this.embedded,
+    this.onSelectDay,
+  });
 
   final Map<DateTime, int> dailyCounts;
   final bool isDark;
+  final bool embedded;
+  final ValueChanged<DateTime>? onSelectDay;
 
   @override
   Widget build(BuildContext context) {
@@ -1389,6 +1401,14 @@ class _DrawerHeatmap extends StatelessWidget {
     void openDay(DateTime d, int count) {
       if (count <= 0) {
         showOverlayToast(context.t.strings.legacy.msg_no_memos_day);
+        return;
+      }
+      final handler = onSelectDay;
+      if (handler != null) {
+        if (!embedded) {
+          Navigator.of(context).pop();
+        }
+        handler(d);
         return;
       }
       final navigator = Navigator.of(context);

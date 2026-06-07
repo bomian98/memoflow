@@ -1402,10 +1402,24 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
 
     final deckAsync = ref.watch(randomWalkDeckProvider(_deckQuery));
     final syncState = ref.watch(syncCoordinatorProvider);
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: widget.presentation,
+          navigationHost: widget.embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: widget.presentation,
+            navigationHost: widget.embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.dailyReview,
       onSelect: _navigate,
       onSelectTag: _openTag,
+      onSelectDay: onSelectDay,
       onOpenNotifications: _openNotifications,
       embedded: useDesktopSidePane,
     );
@@ -1744,6 +1758,7 @@ class _DailyReviewScreenState extends ConsumerState<DailyReviewScreen> {
         selectedDestination: AppDrawerDestination.dailyReview,
         onSelectDestination: _navigate,
         onSelectTag: _openTag,
+        onSelectDay: onSelectDay,
         onOpenNotifications: _openNotifications,
         backgroundColor: bg,
         title: Text(

@@ -130,10 +130,24 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
     final useEmbeddedBottomNav =
         widget.presentation == HomeScreenPresentation.embeddedBottomNav;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: widget.presentation,
+          navigationHost: widget.embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: widget.presentation,
+            navigationHost: widget.embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.recycleBin,
       onSelect: _navigate,
       onSelectTag: _openTag,
+      onSelectDay: onSelectDay,
       onOpenNotifications: _openNotifications,
       embedded: useDesktopSidePane,
     );
@@ -279,6 +293,7 @@ class _RecycleBinScreenState extends ConsumerState<RecycleBinScreen> {
         selectedDestination: AppDrawerDestination.recycleBin,
         onSelectDestination: _navigate,
         onSelectTag: _openTag,
+        onSelectDay: onSelectDay,
         onOpenNotifications: _openNotifications,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(context.t.strings.legacy.msg_recycle_bin),

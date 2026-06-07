@@ -147,10 +147,24 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
     final enableWindowsDragToMove = isWindowsDesktop;
     final useEmbeddedBottomNav =
         widget.presentation == HomeScreenPresentation.embeddedBottomNav;
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: widget.presentation,
+          navigationHost: widget.embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: widget.presentation,
+            navigationHost: widget.embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.tags,
       onSelect: (d) => _navigate(context, d),
       onSelectTag: (t) => _openTag(context, t),
+      onSelectDay: onSelectDay,
       onOpenNotifications: () => _openNotifications(context),
       embedded: useDesktopSidePane,
     );
@@ -282,6 +296,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
         selectedDestination: AppDrawerDestination.tags,
         onSelectDestination: (destination) => _navigate(context, destination),
         onSelectTag: (tag) => _openTag(context, tag),
+        onSelectDay: onSelectDay,
         onOpenNotifications: () => _openNotifications(context),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(context.t.strings.legacy.msg_tags),

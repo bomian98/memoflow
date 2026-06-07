@@ -63,6 +63,7 @@ void main() {
       destinationBuilder.contains('DesktopHomeUtilityView.draftBox'),
       isTrue,
     );
+    expect(destinationBuilder.contains('DesktopHomeUtilityView.stats'), isTrue);
     expect(
       memosList.contains(
         'DesktopHomeUtilityView.draftBox => AppDrawerDestination.draftBox',
@@ -77,7 +78,23 @@ void main() {
       reason:
           'Draft Box should render through the Home primary content override.',
     );
+    expect(
+      memosList.contains('DesktopHomeUtilityView.stats => StatsScreen'),
+      isTrue,
+      reason: 'Stats should render through the Home primary content override.',
+    );
+    expect(
+      memosList.contains('resolveHomeQuickActionNavigationTarget'),
+      isTrue,
+      reason: 'Top quick actions should use the shared navigation resolver.',
+    );
+    expect(
+      memosList.contains('_setDesktopHomeDayFilter'),
+      isTrue,
+      reason: 'Desktop heatmap day selection should stay local to home.',
+    );
     expect(memosBody.contains('desktopPrimaryContentOverride'), isTrue);
+    expect(memosBody.contains('resolvedTagChip'), isTrue);
 
     for (final source in <String>[syncQueue, notifications]) {
       expect(source.contains('HomeScreenPresentation.desktopEmbedded'), isTrue);
@@ -103,5 +120,44 @@ void main() {
     }
     expect(stats.contains('openDesktopHomeUtilityDestination'), isTrue);
     expect(stats.contains('DesktopHomeUtilityView.syncQueue'), isTrue);
+
+    final quickActionNavigation = await File(
+      'lib/features/home/home_quick_action_navigation.dart',
+    ).readAsString();
+    final drawer = await File(
+      'lib/features/home/app_drawer.dart',
+    ).readAsString();
+    final destinationShell = await File(
+      'lib/features/home/desktop/desktop_destination_shell.dart',
+    ).readAsString();
+    expect(
+      quickActionNavigation.contains('HomeQuickAction.monthlyStats'),
+      isTrue,
+    );
+    expect(
+      quickActionNavigation.contains('DesktopHomeUtilityView.stats'),
+      isTrue,
+    );
+    expect(
+      quickActionNavigation.contains('AppDrawerDestination.aiSummary'),
+      isTrue,
+    );
+    expect(
+      quickActionNavigation.contains('AppDrawerDestination.dailyReview'),
+      isTrue,
+    );
+    expect(drawer.contains('ValueChanged<DateTime>? onSelectDay'), isTrue);
+    expect(drawer.contains("navigator.pushNamed('/memos/day'"), isTrue);
+    expect(drawer.contains('final handler = onSelectDay'), isTrue);
+    expect(
+      destinationBuilder.contains('openDesktopHomeDayFilterDestination'),
+      isTrue,
+    );
+    expect(destinationBuilder.contains('initialDesktopHomeDayFilter'), isTrue);
+    expect(
+      destinationShell.contains('ValueChanged<DateTime>? onSelectDay'),
+      isTrue,
+    );
+    expect(destinationShell.contains('onSelectDay: onSelectDay'), isTrue);
   });
 }

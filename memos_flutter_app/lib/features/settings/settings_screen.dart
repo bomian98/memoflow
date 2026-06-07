@@ -221,6 +221,19 @@ class SettingsScreen extends ConsumerWidget
     final useDesktopSidePane =
         embeddedNavigationHost != null &&
         shouldUseDesktopSidePaneLayout(MediaQuery.sizeOf(context).width);
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: presentation,
+          navigationHost: embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: presentation,
+            navigationHost: embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = useEmbeddedBottomNav
         ? AppDrawer(
             selected: AppDrawerDestination.settings,
@@ -609,6 +622,7 @@ class SettingsScreen extends ConsumerWidget
               onSelectDestination: (destination) =>
                   _navigate(context, destination),
               onSelectTag: (tag) => _openTag(context, tag),
+              onSelectDay: onSelectDay,
               onOpenNotifications: () => _openNotifications(context),
               backgroundColor: bg,
               title: Text(

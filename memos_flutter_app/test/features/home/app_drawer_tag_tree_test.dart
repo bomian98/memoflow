@@ -381,11 +381,52 @@ void main() {
     );
     expect(find.byIcon(Icons.grid_view), findsOneWidget);
   });
+
+  testWidgets('heatmap uses day selection callback when supplied', (
+    tester,
+  ) async {
+    final today = DateTime.now();
+    final day = DateTime(today.year, today.month, today.day);
+    DateTime? selectedDay;
+
+    await tester.pumpWidget(
+      _buildDrawerApp(
+        tagStats: const <TagStat>[],
+        dailyCounts: <DateTime, int>{day: 2},
+        child: Scaffold(
+          body: AppDrawer(
+            selected: AppDrawerDestination.memos,
+            embedded: true,
+            onSelect: (_) {},
+            onSelectDay: (value) => selectedDay = value,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final dateLabel =
+        '${day.year.toString().padLeft(4, '0')}-'
+        '${day.month.toString().padLeft(2, '0')}-'
+        '${day.day.toString().padLeft(2, '0')}';
+    final heatmapCell = find.byWidgetPredicate(
+      (widget) =>
+          widget is Tooltip && widget.message?.contains(dateLabel) == true,
+    );
+    expect(heatmapCell, findsOneWidget);
+
+    await tester.tap(heatmapCell);
+    await tester.pumpAndSettle();
+
+    expect(selectedDay, day);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Widget _buildDrawerApp({
   required List<TagStat> tagStats,
   required Widget child,
+  Map<DateTime, int> dailyCounts = const <DateTime, int>{},
 }) {
   return ProviderScope(
     overrides: [
@@ -394,13 +435,13 @@ Widget _buildDrawerApp({
       currentLocalLibraryProvider.overrideWith((ref) => null),
       localStatsProvider.overrideWith(
         (ref) => Stream.value(
-          const LocalStats(
+          LocalStats(
             totalMemos: 0,
             archivedMemos: 0,
             activeDays: 0,
             daysSinceFirstMemo: 0,
             totalChars: 0,
-            dailyCounts: <DateTime, int>{},
+            dailyCounts: dailyCounts,
           ),
         ),
       ),

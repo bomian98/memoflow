@@ -61,6 +61,32 @@ MemosListScreen buildDesktopHomeUtilityDestination({
   );
 }
 
+MemosListScreen buildDesktopHomeDayFilterDestination({
+  required BuildContext context,
+  required DateTime day,
+  HomeScreenPresentation presentation = HomeScreenPresentation.standalone,
+  HomeEmbeddedNavigationHost? navigationHost,
+}) {
+  final normalizedDay = DateTime(day.year, day.month, day.day);
+  return MemosListScreen(
+    title: 'MemoFlow',
+    state: 'NORMAL',
+    showDrawer: true,
+    enableCompose: true,
+    presentation: presentation,
+    embeddedNavigationHost: navigationHost,
+    hidePrimaryComposeFab:
+        presentation == HomeScreenPresentation.embeddedBottomNav,
+    enableDesktopResizableHomeInlineCompose:
+        shouldEnableDesktopHomeInlineComposeResize(
+          platform: Theme.of(context).platform,
+          presentation: presentation,
+          navigationHost: navigationHost,
+        ),
+    initialDesktopHomeDayFilter: normalizedDay,
+  );
+}
+
 bool openDesktopHomeUtilityDestination({
   required BuildContext context,
   required DesktopHomeUtilityView utility,
@@ -82,6 +108,32 @@ bool openDesktopHomeUtilityDestination({
       presentation: presentation,
       navigationHost: navigationHost,
     ),
+  );
+  return true;
+}
+
+bool openDesktopHomeDayFilterDestination({
+  required BuildContext context,
+  required DateTime day,
+  HomeScreenPresentation presentation = HomeScreenPresentation.standalone,
+  HomeEmbeddedNavigationHost? navigationHost,
+}) {
+  if (!shouldUseDesktopHomeUtilityDestination(
+    context: context,
+    presentation: presentation,
+    navigationHost: navigationHost,
+  )) {
+    return false;
+  }
+  closeDrawerThenPushReplacement(
+    context,
+    buildDesktopHomeDayFilterDestination(
+      context: context,
+      day: day,
+      presentation: presentation,
+      navigationHost: navigationHost,
+    ),
+    noAnimation: true,
   );
   return true;
 }
@@ -196,9 +248,22 @@ Widget buildDrawerDestinationScreen({
       presentation: presentation,
       embeddedNavigationHost: navigationHost,
     ),
-    AppDrawerDestination.stats => StatsScreen(
-      embeddedNavigationHost: navigationHost,
-    ),
+    AppDrawerDestination.stats =>
+      shouldUseDesktopHomeUtilityDestination(
+            context: context,
+            presentation: presentation,
+            navigationHost: navigationHost,
+          )
+          ? buildDesktopHomeUtilityDestination(
+              context: context,
+              utility: DesktopHomeUtilityView.stats,
+              presentation: presentation,
+              navigationHost: navigationHost,
+            )
+          : StatsScreen(
+              presentation: presentation,
+              embeddedNavigationHost: navigationHost,
+            ),
     AppDrawerDestination.settings => SettingsScreen(
       presentation: presentation,
       embeddedNavigationHost: navigationHost,

@@ -1017,10 +1017,24 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
     final isReport = _view == _AiSummaryView.report;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final useDesktopSidePane = shouldUseDesktopSidePaneLayout(screenWidth);
+    final onSelectDay =
+        shouldUseDesktopHomeUtilityDestination(
+          context: context,
+          presentation: widget.presentation,
+          navigationHost: widget.embeddedNavigationHost,
+        )
+        ? (DateTime day) => openDesktopHomeDayFilterDestination(
+            context: context,
+            day: day,
+            presentation: widget.presentation,
+            navigationHost: widget.embeddedNavigationHost,
+          )
+        : null;
     final drawerPanel = AppDrawer(
       selected: AppDrawerDestination.aiSummary,
       onSelect: (d) => _navigate(context, d),
       onSelectTag: (t) => _openTag(context, t),
+      onSelectDay: onSelectDay,
       onOpenNotifications: () => _openNotifications(context),
       embedded: useDesktopSidePane,
     );
@@ -1071,6 +1085,7 @@ class _AiSummaryScreenState extends ConsumerState<AiSummaryScreen> {
         selectedDestination: AppDrawerDestination.aiSummary,
         onSelectDestination: (d) => _navigate(context, d),
         onSelectTag: (t) => _openTag(context, t),
+        onSelectDay: onSelectDay,
         onOpenNotifications: () => _openNotifications(context),
         backgroundColor: bg,
         title: Text(context.t.strings.legacy.msg_ai_summary),

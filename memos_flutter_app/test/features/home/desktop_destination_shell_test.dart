@@ -120,12 +120,30 @@ void main() {
 
     expect(find.byTooltip('Close destination'), findsOneWidget);
   });
+
+  testWidgets('passes heatmap day selection callback to the shell drawer', (
+    tester,
+  ) async {
+    void handleDay(DateTime day) {}
+
+    await tester.pumpWidget(
+      _buildHarness(
+        platform: TargetPlatform.windows,
+        width: 1400,
+        onSelectDay: handleDay,
+      ),
+    );
+
+    final drawer = tester.widget<AppDrawer>(find.byType(AppDrawer).first);
+    expect(drawer.onSelectDay, same(handleDay));
+  });
 }
 
 Widget _buildHarness({
   required TargetPlatform platform,
   required double width,
   DesktopDestinationDismissalIntent? dismissalIntent,
+  ValueChanged<DateTime>? onSelectDay,
 }) {
   return ProviderScope(
     child: TranslationProvider(
@@ -140,6 +158,7 @@ Widget _buildHarness({
             selectedDestination: AppDrawerDestination.dailyReview,
             onSelectDestination: (_) {},
             onSelectTag: (_) {},
+            onSelectDay: onSelectDay,
             onOpenNotifications: () {},
             title: const Text('Destination'),
             actions: [

@@ -79,11 +79,15 @@ class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({
     super.key,
     this.showBackButton = true,
+    this.presentation = HomeScreenPresentation.standalone,
     this.embeddedNavigationHost,
+    this.onDesktopEmbeddedBack,
   });
 
   final bool showBackButton;
+  final HomeScreenPresentation presentation;
   final HomeEmbeddedNavigationHost? embeddedNavigationHost;
+  final VoidCallback? onDesktopEmbeddedBack;
 
   @override
   ConsumerState<StatsScreen> createState() => _StatsScreenState();
@@ -505,6 +509,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     required Color textMain,
     required Color textMuted,
     required bool isDark,
+    bool showContentTitle = true,
   }) {
     final isDesktop = constraints.maxWidth >= 980;
     final onPickMonth = months.isEmpty ? null : () => _pickMonth(months);
@@ -515,15 +520,17 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         .clamp(120.0, 150.0)
         .toDouble();
     final headerChildren = <Widget>[
-      Text(
-        context.t.strings.legacy.msg_memo_stats,
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          color: textMain,
+      if (showContentTitle) ...[
+        Text(
+          context.t.strings.legacy.msg_memo_stats,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: textMain,
+          ),
         ),
-      ),
-      const SizedBox(height: 12),
+        const SizedBox(height: 12),
+      ],
       _StatsViewModeToggle(
         selectedView: _selectedView,
         onChanged: _setSelectedView,
@@ -710,6 +717,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     required Color card,
     required Color textMain,
     required Color textMuted,
+    bool showContentTitle = true,
   }) {
     final isDesktop = constraints.maxWidth >= 980;
     final monthIndex = months.indexWhere(
@@ -733,15 +741,17 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         .toLegacyAppPreferences();
     final tagColors = ref.watch(tagColorLookupProvider);
     final headerChildren = <Widget>[
-      Text(
-        context.t.strings.legacy.msg_memo_stats,
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          color: textMain,
+      if (showContentTitle) ...[
+        Text(
+          context.t.strings.legacy.msg_memo_stats,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: textMain,
+          ),
         ),
-      ),
-      const SizedBox(height: 12),
+        const SizedBox(height: 12),
+      ],
       _StatsViewModeToggle(
         selectedView: _selectedView,
         onChanged: _setSelectedView,
@@ -973,6 +983,255 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         : MemoFlowPalette.textLight;
     final textMuted = textMain.withValues(alpha: isDark ? 0.55 : 0.6);
     final statsAsync = ref.watch(localStatsProvider);
+    final embedded =
+        widget.presentation == HomeScreenPresentation.desktopEmbedded;
+
+    Future<void> shareStats() async {
+      final stats = statsAsync.valueOrNull;
+      if (stats == null) {
+        showTopToast(context, context.t.strings.legacy.msg_stats_loading);
+        return;
+      }
+      await _shareStatsPoster();
+    }
+
+    final statsBody = statsAsync.when(
+      data: (stats) {
+        final months = _deriveMonths(stats.dailyCounts);
+        final selected = _selectedMonth;
+        final effectiveMonth =
+            months.isNotEmpty &&
+                !months.any(
+                  (m) => m.year == selected.year && m.month == selected.month,
+                )
+            ? months.first
+            : selected;
+
+        final monthlyKey = (
+          year: effectiveMonth.year,
+          month: effectiveMonth.month,
+        );
+        final previousMonth = DateTime(
+          effectiveMonth.year,
+          effectiveMonth.month - 1,
+          1,
+        );
+        final previousKey = (
+          year: previousMonth.year,
+          month: previousMonth.month,
+        );
+
+        final monthlyAsync = ref.watch(monthlyStatsProvider(monthlyKey));
+        final previousAsync = ref.watch(monthlyStatsProvider(previousKey));
+        final annualAsync = ref.watch(annualInsightsProvider(monthlyKey));
+        final writingHourAsync = ref.watch(writingHourSummaryProvider);
+
+        final monthly = monthlyAsync.valueOrNull;
+        final previous = previousAsync.valueOrNull;
+        final annual = annualAsync.valueOrNull;
+        final hasError =
+            monthlyAsync.hasError ||
+            previousAsync.hasError ||
+            annualAsync.hasError;
+        if (monthly == null || previous == null || annual == null) {
+          if (hasError) {
+            final error =
+                monthlyAsync.asError?.error ??
+                previousAsync.asError?.error ??
+                annualAsync.asError?.error;
+            return Center(
+              child: Text(
+                context.t.strings.legacy.msg_failed_load_4(
+                  e: error?.toString() ?? '',
+                ),
+              ),
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final monthDate = DateTime(monthly.year, monthly.month, 1);
+        final monthLabel = _formatMonth(monthDate);
+        final monthTitle = context.t.strings.legacy.msg_monthly_overview(
+          month: monthLabel,
+        );
+        final trendMonthLabel = DateFormat(
+          'MMM yyyy',
+          Localizations.localeOf(context).toLanguageTag(),
+        ).format(monthDate);
+        final growth = _buildMonthlyGrowthSummary(
+          context: context,
+          current: monthly.totalMemos,
+          previous: previous.totalMemos,
+        );
+
+        final daySeries = _toMonthSeries(monthDate, monthly.dailyCounts);
+        final lastYear = _lastNDaysCounts(stats.dailyCounts, days: 365);
+        final currentStreak = _currentStreakDays(stats.dailyCounts);
+        final longestStreak = _longestStreakDays(stats.dailyCounts);
+        final averageDailyChars = _averageCharsPerNaturalDay(
+          totalChars: stats.totalChars,
+          naturalDays: stats.daysSinceFirstMemo,
+        );
+        final writingHourSummary = writingHourAsync.valueOrNull;
+        final commonWritingTime = _formatHourRange(
+          writingHourSummary?.peakHour,
+        );
+        final activeWeekday = _mostActiveWeekday(stats.dailyCounts);
+        final mostActiveWeekdayLabel = _weekdayLabel(
+          context,
+          activeWeekday?.weekday,
+        );
+        final mostActiveWeekdayTooltip = activeWeekday == null
+            ? null
+            : context.t.strings.legacy.msg_total_count_times(
+                count: _formatNumber(activeWeekday.count),
+              );
+        final bottomItems = <_MetricItemNew>[
+          _MetricItemNew(
+            icon: Icons.local_fire_department_outlined,
+            label: context.t.strings.legacy.msg_current_streak_days,
+            value: _formatNumber(currentStreak),
+            centerValue: true,
+          ),
+          _MetricItemNew(
+            icon: Icons.calendar_month_outlined,
+            label: context.t.strings.legacy.msg_total_days,
+            value: _formatNumber(stats.daysSinceFirstMemo),
+            centerValue: true,
+          ),
+          _MetricItemNew(
+            icon: Icons.text_fields_rounded,
+            label: context.t.strings.legacy.msg_average_daily_characters,
+            value: _formatNumber(averageDailyChars),
+            centerValue: true,
+          ),
+          _MetricItemNew(
+            icon: Icons.emoji_events_outlined,
+            label: context.t.strings.legacy.msg_longest_streak_days,
+            value: _formatNumber(longestStreak),
+            centerValue: true,
+          ),
+        ];
+        final additionalBottomItems = <_MetricItemNew>[
+          _MetricItemNew(
+            icon: Icons.article_outlined,
+            label: context.t.strings.legacy.msg_total_memos_metric,
+            value: _formatNumber(stats.totalMemos),
+            centerValue: true,
+          ),
+          _MetricItemNew(
+            icon: Icons.description_outlined,
+            label: context.t.strings.legacy.msg_total_characters_metric,
+            value: _formatNumber(stats.totalChars),
+            centerValue: true,
+          ),
+          _MetricItemNew(
+            icon: Icons.schedule_outlined,
+            label: context.t.strings.legacy.msg_common_writing_time,
+            value: commonWritingTime,
+            centerValue: true,
+          ),
+          _MetricItemNew(
+            icon: Icons.today_outlined,
+            label: context.t.strings.legacy.msg_most_active_day,
+            value: mostActiveWeekdayLabel,
+            centerValue: true,
+            tooltip: mostActiveWeekdayTooltip,
+          ),
+        ];
+
+        return RepaintBoundary(
+          key: _posterBoundaryKey,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (_selectedView == _StatsScreenView.calendar) {
+                return _buildCalendarStatsContent(
+                  constraints: constraints,
+                  months: months,
+                  monthDate: monthDate,
+                  monthly: monthly,
+                  card: card,
+                  textMain: textMain,
+                  textMuted: textMuted,
+                  showContentTitle: !embedded,
+                );
+              }
+              return _buildDataStatsContent(
+                constraints: constraints,
+                months: months,
+                monthTitle: monthTitle,
+                monthLabel: monthLabel,
+                monthly: monthly,
+                growth: growth,
+                trendMonthLabel: trendMonthLabel,
+                monthDate: monthDate,
+                daySeries: daySeries,
+                lastYear: lastYear,
+                annual: annual,
+                bottomItems: bottomItems,
+                additionalBottomItems: additionalBottomItems,
+                card: card,
+                textMain: textMain,
+                textMuted: textMuted,
+                isDark: isDark,
+                showContentTitle: !embedded,
+              );
+            },
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) =>
+          Center(child: Text(context.t.strings.legacy.msg_failed_load_4(e: e))),
+    );
+
+    if (embedded) {
+      final divider = isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.08);
+      return ColoredBox(
+        color: bg,
+        child: Column(
+          children: [
+            Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: bg,
+                border: Border(bottom: BorderSide(color: divider)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: context.t.strings.legacy.msg_back,
+                    icon: Icon(PlatformIcons.back),
+                    onPressed: widget.onDesktopEmbeddedBack ?? _handleBack,
+                  ),
+                  Expanded(
+                    child: Text(
+                      context.t.strings.legacy.msg_memo_stats,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: textMain,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: shareStats,
+                    child: Text(context.t.strings.legacy.msg_share),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: statsBody),
+          ],
+        ),
+      );
+    }
 
     return PopScope(
       canPop: false,
@@ -993,17 +1252,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             : null,
         actions: [
           TextButton(
-            onPressed: () async {
-              final stats = statsAsync.valueOrNull;
-              if (stats == null) {
-                showTopToast(
-                  context,
-                  context.t.strings.legacy.msg_stats_loading,
-                );
-                return;
-              }
-              await _shareStatsPoster();
-            },
+            onPressed: shareStats,
             child: Text(
               context.t.strings.legacy.msg_share,
               style: TextStyle(
@@ -1014,196 +1263,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             ),
           ),
         ],
-        body: statsAsync.when(
-          data: (stats) {
-            final months = _deriveMonths(stats.dailyCounts);
-            final selected = _selectedMonth;
-            final effectiveMonth =
-                months.isNotEmpty &&
-                    !months.any(
-                      (m) =>
-                          m.year == selected.year && m.month == selected.month,
-                    )
-                ? months.first
-                : selected;
-
-            final monthlyKey = (
-              year: effectiveMonth.year,
-              month: effectiveMonth.month,
-            );
-            final previousMonth = DateTime(
-              effectiveMonth.year,
-              effectiveMonth.month - 1,
-              1,
-            );
-            final previousKey = (
-              year: previousMonth.year,
-              month: previousMonth.month,
-            );
-
-            final monthlyAsync = ref.watch(monthlyStatsProvider(monthlyKey));
-            final previousAsync = ref.watch(monthlyStatsProvider(previousKey));
-            final annualAsync = ref.watch(annualInsightsProvider(monthlyKey));
-            final writingHourAsync = ref.watch(writingHourSummaryProvider);
-
-            final monthly = monthlyAsync.valueOrNull;
-            final previous = previousAsync.valueOrNull;
-            final annual = annualAsync.valueOrNull;
-            final hasError =
-                monthlyAsync.hasError ||
-                previousAsync.hasError ||
-                annualAsync.hasError;
-            if (monthly == null || previous == null || annual == null) {
-              if (hasError) {
-                final error =
-                    monthlyAsync.asError?.error ??
-                    previousAsync.asError?.error ??
-                    annualAsync.asError?.error;
-                return Center(
-                  child: Text(
-                    context.t.strings.legacy.msg_failed_load_4(
-                      e: error?.toString() ?? '',
-                    ),
-                  ),
-                );
-              }
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final monthDate = DateTime(monthly.year, monthly.month, 1);
-            final monthLabel = _formatMonth(monthDate);
-            final monthTitle = context.t.strings.legacy.msg_monthly_overview(
-              month: monthLabel,
-            );
-            final trendMonthLabel = DateFormat(
-              'MMM yyyy',
-              Localizations.localeOf(context).toLanguageTag(),
-            ).format(monthDate);
-            final growth = _buildMonthlyGrowthSummary(
-              context: context,
-              current: monthly.totalMemos,
-              previous: previous.totalMemos,
-            );
-
-            final daySeries = _toMonthSeries(monthDate, monthly.dailyCounts);
-            final lastYear = _lastNDaysCounts(stats.dailyCounts, days: 365);
-            final currentStreak = _currentStreakDays(stats.dailyCounts);
-            final longestStreak = _longestStreakDays(stats.dailyCounts);
-            final averageDailyChars = _averageCharsPerNaturalDay(
-              totalChars: stats.totalChars,
-              naturalDays: stats.daysSinceFirstMemo,
-            );
-            final writingHourSummary = writingHourAsync.valueOrNull;
-            final commonWritingTime = _formatHourRange(
-              writingHourSummary?.peakHour,
-            );
-            final activeWeekday = _mostActiveWeekday(stats.dailyCounts);
-            final mostActiveWeekdayLabel = _weekdayLabel(
-              context,
-              activeWeekday?.weekday,
-            );
-            final mostActiveWeekdayTooltip = activeWeekday == null
-                ? null
-                : context.t.strings.legacy.msg_total_count_times(
-                    count: _formatNumber(activeWeekday.count),
-                  );
-            final bottomItems = <_MetricItemNew>[
-              _MetricItemNew(
-                icon: Icons.local_fire_department_outlined,
-                label: context.t.strings.legacy.msg_current_streak_days,
-                value: _formatNumber(currentStreak),
-                centerValue: true,
-              ),
-              _MetricItemNew(
-                icon: Icons.calendar_month_outlined,
-                label: context.t.strings.legacy.msg_total_days,
-                value: _formatNumber(stats.daysSinceFirstMemo),
-                centerValue: true,
-              ),
-              _MetricItemNew(
-                icon: Icons.text_fields_rounded,
-                label: context.t.strings.legacy.msg_average_daily_characters,
-                value: _formatNumber(averageDailyChars),
-                centerValue: true,
-              ),
-              _MetricItemNew(
-                icon: Icons.emoji_events_outlined,
-                label: context.t.strings.legacy.msg_longest_streak_days,
-                value: _formatNumber(longestStreak),
-                centerValue: true,
-              ),
-            ];
-            final additionalBottomItems = <_MetricItemNew>[
-              _MetricItemNew(
-                icon: Icons.article_outlined,
-                label: context.t.strings.legacy.msg_total_memos_metric,
-                value: _formatNumber(stats.totalMemos),
-                centerValue: true,
-              ),
-              _MetricItemNew(
-                icon: Icons.description_outlined,
-                label: context.t.strings.legacy.msg_total_characters_metric,
-                value: _formatNumber(stats.totalChars),
-                centerValue: true,
-              ),
-              _MetricItemNew(
-                icon: Icons.schedule_outlined,
-                label: context.t.strings.legacy.msg_common_writing_time,
-                value: commonWritingTime,
-                centerValue: true,
-              ),
-              _MetricItemNew(
-                icon: Icons.today_outlined,
-                label: context.t.strings.legacy.msg_most_active_day,
-                value: mostActiveWeekdayLabel,
-                centerValue: true,
-                tooltip: mostActiveWeekdayTooltip,
-              ),
-            ];
-
-            return RepaintBoundary(
-              key: _posterBoundaryKey,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  if (_selectedView == _StatsScreenView.calendar) {
-                    return _buildCalendarStatsContent(
-                      constraints: constraints,
-                      months: months,
-                      monthDate: monthDate,
-                      monthly: monthly,
-                      card: card,
-                      textMain: textMain,
-                      textMuted: textMuted,
-                    );
-                  }
-                  return _buildDataStatsContent(
-                    constraints: constraints,
-                    months: months,
-                    monthTitle: monthTitle,
-                    monthLabel: monthLabel,
-                    monthly: monthly,
-                    growth: growth,
-                    trendMonthLabel: trendMonthLabel,
-                    monthDate: monthDate,
-                    daySeries: daySeries,
-                    lastYear: lastYear,
-                    annual: annual,
-                    bottomItems: bottomItems,
-                    additionalBottomItems: additionalBottomItems,
-                    card: card,
-                    textMain: textMain,
-                    textMuted: textMuted,
-                    isDark: isDark,
-                  );
-                },
-              ),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(
-            child: Text(context.t.strings.legacy.msg_failed_load_4(e: e)),
-          ),
-        ),
+        body: statsBody,
       ),
     );
   }
