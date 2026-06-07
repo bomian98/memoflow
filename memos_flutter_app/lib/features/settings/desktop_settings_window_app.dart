@@ -701,6 +701,7 @@ class _DesktopSettingsWindowScreenState
 
   Future<void> _closeWindowForExit() async {
     _windowVisible = false;
+    await _notifyMainWindowVisibility(false);
     try {
       await WindowController.fromWindowId(widget.windowId).close();
       return;

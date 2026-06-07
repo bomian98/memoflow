@@ -97,6 +97,43 @@ void main() {
     );
   });
 
+  test(
+    'desktop settings visibility lifecycle stays out of feature imports',
+    () async {
+      final files = <File>[
+        File('lib/application/desktop/desktop_window_manager.dart'),
+        File('lib/application/desktop/desktop_settings_window.dart'),
+      ];
+
+      final violations = <String>[];
+      for (final file in files) {
+        final source = p
+            .relative(file.path, from: Directory.current.path)
+            .replaceAll('\\', '/');
+        final contents = await file.readAsString();
+        for (final match in RegExp(
+          r"^import '([^']+)';",
+          multiLine: true,
+        ).allMatches(contents)) {
+          final target = _resolveLocalImport(source, match.group(1)!);
+          if (target != null && target.startsWith('lib/features/')) {
+            violations.add('$source -> $target');
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason: violations.isEmpty
+            ? null
+            : 'Desktop settings visibility lifecycle must remain owned by '
+                  'application/desktop seams, not feature widgets:\n'
+                  '${violations.join('\n')}',
+      );
+    },
+  );
+
   test('core upward dependencies stay inside the evolve allowlist', () async {
     const evolveAllowlist = <String>{
       'lib/core/desktop_window_controls.dart -> lib/application/desktop/desktop_exit_coordinator.dart',

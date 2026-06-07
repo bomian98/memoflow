@@ -434,6 +434,66 @@ void main() {
     },
   );
 
+  testWidgets('sub-window exit reports invisible before closing', (
+    tester,
+  ) async {
+    final sessionController = _TestSessionController();
+    final visibilityPayloads = <Map<Object?, Object?>>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_multiWindowEventChannel, (call) async {
+          switch (call.method) {
+            case 'desktop.quickInput.ping':
+            case 'desktop.settings.ping':
+              return true;
+            case 'desktop.subWindow.visibility':
+              final args = call.arguments;
+              if (args is Map) {
+                visibilityPayloads.add(Map<Object?, Object?>.from(args));
+              }
+              return true;
+            case 'desktop.main.getWorkspaceSnapshot':
+              return <String, dynamic>{
+                'currentKey': null,
+                'hasCurrentAccount': false,
+                'hasLocalLibrary': false,
+              };
+          }
+          return true;
+        });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appSessionProvider.overrideWith((ref) => sessionController),
+          appPreferencesProvider.overrideWith(
+            (ref) => _TestAppPreferencesController(ref),
+          ),
+        ],
+        child: const DesktopSettingsWindowApp(windowId: 7),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    visibilityPayloads.clear();
+
+    final accepted = await _dispatchIncomingMultiWindowMethod(
+      desktopSubWindowExitMethod,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(accepted, isTrue);
+    expect(
+      visibilityPayloads,
+      contains(
+        allOf(
+          containsPair('targetWindowId', 0),
+          containsPair('arguments', containsPair('visible', false)),
+        ),
+      ),
+    );
+  });
+
   testWidgets('macOS settings title avoids native traffic lights', (
     tester,
   ) async {

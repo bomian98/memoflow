@@ -42,6 +42,43 @@ typedef DesktopSettingsFallbackLauncher = Future<void> Function();
 typedef DesktopShareTaskMethodHandler =
     Future<bool> Function(Object? arguments, int fromWindowId);
 
+abstract interface class DesktopSubWindowClient {
+  Future<Set<int>> getAllSubWindowIds();
+
+  Future<dynamic> invokeMethod(
+    int windowId,
+    String method, [
+    dynamic arguments,
+  ]);
+
+  Future<void> show(int windowId);
+}
+
+class DesktopMultiWindowSubWindowClient implements DesktopSubWindowClient {
+  const DesktopMultiWindowSubWindowClient();
+
+  @override
+  Future<Set<int>> getAllSubWindowIds() async {
+    return (await DesktopMultiWindow.getAllSubWindowIds())
+        .where((id) => id > 0)
+        .toSet();
+  }
+
+  @override
+  Future<dynamic> invokeMethod(
+    int windowId,
+    String method, [
+    dynamic arguments,
+  ]) {
+    return DesktopMultiWindow.invokeMethod(windowId, method, arguments);
+  }
+
+  @override
+  Future<void> show(int windowId) {
+    return WindowController.fromWindowId(windowId).show();
+  }
+}
+
 class DesktopWindowManager {
   DesktopWindowManager({
     required AppBootstrapAdapter bootstrapAdapter,
@@ -54,6 +91,8 @@ class DesktopWindowManager {
     DesktopShareTaskMethodHandler? handleShareTaskCanceled,
     required bool Function() isMounted,
     required VoidCallback onVisibilityChanged,
+    DesktopSubWindowClient? subWindowClient,
+    Duration? visibilityWatchdogInterval,
   }) : _bootstrapAdapter = bootstrapAdapter,
        _ref = ref,
        _navigatorKey = navigatorKey,
@@ -63,7 +102,11 @@ class DesktopWindowManager {
        _handleShareTaskResult = handleShareTaskResult,
        _handleShareTaskCanceled = handleShareTaskCanceled,
        _isMounted = isMounted,
-       _onVisibilityChanged = onVisibilityChanged;
+       _onVisibilityChanged = onVisibilityChanged,
+       _subWindowClient =
+           subWindowClient ?? const DesktopMultiWindowSubWindowClient(),
+       _desktopSubWindowVisibilityWatchdogInterval =
+           visibilityWatchdogInterval ?? _desktopSubWindowVisibilityWatchdog;
 
   final AppBootstrapAdapter _bootstrapAdapter;
   final WidgetRef _ref;
@@ -75,12 +118,15 @@ class DesktopWindowManager {
   final DesktopShareTaskMethodHandler? _handleShareTaskCanceled;
   final bool Function() _isMounted;
   final VoidCallback _onVisibilityChanged;
+  final DesktopSubWindowClient _subWindowClient;
+  final Duration _desktopSubWindowVisibilityWatchdogInterval;
 
   final Set<int> _desktopVisibleSubWindowIds = <int>{};
   bool _desktopSubWindowVisibilitySyncInProgress = false;
   bool _desktopSubWindowVisibilitySyncQueued = false;
   bool _desktopSubWindowVisibilitySyncScheduled = false;
   DateTime? _lastDesktopSubWindowVisibilitySyncAt;
+  Timer? _desktopSubWindowVisibilityWatchdogTimer;
   int? _desktopQuickInputWindowId;
   ProviderSubscription<SyncCoordinatorState>? _syncCoordinatorSub;
   WebDavBackupProgressTracker? _boundBackupProgressTracker;
@@ -93,6 +139,9 @@ class DesktopWindowManager {
 
   static const Duration _desktopSubWindowVisibilitySyncDebounce = Duration(
     milliseconds: 360,
+  );
+  static const Duration _desktopSubWindowVisibilityWatchdog = Duration(
+    milliseconds: 750,
   );
   static const Duration _desktopQuickInputIdlePrewarmDelay = Duration(
     seconds: 2,
@@ -125,6 +174,8 @@ class DesktopWindowManager {
   }
 
   void dispose() {
+    _desktopSubWindowVisibilityWatchdogTimer?.cancel();
+    _desktopSubWindowVisibilityWatchdogTimer = null;
     _quickInputIdlePrewarmTimer?.cancel();
     _quickInputIdlePrewarmTimer = null;
     _unbindQuickInputIdleKeyboardHandler();
@@ -149,12 +200,23 @@ class DesktopWindowManager {
     final changed = visible
         ? _desktopVisibleSubWindowIds.add(windowId)
         : _desktopVisibleSubWindowIds.remove(windowId);
-    if (!changed || !_isMounted()) return;
-    _onVisibilityChanged();
+    if (!_isMounted()) return;
+    if (changed) {
+      _onVisibilityChanged();
+    }
+    if (visible) {
+      scheduleVisibilitySync(force: true);
+    } else if (_desktopVisibleSubWindowIds.isEmpty) {
+      _cancelDesktopSubWindowVisibilityWatchdog();
+    }
   }
 
   void scheduleVisibilitySync({bool force = false}) {
-    if (kIsWeb || _desktopVisibleSubWindowIds.isEmpty) return;
+    if (kIsWeb || _desktopVisibleSubWindowIds.isEmpty) {
+      _cancelDesktopSubWindowVisibilityWatchdog();
+      return;
+    }
+    _ensureDesktopSubWindowVisibilityWatchdog();
     if (!force) {
       final last = _lastDesktopSubWindowVisibilitySyncAt;
       if (last != null &&
@@ -178,6 +240,11 @@ class DesktopWindowManager {
     final candidateIds = _desktopVisibleSubWindowIds.toList(growable: false)
       ..sort((a, b) => b.compareTo(a));
     for (final id in candidateIds) {
+      final visible = await _isDesktopSubWindowStillVisible(id);
+      if (visible == false) {
+        setSubWindowVisibility(windowId: id, visible: false);
+        continue;
+      }
       final focused = await _focusDesktopSubWindowById(id);
       if (focused) return;
       setSubWindowVisibility(windowId: id, visible: false);
@@ -244,6 +311,15 @@ class DesktopWindowManager {
   }) {
     return _handleMethodCall(call, fromWindowId);
   }
+
+  @visibleForTesting
+  Future<void> syncDesktopSubWindowVisibilityForTest() {
+    return _syncDesktopSubWindowVisibility();
+  }
+
+  @visibleForTesting
+  Set<int> get visibleSubWindowIdsForTest =>
+      Set<int>.unmodifiable(_desktopVisibleSubWindowIds);
 
   Future<dynamic> _handleMethodCall(MethodCall call, int fromWindowId) async {
     if (!_isMounted()) return null;
@@ -1013,12 +1089,7 @@ class DesktopWindowManager {
     try {
       final trackedIds = _desktopVisibleSubWindowIds.toSet();
       final nextVisibleIds = <int>{};
-      Set<int>? existingIds;
-      try {
-        existingIds = (await DesktopMultiWindow.getAllSubWindowIds())
-            .where((id) => id > 0)
-            .toSet();
-      } catch (_) {}
+      final existingIds = await _getDesktopSubWindowIds();
 
       for (final id in trackedIds) {
         if (existingIds != null && !existingIds.contains(id)) {
@@ -1034,26 +1105,47 @@ class DesktopWindowManager {
         }
       }
 
-      if (!_isMounted() ||
-          setEquals(nextVisibleIds, _desktopVisibleSubWindowIds)) {
-        return;
-      }
-      _desktopVisibleSubWindowIds
-        ..clear()
-        ..addAll(nextVisibleIds);
-      _onVisibilityChanged();
+      _replaceDesktopVisibleSubWindowIds(nextVisibleIds);
     } finally {
       _desktopSubWindowVisibilitySyncInProgress = false;
       if (_desktopSubWindowVisibilitySyncQueued) {
         _desktopSubWindowVisibilitySyncQueued = false;
         unawaited(_syncDesktopSubWindowVisibility());
       }
+      if (_desktopVisibleSubWindowIds.isEmpty) {
+        _cancelDesktopSubWindowVisibilityWatchdog();
+      } else if (_isMounted()) {
+        _ensureDesktopSubWindowVisibilityWatchdog();
+      }
+    }
+  }
+
+  Future<Set<int>?> _getDesktopSubWindowIds() async {
+    try {
+      return await _subWindowClient.getAllSubWindowIds();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _replaceDesktopVisibleSubWindowIds(Set<int> nextVisibleIds) {
+    if (setEquals(nextVisibleIds, _desktopVisibleSubWindowIds)) {
+      return;
+    }
+    _desktopVisibleSubWindowIds
+      ..clear()
+      ..addAll(nextVisibleIds);
+    if (_desktopVisibleSubWindowIds.isEmpty) {
+      _cancelDesktopSubWindowVisibilityWatchdog();
+    }
+    if (_isMounted()) {
+      _onVisibilityChanged();
     }
   }
 
   Future<bool?> _queryDesktopSubWindowVisible(int windowId) async {
     try {
-      final result = await DesktopMultiWindow.invokeMethod(
+      final result = await _subWindowClient.invokeMethod(
         windowId,
         desktopSubWindowIsVisibleMethod,
         null,
@@ -1066,7 +1158,7 @@ class DesktopWindowManager {
 
   Future<bool> _isDesktopSubWindowResponsive(int windowId) async {
     try {
-      final result = await DesktopMultiWindow.invokeMethod(
+      final result = await _subWindowClient.invokeMethod(
         windowId,
         desktopSettingsPingMethod,
         null,
@@ -1076,7 +1168,7 @@ class DesktopWindowManager {
       }
     } catch (_) {}
     try {
-      final result = await DesktopMultiWindow.invokeMethod(
+      final result = await _subWindowClient.invokeMethod(
         windowId,
         desktopQuickInputPingMethod,
         null,
@@ -1087,14 +1179,27 @@ class DesktopWindowManager {
     }
   }
 
+  Future<bool> _isDesktopSubWindowStillVisible(int windowId) async {
+    final existingIds = await _getDesktopSubWindowIds();
+    if (existingIds != null && !existingIds.contains(windowId)) {
+      return false;
+    }
+    final visible = await _queryDesktopSubWindowVisible(windowId);
+    if (visible != null) return visible;
+    if (existingIds == null) {
+      return _isDesktopSubWindowResponsive(windowId);
+    }
+    return true;
+  }
+
   Future<bool> _focusDesktopSubWindowById(int windowId) async {
     try {
-      await WindowController.fromWindowId(windowId).show();
+      await _subWindowClient.show(windowId);
     } catch (_) {}
 
     if (_desktopQuickInputWindowId == windowId) {
       try {
-        await DesktopMultiWindow.invokeMethod(
+        await _subWindowClient.invokeMethod(
           windowId,
           desktopQuickInputFocusMethod,
           null,
@@ -1102,7 +1207,7 @@ class DesktopWindowManager {
         return true;
       } catch (_) {}
       try {
-        await DesktopMultiWindow.invokeMethod(
+        await _subWindowClient.invokeMethod(
           windowId,
           desktopSettingsFocusMethod,
           null,
@@ -1113,7 +1218,7 @@ class DesktopWindowManager {
     }
 
     try {
-      await DesktopMultiWindow.invokeMethod(
+      await _subWindowClient.invokeMethod(
         windowId,
         desktopSettingsFocusMethod,
         null,
@@ -1121,7 +1226,7 @@ class DesktopWindowManager {
       return true;
     } catch (_) {}
     try {
-      await DesktopMultiWindow.invokeMethod(
+      await _subWindowClient.invokeMethod(
         windowId,
         desktopQuickInputFocusMethod,
         null,
@@ -1129,6 +1234,38 @@ class DesktopWindowManager {
       return true;
     } catch (_) {}
     return false;
+  }
+
+  void _ensureDesktopSubWindowVisibilityWatchdog() {
+    if (kIsWeb ||
+        _desktopVisibleSubWindowIds.isEmpty ||
+        !_isMounted() ||
+        _desktopSubWindowVisibilityWatchdogTimer != null) {
+      return;
+    }
+    _desktopSubWindowVisibilityWatchdogTimer = Timer(
+      _desktopSubWindowVisibilityWatchdogInterval,
+      () {
+        _desktopSubWindowVisibilityWatchdogTimer = null;
+        if (kIsWeb || _desktopVisibleSubWindowIds.isEmpty || !_isMounted()) {
+          return;
+        }
+        unawaited(
+          _syncDesktopSubWindowVisibility().whenComplete(() {
+            if (!kIsWeb &&
+                _desktopVisibleSubWindowIds.isNotEmpty &&
+                _isMounted()) {
+              _ensureDesktopSubWindowVisibilityWatchdog();
+            }
+          }),
+        );
+      },
+    );
+  }
+
+  void _cancelDesktopSubWindowVisibilityWatchdog() {
+    _desktopSubWindowVisibilityWatchdogTimer?.cancel();
+    _desktopSubWindowVisibilityWatchdogTimer = null;
   }
 
   void _resetQuickInputIdlePrewarmTimer({required String source}) {
