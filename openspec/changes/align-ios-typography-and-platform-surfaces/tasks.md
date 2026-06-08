@@ -32,7 +32,7 @@
 - [x] 5.2 在 `memos_flutter_app` 运行 focused settings/platform widget tests。
 - [x] 5.3 在 `memos_flutter_app` 运行相关 architecture guardrail tests。
 - [x] 5.4 在 `memos_flutter_app` 运行 `flutter analyze`。
-- [ ] 5.5 在 `memos_flutter_app` 运行 `flutter test`。
+- [x] 5.5 在 `memos_flutter_app` 运行 `flutter test`。
 - [x] 5.6 提交前检查 staged 和 unstaged changes，确认没有商业、订阅、计费、entitlement、paywall、StoreKit 或其他 paid-feature code 泄漏到 public repository。
 
 ## 6. iOS 设置行 value metadata 修复
