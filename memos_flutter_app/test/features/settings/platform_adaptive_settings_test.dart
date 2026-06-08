@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
+import 'package:memos_flutter_app/core/system_fonts.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
 import 'package:memos_flutter_app/data/models/app_preferences.dart';
 import 'package:memos_flutter_app/data/models/device_preferences.dart';
@@ -161,6 +162,60 @@ void main() {
     expect(find.byType(CupertinoListTile), findsWidgets);
   });
 
+  testWidgets(
+    'preferences value rows use bounded Cupertino metadata under large iPhone text',
+    (tester) async {
+      await _setViewport(tester, const Size(390, 844));
+      debugPlatformTargetOverride = TargetPlatform.iOS;
+
+      await tester.pumpWidget(
+        _buildApp(
+          child: const PreferencesSettingsScreen(),
+          mediaQueryData: const MediaQueryData(
+            size: Size(390, 844),
+            textScaler: TextScaler.linear(2.4),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+
+      final valueTileFinder = find.ancestor(
+        of: find.text('Standard'),
+        matching: find.byType(CupertinoListTile),
+      );
+      expect(valueTileFinder, findsOneWidget);
+
+      final valueTile = tester.widget<CupertinoListTile>(valueTileFinder);
+      expect(valueTile.additionalInfo, isNotNull);
+      expect(valueTile.trailing, isA<Icon>());
+    },
+  );
+
+  testWidgets('preferences value rows keep Material trailing on Android', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(390, 844));
+    debugPlatformTargetOverride = TargetPlatform.android;
+
+    await tester.pumpWidget(
+      _buildApp(child: const PreferencesSettingsScreen()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CupertinoListTile), findsNothing);
+
+    final valueTileFinder = find.ancestor(
+      of: find.text('Standard'),
+      matching: find.byType(ListTile),
+    );
+    expect(valueTileFinder, findsOneWidget);
+
+    final valueTile = tester.widget<ListTile>(valueTileFinder);
+    expect(valueTile.trailing, isA<Row>());
+  });
+
   testWidgets('preferences enum choices use desktop picker dialog', (
     tester,
   ) async {
@@ -179,6 +234,65 @@ void main() {
     expect(find.byType(Dialog), findsOneWidget);
     expect(find.byType(BottomSheet), findsNothing);
     expect(find.text('Large'), findsOneWidget);
+  });
+
+  testWidgets('preferences font entry is system-default only on iPhone', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(390, 844));
+    debugPlatformTargetOverride = TargetPlatform.iOS;
+
+    await tester.pumpWidget(
+      _buildApp(
+        child: const PreferencesSettingsScreen(),
+        devicePreferences: DevicePreferences.defaultsForLanguage(
+          AppLanguage.en,
+        ).copyWith(fontFamily: 'Inter', fontFile: 'fonts/Inter.ttf'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('System Default'), findsOneWidget);
+    expect(find.text('Inter'), findsNothing);
+
+    await tester.tap(find.text('Font').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('No system fonts found'), findsNothing);
+    expect(find.byType(ListTile), findsNothing);
+  });
+
+  testWidgets('preferences font picker remains available on desktop', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(1200, 900));
+    debugPlatformTargetOverride = TargetPlatform.windows;
+
+    await tester.pumpWidget(
+      _buildApp(
+        child: const PreferencesSettingsScreen(),
+        devicePreferences: DevicePreferences.defaultsForLanguage(
+          AppLanguage.en,
+        ).copyWith(fontFamily: 'Inter', fontFile: 'C:/Windows/Fonts/inter.ttf'),
+        systemFonts: const [
+          SystemFontInfo(
+            family: 'Inter',
+            displayName: 'Inter',
+            filePath: 'C:/Windows/Fonts/inter.ttf',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Inter'), findsOneWidget);
+
+    await tester.tap(find.text('Font').first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.text('System Default'), findsOneWidget);
+    expect(find.text('Inter'), findsWidgets);
   });
 
   test('settings public shell stays free of commercial branching terms', () {
@@ -221,14 +335,23 @@ Future<void> _setViewport(WidgetTester tester, Size size) async {
   addTearDown(tester.view.resetPhysicalSize);
 }
 
-Widget _buildApp({required Widget child}) {
+Widget _buildApp({
+  required Widget child,
+  DevicePreferences? devicePreferences,
+  List<SystemFontInfo> systemFonts = const [],
+  MediaQueryData? mediaQueryData,
+}) {
+  final home = mediaQueryData == null
+      ? child
+      : MediaQuery(data: mediaQueryData, child: child);
+
   return ProviderScope(
     overrides: [
       appSessionProvider.overrideWith((ref) => _TestSessionController()),
       devicePreferencesProvider.overrideWith(
         (ref) => _TestDevicePreferencesController(
           ref,
-          _TestDevicePreferencesRepository(),
+          _TestDevicePreferencesRepository(devicePreferences),
         ),
       ),
       currentWorkspacePreferencesProvider.overrideWith(
@@ -237,14 +360,14 @@ Widget _buildApp({required Widget child}) {
           _TestWorkspacePreferencesRepository(),
         ),
       ),
-      systemFontsProvider.overrideWith((ref) async => const []),
+      systemFontsProvider.overrideWith((ref) async => systemFonts),
     ],
     child: TranslationProvider(
       child: MaterialApp(
         locale: AppLocale.en.flutterLocale,
         supportedLocales: AppLocaleUtils.supportedLocales,
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: child,
+        home: home,
       ),
     ),
   );
@@ -319,8 +442,10 @@ class _TestSessionController extends AppSessionController {
 }
 
 class _TestDevicePreferencesRepository extends DevicePreferencesRepository {
-  _TestDevicePreferencesRepository()
-    : _prefs = DevicePreferences.defaultsForLanguage(AppLanguage.en),
+  _TestDevicePreferencesRepository(DevicePreferences? initialPreferences)
+    : _prefs =
+          initialPreferences ??
+          DevicePreferences.defaultsForLanguage(AppLanguage.en),
       super(PreferencesMigrationService(const FlutterSecureStorage()));
 
   DevicePreferences _prefs;

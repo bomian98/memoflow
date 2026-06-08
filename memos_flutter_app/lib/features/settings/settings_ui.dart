@@ -483,24 +483,11 @@ class SettingsValueRow extends StatelessWidget {
       opacity: enabled ? 1 : 0.55,
       child: PlatformListSectionRow(
         title: SettingsRowTitle(label),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxTrailingWidth),
-              child: Text(
-                value,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: tokens.textMuted,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Icon(icon, size: 18, color: tokens.textMuted),
-          ],
+        additionalInfo: _SettingsRowValueText(
+          value,
+          maxWidth: maxTrailingWidth,
         ),
+        trailing: Icon(icon, size: 18, color: tokens.textMuted),
         onTap: enabled ? onTap : null,
         subtitle: description == null
             ? null
@@ -536,6 +523,7 @@ class SettingsNavigationRow extends StatelessWidget {
     final tokens = settingsPageTokens(context);
     final homeDensity = _SettingsHomeDensityScope.maybeOf(context);
     final isSingleLine = description == null;
+    final maxTrailingWidth = MediaQuery.sizeOf(context).width * 0.42;
     return Opacity(
       opacity: enabled ? 1 : 0.55,
       child: PlatformListSectionRow(
@@ -544,30 +532,37 @@ class SettingsNavigationRow extends StatelessWidget {
         subtitle: description == null
             ? null
             : SettingsRowDescription(description!),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (value != null) ...[
-              Flexible(
-                child: Text(
-                  value!,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: tokens.textMuted,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-            ],
-            Icon(trailingIcon, size: 18, color: tokens.textMuted),
-          ],
-        ),
+        additionalInfo: value == null
+            ? null
+            : _SettingsRowValueText(value!, maxWidth: maxTrailingWidth),
+        trailing: Icon(trailingIcon, size: 18, color: tokens.textMuted),
         onTap: enabled ? onTap : null,
         mobileMinTileHeight: isSingleLine
             ? homeDensity?.navigationRowMinHeight
             : null,
         denseOnDesktop: description == null,
+      ),
+    );
+  }
+}
+
+class _SettingsRowValueText extends StatelessWidget {
+  const _SettingsRowValueText(this.value, {required this.maxWidth});
+
+  final String value;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = settingsPageTokens(context);
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Text(
+        value,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.end,
+        style: TextStyle(fontWeight: FontWeight.w600, color: tokens.textMuted),
       ),
     );
   }

@@ -204,6 +204,7 @@ class PlatformListSectionRow extends StatelessWidget {
     required this.title,
     this.leading,
     this.subtitle,
+    this.additionalInfo,
     this.trailing,
     this.contentPadding,
     this.mobileMinTileHeight,
@@ -215,6 +216,7 @@ class PlatformListSectionRow extends StatelessWidget {
   final Widget? leading;
   final Widget title;
   final Widget? subtitle;
+  final Widget? additionalInfo;
   final Widget? trailing;
   final EdgeInsetsGeometry? contentPadding;
   final double? mobileMinTileHeight;
@@ -231,6 +233,7 @@ class PlatformListSectionRow extends StatelessWidget {
         leading: leading,
         title: title,
         subtitle: subtitle,
+        additionalInfo: additionalInfo,
         trailing: trailing,
         onTap: onTap,
         backgroundColor: sectionStyle?.rowColor,
@@ -244,6 +247,7 @@ class PlatformListSectionRow extends StatelessWidget {
         target == PlatformTarget.linux;
     final compact = isDesktop && denseOnDesktop;
     final colorScheme = Theme.of(context).colorScheme;
+    final materialTrailing = _materialTrailing();
 
     return ListTile(
       dense: compact,
@@ -258,7 +262,7 @@ class PlatformListSectionRow extends StatelessWidget {
       leading: leading,
       title: title,
       subtitle: subtitle,
-      trailing: trailing,
+      trailing: materialTrailing,
       onTap: onTap,
       minTileHeight: isDesktop ? null : mobileMinTileHeight,
       textColor: danger ? colorScheme.error : null,
@@ -268,6 +272,21 @@ class PlatformListSectionRow extends StatelessWidget {
       hoverColor: sectionStyle?.hoverColor,
       focusColor: sectionStyle?.focusColor,
       splashColor: sectionStyle?.pressedColor,
+    );
+  }
+
+  Widget? _materialTrailing() {
+    final info = additionalInfo;
+    final control = trailing;
+    if (info == null) return control;
+    if (control == null) return info;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(child: info),
+        const SizedBox(width: 6),
+        control,
+      ],
     );
   }
 }

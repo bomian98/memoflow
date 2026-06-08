@@ -2,23 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data/models/app_preferences.dart';
+import 'app_typography_policy.dart';
 import 'memoflow_palette.dart';
-
-const List<String> _windowsDefaultFonts = [
-  'Microsoft YaHei',
-  'Microsoft YaHei UI',
-  '寰蒋闆呴粦',
-];
-const List<String> _windowsDefaultFontFallback = [
-  'Microsoft YaHei UI',
-  '寰蒋闆呴粦',
-];
-
-bool _shouldForceWindowsDefaultFont(AppPreferences prefs) {
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.windows) return false;
-  final family = prefs.fontFamily?.trim() ?? '';
-  return family.isEmpty;
-}
 
 TextTheme _applyLineHeight(TextTheme theme, double height) {
   TextStyle? apply(TextStyle? style) => style?.copyWith(height: height);
@@ -54,8 +39,8 @@ ThemeData buildAppTheme(Brightness brightness) {
   );
   final onPrimary =
       ThemeData.estimateBrightnessForColor(seedColor) == Brightness.dark
-          ? Colors.white
-          : Colors.black;
+      ? Colors.white
+      : Colors.black;
   final colorScheme = baseScheme.copyWith(
     primary: seedColor,
     onPrimary: onPrimary,
@@ -73,7 +58,9 @@ ThemeData buildAppTheme(Brightness brightness) {
       surfaceTintColor: Colors.transparent,
     ),
     cardTheme: CardThemeData(
-      color: brightness == Brightness.dark ? MemoFlowPalette.cardDark : MemoFlowPalette.cardLight,
+      color: brightness == Brightness.dark
+          ? MemoFlowPalette.cardDark
+          : MemoFlowPalette.cardLight,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       elevation: 0,
@@ -87,29 +74,36 @@ ThemeData buildAppTheme(Brightness brightness) {
   );
 }
 
-ThemeData applyPreferencesToTheme(ThemeData theme, AppPreferences prefs) {
-  final forceWindowsDefault = _shouldForceWindowsDefaultFont(prefs);
-  final fontFamily =
-      forceWindowsDefault ? _windowsDefaultFonts.first : prefs.fontFamily;
-  final fontFallback =
-      forceWindowsDefault ? _windowsDefaultFontFallback : null;
-  final lineHeight = lineHeightFor(prefs.lineHeight);
-  final textTheme = _applyLineHeight(
-    _applyFontFamily(
-      theme.textTheme,
-      family: fontFamily,
-      fallback: fontFallback,
-    ),
-    lineHeight,
+ThemeData applyPreferencesToTheme(
+  ThemeData theme,
+  AppPreferences prefs, {
+  TargetPlatform? targetPlatform,
+  bool isWeb = kIsWeb,
+}) {
+  final typography = resolveEffectiveAppTypography(
+    targetPlatform: targetPlatform,
+    isWeb: isWeb,
+    fontSize: prefs.fontSize,
+    lineHeight: prefs.lineHeight,
+    fontFamily: prefs.fontFamily,
+    fontFile: prefs.fontFile,
   );
-  final primaryTextTheme = _applyLineHeight(
-    _applyFontFamily(
-      theme.primaryTextTheme,
-      family: fontFamily,
-      fallback: fontFallback,
-    ),
-    lineHeight,
+  final textThemeWithFont = _applyFontFamily(
+    theme.textTheme,
+    family: typography.themeFontFamily,
+    fallback: typography.themeFontFallback,
   );
+  final primaryTextThemeWithFont = _applyFontFamily(
+    theme.primaryTextTheme,
+    family: typography.themeFontFamily,
+    fallback: typography.themeFontFallback,
+  );
+  final textTheme = typography.applyUiLineHeight
+      ? _applyLineHeight(textThemeWithFont, typography.uiLineHeight)
+      : textThemeWithFont;
+  final primaryTextTheme = typography.applyUiLineHeight
+      ? _applyLineHeight(primaryTextThemeWithFont, typography.uiLineHeight)
+      : primaryTextThemeWithFont;
 
   return theme.copyWith(
     textTheme: textTheme,
@@ -118,19 +112,11 @@ ThemeData applyPreferencesToTheme(ThemeData theme, AppPreferences prefs) {
 }
 
 double textScaleFor(AppFontSize v) {
-  return switch (v) {
-    AppFontSize.standard => 1.0,
-    AppFontSize.large => 1.12,
-    AppFontSize.small => 0.92,
-  };
+  return appTextScaleFor(v);
 }
 
 double lineHeightFor(AppLineHeight v) {
-  return switch (v) {
-    AppLineHeight.classic => 1.55,
-    AppLineHeight.compact => 1.35,
-    AppLineHeight.relaxed => 1.75,
-  };
+  return appLineHeightFor(v);
 }
 
 ThemeMode themeModeFor(AppThemeMode mode) {

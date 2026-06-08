@@ -23,6 +23,7 @@ import 'application/updates/update_announcement_runner.dart';
 import 'application/widgets/home_widgets_updater.dart';
 import 'core/app_localization.dart';
 import 'core/app_theme.dart';
+import 'core/app_typography_policy.dart';
 import 'core/macos_menu_command_channel.dart';
 import 'core/startup_timing.dart';
 import 'core/font_loader.dart' as app_font;
@@ -867,7 +868,6 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
     final screenshotModeEnabled = kDebugMode
         ? _bootstrapAdapter.watchDebugScreenshotMode(ref)
         : false;
-    final scale = textScaleFor(devicePrefs.fontSize);
     final blurDesktopMainWindow = _desktopWindowManager.shouldBlurMainWindow;
     if (blurDesktopMainWindow) {
       _desktopWindowManager.scheduleVisibilitySync();
@@ -929,8 +929,16 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
         },
         builder: (context, child) {
           final media = MediaQuery.of(context);
+          final typography = resolveEffectiveAppTypography(
+            targetPlatform: defaultTargetPlatform,
+            fontSize: devicePrefs.fontSize,
+            lineHeight: devicePrefs.lineHeight,
+            fontFamily: devicePrefs.fontFamily,
+            fontFile: devicePrefs.fontFile,
+            systemTextScaler: media.textScaler,
+          );
           final appContent = MediaQuery(
-            data: media.copyWith(textScaler: TextScaler.linear(scale)),
+            data: media.copyWith(textScaler: typography.textScaler),
             child: Listener(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (_) => _desktopWindowManager.notifyUserInteraction(

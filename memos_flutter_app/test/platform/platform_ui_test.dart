@@ -311,6 +311,73 @@ void main() {
     expect(find.byType(CupertinoSwitch), findsOneWidget);
   });
 
+  testWidgets('text field renders cupertino input on apple mobile', (
+    tester,
+  ) async {
+    setTargetPlatform(TargetPlatform.iOS);
+
+    final controller = TextEditingController(text: 'Local Library');
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: MediaQuery(
+          data: const MediaQueryData(size: Size(390, 844)),
+          child: Center(
+            child: SizedBox(
+              width: 240,
+              child: PlatformTextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  hintText: 'Repository name',
+                  suffixIcon: Icon(Icons.edit),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(CupertinoTextField), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Local Library'), findsOneWidget);
+
+    await tester.enterText(find.byType(CupertinoTextField), 'Renamed');
+    expect(controller.text, 'Renamed');
+  });
+
+  testWidgets('text field keeps material input outside apple mobile', (
+    tester,
+  ) async {
+    setTargetPlatform(TargetPlatform.android);
+
+    final controller = TextEditingController(text: 'Local Library');
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 240,
+              child: PlatformTextField(
+                controller: controller,
+                decoration: const InputDecoration(hintText: 'Repository name'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byType(CupertinoTextField), findsNothing);
+    expect(find.text('Local Library'), findsOneWidget);
+  });
+
   testWidgets('list section uses cupertino grouped rows on apple mobile', (
     tester,
   ) async {

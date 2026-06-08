@@ -6,6 +6,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../core/app_motion.dart';
 import '../../core/app_route_transitions.dart';
 import '../../core/app_localization.dart';
+import '../../core/app_typography_policy.dart';
 import '../../core/memoflow_palette.dart';
 import '../../core/top_toast.dart';
 import '../../core/system_fonts.dart';
@@ -18,6 +19,7 @@ import '../../platform/widgets/platform_picker.dart';
 import '../../data/models/app_preferences.dart';
 import '../../data/models/device_preferences.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_target.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/settings/resolved_preferences_provider.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
@@ -146,8 +148,12 @@ class PreferencesSettingsScreen extends ConsumerWidget {
   String _fontLabel(
     BuildContext context,
     DevicePreferences prefs,
-    List<SystemFontInfo> fonts,
-  ) {
+    List<SystemFontInfo> fonts, {
+    required bool canChooseSystemFonts,
+  }) {
+    if (!canChooseSystemFonts) {
+      return context.t.strings.settings.preferences.systemDefault;
+    }
     final family = prefs.fontFamily?.trim() ?? '';
     if (family.isEmpty) {
       return context.t.strings.settings.preferences.systemDefault;
@@ -189,11 +195,16 @@ class PreferencesSettingsScreen extends ConsumerWidget {
     final themeModeLabel = themeMode.labelFor(devicePrefs.language);
     final themeColor = resolvedSettings.resolvedThemeColor;
     final customTheme = resolvedSettings.resolvedCustomTheme;
-    final fontsAsync = ref.watch(systemFontsProvider);
+    final canChooseSystemFonts =
+        !isAppleMobilePlatform() && canChooseSystemFontsForPlatform();
+    final fontsAsync = canChooseSystemFonts
+        ? ref.watch(systemFontsProvider)
+        : null;
     final fontLabel = _fontLabel(
       context,
       devicePrefs,
-      fontsAsync.valueOrNull ?? const [],
+      fontsAsync?.valueOrNull ?? const [],
+      canChooseSystemFonts: canChooseSystemFonts,
     );
 
     final tokens = settingsPageTokens(context);
@@ -245,10 +256,12 @@ class PreferencesSettingsScreen extends ConsumerWidget {
             SettingsValueRow(
               label: context.t.strings.settings.preferences.font,
               value: fontLabel,
+              enabled: canChooseSystemFonts,
               onTap: () async {
+                if (!canChooseSystemFonts) return;
                 try {
                   final List<SystemFontInfo> fonts =
-                      fontsAsync.valueOrNull ??
+                      fontsAsync?.valueOrNull ??
                       await ref.read(systemFontsProvider.future);
                   if (!context.mounted) return;
                   await _selectFont(

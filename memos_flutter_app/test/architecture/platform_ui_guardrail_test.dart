@@ -7,6 +7,7 @@ void main() {
     const requiredAdaptiveSeams = <String>[
       'lib/platform/widgets/platform_action_sheet.dart',
       'lib/platform/widgets/platform_adaptive_layout.dart',
+      'lib/platform/widgets/platform_controls.dart',
       'lib/platform/widgets/platform_dialog.dart',
       'lib/platform/widgets/platform_list_section.dart',
       'lib/platform/widgets/platform_picker.dart',
@@ -96,6 +97,50 @@ void main() {
           ? null
           : 'platform UI seam must stay free of higher-layer imports and '
                 'commercial branching:\n${violations.join('\n')}',
+    );
+  });
+
+  test('apple mobile setup input stays on platform seams', () async {
+    final platformControls = await File(
+      'lib/platform/widgets/platform_controls.dart',
+    ).readAsString();
+    final settingsUi = await File(
+      'lib/features/settings/settings_ui.dart',
+    ).readAsString();
+    final localModeSetup = await File(
+      'lib/features/settings/local_mode_setup_screen.dart',
+    ).readAsString();
+
+    expect(platformControls, contains('CupertinoTextField('));
+    expect(platformControls, contains('resolvePlatformTarget(context)'));
+    expect(settingsUi, contains('child: PlatformTextField('));
+    expect(localModeSetup, contains('buildPlatformPageRoute'));
+    expect(localModeSetup, contains('showTopToast(context, message)'));
+
+    final violations = <String>[];
+    if (localModeSetup.contains('ScaffoldMessenger.of(')) {
+      violations.add(
+        'local_mode_setup_screen.dart: validation feedback uses ScaffoldMessenger',
+      );
+    }
+    if (localModeSetup.contains('MaterialPageRoute<LocalModeSetupResult>')) {
+      violations.add(
+        'local_mode_setup_screen.dart: setup route bypasses platform route seam',
+      );
+    }
+    if (RegExp(r'\bMaterial\s*\(').hasMatch(localModeSetup)) {
+      violations.add(
+        'local_mode_setup_screen.dart: local Material wrapper hides input seam regression',
+      );
+    }
+
+    expect(
+      violations,
+      isEmpty,
+      reason: violations.isEmpty
+          ? null
+          : 'Apple mobile setup input must stay on platform/settings seams:\n'
+                '${violations.join('\n')}',
     );
   });
 }

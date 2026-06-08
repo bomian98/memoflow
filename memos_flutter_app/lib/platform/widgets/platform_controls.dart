@@ -155,6 +155,40 @@ class PlatformTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final target = resolvePlatformTarget(context);
+    if (target == PlatformTarget.iPhone || target == PlatformTarget.iPad) {
+      return CupertinoTextField(
+        key: textFieldKey,
+        controller: controller,
+        focusNode: focusNode,
+        placeholder: decoration?.hintText ?? decoration?.labelText,
+        placeholderStyle: decoration?.hintStyle,
+        prefix: _cupertinoIconSlot(context, decoration?.prefixIcon),
+        suffix: _cupertinoIconSlot(context, decoration?.suffixIcon),
+        padding: _cupertinoPadding(decoration),
+        decoration: _cupertinoDecoration(decoration),
+        style: style,
+        enabled: enabled ?? true,
+        keyboardType: keyboardType,
+        minLines: minLines,
+        maxLines: maxLines,
+        maxLength: maxLength,
+        maxLengthEnforcement: maxLengthEnforcement,
+        expands: expands,
+        inputFormatters: inputFormatters,
+        autofocus: autofocus,
+        textInputAction: textInputAction,
+        textAlign: textAlign,
+        textAlignVertical: textAlignVertical,
+        obscureText: obscureText,
+        readOnly: readOnly,
+        enableInteractiveSelection: enableInteractiveSelection,
+        onChanged: onChanged,
+        onSubmitted: onSubmitted,
+        onEditingComplete: onEditingComplete,
+      );
+    }
+
     return TextField(
       key: textFieldKey,
       controller: controller,
@@ -179,6 +213,42 @@ class PlatformTextField extends StatelessWidget {
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       onEditingComplete: onEditingComplete,
+    );
+  }
+
+  EdgeInsetsGeometry _cupertinoPadding(InputDecoration? decoration) {
+    final contentPadding = decoration?.contentPadding;
+    if (contentPadding != null) return contentPadding;
+    final border = decoration?.border;
+    if (border == null || border == InputBorder.none) {
+      return EdgeInsets.zero;
+    }
+    return const EdgeInsets.symmetric(horizontal: 12, vertical: 10);
+  }
+
+  BoxDecoration? _cupertinoDecoration(InputDecoration? decoration) {
+    if (decoration == null) return null;
+    final border = decoration.border;
+    if (border == null || border == InputBorder.none) return null;
+    final fillColor = decoration.filled == true ? decoration.fillColor : null;
+    if (border is OutlineInputBorder) {
+      return BoxDecoration(
+        color: fillColor,
+        borderRadius: border.borderRadius,
+        border: Border.all(color: border.borderSide.color),
+      );
+    }
+    return fillColor == null ? null : BoxDecoration(color: fillColor);
+  }
+
+  Widget? _cupertinoIconSlot(BuildContext context, Widget? icon) {
+    if (icon == null) return null;
+    return IconTheme.merge(
+      data: IconThemeData(
+        color: CupertinoColors.secondaryLabel.resolveFrom(context),
+        size: 20,
+      ),
+      child: icon,
     );
   }
 }

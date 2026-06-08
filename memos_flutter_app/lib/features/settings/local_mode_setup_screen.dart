@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/app_localization.dart';
+import '../../core/top_toast.dart';
 import '../../data/logs/log_manager.dart';
 import '../../i18n/strings.g.dart';
+import '../../platform/platform_route.dart';
 import '../../platform/widgets/platform_primary_action.dart';
 import 'settings_ui.dart';
 
@@ -41,7 +43,8 @@ class LocalModeSetupScreen extends StatefulWidget {
     bool showStorageInfoCard = true,
   }) {
     return Navigator.of(context).push<LocalModeSetupResult>(
-      MaterialPageRoute<LocalModeSetupResult>(
+      buildPlatformPageRoute<LocalModeSetupResult>(
+        context: context,
         builder: (_) => LocalModeSetupScreen(
           title: title,
           confirmLabel: confirmLabel,
@@ -101,9 +104,7 @@ class _LocalModeSetupScreenState extends State<LocalModeSetupScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showTopToast(context, message);
   }
 
   Future<void> _submit() async {
