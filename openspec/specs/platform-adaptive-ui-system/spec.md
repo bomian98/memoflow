@@ -833,3 +833,110 @@ The platform adaptive UI system SHALL require migrated settings pages to express
 - **THEN** architecture/style verification SHALL fail or require an explicit documented exception
 - **AND** allowlist 条目 MUST 说明该 surface 属于 semantic danger/error、theme swatch、color preview、media overlay、system/native surface、window controls 或其他已批准例外
 
+### Requirement: Mobile settings home SHALL present layered function hierarchy
+手机端设置首页 SHALL 使用 settings-owned UI tokens 或 approved settings/platform seam 表达 profile card、quick shortcut tiles、grouped function sections 和 single-row section 的层级。该层级 SHALL 通过背景、圆角、轻阴影或暗色等价边界、分割线和间距区分功能入口，而不是通过 `settings_screen.dart` 中的 page-local color/shadow/radius 硬编码实现。
+
+#### Scenario: Profile and shortcuts use home card hierarchy
+- **WHEN** 手机端设置首页渲染用户 profile 入口和顶部 quick shortcut tiles
+- **THEN** profile 入口 SHALL 使用比普通 row 更突出的 home card surface、圆角、间距和 light/dark mode 层级 token
+- **AND** quick shortcut tiles SHALL 作为独立功能卡片渲染，彼此通过卡片背景、间距和边界直接区分
+- **AND** 这些视觉值 SHALL 来自 settings-owned home hierarchy tokens 或 approved settings/platform seam
+
+#### Scenario: Function rows remain grouped by section
+- **WHEN** 手机端设置首页渲染使用指南、账号与安全、偏好设置、AI 设置、应用锁、实验室、功能组件、反馈、充电站、导入/导出、关于或 equivalent function entries
+- **THEN** 普通功能入口 SHALL 默认使用 grouped card + row divider 模型表达分组关系
+- **AND** 单行分组 MAY 使用 single-row card treatment 保持与其他功能分组一致的层级
+- **AND** 每个普通 function row SHALL NOT 被强制拆成独立卡片，除非该入口属于明确的 shortcut tile 或 approved special entry
+
+#### Scenario: Secondary settings pages are not forced into home card treatment
+- **WHEN** 用户从设置首页进入二级或三级设置页面
+- **THEN** 这些页面 SHALL 继续使用标准 `SettingsPage`、`SettingsSection`、settings row surface tokens 或 approved settings/platform seam
+- **AND** 手机端设置首页的重层级卡片、快捷入口布局或 home-only shadow treatment SHALL NOT 自动套用到二级/三级表单页
+
+#### Scenario: Desktop settings keeps dense presentation
+- **WHEN** 设置首页运行在 macOS、Windows 或 Linux desktop experience
+- **THEN** desktop presentation SHALL preserve bounded, dense, work-focused settings layout
+- **AND** it SHALL NOT be forced to use mobile-only large-radius, heavy-shadow, or oversized shortcut-card geometry
+
+#### Scenario: Home hierarchy preserves existing behavior and exceptions
+- **WHEN** 设置首页渲染导航入口、private extension entries、头像、真正按钮、danger/error action、theme swatch、custom color preview、media overlay、native picker 或 window controls
+- **THEN** 本 requirement SHALL preserve existing navigation, haptics, route targets, private extension ordering, avatar rendering, semantic exception visuals, and true button color customization
+- **AND** home hierarchy tokens SHALL NOT override semantic danger/error colors, preview colors, media/native/system surfaces, or app-wide button theme behavior
+
+#### Scenario: Mobile settings home hierarchy is guarded
+- **WHEN** 新增或修改设置首页、settings UI seam 或 migrated settings files
+- **THEN** verification SHALL cover mobile settings home hierarchy for profile card, shortcut tiles, grouped function sections, row dividers, and light/dark mode token use
+- **AND** architecture/style guardrails SHALL fail or require a documented exception if ordinary settings home hierarchy introduces page-local background, border, divider, shadow, radius, or raw palette styling outside the approved settings seam
+
+### Requirement: Adaptive form controls SHALL render safely inside platform page chrome
+The platform adaptive UI system SHALL provide form-control seams that can render text input and related form controls inside platform page chrome without requiring feature pages to add local Material or Cupertino workarounds.
+
+#### Scenario: Text input renders inside Apple mobile PlatformPage
+- **WHEN** a migrated flow renders a text input through `PlatformTextField` inside an iPhone or iPadOS `PlatformPage`
+- **THEN** the input SHALL render without requiring an implicit `Material` ancestor from the feature page
+- **AND** the Apple mobile behavior SHALL be provided by `platform/` or an approved settings/platform seam
+
+#### Scenario: Text input preserves non-Apple behavior
+- **WHEN** the same `PlatformTextField` is rendered on Android, Windows, macOS, Linux, or web
+- **THEN** the existing Material-compatible `TextField` behavior SHALL remain available
+- **AND** the change MUST NOT force Apple mobile control geometry onto non-Apple targets
+
+#### Scenario: Material-only fallback stays inside platform seam
+- **WHEN** a compatibility fallback is needed for a Material-only form control during migration
+- **THEN** that fallback MUST be implemented inside `platform/` or an approved adaptive seam
+- **AND** feature pages MUST NOT wrap individual controls in page-local `Material` solely to satisfy Apple mobile rendering
+
+### Requirement: Settings input rows SHALL express input intent through semantic seams
+Settings pages SHALL render text input rows through settings-owned semantic components and shared platform form-control seams rather than directly branching between Material and Cupertino widgets in each screen.
+
+#### Scenario: Grouped settings input renders on iPhone
+- **WHEN** a settings or onboarding setup page renders `SettingsInputRow` inside an Apple mobile grouped list
+- **THEN** the row SHALL delegate platform-specific text input behavior to `PlatformTextField` or an equivalent shared seam
+- **AND** the row MUST render without Flutter framework errors caused by missing Material ancestors
+
+#### Scenario: Settings input remains shared across feature screens
+- **WHEN** settings pages such as local library setup, server settings, location settings, shortcut editor, or profile settings need editable text
+- **THEN** they SHALL use `SettingsInputRow`, `PlatformTextField`, or an approved settings/platform seam
+- **AND** they MUST NOT create separate iOS-only page trees for the same settings behavior
+
+### Requirement: Validation feedback SHALL avoid page-local Material-only dependencies
+Adaptive flows that can run inside Apple mobile `PlatformPage` content SHALL present lightweight validation feedback through platform-safe feedback surfaces instead of relying on page-local `ScaffoldMessenger` availability.
+
+#### Scenario: Validation feedback runs without Scaffold
+- **WHEN** an Apple mobile setup or settings flow validates user input inside a `CupertinoPageScaffold`
+- **THEN** validation feedback SHALL be shown through `showTopToast`, a platform feedback seam, a platform dialog, or an equivalent overlay-safe surface
+- **AND** the flow MUST NOT require the current page body to be wrapped in a `Scaffold`
+
+#### Scenario: Lightweight validation stays lightweight
+- **WHEN** the validation issue is a simple missing or invalid text value
+- **THEN** the feedback SHOULD use a lightweight toast or equivalent non-blocking surface where project conventions allow
+- **AND** it MUST NOT introduce new business state or persistence behavior
+
+### Requirement: Setup subflows SHALL use platform route seams
+Reusable setup subflows that render through `PlatformPage` SHALL use a platform route abstraction when pushed from migrated mobile, desktop, or Apple flows.
+
+#### Scenario: Local setup route runs on Apple mobile
+- **WHEN** a migrated flow opens local library setup on iPhone or iPadOS
+- **THEN** it SHALL push the setup screen through `buildPlatformPageRoute` or an equivalent platform route seam
+- **AND** the implementation MUST NOT require the caller to choose `CupertinoPageRoute` directly
+
+#### Scenario: Existing route behavior remains available elsewhere
+- **WHEN** the same setup subflow runs on Android, Windows, macOS, Linux, or web
+- **THEN** the platform route seam SHALL preserve existing route behavior appropriate to that target
+- **AND** the setup result and validation behavior SHALL remain shared
+
+### Requirement: Adaptive input surface changes SHALL include focused guardrails
+Changes to platform input controls, settings input rows, Apple mobile validation feedback, or setup route presentation SHALL include focused automated verification and boundary checks.
+
+#### Scenario: Apple mobile input path is verified
+- **WHEN** focused widget tests run for Apple mobile setup or settings input
+- **THEN** they SHALL verify render without Flutter framework exceptions
+- **AND** they SHALL verify editing, validation feedback, and successful submission where the flow supports those behaviors
+
+#### Scenario: Platform adapter dependency direction is verified
+- **WHEN** platform input or feedback adapters are added or changed
+- **THEN** architecture tests or repo scans SHALL prevent new `platform -> features`, `platform -> state`, `platform -> application`, and `platform -> data` dependencies unless an explicit OpenSpec-approved exception exists
+
+#### Scenario: Public shell boundary is verified
+- **WHEN** platform/settings/onboarding input surface code is added or changed in the public repository
+- **THEN** verification or review SHALL confirm it does not add subscription, billing, entitlement, receipt, paywall, StoreKit, product ID, price, private overlay, or `AccessDecision.source` business branching logic
