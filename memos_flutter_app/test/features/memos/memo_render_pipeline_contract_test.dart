@@ -235,8 +235,9 @@ void main() {
 
   test('tag decoration skips hashes inside links', () {
     const content =
+        '#Work\n\n'
         'See [section](https://example.com/article#intro) '
-        'and [jump](#details) #Work';
+        'and [jump](#details)';
 
     final artifact = pipeline.build(data: content, renderImages: true);
 
@@ -249,6 +250,43 @@ void main() {
     expect(artifact.content, contains('href="#details"'));
     expect(artifact.content, isNot(contains('data-tag="intro"')));
     expect(artifact.content, isNot(contains('data-tag="details"')));
+  });
+
+  test('tag decoration skips prose hashes outside strict tag zones', () {
+    const content =
+        '\u6D4B\u8BD5\u6587\u672C #\u8FD9\u662F\u6D4B\u8BD5\u6587\u672C';
+
+    final artifact = pipeline.build(data: content, renderImages: true);
+
+    expect(artifact.content, isNot(contains('class="memotag"')));
+    expect(artifact.content, isNot(contains('data-tag=')));
+  });
+
+  test('tag decoration wraps strict tag-zone lines', () {
+    const content = '#openwrt #build body #ignored\n\nbody';
+
+    final artifact = pipeline.build(data: content, renderImages: true);
+
+    expect(_countMatches(artifact.content, 'class="memotag"'), 2);
+    expect(artifact.content, contains('data-tag="openwrt"'));
+    expect(artifact.content, contains('data-tag="build"'));
+    expect(artifact.content, isNot(contains('data-tag="ignored"')));
+  });
+
+  test('tag decoration treats MemoFlow internal markers as non-content', () {
+    const content = '''# Example article
+
+Captured body
+
+#clip #reading
+
+<!-- memoflow-third-party-share -->''';
+
+    final artifact = pipeline.build(data: content, renderImages: true);
+
+    expect(_countMatches(artifact.content, 'class="memotag"'), 2);
+    expect(artifact.content, contains('data-tag="clip"'));
+    expect(artifact.content, contains('data-tag="reading"'));
   });
 
   test('image src normalizer keeps blob to raw conversions stable', () {

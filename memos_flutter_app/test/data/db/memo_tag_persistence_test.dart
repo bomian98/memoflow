@@ -51,7 +51,7 @@ void main() {
       await _upsertMemo(
         db,
         uid: 'memo-1',
-        content: 'tracked #topic',
+        content: '#topic\n\ntracked',
         tags: const ['topic'],
       );
 
@@ -96,7 +96,7 @@ void main() {
       await _upsertMemo(
         db,
         uid: 'memo-1',
-        content: 'before #real\n```c\n#include <stdio.h>\n```\nafter',
+        content: '#real\n\n```c\n#include <stdio.h>\n```\nafter',
         tags: const ['real'],
       );
 
@@ -122,7 +122,7 @@ void main() {
       await _upsertMemo(
         db,
         uid: 'memo-1',
-        content: 'before #real\n```c\n#include <stdio.h>\n```\nafter',
+        content: '#real\n\n```c\n#include <stdio.h>\n```\nafter',
         tags: const ['include', 'real'],
       );
       expect((await db.getMemoByUid('memo-1'))?['tags'], 'include real');
@@ -147,6 +147,38 @@ void main() {
       expect(await _tagIdByPath(db, 'include'), isNull);
       expect(await _tagAliasCountByTagId(db, includeTagId), 0);
       expect(await _tagStats(db), containsPair('real', 1));
+    },
+  );
+
+  test(
+    'explicit rebuild removes historical prose hash false positives',
+    () async {
+      final dbName = uniqueDbName('memo_tag_rebuild_removes_prose_hash');
+      final db = AppDatabase(dbName: dbName);
+      addTearDown(() async {
+        await db.close();
+        await deleteTestDatabase(dbName);
+      });
+
+      const legacyTag = '\u8FD9\u662F\u6D4B\u8BD5\u6587\u672C';
+      await _upsertMemo(
+        db,
+        uid: 'memo-1',
+        content: '\u6D4B\u8BD5\u6587\u672C #$legacyTag',
+        tags: const [legacyTag],
+      );
+
+      expect((await db.getMemoByUid('memo-1'))?['tags'], legacyTag);
+      expect(await _memoTagPaths(db, 'memo-1'), const [legacyTag]);
+
+      await SelfRepairMutationService(db: db).repairTagsFromContent();
+
+      expect((await db.getMemoByUid('memo-1'))?['tags'], '');
+      expect(await _memoTagPaths(db, 'memo-1'), isEmpty);
+      expect(await _memoUidsForTag(db, legacyTag), isEmpty);
+      expect(await _ftsTagsForMemo(db, 'memo-1'), '');
+      expect(await _tagIdByPath(db, legacyTag), isNull);
+      expect((await _tagStats(db)).containsKey(legacyTag), isFalse);
     },
   );
 
@@ -192,7 +224,7 @@ void main() {
       await _upsertMemo(
         db,
         uid: 'memo-1',
-        content: 'tracked #keep',
+        content: '#keep\n\ntracked',
         tags: const ['keep'],
       );
       await repository.createTag(name: 'unused');
@@ -221,10 +253,11 @@ void main() {
       await deleteTestDatabase(dbName);
     });
 
+    const content = '#real\n\nhello';
     await _upsertMemo(
       db,
       uid: 'memo-1',
-      content: 'hello #real',
+      content: content,
       tags: const ['real'],
     );
     final sqlite = await db.db;
@@ -239,7 +272,10 @@ void main() {
 
     final stats = await db.getStatsCacheRow();
     expect(stats?['total_memos'], 1);
-    expect(stats?['total_chars'], 'hello #real'.replaceAll(' ', '').length);
+    expect(
+      stats?['total_chars'],
+      content.replaceAll(RegExp(r'\s+'), '').length,
+    );
     expect(await _tagStats(db), containsPair('real', 1));
     expect(await db.listDailyCountRows(), isNotEmpty);
   });

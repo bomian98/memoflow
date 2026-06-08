@@ -109,10 +109,11 @@ String buildQuickClipPlaceholderContent({
     ..writeln('${_quickClipLinkLabel(locale)}: ${request.url}')
     ..writeln()
     ..writeln(_quickClipProcessingLabel(locale));
-  if (tags.isNotEmpty) {
+  final tagLine = formatMemoTagZoneLine(tags);
+  if (tagLine.isNotEmpty) {
     buffer
       ..writeln()
-      ..writeln(tags.join(' '));
+      ..writeln(tagLine);
   }
   return buffer.toString().trimRight();
 }
@@ -128,10 +129,11 @@ String buildQuickClipFailureContent({
     ..writeln('${_quickClipLinkLabel(locale)}: ${request.url}')
     ..writeln()
     ..writeln(_quickClipFailureBody(locale));
-  if (tags.isNotEmpty) {
+  final tagLine = formatMemoTagZoneLine(tags);
+  if (tagLine.isNotEmpty) {
     buffer
       ..writeln()
-      ..writeln(tags.join(' '));
+      ..writeln(tagLine);
   }
   return buffer.toString().trimRight();
 }
@@ -145,20 +147,17 @@ String appendQuickClipHiddenMarker(String content, String marker) {
 }
 
 String appendTagsToQuickClipCapturedContent(String content, List<String> tags) {
-  final normalizedTags = tags
-      .map((tag) => tag.trim())
-      .where((tag) => tag.isNotEmpty)
-      .toList(growable: false);
-  if (normalizedTags.isEmpty) return content.trimRight();
+  final tagLine = formatMemoTagZoneLine(tags);
+  if (tagLine.isEmpty) return content.trimRight();
   final normalizedContent = content.trimRight();
   const marker = '<!-- memoflow-third-party-share -->';
   if (normalizedContent.endsWith(marker)) {
     final body = normalizedContent
         .substring(0, normalizedContent.length - marker.length)
         .trimRight();
-    return '$body\n\n${normalizedTags.join(' ')}\n\n$marker';
+    return '$body\n\n$tagLine\n\n$marker';
   }
-  return '$normalizedContent\n\n${normalizedTags.join(' ')}';
+  return '$normalizedContent\n\n$tagLine';
 }
 
 String _quickClipPlaceholderTitle(Locale locale) {
@@ -1086,10 +1085,11 @@ class ShareQuickClipService {
       ..writeln('${_linkLabel(locale)}: ${request.url}')
       ..writeln()
       ..writeln(_processingLabel(locale));
-    if (tags.isNotEmpty) {
+    final tagLine = formatMemoTagZoneLine(tags);
+    if (tagLine.isNotEmpty) {
       buffer
         ..writeln()
-        ..writeln(tags.join(' '));
+        ..writeln(tagLine);
     }
     return buffer.toString().trimRight();
   }
@@ -1105,10 +1105,11 @@ class ShareQuickClipService {
       ..writeln('${_linkLabel(locale)}: ${request.url}')
       ..writeln()
       ..writeln(_failureBody(locale));
-    if (tags.isNotEmpty) {
+    final tagLine = formatMemoTagZoneLine(tags);
+    if (tagLine.isNotEmpty) {
       buffer
         ..writeln()
-        ..writeln(tags.join(' '));
+        ..writeln(tagLine);
     }
     return buffer.toString().trimRight();
   }
@@ -1193,20 +1194,17 @@ class ShareQuickClipService {
   }
 
   String _appendTagsToCapturedContent(String content, List<String> tags) {
-    final normalizedTags = tags
-        .map((tag) => tag.trim())
-        .where((tag) => tag.isNotEmpty)
-        .toList(growable: false);
-    if (normalizedTags.isEmpty) return content.trimRight();
+    final tagLine = formatMemoTagZoneLine(tags);
+    if (tagLine.isEmpty) return content.trimRight();
     final normalizedContent = content.trimRight();
     const marker = '<!-- memoflow-third-party-share -->';
     if (normalizedContent.endsWith(marker)) {
       final body = normalizedContent
           .substring(0, normalizedContent.length - marker.length)
           .trimRight();
-      return '$body\n\n${normalizedTags.join(' ')}\n\n$marker';
+      return '$body\n\n$tagLine\n\n$marker';
     }
-    return '$normalizedContent\n\n${normalizedTags.join(' ')}';
+    return '$normalizedContent\n\n$tagLine';
   }
 
   Future<void> _upsertClipMetadata({

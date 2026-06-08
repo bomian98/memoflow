@@ -57,7 +57,7 @@ void main() {
       });
 
       final future = coordinator.submitQuickInput(
-        rawContent: 'hello #work   ',
+        rawContent: '#work\n\nhello   ',
         visibility: 'PROTECTED',
       );
 
@@ -69,7 +69,7 @@ void main() {
       expect(result.kind, MemosListMutationResultKind.handled);
       expect(repository.createQuickInputCallCount, 1);
       expect(repository.lastQuickInputUid, 'memo-quick-1');
-      expect(repository.lastQuickInputContent, 'hello #work');
+      expect(repository.lastQuickInputContent, '#work\n\nhello');
       expect(repository.lastQuickInputVisibility, 'PROTECTED');
       expect(repository.lastQuickInputNowSec, 1735787045);
       expect(repository.lastQuickInputTags, const <String>['work']);

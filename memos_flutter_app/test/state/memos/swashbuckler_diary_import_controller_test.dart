@@ -75,23 +75,26 @@ void main() {
     final db = AppDatabase(dbName: dbName);
     final account = buildAccount('json-import');
     final archive = await createZipFile('swashbuckler_json', {
-      '2025-03-04.json': utf8.encode(jsonEncode({
-        'title': 'My Diary',
-        'content': 'Trip notes #trip\n![cover](appdata/Image/trip.png)\n[voice](appdata/Audio/trip.m4a)',
-        'mood': 'Happy',
-        'weather': 'Sunny',
-        'location': 'Paris',
-        'top': true,
-        'tags': [
-          {'name': 'travel'},
-        ],
-        'resources': [
-          {'resourceUri': 'appdata/Image/trip.png'},
-          {'resourceUri': 'appdata/Audio/trip.m4a'},
-        ],
-        'createTime': '2025-03-04T01:02:03Z',
-        'updateTime': '2025-03-05T04:05:06Z',
-      })),
+      '2025-03-04.json': utf8.encode(
+        jsonEncode({
+          'title': 'My Diary',
+          'content':
+              '#trip\n\nTrip notes\n![cover](appdata/Image/trip.png)\n[voice](appdata/Audio/trip.m4a)',
+          'mood': 'Happy',
+          'weather': 'Sunny',
+          'location': 'Paris',
+          'top': true,
+          'tags': [
+            {'name': 'travel'},
+          ],
+          'resources': [
+            {'resourceUri': 'appdata/Image/trip.png'},
+            {'resourceUri': 'appdata/Audio/trip.m4a'},
+          ],
+          'createTime': '2025-03-04T01:02:03Z',
+          'updateTime': '2025-03-05T04:05:06Z',
+        }),
+      ),
       'version.json': utf8.encode(
         jsonEncode({'version': '1.7.0', 'fileSuffix': '.json'}),
       ),
@@ -124,8 +127,11 @@ void main() {
     expect(memo['content'] as String, contains('Mood: Happy'));
     expect(memo['content'] as String, contains('Weather: Sunny'));
     expect(memo['content'] as String, contains('Location: Paris'));
-    expect(memo['content'] as String, contains('Trip notes #trip'));
-    expect(memo['content'] as String, isNot(contains('appdata/Image/trip.png')));
+    expect(memo['content'] as String, contains('Trip notes'));
+    expect(
+      memo['content'] as String,
+      isNot(contains('appdata/Image/trip.png')),
+    );
     expect(memo['pinned'], 1);
     expect(
       memo['create_time'],
@@ -134,9 +140,9 @@ void main() {
 
     final attachmentRows = await db.listMemoAttachmentRows(state: 'NORMAL');
     expect(attachmentRows, hasLength(1));
-    final attachments = jsonDecode(
-      attachmentRows.single['attachments_json'] as String,
-    ) as List<dynamic>;
+    final attachments =
+        jsonDecode(attachmentRows.single['attachments_json'] as String)
+            as List<dynamic>;
     expect(attachments, hasLength(2));
 
     expect(await db.listOutboxPendingByType('upload_attachment'), hasLength(2));
@@ -149,7 +155,7 @@ void main() {
     final account = buildAccount('txt-import');
     final archive = await createZipFile('swashbuckler_txt', {
       '20250304112233(2).txt': utf8.encode(
-        'Plain export #retro\n\n![photo](appdata/Image/photo.jpg)',
+        '#retro\n\nPlain export\n\n![photo](appdata/Image/photo.jpg)',
       ),
       'appdata/Image/photo.jpg': const <int>[255, 216, 255, 224, 0, 16, 74, 70],
     });
@@ -174,7 +180,7 @@ void main() {
     final memos = await db.listMemos(limit: 10);
     expect(memos, hasLength(1));
     final memo = memos.single;
-    expect(memo['content'] as String, 'Plain export #retro');
+    expect(memo['content'] as String, '#retro\n\nPlain export');
     expect(
       memo['create_time'],
       DateTime(2025, 3, 4, 11, 22, 33).millisecondsSinceEpoch ~/ 1000,
@@ -182,61 +188,66 @@ void main() {
 
     final attachmentRows = await db.listMemoAttachmentRows(state: 'NORMAL');
     expect(attachmentRows, hasLength(1));
-    final attachments = jsonDecode(
-      attachmentRows.single['attachments_json'] as String,
-    ) as List<dynamic>;
+    final attachments =
+        jsonDecode(attachmentRows.single['attachments_json'] as String)
+            as List<dynamic>;
     expect(attachments, hasLength(1));
   });
 
-  test('imports markdown front matter without leaking metadata into content', () async {
-    final dbName = uniqueDbName('swashbuckler_frontmatter_import');
-    final db = AppDatabase(dbName: dbName);
-    final account = buildAccount('frontmatter-import');
-    final archive = await createZipFile('swashbuckler_frontmatter', {
-      '20260408200753(2).md': utf8.encode(
-        '---\n'
-        'uid: demo-uid\n'
-        'created: 2026-03-23T22:57:50.000Z\n'
-        'updated: 2026-03-23T23:04:38.000Z\n'
-        'visibility: PRIVATE\n'
-        'pinned: true\n'
-        'state: NORMAL\n'
-        '---\n'
-        '# Front matter memo\n\n'
-        '![](appdata/Image/frontmatter.jpg)\n\n'
-        '正文内容',
-      ),
-      'appdata/Image/frontmatter.jpg': const <int>[255, 216, 255, 224, 0, 16],
-    });
+  test(
+    'imports markdown front matter without leaking metadata into content',
+    () async {
+      final dbName = uniqueDbName('swashbuckler_frontmatter_import');
+      final db = AppDatabase(dbName: dbName);
+      final account = buildAccount('frontmatter-import');
+      final archive = await createZipFile('swashbuckler_frontmatter', {
+        '20260408200753(2).md': utf8.encode(
+          '---\n'
+          'uid: demo-uid\n'
+          'created: 2026-03-23T22:57:50.000Z\n'
+          'updated: 2026-03-23T23:04:38.000Z\n'
+          'visibility: PRIVATE\n'
+          'pinned: true\n'
+          'state: NORMAL\n'
+          '---\n'
+          '# Front matter memo\n\n'
+          '![](appdata/Image/frontmatter.jpg)\n\n'
+          '正文内容',
+        ),
+        'appdata/Image/frontmatter.jpg': const <int>[255, 216, 255, 224, 0, 16],
+      });
 
-    addTearDown(() async {
-      await db.close();
-      await deleteTestDatabase(dbName);
-    });
+      addTearDown(() async {
+        await db.close();
+        await deleteTestDatabase(dbName);
+      });
 
-    final result = await importArchive(
-      db: db,
-      account: account,
-      file: archive,
-      importScopeKey: 'workspace-frontmatter-import',
-    );
+      final result = await importArchive(
+        db: db,
+        account: account,
+        file: archive,
+        importScopeKey: 'workspace-frontmatter-import',
+      );
 
-    expect(result.memoCount, 1);
-    expect(result.attachmentCount, 1);
+      expect(result.memoCount, 1);
+      expect(result.attachmentCount, 1);
 
-    final memos = await db.listMemos(limit: 10);
-    expect(memos, hasLength(1));
-    final memo = memos.single;
-    expect(memo['content'] as String, '# Front matter memo\n\n正文内容');
-    expect(memo['content'] as String, isNot(contains('uid: demo-uid')));
-    expect(
-      memo['create_time'],
-      DateTime.parse('2026-03-23T22:57:50.000Z').millisecondsSinceEpoch ~/ 1000,
-    );
-    expect(
-      memo['update_time'],
-      DateTime.parse('2026-03-23T23:04:38.000Z').millisecondsSinceEpoch ~/ 1000,
-    );
-    expect(memo['pinned'], 1);
-  });
+      final memos = await db.listMemos(limit: 10);
+      expect(memos, hasLength(1));
+      final memo = memos.single;
+      expect(memo['content'] as String, '# Front matter memo\n\n正文内容');
+      expect(memo['content'] as String, isNot(contains('uid: demo-uid')));
+      expect(
+        memo['create_time'],
+        DateTime.parse('2026-03-23T22:57:50.000Z').millisecondsSinceEpoch ~/
+            1000,
+      );
+      expect(
+        memo['update_time'],
+        DateTime.parse('2026-03-23T23:04:38.000Z').millisecondsSinceEpoch ~/
+            1000,
+      );
+      expect(memo['pinned'], 1);
+    },
+  );
 }

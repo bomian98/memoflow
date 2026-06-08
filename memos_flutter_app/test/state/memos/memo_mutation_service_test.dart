@@ -96,14 +96,15 @@ void main() {
         syncState: 1,
       );
       final before = LocalMemo.fromDb((await db.getMemoByUid('memo-update'))!);
+      const updatedContent = '#fresh\n\nnew content';
 
       await container
           .read(memoMutationServiceProvider)
-          .updateMemoContent(before, 'new content #fresh');
+          .updateMemoContent(before, updatedContent);
 
       final after = await db.getMemoByUid('memo-update');
       expect(after, isNotNull);
-      expect(after!['content'], 'new content #fresh');
+      expect(after!['content'], updatedContent);
       expect(after['tags'], contains('fresh'));
 
       final versions = await db.listMemoVersionsByUid('memo-update');
@@ -117,7 +118,7 @@ void main() {
           jsonDecode(pending.single['payload'] as String)
               as Map<String, dynamic>;
       expect(payload['uid'], 'memo-update');
-      expect(payload['content'], 'new content #fresh');
+      expect(payload['content'], updatedContent);
       expect(payload['update_time'], isA<int>());
     },
   );

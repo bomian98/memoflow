@@ -258,7 +258,7 @@ void main() {
   testWidgets('prepareSubmissionDraft builds payload from current state', (
     tester,
   ) async {
-    final composer = MemoComposerController(initialText: 'Hello #work');
+    final composer = MemoComposerController(initialText: '#work\n\nHello');
     addTearDown(composer.dispose);
     final tempDir = Directory.systemTemp.createTempSync(
       'inline-compose-coordinator-draft',
@@ -306,7 +306,7 @@ void main() {
     );
 
     expect(draft, isNotNull);
-    expect(draft!.content, 'Hello #work');
+    expect(draft!.content, '#work\n\nHello');
     expect(draft.visibility, 'PUBLIC');
     expect(draft.tags, ['work']);
     expect(draft.location, location);

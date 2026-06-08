@@ -41,7 +41,7 @@ void main() {
   test('extractTags ignores link fragments while keeping real tags', () {
     expect(
       extractTags(
-        'Read [section](https://example.com/article#intro) #Work\n\n[jump](#details)',
+        'Read [section](https://example.com/article#intro)\n\n[jump](#details)\n\n#Work',
       ),
       const <String>['Work'],
     );
@@ -57,13 +57,24 @@ void main() {
 ```
 
 after #done'''),
+      const <String>['real'],
+    );
+    expect(
+      extractTags('''#real
+
+```c
+#include <stdio.h>
+#define DEBUG 1
+```
+
+#done'''),
       const <String>['done', 'real'],
     );
   });
 
   test('extractTags ignores tilde fenced code blocks', () {
     expect(
-      extractTags('''before #visible
+      extractTags('''#visible
 
 ~~~dart
 final value = '#hidden';
@@ -76,14 +87,22 @@ after'''),
 
   test('extractTags ignores inline code spans while keeping prose tags', () {
     expect(
-      extractTags('Use `#include` and `#not-a-tag`, then file under #cpp'),
+      extractTags('Use `#include` and `#not-a-tag`\n\n#cpp'),
       const <String>['cpp'],
     );
   });
 
-  test('extractTags keeps visible prose tags across markdown containers', () {
+  test('extractTags ignores protected hashes at tag-zone boundaries', () {
+    expect(extractTags('[#hidden](https://example.com)'), isEmpty);
+    expect(extractTags('![#hidden](https://example.com/image.png)'), isEmpty);
+    expect(extractTags('https://example.com/article#intro'), isEmpty);
+    expect(extractTags('`#hidden`'), isEmpty);
+    expect(extractTags('```\n#hidden\n```'), isEmpty);
+  });
+
+  test('extractTags only scans strict first and last tag zones', () {
     expect(
-      extractTags('''## Planning #heading-tag
+      extractTags('''#first #top
 
 - item #list-tag
 > quoted #quote-tag
@@ -92,21 +111,56 @@ after'''),
 | - | - |
 | Work | #table-tag |
 
-plain #paragraph-tag'''),
-      const <String>[
-        'heading-tag',
-        'list-tag',
-        'paragraph-tag',
-        'quote-tag',
-        'table-tag',
-      ],
+plain #paragraph-tag
+
+#bottom'''),
+      const <String>['bottom', 'first', 'top'],
     );
   });
 
-  test('extractTags scans middle content lines', () {
+  test('extractTags ignores prose hash fragments', () {
+    expect(extractTags('测试文本 #这是测试文本'), isEmpty);
+    expect(extractTags('今天记录一下 #生活\n\n#real'), const <String>['real']);
+  });
+
+  test('extractTags accepts leading tag prefixes with trailing prose', () {
+    expect(extractTags('#测试文本 测试文本'), const <String>['测试文本']);
     expect(
-      extractTags('first line #first\n\nmiddle line #middle-tag\nlast line'),
-      const <String>['first', 'middle-tag'],
+      extractTags('#first #top opening text\n\nbody\n\n#bottom closing text'),
+      const <String>['bottom', 'first', 'top'],
     );
+    expect(extractTags('#first text #ignored'), const <String>['first']);
+  });
+
+  test('extractTags ignores middle tag-looking lines', () {
+    expect(extractTags('#first\n\n#middle-tag\n\n#last'), const <String>[
+      'first',
+      'last',
+    ]);
+  });
+
+  test('extractTags treats MemoFlow internal markers as non-content lines', () {
+    expect(
+      extractTags('''# Example article
+
+Captured body
+
+#clip #reading
+
+<!-- memoflow-third-party-share -->'''),
+      const <String>['clip', 'reading'],
+    );
+    expect(
+      extractTags('#queued\n\n<!-- memoflow_quick_clip:memo-1 -->'),
+      const <String>['queued'],
+    );
+    expect(
+      extractTags('#inline\n\n<!-- memoflow-share-inline:attachment-1 -->'),
+      const <String>['inline'],
+    );
+  });
+
+  test('extractTags ignores indented code block tag lines', () {
+    expect(extractTags('    #hidden-code-tag'), isEmpty);
   });
 }

@@ -195,6 +195,7 @@ void main() {
           placeholderMemos.single['content'] as String,
           contains('Clipping...'),
         );
+        expect(_memoTags(placeholderMemos.single), contains('clip'));
         expect(await db.countOutboxPending(), 1);
         final memoUid = placeholderMemos.single['uid'] as String;
         final jobs = await db.listRecoverableQuickClipRecoveryJobs();
@@ -223,6 +224,7 @@ void main() {
           updatedMemos.single['content'] as String,
           contains('Captured Title'),
         );
+        expect(_memoTags(updatedMemos.single), contains('clip'));
         final completedJob = await db.getQuickClipRecoveryJobByMemoUid(memoUid);
         expect(completedJob?.status, QuickClipRecoveryJobStatus.completed);
       },
@@ -762,6 +764,13 @@ Future<_TestDatabase> _createDatabase(String prefix) async {
   final db = AppDatabase(dbName: dbName);
   await db.db;
   return _TestDatabase(dbName: dbName, database: db);
+}
+
+List<String> _memoTags(Map<String, dynamic> memo) {
+  return ((memo['tags'] as String?) ?? '')
+      .split(RegExp(r'\s+'))
+      .where((tag) => tag.isNotEmpty)
+      .toList(growable: false);
 }
 
 Future<void> _seedRecoveryJob(

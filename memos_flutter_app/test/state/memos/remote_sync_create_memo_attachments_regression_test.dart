@@ -76,7 +76,7 @@ void main() {
   );
 
   test(
-    'RemoteSyncController extracts middle-line tags when v0.27 payload tags are empty',
+    'RemoteSyncController ignores middle-line fallback tags when v0.27 payload tags are empty',
     () async {
       const memoUid = 'remote-tags-2';
       const middleTag = 'middle-tag';
@@ -106,7 +106,7 @@ void main() {
 
       await _runTagCompatibilitySync(server: server, db: db);
 
-      await _expectLocalTag(db, memoUid: memoUid, tag: middleTag);
+      await _expectNoLocalTag(db, memoUid: memoUid, tag: middleTag);
     },
   );
 
@@ -1682,6 +1682,25 @@ Future<void> _expectLocalTag(
   );
   expect(statsRows, hasLength(1));
   expect(readInt(statsRows.single['memo_count']), 1);
+}
+
+Future<void> _expectNoLocalTag(
+  AppDatabase db, {
+  required String memoUid,
+  required String tag,
+}) async {
+  final memo = await db.getMemoByUid(memoUid);
+  expect(memo, isNotNull);
+  final tagsText = (memo?['tags'] as String?) ?? '';
+  expect(tagsText.split(' '), isNot(contains(tag)));
+
+  final sqlite = await db.db;
+  final tagRows = await sqlite.query(
+    'tags',
+    where: 'path = ?',
+    whereArgs: <Object?>[tag],
+  );
+  expect(tagRows, isEmpty);
 }
 
 class _RemoteSyncTagCompatibilityServer {

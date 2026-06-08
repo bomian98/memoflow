@@ -1,5 +1,3 @@
-import 'package:markdown/markdown.dart' as md;
-
 const int _maxTagLength = 100;
 final RegExp _tagRuneRe = RegExp(r'[\p{L}\p{N}\p{S}\p{M}]', unicode: true);
 final RegExp _tagInlinePattern = RegExp(
@@ -17,6 +15,9 @@ final List<RegExp> _protectedInlineTagPatterns = <RegExp>[
     caseSensitive: false,
   ),
 ];
+final RegExp _memoInternalMarkerLinePattern = RegExp(
+  r'^<!--\s*(?:memoflow-third-party-share|memoflow_quick_clip:[^>]*|memoflow-share-inline:[^>]*)\s*-->$',
+);
 
 class InlineTagMatch {
   const InlineTagMatch({
@@ -78,90 +79,31 @@ String _normalizeTagSegment(String raw) {
   return buffer.toString();
 }
 
+bool isMemoInternalMarkerLine(String line) {
+  return _memoInternalMarkerLinePattern.hasMatch(line.trim());
+}
+
+bool isMemoTagNonContentLine(String line) {
+  final trimmed = line.trim();
+  return trimmed.isEmpty || isMemoInternalMarkerLine(trimmed);
+}
+
 List<String> extractTags(String content) {
   final tags = <String>{};
   if (content.isEmpty) return const [];
 
-  final document = md.Document(extensionSet: md.ExtensionSet.gitHubFlavored);
-  final nodes = document.parseLines(content.split('\n'));
-  for (final node in nodes) {
-    _extractTagsFromMarkdownNode(node, tags);
+  final lines = content.split('\n');
+  final tagZoneLineIndexes = findStrictTagZoneLineIndexes(lines);
+  for (final index in tagZoneLineIndexes) {
+    for (final match in findStrictTagZonePrefixMatches(lines[index])) {
+      if (match.tag.isEmpty) continue;
+      tags.add(match.tag);
+    }
   }
 
   final list = tags.toList(growable: false);
   list.sort();
   return list;
-}
-
-void _extractTagsFromMarkdownNode(md.Node node, Set<String> tags) {
-  _collectTagsFromMarkdownNode(node, tags, blocked: false);
-}
-
-void _collectTagsFromMarkdownNode(
-  md.Node node,
-  Set<String> tags, {
-  required bool blocked,
-}) {
-  if (node is md.Text) {
-    if (blocked) return;
-    final text = _decodeMarkdownTextEntities(node.text);
-    if (text.isEmpty) return;
-    for (final line in text.split('\n')) {
-      if (line.trim().isEmpty) continue;
-      for (final match in findInlineTagMatches(line)) {
-        if (match.tag.isEmpty) continue;
-        tags.add(match.tag);
-      }
-    }
-    return;
-  }
-
-  if (node is! md.Element) return;
-
-  final nextBlocked = blocked || _isProtectedMarkdownElement(node.tag);
-  if (nextBlocked && _skipDescendantsForTagExtraction(node.tag)) {
-    return;
-  }
-
-  final children = node.children;
-  if (children == null || children.isEmpty) return;
-  for (final child in children) {
-    _collectTagsFromMarkdownNode(child, tags, blocked: nextBlocked);
-  }
-}
-
-String _decodeMarkdownTextEntities(String text) {
-  if (!text.contains('&')) return text;
-  return text
-      .replaceAll('&amp;', '&')
-      .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&#39;', "'");
-}
-
-bool _skipDescendantsForTagExtraction(String tag) {
-  switch (tag) {
-    case 'code':
-    case 'pre':
-    case 'a':
-    case 'img':
-      return true;
-    default:
-      return false;
-  }
-}
-
-bool _isProtectedMarkdownElement(String tag) {
-  switch (tag) {
-    case 'code':
-    case 'pre':
-    case 'a':
-    case 'img':
-      return true;
-    default:
-      return false;
-  }
 }
 
 List<InlineTagMatch> findInlineTagMatches(String line) {
@@ -186,6 +128,83 @@ List<InlineTagMatch> findInlineTagMatches(String line) {
     matches.add(InlineTagMatch(start: match.start, end: match.end, tag: tag));
   }
   return matches;
+}
+
+List<int> findStrictTagZoneLineIndexes(
+  List<String> lines, {
+  bool Function(String line)? isNonContentLine,
+}) {
+  if (lines.isEmpty) return const <int>[];
+
+  final nonContentLine = isNonContentLine ?? isMemoTagNonContentLine;
+  int? firstLine;
+  int? lastLine;
+  for (var i = 0; i < lines.length; i++) {
+    if (nonContentLine(lines[i])) continue;
+    firstLine ??= i;
+    lastLine = i;
+  }
+
+  if (firstLine == null || lastLine == null) return const <int>[];
+
+  final indexes = <int>[];
+  if (isStrictTagZoneLine(lines[firstLine])) {
+    indexes.add(firstLine);
+  }
+  if (lastLine != firstLine && isStrictTagZoneLine(lines[lastLine])) {
+    indexes.add(lastLine);
+  }
+  return indexes;
+}
+
+bool isStrictTagZoneLine(String line) {
+  return findStrictTagZonePrefixMatches(line).isNotEmpty;
+}
+
+List<InlineTagMatch> findStrictTagZonePrefixMatches(String line) {
+  if (_hasIndentedCodeBlockPrefix(line)) return const [];
+
+  if (line.trim().isEmpty) return const [];
+
+  final matches = findInlineTagMatches(line);
+  if (matches.isEmpty) return const [];
+
+  var cursor = 0;
+  final prefixMatches = <InlineTagMatch>[];
+  for (final match in matches) {
+    if (!_isWhitespaceOnly(line.substring(cursor, match.start))) {
+      break;
+    }
+    if (!_hasTokenBoundaryAfter(line, match.end)) {
+      break;
+    }
+    prefixMatches.add(match);
+    cursor = match.end;
+  }
+
+  return prefixMatches;
+}
+
+bool _hasIndentedCodeBlockPrefix(String line) {
+  var columns = 0;
+  for (final codeUnit in line.codeUnits) {
+    if (codeUnit == 0x20) {
+      columns++;
+    } else if (codeUnit == 0x09) {
+      columns += 4;
+    } else {
+      break;
+    }
+    if (columns >= 4) return true;
+  }
+  return false;
+}
+
+bool _isWhitespaceOnly(String value) => value.trim().isEmpty;
+
+bool _hasTokenBoundaryAfter(String line, int index) {
+  if (index >= line.length) return true;
+  return String.fromCharCode(line.codeUnitAt(index)).trim().isEmpty;
 }
 
 bool _shouldSkipInlineTag(int? previousRune) {

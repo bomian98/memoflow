@@ -1,6 +1,7 @@
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 
+import '../../core/tags.dart';
 import '../../data/models/memo_clip_card_metadata.dart';
 import 'share_clip_models.dart';
 import 'share_handler.dart';
@@ -100,13 +101,21 @@ String buildLinkOnlyMemoText(
   List<String> tags = const [],
 }) {
   final text = buildLinkOnlyComposeRequest(payload).text.trimRight();
-  final normalizedTags = tags
-      .map((tag) => tag.trim())
-      .where((tag) => tag.isNotEmpty)
-      .toList(growable: false);
-  if (normalizedTags.isEmpty) return text;
-  if (text.isEmpty) return normalizedTags.join(' ');
-  return '$text\n\n${normalizedTags.join(' ')}';
+  final tagLine = formatMemoTagZoneLine(tags);
+  if (tagLine.isEmpty) return text;
+  if (text.isEmpty) return tagLine;
+  return '$text\n\n$tagLine';
+}
+
+String formatMemoTagZoneLine(List<String> tags) {
+  final normalizedTags = <String>[];
+  final seen = <String>{};
+  for (final raw in tags) {
+    final normalized = normalizeTagPath(raw);
+    if (normalized.isEmpty || !seen.add(normalized)) continue;
+    normalizedTags.add('#$normalized');
+  }
+  return normalizedTags.join(' ');
 }
 
 String buildShareCaptureMemoText({

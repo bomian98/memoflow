@@ -115,18 +115,14 @@ bool looksLikeFullHtmlDocument(String text) {
 
 String decorateMemoTagsForHtml(String text) {
   final lines = text.split('\n');
-  int? firstLine;
-  int? lastLine;
-  for (var i = 0; i < lines.length; i++) {
-    if (_isNonContentLine(lines[i])) continue;
-    firstLine ??= i;
-    lastLine = i;
-  }
-  if (firstLine == null || lastLine == null) return text;
+  final tagZoneLineIndexes = findStrictTagZoneLineIndexes(
+    lines,
+    isNonContentLine: _isNonContentLine,
+  );
+  if (tagZoneLineIndexes.isEmpty) return text;
 
-  lines[firstLine] = _replaceTagsInLine(lines[firstLine]);
-  if (lastLine != firstLine) {
-    lines[lastLine] = _replaceTagsInLine(lines[lastLine]);
+  for (final index in tagZoneLineIndexes) {
+    lines[index] = _replaceTagsInLine(lines[index]);
   }
 
   return lines.join('\n');
@@ -159,7 +155,9 @@ String _preserveExplicitBlankLines(String text) {
 
 bool _isNonContentLine(String line) {
   final trimmed = line.trim();
-  return trimmed.isEmpty || trimmed == _memoBlankLineHtml;
+  return trimmed.isEmpty ||
+      trimmed == _memoBlankLineHtml ||
+      isMemoInternalMarkerLine(trimmed);
 }
 
 String _protectEmbeddedFullHtmlDocuments(String text) {
@@ -272,7 +270,7 @@ String _normalizeFencedCodeBlocks(String text) {
 }
 
 String _replaceTagsInLine(String line) {
-  final matches = findInlineTagMatches(line);
+  final matches = findStrictTagZonePrefixMatches(line);
   if (matches.isEmpty) return line;
 
   final buffer = StringBuffer();

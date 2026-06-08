@@ -15,7 +15,7 @@ void main() {
     final keptLocalUrl = Uri.file(keptInlinePath).toString();
     final draft = NoteInputSubmitDraft(
       content:
-          'Hello #work ![]($keptLocalUrl) ![](https://example.com/keep.png)   ',
+          '#work\n\nHello ![]($keptLocalUrl) ![](https://example.com/keep.png)   ',
       visibility: 'PUBLIC',
       location: const MemoLocation(
         placeholder: 'Desk',
@@ -124,7 +124,7 @@ void main() {
 
       final result = await coordinator.submit(
         const NoteInputSubmitDraft(
-          content: 'Submit #tag',
+          content: '#tag\n\nSubmit',
           visibility: 'PRIVATE',
           location: null,
           relations: <Map<String, dynamic>>[],
@@ -139,7 +139,7 @@ void main() {
       expect(result.memoUid, 'memo-submit-1');
       expect(controller.createCallCount, 1);
       expect(controller.lastUid, 'memo-submit-1');
-      expect(controller.lastContent, 'Submit #tag');
+      expect(controller.lastContent, '#tag\n\nSubmit');
       expect(controller.lastTags, ['tag']);
       expect(controller.lastNow, DateTime.utc(2025, 2, 3, 4, 5, 6));
       expect(syncCallCount, 1);

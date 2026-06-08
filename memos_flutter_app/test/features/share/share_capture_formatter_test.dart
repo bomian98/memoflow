@@ -452,7 +452,7 @@ void main() {
 
     expect(
       text,
-      '[Example article](https://example.com/articles/1)\n\n#clip reading',
+      '[Example article](https://example.com/articles/1)\n\n#clip #reading',
     );
   });
 }
