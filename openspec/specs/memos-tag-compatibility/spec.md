@@ -29,31 +29,6 @@ The app MUST parse non-empty `tags` arrays from Memos `0.27.x` `ListMemos` respo
 - **WHEN** remote sync processes a v0.27 memo with non-empty backend `Memo.tags`
 - **THEN** the local `memos.tags`, `tags`, `memo_tags`, and `tag_stats_cache` data MUST contain the backend-compatible tag path
 
-### Requirement: Content fallback extraction covers full memo content
-When backend tag payloads are absent, empty, stale, or when local-only memo content is saved, the app MUST extract valid inline tags from all relevant user-visible Markdown prose rather than using raw line scanning that ignores Markdown context.
-
-#### Scenario: Tag appears in the middle of a multi-line memo
-- **WHEN** a memo content body has no backend `tags` payload and contains `#middle-tag` on a middle non-empty line
-- **THEN** remote sync fallback extraction MUST include `middle-tag` in the local memo tags and tag statistics
-
-#### Scenario: Protected URL and Markdown fragments are not tags
-- **WHEN** memo content contains Markdown links or URL fragments such as `https://example.com/page#section` or `[jump](#details)`
-- **THEN** fallback extraction MUST NOT create tags from those protected fragments
-
-#### Scenario: Fenced code block hashes are not tags
-- **WHEN** memo content contains a fenced code block with code such as `#include <stdio.h>`
-- **THEN** fallback extraction MUST NOT create `include` or other tags from inside the fenced code block
-- **AND** valid tags outside the fenced code block MUST still be extracted
-
-#### Scenario: Inline code hashes are not tags
-- **WHEN** memo content contains inline code such as `` `#include` `` or `` `#not-a-tag` ``
-- **THEN** fallback extraction MUST NOT create tags from the inline code span
-- **AND** valid prose tags in the same memo MUST still be extracted
-
-#### Scenario: User-visible prose tags remain supported
-- **WHEN** memo content contains valid tags in ordinary paragraph text, list item text, blockquote text, or table cell text
-- **THEN** fallback extraction MUST preserve those tags according to the documented tag grammar
-
 ### Requirement: Tag grammar remains a shared lower-layer seam
 Tag parsing, Markdown-aware extraction, normalization, and write-path reconciliation behavior MUST remain centralized in stable lower-layer code and MUST NOT be duplicated in feature screens, widgets, or UI-only helpers.
 
@@ -104,3 +79,56 @@ The app SHALL provide a controlled maintenance operation that can recompute pers
 #### Scenario: Maintenance avoids silent policy loss
 - **WHEN** a recompute operation could remove stored tags that are not present in memo content
 - **THEN** the operation MUST be explicit, documented, or otherwise scoped so users are not surprised by silent tag removal
+
+### Requirement: Content fallback extraction uses strict tag zones
+当后端 tag payload 缺失、为空、陈旧，或本地-only memo 内容需要从正文推导标签时，app MUST 只从严格标签区提取标签。严格标签区仅包含 memo 的首个和最后一个非空内容行；候选行 trim 后 MUST 以一个或多个空白分隔的 `#tag` token 开头。tag prefix 后 MAY 跟随普通说明文字，但说明文字中的后续 `#...` MUST NOT 被提取为标签。普通正文中夹带的 `#...` MUST NOT 被提取为标签。
+
+#### Scenario: First and last tag-zone lines are extracted
+- **WHEN** memo content has first non-empty line `#openwrt #build`, middle body text, and last non-empty line `#router`
+- **THEN** fallback extraction MUST return `openwrt`, `build`, and `router`
+- **AND** local tag storage, search, and statistics MUST reflect only those extracted tag paths when no backend tag payload is available
+
+#### Scenario: Leading tag prefix with trailing prose is extracted
+- **WHEN** memo content has first or last non-empty line `#测试文本 测试文本`
+- **THEN** fallback extraction MUST return `测试文本`
+- **AND** the trailing prose `测试文本` MUST remain normal memo content
+
+#### Scenario: Later prose hash after tag prefix is ignored
+- **WHEN** memo content has first or last non-empty line `#first text #ignored`
+- **THEN** fallback extraction MUST return `first`
+- **AND** fallback extraction MUST NOT include `ignored`
+
+#### Scenario: Body prose hash is ignored
+- **WHEN** memo content contains ordinary prose such as `测试文本 #这是测试文本`
+- **THEN** fallback extraction MUST NOT create `这是测试文本` as a tag
+- **AND** the prose content MUST remain unchanged
+
+#### Scenario: Middle body tag is ignored
+- **WHEN** memo content has a valid-looking `#middle-tag` only in a middle paragraph, list item, blockquote, or table cell
+- **THEN** fallback extraction MUST NOT include `middle-tag`
+
+#### Scenario: Non-zone first or last line is ignored
+- **WHEN** the first or last non-empty line contains prose plus a hash fragment such as `今天记录一下 #生活`
+- **THEN** fallback extraction MUST NOT include `生活`
+
+#### Scenario: Protected Markdown contexts remain ignored
+- **WHEN** memo content contains code blocks, inline code, links, images, or URL fragments with `#...`
+- **THEN** fallback extraction MUST NOT create tags from those protected contexts
+- **AND** valid tags in strict tag-zone lines outside those protected contexts MUST still be extracted
+
+#### Scenario: Backend tag payload remains authoritative
+- **WHEN** remote sync receives a memo with a non-empty backend `Memo.tags` payload
+- **THEN** local storage MUST preserve the backend tag payload even if those tags are not present in strict tag-zone lines
+
+### Requirement: Memo tag decoration follows strict tag zones
+Memo HTML rendering MUST decorate clickable tag chips only for tags that are in strict tag-zone lines. Display decoration MUST NOT make ordinary prose hash fragments look like persisted or navigable tags.
+
+#### Scenario: Prose hash is not decorated
+- **WHEN** memo content contains `测试文本 #这是测试文本`
+- **THEN** rendered memo HTML MUST NOT wrap `#这是测试文本` with the memo tag decoration span
+
+#### Scenario: Tag-zone line is decorated
+- **WHEN** memo content contains a strict tag-zone prefix such as `#openwrt #build body #ignored`
+- **THEN** rendered memo HTML SHOULD decorate `#openwrt` and `#build` as memo tags
+- **AND** rendered memo HTML MUST NOT decorate `#ignored`
+
