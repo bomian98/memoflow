@@ -10,6 +10,7 @@ import '../home/home_entry_screen.dart';
 import '../home/home_navigation_host.dart';
 import '../memos/memos_list_screen.dart';
 import '../settings/about_us_screen.dart';
+import '../../platform/widgets/platform_adaptive_layout.dart';
 import '../../i18n/strings.g.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -116,7 +117,7 @@ class AboutScreen extends StatelessWidget {
       onOpenNotifications: () => _openNotifications(context),
       embedded: useDesktopSidePane,
     );
-    final pageBody = const AboutUsContent();
+    final pageBody = const _AboutDestinationBody(child: AboutUsContent());
     return PopScope(
       canPop: useEmbeddedBottomNav,
       onPopInvokedWithResult: (didPop, result) {
@@ -196,6 +197,26 @@ class AboutScreen extends StatelessWidget {
               : pageBody,
         ),
       ),
+    );
+  }
+}
+
+class _AboutDestinationBody extends StatelessWidget {
+  const _AboutDestinationBody({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        PlatformBoundedContent(
+          desktopMaxWidth: 760,
+          tabletMaxWidth: 680,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: child,
+        ),
+      ],
     );
   }
 }
