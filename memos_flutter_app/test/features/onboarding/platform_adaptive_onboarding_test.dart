@@ -50,25 +50,7 @@ void main() {
     await _setViewport(tester, const Size(1200, 900));
     debugPlatformTargetOverride = TargetPlatform.macOS;
 
-    await tester.pumpWidget(
-      _buildApp(
-        child: const LanguageSelectionScreen(),
-        overrides: [
-          devicePreferencesProvider.overrideWith(
-            (ref) => _TestDevicePreferencesController(
-              ref,
-              DevicePreferences.defaultsForLanguage(
-                AppLanguage.en,
-              ).copyWith(hasSelectedLanguage: false),
-            ),
-          ),
-          localLibrariesProvider.overrideWith(
-            (ref) => _TestLocalLibrariesController(ref),
-          ),
-          appSessionProvider.overrideWith((ref) => _TestSessionController()),
-        ],
-      ),
-    );
+    await tester.pumpWidget(_buildLanguageSelectionApp());
     await tester.pumpAndSettle();
 
     final button = _buttonInside(
@@ -77,6 +59,57 @@ void main() {
 
     expect(button, findsOneWidget);
     expect(tester.getSize(button).width, lessThanOrEqualTo(260));
+  });
+
+  testWidgets('first setup renders language selector on iPhone', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(390, 844));
+    debugPlatformTargetOverride = TargetPlatform.iOS;
+
+    await tester.pumpWidget(_buildLanguageSelectionApp());
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(
+      find.byKey(const ValueKey<String>('onboarding.languageSelector')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('first setup opens platform language picker on iPhone', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(390, 844));
+    debugPlatformTargetOverride = TargetPlatform.iOS;
+
+    await tester.pumpWidget(_buildLanguageSelectionApp());
+    await tester.pumpAndSettle();
+
+    final screenContext = tester.element(find.byType(LanguageSelectionScreen));
+    final japaneseLabel = screenContext.t.strings.languages.ja;
+    await tester.tap(
+      find.byKey(const ValueKey<String>('onboarding.languageSelector')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('onboarding.languagePickerList')),
+      findsOneWidget,
+    );
+    final japaneseOption = find.byKey(
+      const ValueKey<String>('onboarding.languageOption.ja'),
+    );
+    expect(japaneseOption, findsOneWidget);
+
+    await tester.tap(japaneseOption);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(japaneseOption, findsNothing);
+    expect(find.text(japaneseLabel), findsOneWidget);
   });
 
   testWidgets('login keeps connect action bounded on regular desktop', (
@@ -158,8 +191,8 @@ void main() {
 
     expect(confirmButton, findsOneWidget);
     expect(cancelButton, findsOneWidget);
-    expect(tester.getSize(confirmButton).width, 358);
-    expect(tester.getSize(cancelButton).width, 358);
+    expect(tester.getSize(confirmButton).width, 326);
+    expect(tester.getSize(cancelButton).width, 326);
   });
 
   testWidgets('login in narrow desktop can scroll to primary action', (
@@ -192,6 +225,26 @@ void main() {
     expect(tester.getSize(button).width, 380);
     expect(tester.getTopLeft(actionText).dy, lessThan(360));
   });
+}
+
+Widget _buildLanguageSelectionApp({AppLanguage language = AppLanguage.en}) {
+  return _buildApp(
+    child: const LanguageSelectionScreen(),
+    overrides: [
+      devicePreferencesProvider.overrideWith(
+        (ref) => _TestDevicePreferencesController(
+          ref,
+          DevicePreferences.defaultsForLanguage(
+            language,
+          ).copyWith(hasSelectedLanguage: false),
+        ),
+      ),
+      localLibrariesProvider.overrideWith(
+        (ref) => _TestLocalLibrariesController(ref),
+      ),
+      appSessionProvider.overrideWith((ref) => _TestSessionController()),
+    ],
+  );
 }
 
 Finder _buttonInside(ValueKey<String> key) {

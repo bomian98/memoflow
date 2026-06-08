@@ -10,6 +10,7 @@ import '../../data/models/app_preferences.dart';
 import '../../data/models/local_library.dart';
 import '../../platform/widgets/platform_adaptive_layout.dart';
 import '../../platform/widgets/platform_page.dart';
+import '../../platform/widgets/platform_picker.dart';
 import '../../platform/widgets/platform_primary_action.dart';
 import '../settings/local_mode_setup_screen.dart';
 import '../../i18n/strings.g.dart';
@@ -142,6 +143,144 @@ class _LanguageSelectionScreenState
           style: TextStyle(fontSize: 12, color: textMuted),
         ),
       ],
+    );
+  }
+
+  Future<void> _showLanguagePicker({
+    required Color surface,
+    required Color textMain,
+    required Color textMuted,
+  }) async {
+    await showPlatformPicker<void>(
+      context: context,
+      desktopMaxWidth: 440,
+      presentation: PlatformPickerPresentation.centeredDialog,
+      builder: (pickerContext) {
+        return Material(
+          color: surface,
+          child: DefaultTextStyle.merge(
+            style: const TextStyle(decoration: TextDecoration.none),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
+                      child: Text(
+                        context.t.strings.onboarding.selectLanguage,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: textMain,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: ListView(
+                      key: const ValueKey<String>(
+                        'onboarding.languagePickerList',
+                      ),
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+                      children: [
+                        for (final language in _languageOptions)
+                          ListTile(
+                            key: ValueKey<String>(
+                              'onboarding.languageOption.${language.name}',
+                            ),
+                            leading: Icon(
+                              language == _selected
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_off,
+                              color: language == _selected
+                                  ? MemoFlowPalette.primary
+                                  : textMuted,
+                            ),
+                            title: Text(
+                              _languageTitle(language),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: textMain,
+                              ),
+                            ),
+                            subtitle: Text(
+                              _languageSubtitle(language),
+                              style: TextStyle(fontSize: 12, color: textMuted),
+                            ),
+                            onTap: () {
+                              Navigator.of(pickerContext).pop();
+                              _handleLanguageChanged(language);
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageSelector({
+    required Color card,
+    required Color border,
+    required Color textMain,
+    required Color textMuted,
+    required bool isDark,
+  }) {
+    const borderRadius = BorderRadius.all(Radius.circular(18));
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: card,
+        borderRadius: borderRadius,
+        border: Border.all(color: border),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                  color: Colors.black.withValues(alpha: 0.06),
+                ),
+              ],
+      ),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            key: const ValueKey<String>('onboarding.languageSelector'),
+            onTap: () => _showLanguagePicker(
+              surface: card,
+              textMain: textMain,
+              textMuted: textMuted,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _languageLabel(
+                      language: _selected,
+                      textMain: textMain,
+                      textMuted: textMuted,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(Icons.expand_more, size: 20, color: textMuted),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -313,224 +452,180 @@ class _LanguageSelectionScreenState
     final border = isDark
         ? MemoFlowPalette.borderDark
         : MemoFlowPalette.borderLight;
-    final dropdownItems = [
-      for (final language in _languageOptions)
-        DropdownMenuItem<AppLanguage>(
-          value: language,
-          child: _languageLabel(
-            language: language,
-            textMain: textMain,
-            textMuted: textMuted,
-          ),
-        ),
-    ];
 
     return PlatformPage(
       backgroundColor: bg,
-      body: Stack(
-        children: [
-          if (isDark)
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [const Color(0xFF0B0B0B), bg, bg],
+      body: DefaultTextStyle.merge(
+        style: const TextStyle(decoration: TextDecoration.none),
+        child: Stack(
+          children: [
+            if (isDark)
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [const Color(0xFF0B0B0B), bg, bg],
+                    ),
+                  ),
+                ),
+              ),
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+                child: PlatformBoundedContent(
+                  desktopMaxWidth: 560,
+                  tabletMaxWidth: 560,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                              color: MemoFlowPalette.primary.withValues(
+                                alpha: isDark ? 0.18 : 0.16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: Image.asset(
+                            _memoFlowOnboardingLogoAsset,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.high,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'MemoFlow',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: textMain,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.t.strings.onboarding.tagline,
+                        style: TextStyle(fontSize: 12, color: textMuted),
+                      ),
+                      const SizedBox(height: 24),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          context.t.strings.onboarding.selectLanguage,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: textMain,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildLanguageSelector(
+                        card: card,
+                        border: border,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 24),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          context.t.strings.onboarding.selectMode,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: textMain,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          context.t.strings.onboarding.modeHint,
+                          style: TextStyle(fontSize: 12, color: textMuted),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _ModeCard(
+                        selected: _mode == OnboardingMode.local,
+                        background: card,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        title: context.t.strings.onboarding.modeLocalTitle,
+                        label: context.t.strings.onboarding.modeLocalLabel,
+                        description: context.t.strings.onboarding.modeLocalDesc,
+                        icon: Icons.folder_rounded,
+                        onTap: () =>
+                            setState(() => _mode = OnboardingMode.local),
+                      ),
+                      const SizedBox(height: 14),
+                      _ModeCard(
+                        selected: _mode == OnboardingMode.server,
+                        background: card,
+                        textMain: textMain,
+                        textMuted: textMuted,
+                        title: context.t.strings.onboarding.modeServerTitle,
+                        label: context.t.strings.onboarding.modeServerLabel,
+                        description:
+                            context.t.strings.onboarding.modeServerDesc,
+                        icon: Icons.cloud_rounded,
+                        onTap: () =>
+                            setState(() => _mode = OnboardingMode.server),
+                      ),
+                      const SizedBox(height: 22),
+                      PlatformPrimaryAction(
+                        key: const ValueKey<String>(
+                          'onboarding.getStartedAction',
+                        ),
+                        onPressed: _submitting ? null : _confirmSelection,
+                        desktopAlignment: AlignmentDirectional.center,
+                        desktopMaxWidth: 260,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: MemoFlowPalette.primary,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: _submitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                context.t.strings.onboarding.getStarted,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
-              child: PlatformBoundedContent(
-                desktopMaxWidth: 560,
-                tabletMaxWidth: 560,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 76,
-                      height: 76,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
-                        boxShadow: [
-                          BoxShadow(
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                            color: MemoFlowPalette.primary.withValues(
-                              alpha: isDark ? 0.18 : 0.16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(22),
-                        child: Image.asset(
-                          _memoFlowOnboardingLogoAsset,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.high,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'MemoFlow',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: textMain,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.t.strings.onboarding.tagline,
-                      style: TextStyle(fontSize: 12, color: textMuted),
-                    ),
-                    const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        context.t.strings.onboarding.selectLanguage,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: textMain,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: card,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: border),
-                        boxShadow: isDark
-                            ? null
-                            : [
-                                BoxShadow(
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                  color: Colors.black.withValues(alpha: 0.06),
-                                ),
-                              ],
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<AppLanguage>(
-                          value: _selected,
-                          isExpanded: true,
-                          items: dropdownItems,
-                          onChanged: _handleLanguageChanged,
-                          icon: Icon(
-                            Icons.expand_more,
-                            size: 20,
-                            color: textMuted,
-                          ),
-                          dropdownColor: card,
-                          selectedItemBuilder: (context) => [
-                            for (final language in _languageOptions)
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: _languageLabel(
-                                  language: language,
-                                  textMain: textMain,
-                                  textMuted: textMuted,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        context.t.strings.onboarding.selectMode,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: textMain,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        context.t.strings.onboarding.modeHint,
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _ModeCard(
-                      selected: _mode == OnboardingMode.local,
-                      background: card,
-                      textMain: textMain,
-                      textMuted: textMuted,
-                      title: context.t.strings.onboarding.modeLocalTitle,
-                      label: context.t.strings.onboarding.modeLocalLabel,
-                      description: context.t.strings.onboarding.modeLocalDesc,
-                      icon: Icons.folder_rounded,
-                      onTap: () => setState(() => _mode = OnboardingMode.local),
-                    ),
-                    const SizedBox(height: 14),
-                    _ModeCard(
-                      selected: _mode == OnboardingMode.server,
-                      background: card,
-                      textMain: textMain,
-                      textMuted: textMuted,
-                      title: context.t.strings.onboarding.modeServerTitle,
-                      label: context.t.strings.onboarding.modeServerLabel,
-                      description: context.t.strings.onboarding.modeServerDesc,
-                      icon: Icons.cloud_rounded,
-                      onTap: () =>
-                          setState(() => _mode = OnboardingMode.server),
-                    ),
-                    const SizedBox(height: 22),
-                    PlatformPrimaryAction(
-                      key: const ValueKey<String>(
-                        'onboarding.getStartedAction',
-                      ),
-                      onPressed: _submitting ? null : _confirmSelection,
-                      desktopAlignment: AlignmentDirectional.center,
-                      desktopMaxWidth: 260,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: MemoFlowPalette.primary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      child: _submitting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              context.t.strings.onboarding.getStarted,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
