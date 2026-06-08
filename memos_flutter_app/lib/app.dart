@@ -1025,7 +1025,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
       _macosMenuChannel.setMethodCallHandler(null);
     }
     _desktopWindowManager.dispose();
-    unawaited(_desktopQuickInputController.unregisterHotKey());
+    unawaited(_desktopQuickInputController.releaseHotKeyForTeardown());
     _homeWidgetsUpdater.dispose();
     unawaited(_exitCoordinator?.dispose());
     super.dispose();

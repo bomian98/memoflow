@@ -159,6 +159,14 @@ class DesktopQuickInputController {
   }
 
   Future<void> unregisterHotKey() async {
+    await _releaseHotKey(updateRegistrationStatus: true);
+  }
+
+  Future<void> releaseHotKeyForTeardown() async {
+    await _releaseHotKey(updateRegistrationStatus: false);
+  }
+
+  Future<void> _releaseHotKey({required bool updateRegistrationStatus}) async {
     final hotKey = _desktopQuickInputHotKey;
     try {
       if (hotKey != null) {
@@ -167,9 +175,11 @@ class DesktopQuickInputController {
     } catch (_) {
     } finally {
       _desktopQuickInputHotKey = null;
-      _setQuickRecordHotKeyRegistrationStatus(
-        DesktopQuickRecordHotKeyRegistrationStatus.unavailable,
-      );
+      if (updateRegistrationStatus) {
+        _setQuickRecordHotKeyRegistrationStatus(
+          DesktopQuickRecordHotKeyRegistrationStatus.unavailable,
+        );
+      }
     }
   }
 
