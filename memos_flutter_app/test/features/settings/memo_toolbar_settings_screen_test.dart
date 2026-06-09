@@ -12,6 +12,7 @@ import 'package:memos_flutter_app/data/models/account.dart';
 import 'package:memos_flutter_app/data/models/device_preferences.dart';
 import 'package:memos_flutter_app/data/models/instance_profile.dart';
 import 'package:memos_flutter_app/data/models/memo_toolbar_preferences.dart';
+import 'package:memos_flutter_app/data/models/resolved_app_settings.dart';
 import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/features/settings/memo_toolbar_settings_screen.dart';
 import 'package:memos_flutter_app/features/settings/preferences_settings_screen.dart';
@@ -21,6 +22,7 @@ import 'package:memos_flutter_app/platform/platform_target.dart';
 import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_migration_service.dart';
+import 'package:memos_flutter_app/state/settings/resolved_preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/workspace_preferences_provider.dart';
 import 'package:memos_flutter_app/state/system/session_provider.dart';
 import 'package:memos_flutter_app/state/system/system_fonts_provider.dart';
@@ -67,6 +69,34 @@ void main() {
 
     expect(find.text('Auto-open keyboard for Quick Input'), findsNothing);
     expect(find.text('Confirm on Exit'), findsOneWidget);
+  });
+
+  testWidgets('shows engagement preference in server workspace', (
+    tester,
+  ) async {
+    final container = _createContainer(includeSession: true);
+    addTearDown(container.dispose);
+
+    await _pumpPreferencesScreen(tester, container: container);
+
+    expect(find.text('Show likes and comments'), findsOneWidget);
+  });
+
+  testWidgets('hides engagement preference in local library workspace', (
+    tester,
+  ) async {
+    final container = _createContainer(
+      includeSession: true,
+      localLibraryMode: true,
+      initialWorkspacePrefs: WorkspacePreferences.defaults.copyWith(
+        showMemoEngagement: true,
+      ),
+    );
+    addTearDown(container.dispose);
+
+    await _pumpPreferencesScreen(tester, container: container);
+
+    expect(find.text('Show likes and comments'), findsNothing);
   });
 
   testWidgets('launch action opens centered dialog and supports Explore', (
@@ -325,11 +355,18 @@ void main() {
 ProviderContainer _createContainer({
   bool includeSession = false,
   MemoToolbarPreferences? initialPrefs,
+  WorkspacePreferences? initialWorkspacePrefs,
+  bool localLibraryMode = false,
 }) {
   final repository = _TestAppPreferencesRepository(initialPrefs: initialPrefs);
   final deviceRepository = _TestDevicePreferencesRepository();
+  final workspacePrefs =
+      initialWorkspacePrefs ??
+      WorkspacePreferences.defaults.copyWith(
+        memoToolbarPreferences: initialPrefs ?? MemoToolbarPreferences.defaults,
+      );
   final workspaceRepository = _TestWorkspacePreferencesRepository(
-    initialPrefs: initialPrefs,
+    initialPrefs: workspacePrefs,
   );
   return ProviderContainer(
     overrides: [
@@ -340,6 +377,16 @@ ProviderContainer _createContainer({
       ),
       devicePreferencesProvider.overrideWith(
         (ref) => _TestDevicePreferencesController(ref, deviceRepository),
+      ),
+      resolvedAppSettingsProvider.overrideWithValue(
+        ResolvedAppSettings(
+          device: DevicePreferences.defaultsForLanguage(AppLanguage.en),
+          workspace: workspacePrefs,
+          workspaceKey: localLibraryMode ? 'local-library' : 'test-workspace',
+          hasWorkspace: true,
+          hasRemoteAccount: includeSession && !localLibraryMode,
+          isLocalLibraryMode: localLibraryMode,
+        ),
       ),
       currentWorkspaceKeyProvider.overrideWith((ref) => 'test-workspace'),
       currentWorkspacePreferencesProvider.overrideWith(
@@ -542,14 +589,13 @@ class _TestAppPreferencesController extends AppPreferencesController {
 
 class _TestWorkspacePreferencesRepository
     extends WorkspacePreferencesRepository {
-  _TestWorkspacePreferencesRepository({MemoToolbarPreferences? initialPrefs})
-    : _prefs = WorkspacePreferences.defaults.copyWith(
-        memoToolbarPreferences: initialPrefs ?? MemoToolbarPreferences.defaults,
-      ),
-      super(
-        PreferencesMigrationService(const FlutterSecureStorage()),
-        workspaceKey: 'test-workspace',
-      );
+  _TestWorkspacePreferencesRepository({
+    required WorkspacePreferences initialPrefs,
+  }) : _prefs = initialPrefs,
+       super(
+         PreferencesMigrationService(const FlutterSecureStorage()),
+         workspaceKey: 'test-workspace',
+       );
 
   WorkspacePreferences _prefs;
 

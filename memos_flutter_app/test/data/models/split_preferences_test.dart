@@ -123,7 +123,7 @@ void main() {
       final prefs = WorkspacePreferences.defaults.copyWith(
         collapseLongContent: false,
         collapseReferences: false,
-        showEngagementInAllMemoDetails: true,
+        showMemoEngagement: true,
         autoSyncOnStartAndResume: false,
         defaultUseLegacyApi: false,
         showDrawerExplore: false,
@@ -171,9 +171,33 @@ void main() {
       expect(legacy.showDrawerDraftBox, isFalse);
       expect(legacy.accountCustomThemes['workspace-1'], customTheme);
       expect(legacy.language, AppPreferences.defaults.language);
+      expect(prefs.showMemoEngagement, isTrue);
+      expect(legacy.showMemoEngagement, isTrue);
       expect(
         legacy.hasSelectedLanguage,
         AppPreferences.defaults.hasSelectedLanguage,
+      );
+    });
+
+    test('reads new memo engagement key with legacy fallback', () {
+      expect(
+        WorkspacePreferences.fromJson(const {
+          'showMemoEngagement': true,
+        }).showMemoEngagement,
+        isTrue,
+      );
+      expect(
+        WorkspacePreferences.fromJson(const {
+          'showEngagementInAllMemoDetails': true,
+        }).showMemoEngagement,
+        isTrue,
+      );
+      expect(
+        WorkspacePreferences.fromJson(const {
+          'showMemoEngagement': false,
+          'showEngagementInAllMemoDetails': true,
+        }).showMemoEngagement,
+        isFalse,
       );
     });
   });
@@ -197,6 +221,7 @@ void main() {
           workspace: workspace,
           workspaceKey: 'workspace-1',
           hasWorkspace: true,
+          hasRemoteAccount: true,
         );
 
         expect(settings.resolvedThemeColor, AppThemeColor.cypressGreen);
@@ -210,6 +235,47 @@ void main() {
         expect(
           legacy.accountThemeColors['workspace-1'],
           AppThemeColor.cypressGreen,
+        );
+      },
+    );
+
+    test(
+      'resolves memo engagement through remote and local workspace gates',
+      () {
+        final workspace = WorkspacePreferences.defaults.copyWith(
+          showMemoEngagement: true,
+        );
+
+        expect(
+          ResolvedAppSettings(
+            device: DevicePreferences.defaults,
+            workspace: workspace,
+            workspaceKey: 'remote',
+            hasWorkspace: true,
+            hasRemoteAccount: true,
+          ).effectiveShowMemoEngagement,
+          isTrue,
+        );
+        expect(
+          ResolvedAppSettings(
+            device: DevicePreferences.defaults,
+            workspace: workspace,
+            workspaceKey: 'local',
+            hasWorkspace: true,
+            hasRemoteAccount: false,
+            isLocalLibraryMode: true,
+          ).effectiveShowMemoEngagement,
+          isFalse,
+        );
+        expect(
+          ResolvedAppSettings(
+            device: DevicePreferences.defaults,
+            workspace: workspace.copyWith(showMemoEngagement: false),
+            workspaceKey: 'remote',
+            hasWorkspace: true,
+            hasRemoteAccount: true,
+          ).effectiveShowMemoEngagement,
+          isFalse,
         );
       },
     );

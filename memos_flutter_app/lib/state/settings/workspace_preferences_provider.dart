@@ -158,8 +158,10 @@ class WorkspacePreferencesController
       _setAndPersist(state.copyWith(collapseLongContent: value));
   void setCollapseReferences(bool value) =>
       _setAndPersist(state.copyWith(collapseReferences: value));
+  void setShowMemoEngagement(bool value) =>
+      _setAndPersist(state.copyWith(showMemoEngagement: value));
   void setShowEngagementInAllMemoDetails(bool value) =>
-      _setAndPersist(state.copyWith(showEngagementInAllMemoDetails: value));
+      setShowMemoEngagement(value);
   void setAutoSyncOnStartAndResume(bool value) =>
       _setAndPersist(state.copyWith(autoSyncOnStartAndResume: value));
   void setDefaultUseLegacyApi(bool value) =>

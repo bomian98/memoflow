@@ -33,6 +33,7 @@ import '../image_preview/image_preview_item.dart';
 import '../image_preview/image_preview_launcher.dart';
 import '../image_preview/image_preview_open_request.dart';
 import '../location_picker/show_location_picker.dart';
+import '../settings/location_settings_navigation.dart';
 import '../voice/voice_record_screen.dart';
 import 'attachment_gallery_screen.dart';
 import 'compose_toolbar_shared.dart';
@@ -189,6 +190,7 @@ class MemosListInlineComposeCoordinator extends ChangeNotifier {
           : showLocationPickerSheetOrDialog(
               context: context,
               ref: _ref,
+              openLocationSettings: openLocationSettingsSurface,
               initialLocation: _location,
             ));
       if (!context.mounted || next == null) return;

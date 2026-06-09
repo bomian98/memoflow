@@ -16,11 +16,14 @@ import 'package:memos_flutter_app/core/top_toast.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
 import 'package:memos_flutter_app/data/models/attachment.dart';
 import 'package:memos_flutter_app/data/models/content_fingerprint.dart';
+import 'package:memos_flutter_app/data/models/device_preferences.dart';
 import 'package:memos_flutter_app/data/models/instance_profile.dart';
 import 'package:memos_flutter_app/data/models/local_memo.dart';
 import 'package:memos_flutter_app/data/models/memo.dart';
 import 'package:memos_flutter_app/data/models/memo_relation.dart';
 import 'package:memos_flutter_app/data/models/reaction.dart';
+import 'package:memos_flutter_app/data/models/resolved_app_settings.dart';
+import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/features/memos/memo_detail_screen.dart';
 import 'package:memos_flutter_app/features/memos/memo_card_action.dart';
 import 'package:memos_flutter_app/features/memos/memo_hero_flight.dart';
@@ -34,6 +37,7 @@ import 'package:memos_flutter_app/features/share/share_inline_image_content.dart
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memo_engagement_provider.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
+import 'package:memos_flutter_app/state/settings/resolved_preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_provider.dart';
 import 'package:memos_flutter_app/state/system/session_provider.dart';
 import 'package:memos_flutter_app/state/tags/tag_color_lookup.dart';
@@ -682,7 +686,7 @@ void main() {
     await tester.pumpWidget(
       _buildTestApp(
         memo: memo,
-        showEngagement: true,
+        showMemoEngagement: true,
         engagementClient: _FakeMemoEngagementClient(
           reactions: [_reaction()],
           comments: [_comment('detail comment')],
@@ -700,17 +704,56 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('local library detail never mounts engagement surface', (
+    tester,
+  ) async {
+    final memo = _buildMemo(uid: 'memo-engagement');
+    final client = _FakeMemoEngagementClient(
+      reactions: [_reaction()],
+      comments: [_comment('detail comment')],
+    );
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        memo: memo,
+        showMemoEngagement: true,
+        localLibraryMode: true,
+        engagementClient: client,
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('open-detail')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(memoEngagementSurfaceKey), findsNothing);
+    expect(client.reactionLoadCalls, 0);
+    expect(client.commentLoadCalls, 0);
+  });
 }
 
 Widget _buildTestApp({
   required LocalMemo memo,
   bool readOnly = false,
-  bool showEngagement = false,
+  bool showMemoEngagement = false,
+  bool localLibraryMode = false,
   MemoEngagementClient? engagementClient,
 }) {
   LocaleSettings.setLocale(AppLocale.en);
+  final workspace = WorkspacePreferences.defaults.copyWith(
+    showMemoEngagement: showMemoEngagement,
+  );
   final overrides = <Override>[
     appSessionProvider.overrideWith((ref) => _TestSessionController()),
+    resolvedAppSettingsProvider.overrideWithValue(
+      ResolvedAppSettings(
+        device: DevicePreferences.defaultsForLanguage(AppLanguage.en),
+        workspace: workspace,
+        workspaceKey: localLibraryMode ? 'local-library' : 'remote-account',
+        hasWorkspace: true,
+        hasRemoteAccount: !localLibraryMode,
+        isLocalLibraryMode: localLibraryMode,
+      ),
+    ),
     appPreferencesProvider.overrideWith(
       (ref) => _TestAppPreferencesController(ref),
     ),
@@ -732,11 +775,7 @@ Widget _buildTestApp({
         locale: AppLocale.en.flutterLocale,
         supportedLocales: AppLocaleUtils.supportedLocales,
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: _DetailRouteLauncher(
-          memo: memo,
-          readOnly: readOnly,
-          showEngagement: showEngagement,
-        ),
+        home: _DetailRouteLauncher(memo: memo, readOnly: readOnly),
       ),
     ),
   );
@@ -772,15 +811,10 @@ Widget _buildPrimaryContentTestApp({
 }
 
 class _DetailRouteLauncher extends StatelessWidget {
-  const _DetailRouteLauncher({
-    required this.memo,
-    required this.readOnly,
-    required this.showEngagement,
-  });
+  const _DetailRouteLauncher({required this.memo, required this.readOnly});
 
   final LocalMemo memo;
   final bool readOnly;
-  final bool showEngagement;
 
   @override
   Widget build(BuildContext context) {
@@ -801,11 +835,7 @@ class _DetailRouteLauncher extends StatelessWidget {
                       milliseconds: 400,
                     ),
                     pageBuilder: (context, animation, secondaryAnimation) =>
-                        MemoDetailScreen(
-                          initialMemo: memo,
-                          readOnly: readOnly,
-                          showEngagement: showEngagement,
-                        ),
+                        MemoDetailScreen(initialMemo: memo, readOnly: readOnly),
                     transitionsBuilder:
                         (context, animation, secondaryAnimation, child) {
                           return FadeTransition(
@@ -908,10 +938,13 @@ class _FakeMemoEngagementClient implements MemoEngagementClient {
 
   List<Reaction> _reactions;
   final List<Memo> _comments;
+  int reactionLoadCalls = 0;
+  int commentLoadCalls = 0;
 
   @override
   Future<({List<Reaction> reactions, String nextPageToken, int totalSize})>
   listMemoReactions({required String memoUid, int pageSize = 50}) async {
+    reactionLoadCalls += 1;
     return (
       reactions: List<Reaction>.from(_reactions),
       nextPageToken: '',
@@ -922,6 +955,7 @@ class _FakeMemoEngagementClient implements MemoEngagementClient {
   @override
   Future<({List<Memo> memos, String nextPageToken, int totalSize})>
   listMemoComments({required String memoUid, int pageSize = 50}) async {
+    commentLoadCalls += 1;
     return (
       memos: List<Memo>.from(_comments),
       nextPageToken: '',

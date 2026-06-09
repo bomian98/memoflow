@@ -6,7 +6,7 @@
 /// Locales: 7
 /// Strings: 14896 (2128 per locale)
 ///
-/// Built on 2026-06-07 at 05:12 UTC
+/// Built on 2026-06-09 at 00:49 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -2152,7 +2152,7 @@ class _StringsStringsSettingsPreferencesEn {
 	String loadFontsFailed({required Object error}) => 'Failed to load fonts: ${error}';
 	String get collapseLongContent => 'Collapse Long Content';
 	String get collapseReferences => 'Collapse References';
-	String get showEngagementInAllMemoDetails => 'Show likes and comments on home cards and memo details';
+	String get showMemoEngagement => 'Show likes and comments';
 	String get launchAction => 'Launch Action';
 	String get quickInputKeyboard => 'Auto-open keyboard for Quick Input';
 	String get confirmExitOnBack => 'Confirm on Exit';
@@ -4833,7 +4833,7 @@ class _StringsStringsSettingsPreferencesDe extends _StringsStringsSettingsPrefer
 	@override String loadFontsFailed({required Object error}) => 'Schriftarten konnten nicht geladen werden: ${error}';
 	@override String get collapseLongContent => 'Lange Inhalte einklappen';
 	@override String get collapseReferences => 'Referenzen einklappen';
-	@override String get showEngagementInAllMemoDetails => 'Likes und Kommentare auf Startkarten und in Memo-Details anzeigen';
+	@override String get showMemoEngagement => 'Likes und Kommentare anzeigen';
 	@override String get launchAction => 'Aktion beim Start';
 	@override String get quickInputKeyboard => 'Tastatur bei Schnellnotiz automatisch öffnen';
 	@override String get confirmExitOnBack => 'Beenden bestätigen';
@@ -7489,7 +7489,7 @@ class _StringsStringsSettingsPreferencesJa extends _StringsStringsSettingsPrefer
 	@override String loadFontsFailed({required Object error}) => 'フォントの読み込みに失敗しました: ${error}';
 	@override String get collapseLongContent => '長文を折りたたむ';
 	@override String get collapseReferences => '参照を折りたたむ';
-	@override String get showEngagementInAllMemoDetails => 'ホームカードとメモ詳細でいいねとコメントを表示';
+	@override String get showMemoEngagement => 'いいねとコメントを表示';
 	@override String get launchAction => '起動時の動作';
 	@override String get quickInputKeyboard => 'クイック入力で自動的にキーボードを開く';
 	@override String get confirmExitOnBack => '終了時に確認する';
@@ -10236,7 +10236,7 @@ class _StringsStringsSettingsPreferencesKo extends _StringsStringsSettingsPrefer
 	@override String loadFontsFailed({required Object error}) => '글꼴을 로드하지 못했습니다: ${error}';
 	@override String get collapseLongContent => '긴 콘텐츠 접기';
 	@override String get collapseReferences => '참조 축소';
-	@override String get showEngagementInAllMemoDetails => '홈 카드와 메모 세부정보에 좋아요와 댓글 표시';
+	@override String get showMemoEngagement => '좋아요와 댓글 표시';
 	@override String get launchAction => '실행 작업';
 	@override String get quickInputKeyboard => '빠른 입력을 위한 자동 열기 키보드';
 	@override String get confirmExitOnBack => '종료 시 확인';
@@ -13008,7 +13008,7 @@ class _StringsStringsSettingsPreferencesPtBr extends _StringsStringsSettingsPref
 	@override String loadFontsFailed({required Object error}) => 'Falha ao carregar fontes: ${error}';
 	@override String get collapseLongContent => 'Recolher conteúdo longo';
 	@override String get collapseReferences => 'Recolher referências';
-	@override String get showEngagementInAllMemoDetails => 'Mostrar curtidas e comentários nos cartões iniciais e nos detalhes do memorando';
+	@override String get showMemoEngagement => 'Mostrar curtidas e comentários';
 	@override String get launchAction => 'Ação de lançamento';
 	@override String get quickInputKeyboard => 'Teclado de abertura automática para entrada rápida';
 	@override String get confirmExitOnBack => 'Confirmar na saída';
@@ -15782,7 +15782,7 @@ class _StringsStringsSettingsPreferencesZhHans extends _StringsStringsSettingsPr
 	@override String loadFontsFailed({required Object error}) => '字体加载失败：${error}';
 	@override String get collapseLongContent => '折叠长内容';
 	@override String get collapseReferences => '折叠引用';
-	@override String get showEngagementInAllMemoDetails => '在首页卡片和笔记详情中显示点赞和评论';
+	@override String get showMemoEngagement => '显示点赞与评论';
 	@override String get launchAction => '启动动作';
 	@override String get quickInputKeyboard => '快速记录时唤醒键盘';
 	@override String get confirmExitOnBack => '退出时确认';
@@ -18525,7 +18525,7 @@ class _StringsStringsSettingsPreferencesZhHantTw extends _StringsStringsSettings
 	@override String loadFontsFailed({required Object error}) => '字型載入失敗：${error}';
 	@override String get collapseLongContent => '折疊長內容';
 	@override String get collapseReferences => '折疊引用';
-	@override String get showEngagementInAllMemoDetails => '在首頁卡片和筆記詳情中顯示按讚和評論';
+	@override String get showMemoEngagement => '顯示按讚與評論';
 	@override String get launchAction => '啟動動作';
 	@override String get quickInputKeyboard => '快速記錄時自動開啟鍵盤';
 	@override String get confirmExitOnBack => '退出時確認';
@@ -19359,7 +19359,7 @@ extension on Translations {
 			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => 'Failed to load fonts: ${error}';
 			case 'strings.settings.preferences.collapseLongContent': return 'Collapse Long Content';
 			case 'strings.settings.preferences.collapseReferences': return 'Collapse References';
-			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return 'Show likes and comments on home cards and memo details';
+			case 'strings.settings.preferences.showMemoEngagement': return 'Show likes and comments';
 			case 'strings.settings.preferences.launchAction': return 'Launch Action';
 			case 'strings.settings.preferences.quickInputKeyboard': return 'Auto-open keyboard for Quick Input';
 			case 'strings.settings.preferences.confirmExitOnBack': return 'Confirm on Exit';
@@ -21533,7 +21533,7 @@ extension on _StringsDe {
 			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => 'Schriftarten konnten nicht geladen werden: ${error}';
 			case 'strings.settings.preferences.collapseLongContent': return 'Lange Inhalte einklappen';
 			case 'strings.settings.preferences.collapseReferences': return 'Referenzen einklappen';
-			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return 'Likes und Kommentare auf Startkarten und in Memo-Details anzeigen';
+			case 'strings.settings.preferences.showMemoEngagement': return 'Likes und Kommentare anzeigen';
 			case 'strings.settings.preferences.launchAction': return 'Aktion beim Start';
 			case 'strings.settings.preferences.quickInputKeyboard': return 'Tastatur bei Schnellnotiz automatisch öffnen';
 			case 'strings.settings.preferences.confirmExitOnBack': return 'Beenden bestätigen';
@@ -23599,7 +23599,7 @@ extension on _StringsJa {
 			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => 'フォントの読み込みに失敗しました: ${error}';
 			case 'strings.settings.preferences.collapseLongContent': return '長文を折りたたむ';
 			case 'strings.settings.preferences.collapseReferences': return '参照を折りたたむ';
-			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return 'ホームカードとメモ詳細でいいねとコメントを表示';
+			case 'strings.settings.preferences.showMemoEngagement': return 'いいねとコメントを表示';
 			case 'strings.settings.preferences.launchAction': return '起動時の動作';
 			case 'strings.settings.preferences.quickInputKeyboard': return 'クイック入力で自動的にキーボードを開く';
 			case 'strings.settings.preferences.confirmExitOnBack': return '終了時に確認する';
@@ -25665,7 +25665,7 @@ extension on _StringsKo {
 			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => '글꼴을 로드하지 못했습니다: ${error}';
 			case 'strings.settings.preferences.collapseLongContent': return '긴 콘텐츠 접기';
 			case 'strings.settings.preferences.collapseReferences': return '참조 축소';
-			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return '홈 카드와 메모 세부정보에 좋아요와 댓글 표시';
+			case 'strings.settings.preferences.showMemoEngagement': return '좋아요와 댓글 표시';
 			case 'strings.settings.preferences.launchAction': return '실행 작업';
 			case 'strings.settings.preferences.quickInputKeyboard': return '빠른 입력을 위한 자동 열기 키보드';
 			case 'strings.settings.preferences.confirmExitOnBack': return '종료 시 확인';
@@ -27837,7 +27837,7 @@ extension on _StringsPtBr {
 			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => 'Falha ao carregar fontes: ${error}';
 			case 'strings.settings.preferences.collapseLongContent': return 'Recolher conteúdo longo';
 			case 'strings.settings.preferences.collapseReferences': return 'Recolher referências';
-			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return 'Mostrar curtidas e comentários nos cartões iniciais e nos detalhes do memorando';
+			case 'strings.settings.preferences.showMemoEngagement': return 'Mostrar curtidas e comentários';
 			case 'strings.settings.preferences.launchAction': return 'Ação de lançamento';
 			case 'strings.settings.preferences.quickInputKeyboard': return 'Teclado de abertura automática para entrada rápida';
 			case 'strings.settings.preferences.confirmExitOnBack': return 'Confirmar na saída';
@@ -30009,7 +30009,7 @@ extension on _StringsZhHans {
 			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => '字体加载失败：${error}';
 			case 'strings.settings.preferences.collapseLongContent': return '折叠长内容';
 			case 'strings.settings.preferences.collapseReferences': return '折叠引用';
-			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return '在首页卡片和笔记详情中显示点赞和评论';
+			case 'strings.settings.preferences.showMemoEngagement': return '显示点赞与评论';
 			case 'strings.settings.preferences.launchAction': return '启动动作';
 			case 'strings.settings.preferences.quickInputKeyboard': return '快速记录时唤醒键盘';
 			case 'strings.settings.preferences.confirmExitOnBack': return '退出时确认';
@@ -32183,7 +32183,7 @@ extension on _StringsZhHantTw {
 			case 'strings.settings.preferences.loadFontsFailed': return ({required Object error}) => '字型載入失敗：${error}';
 			case 'strings.settings.preferences.collapseLongContent': return '折疊長內容';
 			case 'strings.settings.preferences.collapseReferences': return '折疊引用';
-			case 'strings.settings.preferences.showEngagementInAllMemoDetails': return '在首頁卡片和筆記詳情中顯示按讚和評論';
+			case 'strings.settings.preferences.showMemoEngagement': return '顯示按讚與評論';
 			case 'strings.settings.preferences.launchAction': return '啟動動作';
 			case 'strings.settings.preferences.quickInputKeyboard': return '快速記錄時自動開啟鍵盤';
 			case 'strings.settings.preferences.confirmExitOnBack': return '退出時確認';

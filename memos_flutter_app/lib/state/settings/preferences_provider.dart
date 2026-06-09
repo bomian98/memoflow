@@ -325,8 +325,9 @@ class AppPreferencesController extends StateNotifier<AppPreferences> {
       _setAndPersist(state.copyWith(collapseLongContent: v));
   void setCollapseReferences(bool v) =>
       _setAndPersist(state.copyWith(collapseReferences: v));
-  void setShowEngagementInAllMemoDetails(bool v) =>
+  void setShowMemoEngagement(bool v) =>
       _setAndPersist(state.copyWith(showEngagementInAllMemoDetails: v));
+  void setShowEngagementInAllMemoDetails(bool v) => setShowMemoEngagement(v);
   void setLaunchAction(LaunchAction v) =>
       _setAndPersist(state.copyWith(launchAction: v));
   void setAutoSyncOnStartAndResume(bool v) =>

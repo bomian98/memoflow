@@ -140,4 +140,43 @@ void main() {
       );
     },
   );
+
+  test(
+    'memo engagement display cannot bypass the unified preference gate',
+    () async {
+      final featureFiles = <File>[
+        File('lib/features/memos/memo_detail_screen.dart'),
+        File('lib/features/memos/desktop_memo_reader_surface.dart'),
+        File('lib/features/memos/widgets/memos_list_desktop_preview_pane.dart'),
+        File('lib/features/memos/widgets/memos_list_memo_card_container.dart'),
+        File('lib/features/explore/explore_screen.dart'),
+        File('lib/features/notifications/notifications_screen.dart'),
+      ];
+      const prohibitedPatterns = <String>{
+        'showEngagement: true',
+        'shouldShowEngagement: true',
+        'widget.showEngagement ||',
+      };
+
+      final violations = <String>[];
+      for (final file in featureFiles) {
+        final contents = await file.readAsString();
+        for (final pattern in prohibitedPatterns) {
+          if (contents.contains(pattern)) {
+            violations.add('${file.path}: $pattern');
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason: violations.isEmpty
+            ? null
+            : 'Memo engagement surfaces must consume the unified resolved '
+                  'gate instead of forcing likes/comments visible:\n'
+                  '${violations.join('\n')}',
+      );
+    },
+  );
 }

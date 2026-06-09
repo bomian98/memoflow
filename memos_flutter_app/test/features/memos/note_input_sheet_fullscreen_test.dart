@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -12,8 +14,11 @@ import 'package:memos_flutter_app/application/sync/sync_types.dart';
 import 'package:memos_flutter_app/application/sync/webdav_backup_service.dart';
 import 'package:memos_flutter_app/application/sync/webdav_sync_service.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
+import 'package:memos_flutter_app/core/desktop/shortcuts.dart';
 import 'package:memos_flutter_app/core/share_inline_image_content.dart';
+import 'package:memos_flutter_app/data/models/app_preferences.dart';
 import 'package:memos_flutter_app/data/models/compose_draft.dart';
+import 'package:memos_flutter_app/data/models/device_preferences.dart';
 import 'package:memos_flutter_app/data/models/local_library.dart';
 import 'package:memos_flutter_app/data/models/memo_location.dart';
 import 'package:memos_flutter_app/data/models/memo_template_settings.dart';
@@ -32,6 +37,7 @@ import 'package:memos_flutter_app/state/memos/compose_draft_provider.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/memos/note_input_controller.dart';
 import 'package:memos_flutter_app/state/memos/note_input_providers.dart';
+import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/memo_template_settings_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_migration_service.dart';
 import 'package:memos_flutter_app/state/settings/workspace_preferences_provider.dart';
@@ -41,7 +47,10 @@ import 'package:memos_flutter_app/state/settings/user_settings_provider.dart';
 
 void main() {
   setUp(() => LocaleSettings.setLocale(AppLocale.en));
-  tearDown(() => debugPlatformTargetOverride = null);
+  tearDown(() {
+    debugPlatformTargetOverride = null;
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   testWidgets('expands from embedded compact control and preserves text', (
     tester,
@@ -311,6 +320,75 @@ void main() {
     await _disposeHarness(tester);
   });
 
+  testWidgets('configured desktop submit shortcut sends note input content', (
+    tester,
+  ) async {
+    await _withDefaultTargetPlatform(TargetPlatform.windows, () async {
+      final controller = _RecordingNoteInputController();
+      await tester.pumpWidget(
+        _buildHarness(
+          noteInputController: controller,
+          devicePreferences: _devicePreferencesWithPublishBinding(
+            DesktopShortcutBinding(
+              keyId: LogicalKeyboardKey.keyS.keyId,
+              primary: true,
+              shift: true,
+              alt: false,
+            ),
+          ),
+          child: const NoteInputSheet(
+            initialText: 'Shortcut note input',
+            ignoreDraft: true,
+            autoFocus: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(TextField).first);
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(controller.createdContents, ['Shortcut note input']);
+
+      await _disposeHarness(tester);
+    });
+  });
+
+  testWidgets('plain desktop Enter does not submit note input content', (
+    tester,
+  ) async {
+    await _withDefaultTargetPlatform(TargetPlatform.windows, () async {
+      final controller = _RecordingNoteInputController();
+      await tester.pumpWidget(
+        _buildHarness(
+          noteInputController: controller,
+          child: const NoteInputSheet(
+            initialText: 'Plain enter note input',
+            ignoreDraft: true,
+            autoFocus: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(TextField).first);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      expect(controller.createdContents, isEmpty);
+      expect(find.byType(NoteInputSheet), findsOneWidget);
+
+      await _disposeHarness(tester);
+    });
+  });
+
   testWidgets('fullscreen close uses draft-aware close path', (tester) async {
     final draftRepository = _FakeComposeDraftRepository();
     await tester.pumpWidget(
@@ -456,10 +534,23 @@ Future<void> _disposeHarness(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 1));
 }
 
+Future<void> _withDefaultTargetPlatform(
+  TargetPlatform platform,
+  Future<void> Function() body,
+) async {
+  debugDefaultTargetPlatformOverride = platform;
+  try {
+    await body();
+  } finally {
+    debugDefaultTargetPlatformOverride = null;
+  }
+}
+
 Widget _buildHarness({
   required Widget child,
   _RecordingNoteInputController? noteInputController,
   _FakeComposeDraftRepository? draftRepository,
+  DevicePreferences? devicePreferences,
   MediaQueryData mediaQueryData = const MediaQueryData(size: Size(390, 780)),
 }) {
   final drafts = draftRepository ?? _FakeComposeDraftRepository();
@@ -472,6 +563,13 @@ Widget _buildHarness({
       workspacePreferencesLoadedProvider.overrideWith((ref) => true),
       memoTemplateSettingsProvider.overrideWith(
         (ref) => _TestMemoTemplateSettingsController(ref),
+      ),
+      devicePreferencesProvider.overrideWith(
+        (ref) => _TestDevicePreferencesController(
+          ref,
+          devicePreferences ??
+              DevicePreferences.defaultsForLanguage(AppLanguage.en),
+        ),
       ),
       tagStatsProvider.overrideWith((ref) => Stream.value(const <TagStat>[])),
       tagColorLookupProvider.overrideWith(
@@ -536,6 +634,45 @@ class _RecordingNoteInputController implements NoteInputController {
     required String sourceUrl,
     required NoteInputPendingAttachment attachment,
   }) async {}
+}
+
+DevicePreferences _devicePreferencesWithPublishBinding(
+  DesktopShortcutBinding binding,
+) {
+  final bindings = Map<DesktopShortcutAction, DesktopShortcutBinding>.from(
+    desktopShortcutDefaultBindings,
+  );
+  bindings[DesktopShortcutAction.publishMemo] = binding;
+  return DevicePreferences.defaultsForLanguage(
+    AppLanguage.en,
+  ).copyWith(desktopShortcutBindings: bindings);
+}
+
+class _TestDevicePreferencesRepository extends DevicePreferencesRepository {
+  _TestDevicePreferencesRepository(this._stored)
+    : super(PreferencesMigrationService(const FlutterSecureStorage()));
+
+  DevicePreferences _stored;
+
+  @override
+  Future<StorageReadResult<DevicePreferences>> readWithStatus() async {
+    return StorageReadResult.success(_stored);
+  }
+
+  @override
+  Future<DevicePreferences> read() async => _stored;
+
+  @override
+  Future<void> write(DevicePreferences prefs) async {
+    _stored = prefs;
+  }
+}
+
+class _TestDevicePreferencesController extends DevicePreferencesController {
+  _TestDevicePreferencesController(Ref ref, DevicePreferences initial)
+    : super(ref, _TestDevicePreferencesRepository(initial)) {
+    state = initial;
+  }
 }
 
 class _FakeComposeDraftRepository implements ComposeDraftRepository {

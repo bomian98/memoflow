@@ -242,6 +242,42 @@ void main() {
     expect(sheetOpenCount, 0);
   });
 
+  testWidgets('openNoteInput uses desktop presenter on default macOS desktop', (
+    tester,
+  ) async {
+    final harness = await _pumpRouteDelegateHarness(
+      tester,
+      platform: TargetPlatform.macOS,
+    );
+    var sheetOpenCount = 0;
+    var desktopOpenCount = 0;
+    final delegate = harness.buildDelegate(
+      showNoteInputSheet:
+          (
+            context, {
+            String? initialText,
+            List<String> initialAttachmentPaths = const <String>[],
+            bool ignoreDraft = false,
+          }) async {
+            sheetOpenCount++;
+          },
+      showDesktopComposeSurface:
+          (
+            context, {
+            String? initialText,
+            List<String> initialAttachmentPaths = const <String>[],
+            bool ignoreDraft = false,
+          }) async {
+            desktopOpenCount++;
+          },
+    );
+
+    await delegate.openNoteInput();
+
+    expect(desktopOpenCount, 1);
+    expect(sheetOpenCount, 0);
+  });
+
   testWidgets('openVoiceNoteInput uses desktop presenter on Windows platform', (
     tester,
   ) async {

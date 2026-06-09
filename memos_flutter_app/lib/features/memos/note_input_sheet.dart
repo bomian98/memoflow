@@ -59,6 +59,7 @@ import '../share/share_video_attachment_preparer.dart';
 import '../share/share_video_compression_service.dart';
 import '../share/share_video_download_service.dart';
 import '../share/share_video_limit_messages.dart';
+import '../settings/location_settings_navigation.dart';
 import 'attachment_gallery_screen.dart';
 import 'attachment_video_screen.dart';
 import 'compose_input_hint.dart';
@@ -1166,10 +1167,11 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
       ref.read(devicePreferencesProvider).desktopShortcutBindings,
     );
     bool matches(DesktopShortcutAction action) {
-      return matchesDesktopShortcut(
+      return matchesDesktopShortcutAction(
         event: event,
         pressedKeys: pressed,
-        binding: bindings[action]!,
+        bindings: bindings,
+        action: action,
       );
     }
 
@@ -1464,6 +1466,7 @@ class _NoteInputSheetState extends ConsumerState<NoteInputSheet> {
     final next = await showLocationPickerSheetOrDialog(
       context: context,
       ref: ref,
+      openLocationSettings: openLocationSettingsSurface,
       initialLocation: _location,
     );
     if (!mounted || next == null) return;

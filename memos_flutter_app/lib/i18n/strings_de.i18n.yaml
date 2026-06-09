@@ -118,7 +118,7 @@ settings:
     loadFontsFailed: "Schriftarten konnten nicht geladen werden: $error"
     collapseLongContent: "Lange Inhalte einklappen"
     collapseReferences: "Referenzen einklappen"
-    showEngagementInAllMemoDetails: "Likes und Kommentare auf Startkarten und in Memo-Details anzeigen"
+    showMemoEngagement: "Likes und Kommentare anzeigen"
     launchAction: "Aktion beim Start"
     quickInputKeyboard: "Tastatur bei Schnellnotiz automatisch öffnen"
     confirmExitOnBack: "Beenden bestätigen"

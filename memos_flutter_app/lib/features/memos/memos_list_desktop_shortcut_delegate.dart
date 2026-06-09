@@ -124,10 +124,11 @@ class MemosListDesktopShortcutDelegate {
 
     final bindings = bindingsResolver();
     bool matches(DesktopShortcutAction action) {
-      return matchesDesktopShortcut(
+      return matchesDesktopShortcutAction(
         event: event,
         pressedKeys: pressedKeys,
-        binding: bindings[action]!,
+        bindings: bindings,
+        action: action,
       );
     }
 

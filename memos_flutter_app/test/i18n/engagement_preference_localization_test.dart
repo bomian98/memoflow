@@ -2,60 +2,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 
 void main() {
-  test('engagement preference copy mentions home cards and memo details', () {
+  test('engagement preference copy is surface agnostic', () {
     expect(
-      AppLocale.en
-          .build()
-          .strings
-          .settings
-          .preferences
-          .showEngagementInAllMemoDetails,
-      'Show likes and comments on home cards and memo details',
+      AppLocale.en.build().strings.settings.preferences.showMemoEngagement,
+      'Show likes and comments',
     );
     expect(
-      AppLocale.de
-          .build()
-          .strings
-          .settings
-          .preferences
-          .showEngagementInAllMemoDetails,
-      contains('Startkarten'),
+      AppLocale.de.build().strings.settings.preferences.showMemoEngagement,
+      'Likes und Kommentare anzeigen',
     );
     expect(
-      AppLocale.ja
-          .build()
-          .strings
-          .settings
-          .preferences
-          .showEngagementInAllMemoDetails,
-      contains('ホームカード'),
+      AppLocale.ja.build().strings.settings.preferences.showMemoEngagement,
+      'いいねとコメントを表示',
     );
     expect(
-      AppLocale.ko
-          .build()
-          .strings
-          .settings
-          .preferences
-          .showEngagementInAllMemoDetails,
-      contains('홈 카드'),
+      AppLocale.ko.build().strings.settings.preferences.showMemoEngagement,
+      '좋아요와 댓글 표시',
     );
     expect(
-      AppLocale.ptBr
-          .build()
-          .strings
-          .settings
-          .preferences
-          .showEngagementInAllMemoDetails,
-      contains('cartões'),
+      AppLocale.ptBr.build().strings.settings.preferences.showMemoEngagement,
+      'Mostrar curtidas e comentários',
     );
     expect(
-      AppLocale.zhHans
-          .build()
-          .strings
-          .settings
-          .preferences
-          .showEngagementInAllMemoDetails,
-      contains('首页卡片'),
+      AppLocale.zhHans.build().strings.settings.preferences.showMemoEngagement,
+      '显示点赞与评论',
     );
     expect(
       AppLocale.zhHantTw
@@ -63,8 +33,8 @@ void main() {
           .strings
           .settings
           .preferences
-          .showEngagementInAllMemoDetails,
-      contains('首頁卡片'),
+          .showMemoEngagement,
+      '顯示按讚與評論',
     );
   });
 }

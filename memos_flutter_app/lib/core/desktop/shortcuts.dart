@@ -436,14 +436,50 @@ bool matchesDesktopShortcut({
   required Set<LogicalKeyboardKey> pressedKeys,
   required DesktopShortcutBinding binding,
 }) {
+  return matchesDesktopShortcutBinding(
+    event: event,
+    pressedKeys: pressedKeys,
+    binding: binding,
+    acceptNumpadEnterEquivalent: false,
+  );
+}
+
+bool matchesDesktopShortcutAction({
+  required KeyEvent event,
+  required Set<LogicalKeyboardKey> pressedKeys,
+  required Map<DesktopShortcutAction, DesktopShortcutBinding> bindings,
+  required DesktopShortcutAction action,
+  bool acceptNumpadEnterEquivalent = true,
+}) {
+  final binding = normalizeDesktopShortcutBindings(bindings)[action];
+  if (binding == null) return false;
+  return matchesDesktopShortcutBinding(
+    event: event,
+    pressedKeys: pressedKeys,
+    binding: binding,
+    acceptNumpadEnterEquivalent: acceptNumpadEnterEquivalent,
+  );
+}
+
+bool matchesDesktopShortcutBinding({
+  required KeyEvent event,
+  required Set<LogicalKeyboardKey> pressedKeys,
+  required DesktopShortcutBinding binding,
+  bool acceptNumpadEnterEquivalent = true,
+}) {
   if (event is! KeyDownEvent) return false;
   final primary = isPrimaryShortcutModifierPressed(pressedKeys);
   final shift = isShiftModifierPressed(pressedKeys);
   final alt = isAltModifierPressed(pressedKeys);
-  return event.logicalKey.keyId == binding.keyId &&
-      primary == binding.primary &&
-      shift == binding.shift &&
-      alt == binding.alt;
+  if (primary != binding.primary ||
+      shift != binding.shift ||
+      alt != binding.alt) {
+    return false;
+  }
+  if (event.logicalKey.keyId == binding.keyId) return true;
+  return acceptNumpadEnterEquivalent &&
+      _isEnterKeyId(binding.keyId) &&
+      _isEnterKey(event.logicalKey);
 }
 
 bool isDesktopShortcutModifierKey(LogicalKeyboardKey key) {
@@ -526,6 +562,16 @@ String desktopShortcutGuideBindingLabel(
 
 TargetPlatform _shortcutLabelPlatform(TargetPlatform? platform) {
   return platform ?? defaultTargetPlatform;
+}
+
+bool _isEnterKey(LogicalKeyboardKey key) {
+  return key == LogicalKeyboardKey.enter ||
+      key == LogicalKeyboardKey.numpadEnter;
+}
+
+bool _isEnterKeyId(int keyId) {
+  return keyId == LogicalKeyboardKey.enter.keyId ||
+      keyId == LogicalKeyboardKey.numpadEnter.keyId;
 }
 
 String _desktopShortcutKeyLabel(

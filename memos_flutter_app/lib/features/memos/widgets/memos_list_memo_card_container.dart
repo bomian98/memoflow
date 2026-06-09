@@ -14,6 +14,7 @@ import '../../../state/memos/memos_list_providers.dart';
 import '../../../state/memos/memos_providers.dart';
 import '../../../state/settings/location_settings_provider.dart';
 import '../../../state/settings/reminder_settings_provider.dart';
+import '../../../state/settings/resolved_preferences_provider.dart';
 import '../../../state/system/logging_provider.dart';
 import '../../../state/system/reminder_providers.dart';
 import '../../../state/system/reminder_utils.dart';
@@ -145,6 +146,11 @@ class MemosListMemoCardContainer extends ConsumerWidget {
     final isAudioLoading = isAudioActive && audioLoading;
     final session = ref.watch(appSessionProvider).valueOrNull;
     final account = session?.currentAccount;
+    final effectiveShowMemoEngagement = ref.watch(
+      resolvedAppSettingsProvider.select(
+        (settings) => settings.effectiveShowMemoEngagement,
+      ),
+    );
     final baseUrl = account?.baseUrl;
     final sessionController = ref.read(appSessionProvider.notifier);
     final serverVersion = account == null
@@ -270,7 +276,7 @@ class MemosListMemoCardContainer extends ConsumerWidget {
       highlightQuery: trimmedSearchQuery.isEmpty ? null : trimmedSearchQuery,
       collapseLongContent: prefs.collapseLongContent,
       collapseReferences: prefs.collapseReferences,
-      showEngagement: prefs.showEngagementInAllMemoDetails && account != null,
+      showEngagement: effectiveShowMemoEngagement,
       isAudioPlaying: removing ? false : isAudioPlaying,
       isAudioLoading: removing ? false : isAudioLoading,
       audioPositionListenable: removing || !isAudioActive

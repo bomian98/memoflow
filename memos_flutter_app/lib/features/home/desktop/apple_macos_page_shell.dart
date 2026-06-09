@@ -337,29 +337,9 @@ class _AppleMacosModalSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
+      key: const ValueKey<String>('apple-macos-modal-surface'),
       color: barrierColor,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760, maxHeight: 720),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemBackground.resolveFrom(context),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: child,
-            ),
-          ),
-        ),
-      ),
+      child: Material(type: MaterialType.transparency, child: child),
     );
   }
 }

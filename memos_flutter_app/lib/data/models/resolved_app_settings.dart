@@ -9,18 +9,25 @@ class ResolvedAppSettings {
     required this.workspace,
     required this.workspaceKey,
     required this.hasWorkspace,
+    this.hasRemoteAccount = false,
+    this.isLocalLibraryMode = false,
   });
 
   final DevicePreferences device;
   final WorkspacePreferences workspace;
   final String? workspaceKey;
   final bool hasWorkspace;
+  final bool hasRemoteAccount;
+  final bool isLocalLibraryMode;
 
   AppThemeColor get resolvedThemeColor =>
       workspace.themeColorOverride ?? device.themeColor;
 
   CustomThemeSettings get resolvedCustomTheme =>
       workspace.customThemeOverride ?? device.customTheme;
+
+  bool get effectiveShowMemoEngagement =>
+      hasRemoteAccount && !isLocalLibraryMode && workspace.showMemoEngagement;
 
   AppPreferences toLegacyAppPreferences() {
     final normalizedKey = workspaceKey?.trim();
@@ -36,7 +43,7 @@ class ResolvedAppSettings {
       fontFile: device.fontFile,
       collapseLongContent: workspace.collapseLongContent,
       collapseReferences: workspace.collapseReferences,
-      showEngagementInAllMemoDetails: workspace.showEngagementInAllMemoDetails,
+      showEngagementInAllMemoDetails: workspace.showMemoEngagement,
       launchAction: device.launchAction,
       autoSyncOnStartAndResume: workspace.autoSyncOnStartAndResume,
       quickInputAutoFocus: device.quickInputAutoFocus,
@@ -83,11 +90,19 @@ class ResolvedAppSettings {
     return other is ResolvedAppSettings &&
         workspaceKey == other.workspaceKey &&
         hasWorkspace == other.hasWorkspace &&
+        hasRemoteAccount == other.hasRemoteAccount &&
+        isLocalLibraryMode == other.isLocalLibraryMode &&
         device == other.device &&
         workspace == other.workspace;
   }
 
   @override
-  int get hashCode =>
-      Object.hash(device, workspace, workspaceKey, hasWorkspace);
+  int get hashCode => Object.hash(
+    device,
+    workspace,
+    workspaceKey,
+    hasWorkspace,
+    hasRemoteAccount,
+    isLocalLibraryMode,
+  );
 }

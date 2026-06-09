@@ -294,16 +294,13 @@ class PreferencesSettingsScreen extends ConsumerWidget {
               value: workspacePrefs.collapseReferences,
               onChanged: workspaceNotifier.setCollapseReferences,
             ),
-            SettingsToggleRow(
-              label: context
-                  .t
-                  .strings
-                  .settings
-                  .preferences
-                  .showEngagementInAllMemoDetails,
-              value: workspacePrefs.showEngagementInAllMemoDetails,
-              onChanged: workspaceNotifier.setShowEngagementInAllMemoDetails,
-            ),
+            if (!resolvedSettings.isLocalLibraryMode)
+              SettingsToggleRow(
+                label:
+                    context.t.strings.settings.preferences.showMemoEngagement,
+                value: workspacePrefs.showMemoEngagement,
+                onChanged: workspaceNotifier.setShowMemoEngagement,
+              ),
           ],
         ),
         const SizedBox(height: 12),

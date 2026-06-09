@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,7 @@ import '../../application/sync/sync_request.dart';
 import '../../core/app_localization.dart';
 import '../../core/attachment_mime_type.dart';
 import '../../core/desktop/shortcuts.dart';
+import '../../core/desktop/window_chrome_safe_area.dart';
 import '../../core/image_thumbnail_cache.dart';
 import '../../core/markdown_editing.dart';
 import '../../core/memo_template_renderer.dart';
@@ -46,10 +48,12 @@ import '../../state/memos/memo_editor_draft_provider.dart';
 import '../../state/memos/memo_editor_draft_session.dart';
 import '../../state/memos/memo_composer_state.dart';
 import '../../state/settings/image_compression_settings_provider.dart';
+import '../../state/settings/device_preferences_provider.dart';
 import '../../state/settings/memo_template_settings_provider.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
 import '../../state/memos/memo_editor_providers.dart';
 import '../../state/memos/memos_providers.dart';
+import '../../state/memos/note_input_draft_session.dart';
 import '../../state/system/session_provider.dart';
 import '../../state/system/scene_micro_guide_provider.dart';
 import '../../state/tags/tag_color_lookup.dart';
@@ -57,6 +61,7 @@ import '../image_preview/image_preview_item.dart';
 import '../image_preview/image_preview_launcher.dart';
 import '../image_preview/image_preview_open_request.dart';
 import '../image_preview/widgets/image_preview_tile.dart';
+import '../settings/location_settings_navigation.dart';
 import 'attachment_gallery_screen.dart';
 import 'compose_toolbar_shared.dart';
 import 'gallery_attachment_picker.dart';
@@ -86,6 +91,7 @@ class MemoEditorScreen extends ConsumerStatefulWidget {
     this.existing,
     this.initialText,
     this.initialEditDraft,
+    this.initialCreateDraft,
     this.initialAttachmentPaths = const [],
     this.ignoreDraft = false,
     this.autoFocus = true,
@@ -98,6 +104,7 @@ class MemoEditorScreen extends ConsumerStatefulWidget {
   final LocalMemo? existing;
   final String? initialText;
   final ComposeDraftRecord? initialEditDraft;
+  final ComposeDraftRecord? initialCreateDraft;
   final List<String> initialAttachmentPaths;
   final bool ignoreDraft;
   final bool autoFocus;
@@ -120,6 +127,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   late final MemoComposerController _composer;
   late final MemoEditorDraftRepository _draftRepository;
   static const _editDraftSessionHelper = MemoEditorDraftSessionHelper();
+  static const _createDraftSessionHelper = NoteInputDraftSessionHelper();
   late final TextEditingController _contentController;
   late final FocusNode _editorFocusNode;
   late final AndroidMemoKeyboardResumeController _keyboardResumeController;
@@ -169,6 +177,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
   bool _skipDraftPersistOnDispose = false;
   bool _openedFromVisibleEditDraft = false;
   String? _activeVisibleEditDraftUid;
+  String? _activeVisibleCreateDraftUid;
   Future<void>? _relationsLoadFuture;
   late String _visibility;
   late bool _pinned;
@@ -208,7 +217,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
       initialText: existing?.content ?? (widget.initialText ?? ''),
     );
     _contentController = _composer.textController;
-    _editorFocusNode = FocusNode();
+    _editorFocusNode = FocusNode(onKeyEvent: _handleTagAutocompleteKeyEvent);
     _keyboardResumeController = AndroidMemoKeyboardResumeController(
       focusNode: _editorFocusNode,
       isSurfaceEligible: () => mounted && !_saving,
@@ -229,10 +238,14 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     _initialLocation = existing?.location;
     if (existing != null && _restoreInitialEditDraft(existing)) {
       // The visible draft carries the relation state to save later.
+    } else if (existing == null && _restoreInitialCreateDraft()) {
+      // The visible draft carries the create state to save later.
     } else if (existing != null) {
       _loadExistingRelations();
     }
-    if (!widget.ignoreDraft && widget.initialEditDraft == null) {
+    if (!widget.ignoreDraft &&
+        widget.initialEditDraft == null &&
+        widget.initialCreateDraft == null) {
       unawaited(_restoreEditorDraftIfNeeded());
     }
     if (widget.autoFocus) {
@@ -354,6 +367,27 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     FocusNode node,
     KeyEvent event,
   ) {
+    final keyboard = HardwareKeyboard.instance;
+    final controlPressed = keyboard.isControlPressed;
+    final metaPressed = keyboard.isMetaPressed;
+    final shiftPressed = keyboard.isShiftPressed;
+    final altPressed = keyboard.isAltPressed;
+    final key = event.logicalKey;
+    if (event is KeyDownEvent && isDesktopShortcutEnabled()) {
+      final bindings = ref
+          .read(devicePreferencesProvider)
+          .desktopShortcutBindings;
+      if (matchesDesktopShortcutAction(
+        event: event,
+        pressedKeys: HardwareKeyboard.instance.logicalKeysPressed,
+        bindings: bindings,
+        action: DesktopShortcutAction.publishMemo,
+      )) {
+        unawaited(_save());
+        return KeyEventResult.handled;
+      }
+    }
+
     final result = _composer.handleTagAutocompleteKeyEvent(
       event,
       tagStats: _currentTagStats(),
@@ -365,11 +399,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
       return result;
     }
 
-    final pressed = HardwareKeyboard.instance.logicalKeysPressed;
-    final primaryPressed = isPrimaryShortcutModifierPressed(pressed);
-    final shiftPressed = isShiftModifierPressed(pressed);
-    final altPressed = isAltModifierPressed(pressed);
-    final key = event.logicalKey;
     if (event is KeyDownEvent && key == LogicalKeyboardKey.escape) {
       if (_isPageFullscreenCompose) {
         _collapsePageFullscreenCompose();
@@ -385,25 +414,22 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
       }
     }
     if (event is KeyDownEvent &&
-        primaryPressed &&
-        !shiftPressed &&
+        !controlPressed &&
+        !metaPressed &&
         !altPressed &&
         (key == LogicalKeyboardKey.enter ||
             key == LogicalKeyboardKey.numpadEnter)) {
-      unawaited(_save());
-      return KeyEventResult.handled;
-    }
-    if (event is KeyDownEvent &&
-        !primaryPressed &&
-        !shiftPressed &&
-        !altPressed &&
-        (key == LogicalKeyboardKey.enter ||
-            key == LogicalKeyboardKey.numpadEnter) &&
-        _composer.applyDesktopSmartEnter(
-          lineBreak: isWindowsPlatform() ? '\r\n' : '\n',
-        )) {
-      setState(() {});
-      return KeyEventResult.handled;
+      final lineBreak = isWindowsPlatform() ? '\r\n' : '\n';
+      if (!shiftPressed &&
+          _composer.applyDesktopSmartEnter(lineBreak: lineBreak)) {
+        setState(() {});
+        return KeyEventResult.handled;
+      }
+      if (_supportsDesktopSurfaceChrome) {
+        _composer.insertText(lineBreak);
+        setState(() {});
+        return KeyEventResult.handled;
+      }
     }
     return result;
   }
@@ -447,6 +473,32 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
       ..addAll(restored.attachmentsToDelete);
     _relationsLoaded = true;
     _relationsDirty = true;
+    _composer.clearHistory();
+    return true;
+  }
+
+  bool _restoreInitialCreateDraft() {
+    final draft = widget.initialCreateDraft;
+    if (draft == null || !draft.isCreateMemoDraft) return false;
+    final restored = _createDraftSessionHelper.restoreState(
+      draft,
+      defaultVisibility: _visibility,
+    );
+    _activeVisibleCreateDraftUid = restored.draftUid;
+    _contentController.value = _contentController.value.copyWith(
+      text: restored.content,
+      selection: TextSelection.collapsed(offset: restored.content.length),
+      composing: TextRange.empty,
+    );
+    _visibility = restored.visibility;
+    _location = restored.location;
+    _composer.setPendingAttachments(restored.pendingAttachments);
+    _composer.setLinkedMemos(restored.linkedMemos);
+    _pickedImages
+      ..clear()
+      ..addAll(restored.pickedImagePaths.map(XFile.new));
+    _relationsLoaded = true;
+    _relationsDirty = restored.linkedMemos.isNotEmpty;
     _composer.clearHistory();
     return true;
   }
@@ -1022,6 +1074,16 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     }
   }
 
+  Future<void> _deleteActiveVisibleCreateDraft({
+    Set<String> keepPaths = const <String>{},
+  }) async {
+    final draftUid = _activeVisibleCreateDraftUid?.trim();
+    if (draftUid == null || draftUid.isEmpty) return;
+    await ref
+        .read(composeDraftRepositoryProvider)
+        .deleteDraft(draftUid, keepPaths: keepPaths);
+  }
+
   void _performCloseEditor() {
     _draftTimer?.cancel();
     final onCloseRequested = widget.onCloseRequested;
@@ -1251,6 +1313,16 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
           );
         } catch (_) {}
       }
+      if (existing == null) {
+        try {
+          await _deleteActiveVisibleCreateDraft(
+            keepPaths: pendingAttachments
+                .map((attachment) => attachment.filePath.trim())
+                .where((path) => path.isNotEmpty)
+                .toSet(),
+          );
+        } catch (_) {}
+      }
 
       if (!mounted) return;
       final onSaved = widget.onSaved;
@@ -1472,6 +1544,7 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     final next = await showLocationPickerSheetOrDialog(
       context: context,
       ref: ref,
+      openLocationSettings: openLocationSettingsSurface,
       initialLocation: _location,
     );
     if (!mounted || next == null) return;
@@ -2949,7 +3022,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
     required List<TagStat> tagSuggestions,
     required TagColorLookup tagColorLookup,
     required int highlightedTagSuggestionIndex,
-    required FocusOnKeyEventCallback onEditorKeyEvent,
     required ValueChanged<int> onTagHighlight,
     required void Function(ActiveTagQuery query, TagStat tag) onTagSelect,
   }) {
@@ -2961,7 +3033,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
             key: _editorFieldKey,
             child: Focus(
               canRequestFocus: false,
-              onKeyEvent: onEditorKeyEvent,
               child: PlatformTextField(
                 key: _pageFullscreenTextFieldKey,
                 controller: _contentController,
@@ -3101,7 +3172,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
           tagSuggestions: tagSuggestions,
           tagColorLookup: tagColorLookup,
           highlightedTagSuggestionIndex: highlightedTagSuggestionIndex,
-          onEditorKeyEvent: _handleTagAutocompleteKeyEvent,
           onTagHighlight: (index) {
             if (_tagAutocompleteIndex == index) return;
             setState(() {
@@ -3292,7 +3362,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
                           key: _editorFieldKey,
                           child: Focus(
                             canRequestFocus: false,
-                            onKeyEvent: _handleTagAutocompleteKeyEvent,
                             child: PlatformTextField(
                               controller: _contentController,
                               focusNode: _editorFocusNode,
@@ -3502,48 +3571,69 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
               ],
             ),
           );
+    final desktopChromeInsets =
+        _isDesktopFullscreenPresentation &&
+            defaultTargetPlatform == TargetPlatform.macOS
+        ? resolveDesktopWindowChromeInsets(
+            platform: defaultTargetPlatform,
+            contentExtendsIntoTitleBar: true,
+          )
+        : const DesktopWindowChromeInsets.none();
+    final desktopHeaderTitle = Expanded(
+      child: Text(
+        titleText,
+        key: const ValueKey<String>('memo-editor-desktop-title'),
+        style: Theme.of(context).textTheme.titleMedium,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+    final desktopHeaderFullscreenButton = IconButton(
+      key: const ValueKey<String>('memo-editor-fullscreen-toggle'),
+      tooltip: _isDesktopFullscreenPresentation
+          ? context.t.strings.legacy.msg_restore_window
+          : context.t.strings.legacy.msg_maximize,
+      onPressed: widget.onToggleFullscreen,
+      icon: Icon(
+        _isDesktopFullscreenPresentation
+            ? Icons.fullscreen_exit_rounded
+            : Icons.fullscreen_rounded,
+      ),
+    );
+    final desktopHeaderCloseButton = IconButton(
+      key: const ValueKey<String>('memo-editor-close-button'),
+      tooltip: context.t.strings.legacy.msg_close,
+      onPressed: _saving ? null : () => unawaited(_requestCloseEditor()),
+      icon: const Icon(Icons.close_rounded),
+    );
+    final desktopHeaderChildren = defaultTargetPlatform == TargetPlatform.macOS
+        ? <Widget>[
+            desktopHeaderCloseButton,
+            const SizedBox(width: 4),
+            desktopHeaderTitle,
+            desktopHeaderFullscreenButton,
+          ]
+        : <Widget>[
+            desktopHeaderTitle,
+            desktopHeaderFullscreenButton,
+            desktopHeaderCloseButton,
+          ];
     final desktopHeader = !_supportsDesktopSurfaceChrome
         ? null
         : Container(
             key: const ValueKey<String>('memo-editor-desktop-header'),
-            height: 56,
-            padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+            height: 56 + desktopChromeInsets.top,
+            padding: EdgeInsetsDirectional.only(
+              start: 16 + desktopChromeInsets.leading,
+              top: 8 + desktopChromeInsets.top,
+              end: 8 + desktopChromeInsets.trailing,
+              bottom: 8,
+            ),
             decoration: BoxDecoration(
               color: cardColor,
               border: Border(bottom: BorderSide(color: borderColor)),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    titleText,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  key: const ValueKey<String>('memo-editor-fullscreen-toggle'),
-                  tooltip: _isDesktopFullscreenPresentation
-                      ? context.t.strings.legacy.msg_restore_window
-                      : context.t.strings.legacy.msg_maximize,
-                  onPressed: widget.onToggleFullscreen,
-                  icon: Icon(
-                    _isDesktopFullscreenPresentation
-                        ? Icons.fullscreen_exit_rounded
-                        : Icons.fullscreen_rounded,
-                  ),
-                ),
-                IconButton(
-                  key: const ValueKey<String>('memo-editor-close-button'),
-                  tooltip: context.t.strings.legacy.msg_close,
-                  onPressed: _saving
-                      ? null
-                      : () => unawaited(_requestCloseEditor()),
-                  icon: const Icon(Icons.close_rounded),
-                ),
-              ],
-            ),
+            child: Row(children: desktopHeaderChildren),
           );
     final composeSurface = MemoComposeSurface(
       backgroundColor: background,
@@ -3581,23 +3671,6 @@ class _MemoEditorScreenState extends ConsumerState<MemoEditorScreen> {
                 }
                 unawaited(_requestCloseEditor());
               },
-              const SingleActivator(
-                LogicalKeyboardKey.enter,
-                control: true,
-              ): () =>
-                  unawaited(_save()),
-              const SingleActivator(
-                LogicalKeyboardKey.numpadEnter,
-                control: true,
-              ): () =>
-                  unawaited(_save()),
-              const SingleActivator(LogicalKeyboardKey.enter, meta: true): () =>
-                  unawaited(_save()),
-              const SingleActivator(
-                LogicalKeyboardKey.numpadEnter,
-                meta: true,
-              ): () =>
-                  unawaited(_save()),
             },
             child: composeSurface,
           )

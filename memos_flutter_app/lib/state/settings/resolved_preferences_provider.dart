@@ -24,6 +24,8 @@ final resolvedAppSettingsProvider = Provider<ResolvedAppSettings>((ref) {
     workspace: workspace,
     workspaceKey: workspaceKey,
     hasWorkspace: hasWorkspace,
+    hasRemoteAccount: session?.currentAccount != null,
+    isLocalLibraryMode: currentLocalLibrary != null,
   );
 });
 

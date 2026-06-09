@@ -1262,11 +1262,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void _openMemoDetail(Memo memo) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => MemoDetailScreen(
-          initialMemo: _toLocalMemo(memo),
-          readOnly: true,
-          showEngagement: true,
-        ),
+        builder: (_) =>
+            MemoDetailScreen(initialMemo: _toLocalMemo(memo), readOnly: true),
       ),
     );
   }
@@ -1925,7 +1922,6 @@ class _ExploreDesktopPreviewPane extends StatelessWidget {
                     ),
                     initialMemo: previewMemo!,
                     readOnly: true,
-                    showEngagement: true,
                     embedded: true,
                   ),
           ),

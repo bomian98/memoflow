@@ -42,6 +42,7 @@ void main() {
       'lib/features/settings/local_network_migration_screen.dart',
       'lib/features/settings/local_mode_setup_screen.dart',
       'lib/features/settings/location_settings_screen.dart',
+      'lib/features/settings/location_settings_navigation.dart',
       'lib/features/settings/memoflow_bridge_screen.dart',
       'lib/features/settings/memo_toolbar_settings_screen.dart',
       'lib/features/settings/migration/memoflow_migration_receiver_screen.dart',

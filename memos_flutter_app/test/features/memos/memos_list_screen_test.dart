@@ -19,6 +19,7 @@ import 'package:memos_flutter_app/application/sync/sync_types.dart';
 import 'package:memos_flutter_app/application/sync/webdav_backup_service.dart';
 import 'package:memos_flutter_app/application/sync/webdav_sync_service.dart';
 import 'package:memos_flutter_app/core/app_motion.dart';
+import 'package:memos_flutter_app/core/desktop/window_chrome_safe_area.dart';
 import 'package:memos_flutter_app/core/platform_layout.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
 import 'package:memos_flutter_app/data/ai/ai_provider_adapter.dart';
@@ -690,6 +691,21 @@ void main() {
     await tester.pump(AppMotion.desktopPreviewContentReveal);
     await _pumpScreenFrames(tester);
 
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+    for (var i = 0; i < 10; i++) {
+      if (container.read(desktopMemoPreviewSessionProvider).phase ==
+          DesktopMemoPreviewPhase.ready) {
+        break;
+      }
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(
+      container.read(desktopMemoPreviewSessionProvider).phase,
+      DesktopMemoPreviewPhase.ready,
+    );
+
     await tester.tap(
       find.byKey(const ValueKey<String>('desktop-memo-preview-edit')),
     );
@@ -701,6 +717,502 @@ void main() {
     );
     expect(find.byType(MemoEditorScreen), findsOneWidget);
     expect(find.byType(MemoDetailScreen), findsNothing);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('macOS wide layout preview edit button opens desktop editor', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1360, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1360, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'macOS preview edit target memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    await tester.tap(find.byType(MemoListCard).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 32));
+    await tester.pump(AppMotion.desktopPreviewInitialLoaderMin);
+    await tester.pump(AppMotion.desktopPreviewContentReveal);
+    await _pumpScreenFrames(tester);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+    for (var i = 0; i < 10; i++) {
+      if (container.read(desktopMemoPreviewSessionProvider).phase ==
+          DesktopMemoPreviewPhase.ready) {
+        break;
+      }
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(
+      container.read(desktopMemoPreviewSessionProvider).phase,
+      DesktopMemoPreviewPhase.ready,
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).selectedMemoUid,
+      'memo-1',
+    );
+    expect(container.read(desktopHomePaneStateProvider).previewVisible, isTrue);
+
+    final editButtonFinder = find.byKey(
+      const ValueKey<String>('desktop-memo-preview-edit'),
+    );
+    for (var i = 0; i < 10; i++) {
+      if (tester.widget<IconButton>(editButtonFinder).onPressed != null) {
+        break;
+      }
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(tester.widget<IconButton>(editButtonFinder).onPressed, isNotNull);
+
+    await tester.tap(editButtonFinder);
+    await _pumpScreenFrames(tester);
+
+    expect(container.read(desktopHomePaneStateProvider).editorVisible, isTrue);
+    expect(find.byType(MemoEditorScreen), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('memo-editor-desktop-header')),
+      findsOneWidget,
+    );
+    expect(find.byType(MemoDetailScreen), findsNothing);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('macOS menu new memo does not replace visible desktop editor', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1360, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1360, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Original editable memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    await tester.tap(find.byType(MemoListCard).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 32));
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+    await _pumpDesktopPreviewReady(tester, container);
+
+    final editButtonFinder = find.byKey(
+      const ValueKey<String>('desktop-memo-preview-edit'),
+    );
+    expect(tester.widget<IconButton>(editButtonFinder).onPressed, isNotNull);
+
+    await tester.tap(editButtonFinder);
+    await _pumpScreenFrames(tester);
+
+    final editorFieldFinder = find
+        .descendant(
+          of: find.byType(MemoEditorScreen),
+          matching: find.byType(TextField),
+        )
+        .first;
+    await tester.enterText(editorFieldFinder, 'Unsaved existing edit');
+    await tester.pump();
+
+    expect(container.read(desktopHomePaneStateProvider).editorVisible, isTrue);
+    expect(MemosListScreen.openNewMemoInCurrentDesktopHome(), isFalse);
+    await _pumpScreenFrames(tester);
+
+    expect(find.byType(MemoEditorScreen), findsOneWidget);
+    expect(container.read(desktopHomePaneStateProvider).editorVisible, isTrue);
+    expect(
+      tester.widget<TextField>(editorFieldFinder).controller?.text,
+      'Unsaved existing edit',
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('windows desktop card action edit opens desktop editor surface', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Card action edit target memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byType(MemoListCard).first),
+      kind: PointerDeviceKind.mouse,
+      buttons: kSecondaryMouseButton,
+    );
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Edit'));
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(const ValueKey<String>('windows-desktop-modal-surface')),
+      findsOneWidget,
+    );
+    expect(find.byType(MemoEditorScreen), findsOneWidget);
+    expect(find.byType(MemoDetailScreen), findsNothing);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('windows desktop keyboard edit opens desktop editor surface', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Keyboard edit target memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    await tester.tap(find.byType(MemoListCard).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 32));
+    await _pumpScreenFrames(tester);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyE);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(const ValueKey<String>('windows-desktop-modal-surface')),
+      findsOneWidget,
+    );
+    expect(find.byType(MemoEditorScreen), findsOneWidget);
+    expect(find.byType(MemoDetailScreen), findsNothing);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('macOS menu fallback opens desktop editor surface', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1360, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: Stream.value(const <LocalMemo>[]),
+        screenSize: const Size(1360, 1800),
+        showDrawer: true,
+        enableCompose: true,
+        initialDesktopCreateEditor: true,
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    expect(find.byType(MemoEditorScreen), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('memo-editor-desktop-header')),
+      findsOneWidget,
+    );
+    final closeRect = tester.getRect(
+      find.byKey(const ValueKey<String>('memo-editor-close-button')),
+    );
+    final titleRect = tester.getRect(
+      find.byKey(const ValueKey<String>('memo-editor-desktop-title')),
+    );
+    expect(closeRect.right, lessThanOrEqualTo(titleRect.left));
+    expect(find.byType(BottomSheet), findsNothing);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets(
+    'macOS fullscreen editor header avoids native traffic light chrome',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1360, 1800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: Stream.value(const <LocalMemo>[]),
+          screenSize: const Size(1360, 1800),
+          showDrawer: true,
+          enableCompose: true,
+          initialDesktopCreateEditor: true,
+        ),
+      );
+      await _pumpScreenFrames(tester);
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('memo-editor-fullscreen-toggle')),
+      );
+      await _pumpScreenFrames(tester);
+
+      final closeRect = tester.getRect(
+        find.byKey(const ValueKey<String>('memo-editor-close-button')),
+      );
+      final titleRect = tester.getRect(
+        find.byKey(const ValueKey<String>('memo-editor-desktop-title')),
+      );
+
+      expect(
+        closeRect.left,
+        greaterThanOrEqualTo(kMacosTrafficLightReservedWidth),
+      );
+      expect(closeRect.top, greaterThanOrEqualTo(kMacosTitleBarHeight));
+      expect(
+        titleRect.left,
+        greaterThanOrEqualTo(kMacosTrafficLightReservedWidth),
+      );
+      expect(titleRect.top, greaterThanOrEqualTo(kMacosTitleBarHeight));
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets('macOS reader surfaces avoid native traffic light chrome', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1360, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1360, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'macOS reader chrome memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    await tester.tap(find.byType(MemoListCard).first);
+    await tester.pump(const Duration(milliseconds: 420));
+    await _pumpScreenFrames(tester);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await _pumpScreenFrames(tester);
+
+    final centeredTitleRect = tester.getRect(
+      find.byKey(const ValueKey<String>('desktop-memo-reader-title')),
+    );
+    final centeredCloseRect = tester.getRect(
+      find.byKey(const ValueKey<String>('desktop-memo-reader-close')),
+    );
+
+    expect(
+      centeredTitleRect.left,
+      greaterThanOrEqualTo(kMacosTrafficLightReservedWidth),
+    );
+    expect(centeredTitleRect.top, greaterThanOrEqualTo(kMacosTitleBarHeight));
+    expect(centeredCloseRect.top, greaterThanOrEqualTo(kMacosTitleBarHeight));
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-fullscreen-toggle'),
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-fullscreen-surface'),
+      ),
+      findsOneWidget,
+    );
+
+    final fullscreenTitleRect = tester.getRect(
+      find.byKey(const ValueKey<String>('desktop-memo-reader-title')),
+    );
+    final fullscreenCloseRect = tester.getRect(
+      find.byKey(const ValueKey<String>('desktop-memo-reader-close')),
+    );
+
+    expect(
+      fullscreenTitleRect.left,
+      greaterThanOrEqualTo(kMacosTrafficLightReservedWidth),
+    );
+    expect(fullscreenTitleRect.top, greaterThanOrEqualTo(kMacosTitleBarHeight));
+    expect(fullscreenCloseRect.top, greaterThanOrEqualTo(kMacosTitleBarHeight));
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets(
+    'desktop editor fullscreen toggle preserves text and restores centered',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1600, 1800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: Stream.value(const <LocalMemo>[]),
+          screenSize: const Size(1600, 1800),
+          showDrawer: true,
+          enableCompose: true,
+        ),
+      );
+      await _pumpScreenFrames(tester);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MemosListScreen)),
+      );
+
+      await tester.tap(find.byTooltip('Create memo').first);
+      await _pumpScreenFrames(tester);
+
+      final editorFieldFinder = find
+          .descendant(
+            of: find.byType(MemoEditorScreen),
+            matching: find.byType(TextField),
+          )
+          .first;
+      await tester.enterText(editorFieldFinder, 'Fullscreen state survives');
+      await tester.pump();
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('memo-editor-fullscreen-toggle')),
+      );
+      await _pumpScreenFrames(tester);
+
+      expect(
+        container.read(desktopHomePaneStateProvider).isEditorFullscreen,
+        isTrue,
+      );
+      expect(find.text('Fullscreen state survives'), findsOneWidget);
+      expect(find.byType(MemoEditorScreen), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('memo-editor-fullscreen-toggle')),
+      );
+      await _pumpScreenFrames(tester);
+
+      expect(
+        container.read(desktopHomePaneStateProvider).isEditorFullscreen,
+        isFalse,
+      );
+      expect(find.text('Fullscreen state survives'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('windows-desktop-modal-surface')),
+        findsOneWidget,
+      );
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets('desktop editor modal does not clear inline compose draft', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: Stream.value(const <LocalMemo>[]),
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+        enableCompose: true,
+        enableDesktopResizableHomeInlineCompose: true,
+        seedDevicePreferencesSynchronously: true,
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    final inlineEditorFinder = find.byKey(
+      const ValueKey<String>('memos-inline-compose-text-field'),
+    );
+    expect(inlineEditorFinder, findsOneWidget);
+    await tester.enterText(inlineEditorFinder, 'Inline draft survives modal');
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Create memo').first);
+    await _pumpScreenFrames(tester);
+    expect(find.byType(MemoEditorScreen), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('memo-editor-close-button')),
+    );
+    await _pumpScreenFrames(tester);
+    expect(container.read(desktopHomePaneStateProvider).editorVisible, isFalse);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(MemoEditorScreen), findsNothing);
+    expect(
+      tester.widget<TextField>(inlineEditorFinder).controller?.text,
+      'Inline draft survives modal',
+    );
     debugDefaultTargetPlatformOverride = null;
   });
 
@@ -822,7 +1334,128 @@ void main() {
     },
   );
 
-  testWidgets('windows wide layout Enter opens full detail for selected memo', (
+  testWidgets(
+    'windows wide layout Enter opens desktop reader for selected memo',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1600, 1800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final memosController = StreamController<List<LocalMemo>>.broadcast();
+      addTearDown(memosController.close);
+
+      await tester.pumpWidget(
+        _buildHarness(
+          memosStream: memosController.stream,
+          screenSize: const Size(1600, 1800),
+          showDrawer: true,
+        ),
+      );
+      memosController.add(<LocalMemo>[
+        _buildMemo(uid: 'memo-1', content: 'Enter preview memo'),
+      ]);
+      await _pumpScreenFrames(tester);
+
+      await tester.tap(find.byType(MemoListCard).first);
+      await tester.pump(const Duration(milliseconds: 420));
+      await _pumpScreenFrames(tester);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await _pumpScreenFrames(tester);
+
+      expect(
+        find.byKey(
+          const ValueKey<String>('desktop-memo-reader-centered-surface'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('desktop-memo-reader-header')),
+        findsOneWidget,
+      );
+      final title = tester.widget<Text>(
+        find.byKey(const ValueKey<String>('desktop-memo-reader-title')),
+      );
+      expect(title.data, '2025-01-02 03:04');
+      expect(
+        find.descendant(
+          of: find.byType(MemoDetailScreen),
+          matching: find.text('2025-01-02 03:04'),
+        ),
+        findsNothing,
+      );
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
+  testWidgets('desktop reader lets top dialog consume Escape', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Popup Escape reader memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    await tester.tap(find.byType(MemoListCard).first);
+    await tester.pump(const Duration(milliseconds: 420));
+    await _pumpScreenFrames(tester);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await _pumpScreenFrames(tester);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+    expect(container.read(desktopHomePaneStateProvider).readerVisible, isTrue);
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-centered-surface'),
+      ),
+      findsOneWidget,
+    );
+
+    unawaited(
+      showDialog<void>(
+        context: tester.element(find.byType(MemosListScreen)),
+        builder: (_) => const AlertDialog(content: Text('Reader top dialog')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Reader top dialog'), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Reader top dialog'), findsNothing);
+    expect(container.read(desktopHomePaneStateProvider).readerVisible, isTrue);
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-centered-surface'),
+      ),
+      findsOneWidget,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('windows wide layout double tap opens desktop reader surface', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.windows;
@@ -842,18 +1475,210 @@ void main() {
       ),
     );
     memosController.add(<LocalMemo>[
-      _buildMemo(uid: 'memo-1', content: 'Enter preview memo'),
+      _buildMemo(uid: 'memo-1', content: 'Double tap reader memo'),
+    ]);
+    await _pumpScreenFrames(tester);
+
+    final card = find.byType(MemoListCard).first;
+    await tester.tap(card);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tap(card);
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-centered-surface'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.ancestor(
+        of: find.byType(MemoDetailScreen),
+        matching: find.byKey(
+          const ValueKey<String>('desktop-memo-reader-centered-surface'),
+        ),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Double tap reader memo', findRichText: true),
+      findsWidgets,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('windows wide layout preview open action opens reader surface', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Preview open reader memo'),
     ]);
     await _pumpScreenFrames(tester);
 
     await tester.tap(find.byType(MemoListCard).first);
-    await tester.pump(const Duration(milliseconds: 420));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 32));
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+    await _pumpDesktopPreviewReady(tester, container);
+
+    final openButton = find.byKey(
+      const ValueKey<String>('desktop-memo-preview-open'),
+    );
+    expect(openButton, findsOneWidget);
+    expect(tester.widget<IconButton>(openButton).onPressed, isNotNull);
+
+    await tester.tap(openButton);
     await _pumpScreenFrames(tester);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-centered-surface'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Preview open reader memo', findRichText: true),
+      findsWidgets,
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).selectedMemoUid,
+      'memo-1',
+    );
+    expect(container.read(desktopHomePaneStateProvider).previewVisible, isTrue);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('windows wide layout reader fullscreen restores centered', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1600, 1800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final memosController = StreamController<List<LocalMemo>>.broadcast();
+    addTearDown(memosController.close);
+
+    await tester.pumpWidget(
+      _buildHarness(
+        memosStream: memosController.stream,
+        screenSize: const Size(1600, 1800),
+        showDrawer: true,
+      ),
+    );
+    memosController.add(<LocalMemo>[
+      _buildMemo(uid: 'memo-1', content: 'Fullscreen reader memo'),
+    ]);
     await _pumpScreenFrames(tester);
 
-    expect(find.byType(MemoDetailScreen), findsOneWidget);
+    await tester.tap(find.byType(MemoListCard).first);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MemosListScreen)),
+    );
+    await _pumpDesktopPreviewReady(tester, container);
+
+    final openButton = find.byKey(
+      const ValueKey<String>('desktop-memo-preview-open'),
+    );
+    for (var i = 0; i < 10; i++) {
+      if (tester.widget<IconButton>(openButton).onPressed != null) {
+        break;
+      }
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(tester.widget<IconButton>(openButton).onPressed, isNotNull);
+
+    await tester.tap(openButton);
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-centered-surface'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).readerMemoUid,
+      'memo-1',
+    );
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-fullscreen-toggle'),
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-fullscreen-surface'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-centered-surface'),
+      ),
+      findsNothing,
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).isReaderFullscreen,
+      isTrue,
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).readerMemoUid,
+      'memo-1',
+    );
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-fullscreen-toggle'),
+      ),
+    );
+    await _pumpScreenFrames(tester);
+
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-centered-surface'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).isReaderFullscreen,
+      isFalse,
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).readerMemoUid,
+      'memo-1',
+    );
+    expect(
+      find.textContaining('Fullscreen reader memo', findRichText: true),
+      findsWidgets,
+    );
+    expect(
+      container.read(desktopHomePaneStateProvider).selectedMemoUid,
+      'memo-1',
+    );
     debugDefaultTargetPlatformOverride = null;
   });
 
@@ -1001,7 +1826,7 @@ void main() {
     },
   );
 
-  testWidgets('windows wide layout detail edit returns to home compose pane', (
+  testWidgets('windows wide layout reader edit opens home compose pane', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.windows;
@@ -1032,17 +1857,21 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await _pumpScreenFrames(tester);
 
-    final fullDetailEditButton = find.descendant(
-      of: find.byType(MemoDetailScreen).last,
-      matching: find.byIcon(Icons.edit),
+    final readerEditButton = find.byKey(
+      const ValueKey<String>('desktop-memo-reader-edit'),
     );
-    expect(fullDetailEditButton, findsOneWidget);
+    expect(readerEditButton, findsOneWidget);
 
-    await tester.tap(fullDetailEditButton);
+    await tester.tap(readerEditButton);
     await _pumpScreenFrames(tester);
     await _pumpScreenFrames(tester);
 
-    expect(find.byType(MemoDetailScreen), findsNothing);
+    expect(
+      find.byKey(
+        const ValueKey<String>('desktop-memo-reader-centered-surface'),
+      ),
+      findsNothing,
+    );
     expect(find.byType(MemoEditorScreen), findsOneWidget);
     expect(find.byType(MemoListCard), findsOneWidget);
     debugDefaultTargetPlatformOverride = null;
@@ -1292,6 +2121,15 @@ void main() {
       await _pumpScreenFrames(tester);
 
       expect(find.byType(MemoDetailScreen), findsOneWidget);
+      expect(find.byType(AppBar), findsOneWidget);
+      expect(
+        tester.getSize(find.byType(AppBar)).height,
+        greaterThanOrEqualTo(kToolbarHeight + kMacosTitleBarHeight),
+      );
+      expect(
+        tester.getRect(find.byKey(memoDetailBoundedDocumentKey)).top,
+        greaterThanOrEqualTo(kMacosTitleBarHeight),
+      );
       expect(
         container.read(desktopHomePaneStateProvider).previewVisible,
         isFalse,
@@ -2965,6 +3803,26 @@ Future<void> _pumpScreenFrames(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 32));
 }
 
+Future<void> _pumpDesktopPreviewReady(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await tester.pump(AppMotion.desktopPreviewInitialLoaderMin);
+  await tester.pump(AppMotion.desktopPreviewContentReveal);
+  await _pumpScreenFrames(tester);
+  for (var i = 0; i < 10; i++) {
+    if (container.read(desktopMemoPreviewSessionProvider).phase ==
+        DesktopMemoPreviewPhase.ready) {
+      break;
+    }
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  expect(
+    container.read(desktopMemoPreviewSessionProvider).phase,
+    DesktopMemoPreviewPhase.ready,
+  );
+}
+
 Widget _buildHarness({
   required Stream<List<LocalMemo>> memosStream,
   Size screenSize = const Size(1280, 1800),
@@ -2978,6 +3836,7 @@ Widget _buildHarness({
   bool seedDevicePreferencesSynchronously = false,
   MemosListRouteNoteInputPresenter? showNoteInputSheet,
   MemosListRouteVoiceRecordOverlayPresenter? showVoiceRecordOverlay,
+  bool initialDesktopCreateEditor = false,
   DesktopHomeUtilityView initialDesktopUtilityView =
       DesktopHomeUtilityView.none,
   DateTime? initialDesktopHomeDayFilter,
@@ -3066,6 +3925,7 @@ Widget _buildHarness({
             hidePrimaryComposeFab: hidePrimaryComposeFab,
             showNoteInputSheet: showNoteInputSheet,
             showVoiceRecordOverlay: showVoiceRecordOverlay,
+            initialDesktopCreateEditor: initialDesktopCreateEditor,
             initialDesktopUtilityView: initialDesktopUtilityView,
             initialDesktopHomeDayFilter: initialDesktopHomeDayFilter,
           ),

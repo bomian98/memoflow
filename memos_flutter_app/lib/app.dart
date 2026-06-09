@@ -36,7 +36,6 @@ import 'features/home/home_navigation_host.dart';
 import 'features/import/import_flow_screens.dart';
 import 'features/image_editor/i18n.dart';
 import 'features/lock/app_lock_gate.dart';
-import 'features/memos/memo_editor_screen.dart';
 import 'features/memos/memos_list_screen.dart';
 import 'features/memos/recycle_bin_screen.dart';
 import 'features/review/ai_insight_history_screen.dart';
@@ -369,7 +368,19 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
     if (!mounted) return;
     switch (command) {
       case macosMenuCommandNewMemo:
-        await _pushMacosMenuRoute(const MemoEditorScreen());
+        if (MemosListScreen.openNewMemoInCurrentDesktopHome()) {
+          return;
+        }
+        await _pushMacosMenuRoute(
+          const MemosListScreen(
+            title: 'MemoFlow',
+            state: 'NORMAL',
+            showDrawer: true,
+            enableCompose: true,
+            enableDesktopResizableHomeInlineCompose: true,
+            initialDesktopCreateEditor: true,
+          ),
+        );
         return;
       case macosMenuCommandQuickInput:
       case macosMenuCommandFocusQuickInput:

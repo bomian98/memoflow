@@ -148,6 +148,60 @@ void main() {
     expect(recorder.submitInlineComposeCount, 1);
   });
 
+  test('configured publish binding publishes memo in inline editor', () {
+    final recorder = _CallbackRecorder();
+    final delegate = _buildDelegate(
+      recorder: recorder,
+      inlineEditorActive: true,
+      bindings: <DesktopShortcutAction, DesktopShortcutBinding>{
+        DesktopShortcutAction.publishMemo: DesktopShortcutBinding(
+          keyId: LogicalKeyboardKey.keyS.keyId,
+          primary: true,
+          shift: true,
+          alt: false,
+        ),
+      },
+    );
+
+    final dispatch = delegate.handle(
+      _keyDown(
+        logicalKey: LogicalKeyboardKey.keyS,
+        physicalKey: PhysicalKeyboardKey.keyS,
+      ),
+      <LogicalKeyboardKey>{
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+        LogicalKeyboardKey.keyS,
+      },
+    );
+
+    expect(dispatch.stage, MemosListDesktopShortcutDispatchStage.matched);
+    expect(dispatch.action, DesktopShortcutAction.publishMemo);
+    expect(dispatch.reason, 'binding');
+    expect(recorder.submitInlineComposeCount, 1);
+  });
+
+  test('plain enter in inline editor is left to editor input', () {
+    final recorder = _CallbackRecorder();
+    final delegate = _buildDelegate(
+      recorder: recorder,
+      inlineEditorActive: true,
+    );
+
+    final dispatch = delegate.handle(
+      _keyDown(
+        logicalKey: LogicalKeyboardKey.enter,
+        physicalKey: PhysicalKeyboardKey.enter,
+      ),
+      <LogicalKeyboardKey>{LogicalKeyboardKey.enter},
+    );
+
+    expect(dispatch.stage, MemosListDesktopShortcutDispatchStage.noMatch);
+    expect(dispatch.handled, isFalse);
+    expect(recorder.submitInlineComposeCount, 0);
+    expect(recorder.totalCalls, 0);
+  });
+
   test('inline formatting callbacks are forwarded', () {
     final recorder = _CallbackRecorder();
     final delegate = _buildDelegate(

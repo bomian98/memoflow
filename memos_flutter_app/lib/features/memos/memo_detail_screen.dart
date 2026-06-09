@@ -28,6 +28,7 @@ import '../../platform/widgets/platform_dialog.dart';
 import '../../state/memos/memo_detail_providers.dart';
 import '../../state/memos/memo_clip_card_providers.dart';
 import '../../state/memos/memos_providers.dart';
+import '../../state/settings/resolved_preferences_provider.dart';
 import '../../state/settings/device_preferences_provider.dart';
 import '../../state/settings/workspace_preferences_provider.dart';
 import '../../state/tags/tag_color_lookup.dart';
@@ -284,22 +285,26 @@ class MemoDetailScreen extends ConsumerStatefulWidget {
     super.key,
     required this.initialMemo,
     this.readOnly = false,
-    this.showEngagement = false,
+    this.supportsMemoEngagement = true,
     this.richContentEnabled = true,
     this.heroTag,
     this.embedded = false,
     this.embeddedHeader,
+    this.showDocumentMetadata = true,
+    this.showSupplementarySections = true,
     this.scrollController,
     this.onRequestEditExisting,
   });
 
   final LocalMemo initialMemo;
   final bool readOnly;
-  final bool showEngagement;
+  final bool supportsMemoEngagement;
   final bool richContentEnabled;
   final Object? heroTag;
   final bool embedded;
   final Widget? embeddedHeader;
+  final bool showDocumentMetadata;
+  final bool showSupplementarySections;
   final ScrollController? scrollController;
   final Future<void> Function(LocalMemo memo)? onRequestEditExisting;
 
@@ -968,13 +973,13 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
         (prefs) => prefs.collapseReferences,
       ),
     );
-    final showEngagementInAllMemoDetails = ref.watch(
-      currentWorkspacePreferencesProvider.select(
-        (prefs) => prefs.showEngagementInAllMemoDetails,
+    final effectiveShowMemoEngagement = ref.watch(
+      resolvedAppSettingsProvider.select(
+        (settings) => settings.effectiveShowMemoEngagement,
       ),
     );
     final shouldShowEngagement =
-        widget.showEngagement || showEngagementInAllMemoDetails;
+        widget.supportsMemoEngagement && effectiveShowMemoEngagement;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark
         ? MemoFlowPalette.cardDark
@@ -1036,6 +1041,7 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
       isArchived: isArchived,
       hapticsEnabled: hapticsEnabled,
       markdownSelectable: _routeSettled,
+      showMetadata: widget.showDocumentMetadata,
       onDoubleTapEdit: onDoubleTapEdit,
       onTimeTap: widget.readOnly || isArchived ? null : _adjustMemoTime,
       onReplaceAttachment: canEditAttachments ? _replaceMemoAttachment : null,
@@ -1053,7 +1059,8 @@ class _MemoDetailScreenState extends ConsumerState<MemoDetailScreen> {
       resolvedData: resolvedData,
       header: header,
       scrollController: _scrollController,
-      showSupplementarySections: _routeSettled,
+      showSupplementarySections:
+          widget.showSupplementarySections && _routeSettled,
       shouldShowEngagement: shouldShowEngagement,
       boundDesktopReadWidth: !widget.embedded,
       onLongPressStart: widget.readOnly
@@ -1378,6 +1385,7 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
     this.isArchived = false,
     this.hapticsEnabled = false,
     this.markdownSelectable = true,
+    this.showMetadata = true,
     this.mediaMaxHeightFactor = 0.4,
     this.onDoubleTapEdit,
     this.onTimeTap,
@@ -1390,6 +1398,7 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
   final bool isArchived;
   final bool hapticsEnabled;
   final bool markdownSelectable;
+  final bool showMetadata;
   final double mediaMaxHeightFactor;
   final VoidCallback? onDoubleTapEdit;
   final VoidCallback? onTimeTap;
@@ -1468,6 +1477,7 @@ class MemoDocumentPrimaryContent extends ConsumerWidget {
           metaTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
+          showMetadata: showMetadata,
           mediaMaxHeightFactor: mediaMaxHeightFactor,
           mediaMaxCount: 9,
           contentOverride: contentWidget,

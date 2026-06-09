@@ -26,6 +26,16 @@ import '../memo_video_grid.dart';
 
 final DateFormat _memoReaderDateFormatter = DateFormat('yyyy-MM-dd HH:mm');
 
+DateTime resolveMemoReaderDisplayTime(LocalMemo memo) {
+  return memo.effectiveDisplayTime.millisecondsSinceEpoch > 0
+      ? memo.effectiveDisplayTime
+      : memo.updateTime;
+}
+
+String formatMemoReaderDisplayTime(LocalMemo memo) {
+  return _memoReaderDateFormatter.format(resolveMemoReaderDisplayTime(memo));
+}
+
 const memoReaderTimeAdjustTriggerKey = ValueKey<String>(
   'memo-reader-time-adjust-trigger',
 );
@@ -78,6 +88,7 @@ class MemoReaderContent extends ConsumerWidget {
     this.showDivider = false,
     this.contentTextStyle,
     this.metaTextStyle,
+    this.showMetadata = true,
     this.selectable = true,
     this.previewImageOnTap = true,
     this.mediaMaxHeightFactor = 0.42,
@@ -96,6 +107,7 @@ class MemoReaderContent extends ConsumerWidget {
   final bool showDivider;
   final TextStyle? contentTextStyle;
   final TextStyle? metaTextStyle;
+  final bool showMetadata;
   final bool selectable;
   final bool previewImageOnTap;
   final double mediaMaxHeightFactor;
@@ -170,9 +182,6 @@ class MemoReaderContent extends ConsumerWidget {
     final nonMediaAttachments =
         nonMediaAttachmentsOverride ??
         filterNonMediaAttachments(memo.attachments);
-    final displayTime = memo.effectiveDisplayTime.millisecondsSinceEpoch > 0
-        ? memo.effectiveDisplayTime
-        : memo.updateTime;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDark
         ? MemoFlowPalette.borderDark
@@ -202,30 +211,32 @@ class MemoReaderContent extends ConsumerWidget {
                 color: Theme.of(context).dividerColor.withValues(alpha: 0.32),
               ),
             ),
-          _MemoReaderTimeLabel(
-            text: _memoReaderDateFormatter.format(displayTime),
-            style:
-                metaTextStyle ??
-                Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-            onTap: onTimeTap,
-          ),
-          if (memo.location != null) ...[
-            const SizedBox(height: 6),
-            MemoLocationLine(
-              location: memo.location!,
-              textColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              onTap: () => openMemoLocation(
-                context,
-                memo.location!,
-                memoUid: memo.uid,
-                provider: locationProvider,
-              ),
-              fontSize: 12,
+          if (showMetadata) ...[
+            _MemoReaderTimeLabel(
+              text: formatMemoReaderDisplayTime(memo),
+              style:
+                  metaTextStyle ??
+                  Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+              onTap: onTimeTap,
             ),
+            if (memo.location != null) ...[
+              const SizedBox(height: 6),
+              MemoLocationLine(
+                location: memo.location!,
+                textColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                onTap: () => openMemoLocation(
+                  context,
+                  memo.location!,
+                  memoUid: memo.uid,
+                  provider: locationProvider,
+                ),
+                fontSize: 12,
+              ),
+            ],
+            const SizedBox(height: 10),
           ],
-          const SizedBox(height: 10),
           contentOverride ??
               MemoMarkdown(
                 cacheKey:

@@ -60,6 +60,7 @@ class WorkspacePreferences {
   final bool collapseLongContent;
   final bool collapseReferences;
   final bool showEngagementInAllMemoDetails;
+  bool get showMemoEngagement => showEngagementInAllMemoDetails;
   final bool autoSyncOnStartAndResume;
   final bool defaultUseLegacyApi;
   final bool showDrawerExplore;
@@ -107,7 +108,8 @@ class WorkspacePreferences {
     final legacy = AppPreferences.fromJson({
       'collapseLongContent': json['collapseLongContent'],
       'collapseReferences': json['collapseReferences'],
-      'showEngagementInAllMemoDetails': json['showEngagementInAllMemoDetails'],
+      'showEngagementInAllMemoDetails':
+          json['showMemoEngagement'] ?? json['showEngagementInAllMemoDetails'],
       'autoSyncOnStartAndResume': json['autoSyncOnStartAndResume'],
       'useLegacyApi': json['defaultUseLegacyApi'],
       'showDrawerExplore': json['showDrawerExplore'],
@@ -202,7 +204,7 @@ class WorkspacePreferences {
     return AppPreferences.defaults.copyWith(
       collapseLongContent: collapseLongContent,
       collapseReferences: collapseReferences,
-      showEngagementInAllMemoDetails: showEngagementInAllMemoDetails,
+      showEngagementInAllMemoDetails: showMemoEngagement,
       autoSyncOnStartAndResume: autoSyncOnStartAndResume,
       useLegacyApi: defaultUseLegacyApi,
       showDrawerExplore: showDrawerExplore,
@@ -228,6 +230,7 @@ class WorkspacePreferences {
   WorkspacePreferences copyWith({
     bool? collapseLongContent,
     bool? collapseReferences,
+    bool? showMemoEngagement,
     bool? showEngagementInAllMemoDetails,
     bool? autoSyncOnStartAndResume,
     bool? defaultUseLegacyApi,
@@ -252,7 +255,9 @@ class WorkspacePreferences {
       collapseLongContent: collapseLongContent ?? this.collapseLongContent,
       collapseReferences: collapseReferences ?? this.collapseReferences,
       showEngagementInAllMemoDetails:
-          showEngagementInAllMemoDetails ?? this.showEngagementInAllMemoDetails,
+          showMemoEngagement ??
+          showEngagementInAllMemoDetails ??
+          this.showEngagementInAllMemoDetails,
       autoSyncOnStartAndResume:
           autoSyncOnStartAndResume ?? this.autoSyncOnStartAndResume,
       defaultUseLegacyApi: defaultUseLegacyApi ?? this.defaultUseLegacyApi,

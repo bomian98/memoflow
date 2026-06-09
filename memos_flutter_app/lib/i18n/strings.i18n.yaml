@@ -118,7 +118,7 @@ settings:
     loadFontsFailed: "Failed to load fonts: $error"
     collapseLongContent: "Collapse Long Content"
     collapseReferences: "Collapse References"
-    showEngagementInAllMemoDetails: "Show likes and comments on home cards and memo details"
+    showMemoEngagement: "Show likes and comments"
     launchAction: "Launch Action"
     quickInputKeyboard: "Auto-open keyboard for Quick Input"
     confirmExitOnBack: "Confirm on Exit"

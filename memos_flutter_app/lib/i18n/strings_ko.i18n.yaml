@@ -119,7 +119,7 @@ settings:
     loadFontsFailed: '글꼴을 로드하지 못했습니다: $error'
     collapseLongContent: 긴 콘텐츠 접기
     collapseReferences: 참조 축소
-    showEngagementInAllMemoDetails: 홈 카드와 메모 세부정보에 좋아요와 댓글 표시
+    showMemoEngagement: 좋아요와 댓글 표시
     launchAction: 실행 작업
     quickInputKeyboard: 빠른 입력을 위한 자동 열기 키보드
     confirmExitOnBack: 종료 시 확인

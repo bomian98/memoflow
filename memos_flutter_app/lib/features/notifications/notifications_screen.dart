@@ -386,11 +386,8 @@ class NotificationsScreen extends ConsumerWidget {
       Navigator.of(context).push(
         buildPlatformPageRoute<void>(
           context: context,
-          builder: (_) => MemoDetailScreen(
-            initialMemo: localMemo,
-            readOnly: true,
-            showEngagement: true,
-          ),
+          builder: (_) =>
+              MemoDetailScreen(initialMemo: localMemo, readOnly: true),
         ),
       );
 

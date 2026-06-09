@@ -41,7 +41,87 @@ import '../../memos/link_memo_sheet.dart';
 import '../../location_picker/show_location_picker.dart';
 import '../../memos/memo_video_grid.dart';
 import '../../memos/windows_camera_capture_screen.dart';
+import '../../settings/location_settings_navigation.dart';
 import 'desktop_quick_input_capabilities.dart';
+
+enum DesktopQuickInputShortcutIntent {
+  submit,
+  bold,
+  highlight,
+  underline,
+  unorderedList,
+  orderedList,
+  closeWindow,
+  toggleAlwaysOnTop,
+}
+
+@visibleForTesting
+DesktopQuickInputShortcutIntent? resolveDesktopQuickInputShortcutIntent({
+  required KeyEvent event,
+  required Set<LogicalKeyboardKey> pressedKeys,
+  required Map<DesktopShortcutAction, DesktopShortcutBinding> bindings,
+  required bool editorFocused,
+  required bool alwaysOnTopSupported,
+  required bool pinning,
+}) {
+  if (event is! KeyDownEvent) return null;
+
+  final normalizedBindings = normalizeDesktopShortcutBindings(bindings);
+  final primaryPressed = isPrimaryShortcutModifierPressed(pressedKeys);
+  final shiftPressed = isShiftModifierPressed(pressedKeys);
+  final altPressed = isAltModifierPressed(pressedKeys);
+  final key = event.logicalKey;
+
+  bool matches(DesktopShortcutAction action) {
+    return matchesDesktopShortcutAction(
+      event: event,
+      pressedKeys: pressedKeys,
+      bindings: normalizedBindings,
+      action: action,
+    );
+  }
+
+  if (editorFocused) {
+    if (matches(DesktopShortcutAction.publishMemo)) {
+      return DesktopQuickInputShortcutIntent.submit;
+    }
+    if (matches(DesktopShortcutAction.bold)) {
+      return DesktopQuickInputShortcutIntent.bold;
+    }
+    if (matches(DesktopShortcutAction.highlight)) {
+      return DesktopQuickInputShortcutIntent.highlight;
+    }
+    if (matches(DesktopShortcutAction.underline)) {
+      return DesktopQuickInputShortcutIntent.underline;
+    }
+    if (matches(DesktopShortcutAction.unorderedList)) {
+      return DesktopQuickInputShortcutIntent.unorderedList;
+    }
+    if (matches(DesktopShortcutAction.orderedList)) {
+      return DesktopQuickInputShortcutIntent.orderedList;
+    }
+  }
+
+  if (!primaryPressed && !shiftPressed && !altPressed) {
+    if (key == LogicalKeyboardKey.escape) {
+      return DesktopQuickInputShortcutIntent.closeWindow;
+    }
+  }
+
+  if (primaryPressed && !shiftPressed && !altPressed) {
+    if (key == LogicalKeyboardKey.keyW) {
+      return DesktopQuickInputShortcutIntent.closeWindow;
+    }
+  }
+
+  if (primaryPressed && shiftPressed && !altPressed) {
+    if (key == LogicalKeyboardKey.keyP && alwaysOnTopSupported && !pinning) {
+      return DesktopQuickInputShortcutIntent.toggleAlwaysOnTop;
+    }
+  }
+
+  return null;
+}
 
 class DesktopQuickInputWindowApp extends ConsumerWidget {
   const DesktopQuickInputWindowApp({super.key, required this.windowId});
@@ -943,29 +1023,17 @@ class _DesktopQuickInputWindowScreenState
     if (!mounted || !isDesktopShortcutEnabled()) return false;
     final route = ModalRoute.of(context);
     if (route != null && !route.isCurrent) return false;
-    if (event is! KeyDownEvent) return false;
 
-    final pressed = HardwareKeyboard.instance.logicalKeysPressed;
-    final bindings = normalizeDesktopShortcutBindings(
-      ref.read(devicePreferencesProvider).desktopShortcutBindings,
+    final intent = resolveDesktopQuickInputShortcutIntent(
+      event: event,
+      pressedKeys: HardwareKeyboard.instance.logicalKeysPressed,
+      bindings: ref.read(devicePreferencesProvider).desktopShortcutBindings,
+      editorFocused: _focusNode.hasFocus,
+      alwaysOnTopSupported: _alwaysOnTopSupported,
+      pinning: _pinning,
     );
-    final primaryPressed = isPrimaryShortcutModifierPressed(pressed);
-    final shiftPressed = isShiftModifierPressed(pressed);
-    final altPressed = isAltModifierPressed(pressed);
-    final key = event.logicalKey;
-
-    bool matches(DesktopShortcutAction action) {
-      final binding = bindings[action];
-      if (binding == null) return false;
-      return matchesDesktopShortcut(
-        event: event,
-        pressedKeys: pressed,
-        binding: binding,
-      );
-    }
-
-    if (_focusNode.hasFocus) {
-      if (matches(DesktopShortcutAction.publishMemo)) {
+    switch (intent) {
+      case DesktopQuickInputShortcutIntent.submit:
         ref
             .read(logManagerProvider)
             .info(
@@ -974,8 +1042,7 @@ class _DesktopQuickInputWindowScreenState
             );
         unawaited(_submit());
         return true;
-      }
-      if (matches(DesktopShortcutAction.bold)) {
+      case DesktopQuickInputShortcutIntent.bold:
         ref
             .read(logManagerProvider)
             .info(
@@ -984,8 +1051,7 @@ class _DesktopQuickInputWindowScreenState
             );
         _toggleBold();
         return true;
-      }
-      if (matches(DesktopShortcutAction.highlight)) {
+      case DesktopQuickInputShortcutIntent.highlight:
         ref
             .read(logManagerProvider)
             .info(
@@ -994,8 +1060,7 @@ class _DesktopQuickInputWindowScreenState
             );
         _toggleHighlight();
         return true;
-      }
-      if (matches(DesktopShortcutAction.underline)) {
+      case DesktopQuickInputShortcutIntent.underline:
         ref
             .read(logManagerProvider)
             .info(
@@ -1004,8 +1069,7 @@ class _DesktopQuickInputWindowScreenState
             );
         _toggleUnderline();
         return true;
-      }
-      if (matches(DesktopShortcutAction.unorderedList)) {
+      case DesktopQuickInputShortcutIntent.unorderedList:
         ref
             .read(logManagerProvider)
             .info(
@@ -1014,8 +1078,7 @@ class _DesktopQuickInputWindowScreenState
             );
         _toggleUnorderedList();
         return true;
-      }
-      if (matches(DesktopShortcutAction.orderedList)) {
+      case DesktopQuickInputShortcutIntent.orderedList:
         ref
             .read(logManagerProvider)
             .info(
@@ -1024,33 +1087,15 @@ class _DesktopQuickInputWindowScreenState
             );
         _toggleOrderedList();
         return true;
-      }
-    }
-
-    if (!primaryPressed && !shiftPressed && !altPressed) {
-      if (key == LogicalKeyboardKey.escape) {
+      case DesktopQuickInputShortcutIntent.closeWindow:
         unawaited(_closeWindow());
         return true;
-      }
-    }
-
-    if (primaryPressed && !shiftPressed && !altPressed) {
-      if (key == LogicalKeyboardKey.keyW) {
-        unawaited(_closeWindow());
-        return true;
-      }
-    }
-
-    if (primaryPressed && shiftPressed && !altPressed) {
-      if (key == LogicalKeyboardKey.keyP &&
-          _alwaysOnTopSupported &&
-          !_pinning) {
+      case DesktopQuickInputShortcutIntent.toggleAlwaysOnTop:
         unawaited(_toggleAlwaysOnTop());
         return true;
-      }
+      case null:
+        return false;
     }
-
-    return false;
   }
 
   Future<void> _openTodoShortcutMenuFromKey(GlobalKey key) async {
@@ -1546,6 +1591,7 @@ class _DesktopQuickInputWindowScreenState
     final next = await showLocationPickerSheetOrDialog(
       context: context,
       ref: ref,
+      openLocationSettings: openLocationSettingsSurface,
       initialLocation: _location,
     );
     if (!mounted || next == null) return;

@@ -373,7 +373,7 @@ void main() {
       );
       expect(
         macos.composePresentation,
-        MemosListDesktopComposePresentation.sheet,
+        MemosListDesktopComposePresentation.desktopSurface,
       );
       expect(macos.previewPanePolicy.supportsPane, isTrue);
       expect(macos.previewPanePolicy.defaultMemoClickOpensPreview, isFalse);

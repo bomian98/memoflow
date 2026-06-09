@@ -6,22 +6,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memos_flutter_app/data/api/memos_live_refresh_api.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
+import 'package:memos_flutter_app/data/models/app_preferences.dart';
 import 'package:memos_flutter_app/data/models/content_fingerprint.dart';
+import 'package:memos_flutter_app/data/models/device_preferences.dart';
 import 'package:memos_flutter_app/data/models/instance_profile.dart';
 import 'package:memos_flutter_app/data/models/local_memo.dart';
 import 'package:memos_flutter_app/data/models/location_settings.dart';
 import 'package:memos_flutter_app/data/models/memo.dart';
 import 'package:memos_flutter_app/data/models/memo_relation.dart';
 import 'package:memos_flutter_app/data/models/reaction.dart';
+import 'package:memos_flutter_app/data/models/resolved_app_settings.dart';
 import 'package:memos_flutter_app/data/models/user.dart';
+import 'package:memos_flutter_app/data/models/workspace_preferences.dart';
 import 'package:memos_flutter_app/features/memos/memo_inline_image_syntax.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memo_engagement_surface.dart';
+import 'package:memos_flutter_app/features/memos/widgets/memos_list_memo_card_container.dart';
 import 'package:memos_flutter_app/features/memos/widgets/memos_list_memo_card.dart';
 import 'package:memos_flutter_app/i18n/strings.g.dart';
 import 'package:memos_flutter_app/state/memos/memo_detail_controller.dart';
 import 'package:memos_flutter_app/state/memos/memo_detail_providers.dart';
 import 'package:memos_flutter_app/state/memos/memo_engagement_provider.dart';
+import 'package:memos_flutter_app/state/memos/memos_list_providers.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
+import 'package:memos_flutter_app/state/settings/resolved_preferences_provider.dart';
 import 'package:memos_flutter_app/state/system/session_provider.dart';
 import 'package:memos_flutter_app/state/tags/tag_color_lookup.dart';
 
@@ -50,6 +57,73 @@ void main() {
       const MemosLiveRefreshEvent(
         type: MemosLiveRefreshEventType.reactionUpserted,
         name: 'memos/memo-1',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(memoEngagementCompactBarKey), findsNothing);
+    expect(client.reactionLoadCalls, 0);
+    expect(client.commentLoadCalls, 0);
+  });
+
+  testWidgets('card container hides engagement when unified gate is disabled', (
+    tester,
+  ) async {
+    final client = _FakeMemoEngagementClient(
+      reactions: [_reaction()],
+      comments: [_remoteMemo('comment')],
+    );
+
+    await tester.pumpWidget(
+      _buildCardContainerHarness(
+        memo: _localMemo(),
+        showMemoEngagement: false,
+        client: client,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(memoEngagementCompactBarKey), findsNothing);
+    expect(client.reactionLoadCalls, 0);
+    expect(client.commentLoadCalls, 0);
+  });
+
+  testWidgets('card container shows engagement when unified gate is enabled', (
+    tester,
+  ) async {
+    final client = _FakeMemoEngagementClient(
+      reactions: [_reaction()],
+      comments: [_remoteMemo('comment')],
+    );
+
+    await tester.pumpWidget(
+      _buildCardContainerHarness(
+        memo: _localMemo(),
+        showMemoEngagement: true,
+        client: client,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(memoEngagementCompactBarKey), findsOneWidget);
+    expect(find.text('Like 1'), findsOneWidget);
+    expect(find.text('Comment 1'), findsOneWidget);
+  });
+
+  testWidgets('local library card container never mounts engagement', (
+    tester,
+  ) async {
+    final client = _FakeMemoEngagementClient(
+      reactions: [_reaction()],
+      comments: [_remoteMemo('comment')],
+    );
+
+    await tester.pumpWidget(
+      _buildCardContainerHarness(
+        memo: _localMemo(),
+        showMemoEngagement: true,
+        localLibraryMode: true,
+        client: client,
       ),
     );
     await tester.pumpAndSettle();
@@ -259,6 +333,82 @@ void main() {
 
     expect(client.createdComments, ['from card']);
   });
+}
+
+Widget _buildCardContainerHarness({
+  required LocalMemo memo,
+  required bool showMemoEngagement,
+  bool localLibraryMode = false,
+  required _FakeMemoEngagementClient client,
+}) {
+  LocaleSettings.setLocale(AppLocale.en);
+  final position = ValueNotifier<Duration>(Duration.zero);
+  final duration = ValueNotifier<Duration?>(null);
+  final workspace = WorkspacePreferences.defaults.copyWith(
+    showMemoEngagement: showMemoEngagement,
+  );
+  return ProviderScope(
+    overrides: [
+      memoEngagementClientProvider.overrideWithValue(client),
+      memoDetailControllerProvider.overrideWith(
+        (ref) => _FakeMemoDetailController(ref, const <String, User>{}),
+      ),
+      appSessionProvider.overrideWith(
+        (ref) => _TestSessionController(hasAccount: !localLibraryMode),
+      ),
+      resolvedAppSettingsProvider.overrideWithValue(
+        ResolvedAppSettings(
+          device: DevicePreferences.defaultsForLanguage(AppLanguage.en),
+          workspace: workspace,
+          workspaceKey: localLibraryMode ? 'local-library' : 'test',
+          hasWorkspace: true,
+          hasRemoteAccount: !localLibraryMode,
+          isLocalLibraryMode: localLibraryMode,
+        ),
+      ),
+      memoRelationsProvider.overrideWith(
+        (ref, uid) => Stream<List<MemoRelation>>.value(const <MemoRelation>[]),
+      ),
+    ],
+    child: TranslationProvider(
+      child: MaterialApp(
+        locale: AppLocale.en.flutterLocale,
+        supportedLocales: AppLocaleUtils.supportedLocales,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SizedBox(
+              width: 420,
+              child: MemosListMemoCardContainer(
+                memoCardKey: GlobalKey<MemoListCardState>(),
+                memo: memo,
+                heroTag: null,
+                prefs: AppPreferences.defaultsForLanguage(AppLanguage.en),
+                outboxStatus: const OutboxMemoStatus.empty(),
+                tagColors: TagColorLookup(const []),
+                removing: false,
+                searching: false,
+                windowsHeaderSearchExpanded: false,
+                selectedQuickSearchKind: null,
+                searchQuery: '',
+                playingMemoUid: null,
+                audioPlaying: false,
+                audioLoading: false,
+                audioPositionListenable: position,
+                audioDurationListenable: duration,
+                onAudioSeek: null,
+                onAudioTap: null,
+                onSyncStatusTap: null,
+                onToggleTask: (_) {},
+                onTap: () {},
+                onAction: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 Widget _buildCardHarness({
@@ -537,10 +687,15 @@ final _testUsers = <String, User>{
 };
 
 class _TestSessionController extends AppSessionController {
-  _TestSessionController()
+  _TestSessionController({bool hasAccount = true})
     : super(
         AsyncValue.data(
-          AppSessionState(accounts: [_testAccount], currentKey: 'test'),
+          hasAccount
+              ? AppSessionState(accounts: [_testAccount], currentKey: 'test')
+              : const AppSessionState(
+                  accounts: <Account>[],
+                  currentKey: 'local-library',
+                ),
         ),
       );
 

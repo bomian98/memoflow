@@ -118,7 +118,7 @@ settings:
     loadFontsFailed: "字体加载失败：$error"
     collapseLongContent: "折叠长内容"
     collapseReferences: "折叠引用"
-    showEngagementInAllMemoDetails: "在首页卡片和笔记详情中显示点赞和评论"
+    showMemoEngagement: "显示点赞与评论"
     launchAction: "启动动作"
     quickInputKeyboard: "快速记录时唤醒键盘"
     confirmExitOnBack: "\u9000\u51fa\u65f6\u786e\u8ba4"

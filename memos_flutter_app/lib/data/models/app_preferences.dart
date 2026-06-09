@@ -211,6 +211,7 @@ class AppPreferences {
   final bool collapseLongContent;
   final bool collapseReferences;
   final bool showEngagementInAllMemoDetails;
+  bool get showMemoEngagement => showEngagementInAllMemoDetails;
   final LaunchAction launchAction;
   final bool autoSyncOnStartAndResume;
   final bool quickInputAutoFocus;

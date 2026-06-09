@@ -5,6 +5,8 @@ enum DesktopHomeSecondaryPaneMode { none, preview }
 
 enum DesktopHomeEditorSurfaceMode { hidden, centered, fullscreen }
 
+enum DesktopHomeReaderSurfaceMode { hidden, centered, fullscreen }
+
 @immutable
 sealed class DesktopHomeComposeDraftTarget {
   const DesktopHomeComposeDraftTarget();
@@ -27,6 +29,8 @@ class DesktopHomePaneState {
     required this.secondaryPaneMode,
     required this.composeDraftTarget,
     required this.editorSurfaceMode,
+    required this.readerMemoUid,
+    required this.readerSurfaceMode,
   });
 
   static const initial = DesktopHomePaneState(
@@ -34,12 +38,16 @@ class DesktopHomePaneState {
     secondaryPaneMode: DesktopHomeSecondaryPaneMode.none,
     composeDraftTarget: null,
     editorSurfaceMode: DesktopHomeEditorSurfaceMode.hidden,
+    readerMemoUid: null,
+    readerSurfaceMode: DesktopHomeReaderSurfaceMode.hidden,
   );
 
   final String? selectedMemoUid;
   final DesktopHomeSecondaryPaneMode secondaryPaneMode;
   final DesktopHomeComposeDraftTarget? composeDraftTarget;
   final DesktopHomeEditorSurfaceMode editorSurfaceMode;
+  final String? readerMemoUid;
+  final DesktopHomeReaderSurfaceMode readerSurfaceMode;
 
   bool get hasSelection => (selectedMemoUid ?? '').trim().isNotEmpty;
   bool get previewVisible =>
@@ -48,6 +56,10 @@ class DesktopHomePaneState {
       editorSurfaceMode != DesktopHomeEditorSurfaceMode.hidden;
   bool get isEditorFullscreen =>
       editorSurfaceMode == DesktopHomeEditorSurfaceMode.fullscreen;
+  bool get readerVisible =>
+      readerSurfaceMode != DesktopHomeReaderSurfaceMode.hidden;
+  bool get isReaderFullscreen =>
+      readerSurfaceMode == DesktopHomeReaderSurfaceMode.fullscreen;
 }
 
 class DesktopHomePaneStateController
@@ -63,6 +75,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: state.secondaryPaneMode,
       composeDraftTarget: state.composeDraftTarget,
       editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: state.readerSurfaceMode,
     );
   }
 
@@ -74,6 +88,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: DesktopHomeSecondaryPaneMode.preview,
       composeDraftTarget: state.composeDraftTarget,
       editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: state.readerSurfaceMode,
     );
   }
 
@@ -86,6 +102,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: DesktopHomeSecondaryPaneMode.preview,
       composeDraftTarget: state.composeDraftTarget,
       editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: state.readerSurfaceMode,
     );
   }
 
@@ -95,6 +113,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: DesktopHomeSecondaryPaneMode.none,
       composeDraftTarget: state.composeDraftTarget,
       editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: state.readerSurfaceMode,
     );
   }
 
@@ -108,6 +128,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: DesktopHomeSecondaryPaneMode.none,
       composeDraftTarget: state.composeDraftTarget,
       editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: state.readerSurfaceMode,
     );
   }
 
@@ -119,6 +141,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: state.secondaryPaneMode,
       composeDraftTarget: const DesktopHomeComposeNewMemo(),
       editorSurfaceMode: DesktopHomeEditorSurfaceMode.centered,
+      readerMemoUid: null,
+      readerSurfaceMode: DesktopHomeReaderSurfaceMode.hidden,
     );
   }
 
@@ -130,6 +154,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: state.secondaryPaneMode,
       composeDraftTarget: DesktopHomeComposeEditMemo(trimmedUid),
       editorSurfaceMode: DesktopHomeEditorSurfaceMode.centered,
+      readerMemoUid: null,
+      readerSurfaceMode: DesktopHomeReaderSurfaceMode.hidden,
     );
   }
 
@@ -140,6 +166,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: state.secondaryPaneMode,
       composeDraftTarget: state.composeDraftTarget,
       editorSurfaceMode: DesktopHomeEditorSurfaceMode.fullscreen,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: state.readerSurfaceMode,
     );
   }
 
@@ -150,6 +178,8 @@ class DesktopHomePaneStateController
       secondaryPaneMode: state.secondaryPaneMode,
       composeDraftTarget: state.composeDraftTarget,
       editorSurfaceMode: DesktopHomeEditorSurfaceMode.centered,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: state.readerSurfaceMode,
     );
   }
 
@@ -159,6 +189,56 @@ class DesktopHomePaneStateController
       secondaryPaneMode: state.secondaryPaneMode,
       composeDraftTarget: null,
       editorSurfaceMode: DesktopHomeEditorSurfaceMode.hidden,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: state.readerSurfaceMode,
+    );
+  }
+
+  void showReader(String memoUid) {
+    final trimmedUid = memoUid.trim();
+    if (trimmedUid.isEmpty || state.editorVisible) return;
+    state = DesktopHomePaneState(
+      selectedMemoUid: trimmedUid,
+      secondaryPaneMode: state.secondaryPaneMode,
+      composeDraftTarget: state.composeDraftTarget,
+      editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: trimmedUid,
+      readerSurfaceMode: DesktopHomeReaderSurfaceMode.centered,
+    );
+  }
+
+  void expandReaderToFullscreen() {
+    if (!state.readerVisible) return;
+    state = DesktopHomePaneState(
+      selectedMemoUid: state.selectedMemoUid,
+      secondaryPaneMode: state.secondaryPaneMode,
+      composeDraftTarget: state.composeDraftTarget,
+      editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: DesktopHomeReaderSurfaceMode.fullscreen,
+    );
+  }
+
+  void restoreReaderToCentered() {
+    if (!state.readerVisible) return;
+    state = DesktopHomePaneState(
+      selectedMemoUid: state.selectedMemoUid,
+      secondaryPaneMode: state.secondaryPaneMode,
+      composeDraftTarget: state.composeDraftTarget,
+      editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: state.readerMemoUid,
+      readerSurfaceMode: DesktopHomeReaderSurfaceMode.centered,
+    );
+  }
+
+  void closeReader() {
+    state = DesktopHomePaneState(
+      selectedMemoUid: state.selectedMemoUid,
+      secondaryPaneMode: state.secondaryPaneMode,
+      composeDraftTarget: state.composeDraftTarget,
+      editorSurfaceMode: state.editorSurfaceMode,
+      readerMemoUid: null,
+      readerSurfaceMode: DesktopHomeReaderSurfaceMode.hidden,
     );
   }
 

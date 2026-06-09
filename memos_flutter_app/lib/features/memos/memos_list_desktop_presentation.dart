@@ -145,7 +145,7 @@ MemosListDesktopPresentation resolveMemosListDesktopPresentation({
     searchPresentation: isWindows
         ? MemosListDesktopSearchPresentation.header
         : MemosListDesktopSearchPresentation.standard,
-    composePresentation: isWindows
+    composePresentation: isWindows || isMacos
         ? MemosListDesktopComposePresentation.desktopSurface
         : MemosListDesktopComposePresentation.sheet,
     inlineComposeCapability: MemosListInlineComposeCapability(

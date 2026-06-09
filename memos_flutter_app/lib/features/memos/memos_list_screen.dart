@@ -82,6 +82,9 @@ import '../tags/tag_edit_sheet.dart';
 import '../voice/voice_record_screen.dart';
 import 'advanced_search_sheet.dart';
 import 'android_memo_keyboard_resume_controller.dart';
+import 'desktop_memo_editor_intent.dart';
+import 'desktop_memo_reader_intent.dart';
+import 'desktop_memo_reader_surface.dart';
 import 'draft_box_screen.dart';
 import 'memo_detail_screen.dart';
 import 'memo_editor_screen.dart';
@@ -142,6 +145,7 @@ class MemosListScreen extends ConsumerStatefulWidget {
     this.enableDrawerOpenDragGesture = true,
     this.initialDesktopUtilityView = DesktopHomeUtilityView.none,
     this.initialDesktopHomeDayFilter,
+    this.initialDesktopCreateEditor = false,
   });
 
   static final List<_MemosListScreenState> _activeStates =
@@ -153,6 +157,20 @@ class MemosListScreen extends ConsumerStatefulWidget {
       final route = ModalRoute.of(state.context);
       if (route?.isCurrent != true) continue;
       if (state._showDesktopHomeUtilityView(DesktopHomeUtilityView.draftBox)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static bool openNewMemoInCurrentDesktopHome() {
+    for (final state in _activeStates.reversed) {
+      if (!state.mounted) continue;
+      final route = ModalRoute.of(state.context);
+      if (route?.isCurrent != true) continue;
+      if (state._openDesktopMemoEditor(
+        const DesktopMemoEditorIntent.create(),
+      )) {
         return true;
       }
     }
@@ -181,6 +199,7 @@ class MemosListScreen extends ConsumerStatefulWidget {
   final bool enableDrawerOpenDragGesture;
   final DesktopHomeUtilityView initialDesktopUtilityView;
   final DateTime? initialDesktopHomeDayFilter;
+  final bool initialDesktopCreateEditor;
 
   @override
   ConsumerState<MemosListScreen> createState() => _MemosListScreenState();
@@ -253,6 +272,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   int _desktopPreviewPressSequence = 0;
   int? _activeDesktopPreviewPressSequence;
   LocalMemo? _desktopPreviewPressMemo;
+  Timer? _desktopPreviewTapHistoryTimer;
+  String? _lastDesktopPreviewTapMemoUid;
   DesktopHomePaneState? _desktopPreviewRollbackPaneState;
   bool? _desktopPreviewRollbackSecondaryPaneVisible;
   bool _desktopPreviewPressOpened = false;
@@ -262,6 +283,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   String? _desktopComposeInitialText;
   List<String> _desktopComposeInitialAttachmentPaths = const <String>[];
   bool _desktopComposeIgnoreDraft = false;
+  ComposeDraftRecord? _desktopComposeInitialCreateDraft;
+  ComposeDraftRecord? _desktopComposeInitialEditDraft;
   String _floatingCollapseVisibleMemoSignature = '';
   late DesktopHomeUtilityView _desktopHomeUtilityView;
   String? _desktopDraftBoxActiveDraftId;
@@ -479,6 +502,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     _desktopComposeInitialText = null;
     _desktopComposeInitialAttachmentPaths = const <String>[];
     _desktopComposeIgnoreDraft = false;
+    _desktopComposeInitialCreateDraft = null;
+    _desktopComposeInitialEditDraft = null;
   }
 
   LocalMemo? _findMemoByUid(List<LocalMemo> memos, String? memoUid) {
@@ -532,6 +557,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       () => _previewTransitionKey += 1,
     );
     ref.read(desktopHomePaneStateProvider.notifier).deselectMemo();
+    _clearDesktopPreviewTapHistory();
     if (persistHidden) {
       _setDesktopPreviewPaneVisiblePreference(false);
     }
@@ -571,6 +597,28 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     final memoUid = memo.uid.trim();
     final otherUid = other?.uid.trim() ?? '';
     return memoUid.isNotEmpty && memoUid == otherUid;
+  }
+
+  bool _isDesktopPreviewDoubleTap(LocalMemo memo) {
+    final memoUid = memo.uid.trim();
+    return memoUid.isNotEmpty && _lastDesktopPreviewTapMemoUid == memoUid;
+  }
+
+  void _recordDesktopPreviewTap(LocalMemo memo) {
+    final memoUid = memo.uid.trim();
+    if (memoUid.isEmpty) return;
+    _desktopPreviewTapHistoryTimer?.cancel();
+    _lastDesktopPreviewTapMemoUid = memoUid;
+    _desktopPreviewTapHistoryTimer = Timer(kDoubleTapTimeout, () {
+      _desktopPreviewTapHistoryTimer = null;
+      _lastDesktopPreviewTapMemoUid = null;
+    });
+  }
+
+  void _clearDesktopPreviewTapHistory() {
+    _desktopPreviewTapHistoryTimer?.cancel();
+    _desktopPreviewTapHistoryTimer = null;
+    _lastDesktopPreviewTapMemoUid = null;
   }
 
   bool _matchesDesktopPreviewPressSequence(int sequence, LocalMemo memo) {
@@ -663,8 +711,15 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     _ignoredDesktopPreviewTapCount += 1;
     _desktopPreviewPressTimer?.cancel();
     _desktopPreviewPressTimer = null;
+    if (_isDesktopPreviewDoubleTap(memo)) {
+      _clearDesktopPreviewTapHistory();
+      _openMemoReader(memo, heroTag: memoHeroTagForMemo(memo));
+      _clearDesktopPreviewPressState(resetTapIgnore: false);
+      return;
+    }
     if (_desktopPreviewPressShouldDeselect) {
       _deselectDesktopMemo();
+      _clearDesktopPreviewTapHistory();
       _clearDesktopPreviewPressState(resetTapIgnore: false);
       return;
     }
@@ -672,6 +727,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       _desktopPreviewPressOpened = true;
       _openDesktopPreview(memo, requestMemo: false);
     }
+    _recordDesktopPreviewTap(memo);
     _clearDesktopPreviewPressState(resetTapIgnore: false);
   }
 
@@ -709,6 +765,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     String? initialText,
     List<String> initialAttachmentPaths = const <String>[],
     bool ignoreDraft = false,
+    ComposeDraftRecord? initialCreateDraft,
   }) {
     final paneState = ref.read(desktopHomePaneStateProvider);
     _setStateWithDiagnostics('desktop_compose_new', () {
@@ -718,18 +775,77 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         initialAttachmentPaths,
       );
       _desktopComposeIgnoreDraft = ignoreDraft;
+      _desktopComposeInitialCreateDraft = initialCreateDraft;
+      _desktopComposeInitialEditDraft = null;
     });
     ref
         .read(desktopHomePaneStateProvider.notifier)
         .showComposeNew(selectedMemoUid: paneState.selectedMemoUid);
   }
 
-  void _openDesktopComposeEdit(LocalMemo memo) {
+  void _openDesktopComposeEdit(
+    LocalMemo memo, {
+    ComposeDraftRecord? initialEditDraft,
+  }) {
     _setStateWithDiagnostics('desktop_compose_edit', () {
       _composeTransitionKey += 1;
       _resetDesktopComposeSeed();
+      _desktopComposeInitialEditDraft = initialEditDraft;
     });
     ref.read(desktopHomePaneStateProvider.notifier).showComposeEdit(memo.uid);
+  }
+
+  bool _openDesktopMemoEditor(DesktopMemoEditorIntent intent) {
+    if (kIsWeb) return false;
+    if (!widget.showDrawer) return false;
+    final desktopPresentation = _resolveCurrentMemosListDesktopPresentation();
+    if (!desktopPresentation.usesDesktopComposeSurface) return false;
+    final layoutSpec = _resolveCurrentDesktopLayout();
+    if (layoutSpec.tier == DesktopLayoutTier.narrow) return false;
+    final paneState = ref.read(desktopHomePaneStateProvider);
+    if (paneState.editorVisible) return false;
+    switch (intent.kind) {
+      case DesktopMemoEditorIntentKind.create:
+        _openDesktopComposeNew(
+          initialText: intent.initialText,
+          initialAttachmentPaths: intent.initialAttachmentPaths,
+          ignoreDraft: intent.ignoreDraft,
+          initialCreateDraft: intent.initialCreateDraft,
+        );
+        return true;
+      case DesktopMemoEditorIntentKind.edit:
+        final memo = intent.existing;
+        if (memo == null) return false;
+        _openDesktopComposeEdit(
+          memo,
+          initialEditDraft: intent.initialEditDraft,
+        );
+        return true;
+    }
+  }
+
+  bool _openDesktopMemoReader(DesktopMemoReaderIntent intent) {
+    if (kIsWeb) return false;
+    if (!widget.showDrawer) return false;
+    final desktopPresentation = _resolveCurrentMemosListDesktopPresentation();
+    if (!desktopPresentation.previewPanePolicy.supportsPane) return false;
+    final layoutSpec = _resolveCurrentDesktopLayout();
+    if (layoutSpec.tier == DesktopLayoutTier.narrow) return false;
+    final paneState = ref.read(desktopHomePaneStateProvider);
+    if (paneState.editorVisible) {
+      return true;
+    }
+    ref
+        .read(desktopHomePaneStateProvider.notifier)
+        .showReader(intent.existing.uid);
+    return true;
+  }
+
+  void _openMemoReader(LocalMemo memo, {Object? heroTag}) {
+    if (_openDesktopMemoReader(DesktopMemoReaderIntent.open(existing: memo))) {
+      return;
+    }
+    _openMemoDetailRoute(memo, heroTag: heroTag);
   }
 
   void _closeDesktopCompose() {
@@ -737,6 +853,26 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       _resetDesktopComposeSeed();
     });
     ref.read(desktopHomePaneStateProvider.notifier).closeCompose();
+  }
+
+  void _closeDesktopReader() {
+    ref.read(desktopHomePaneStateProvider.notifier).closeReader();
+  }
+
+  void _toggleDesktopReaderFullscreen() {
+    final controller = ref.read(desktopHomePaneStateProvider.notifier);
+    final paneState = ref.read(desktopHomePaneStateProvider);
+    if (!paneState.readerVisible) return;
+    if (paneState.isReaderFullscreen) {
+      controller.restoreReaderToCentered();
+      return;
+    }
+    controller.expandReaderToFullscreen();
+  }
+
+  void _editFromDesktopReader(LocalMemo memo) {
+    _closeDesktopReader();
+    unawaited(_openMemoEditor(memo));
   }
 
   void _toggleDesktopComposeFullscreen() {
@@ -769,6 +905,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
   Future<void> _showDesktopComposeDialog({
     LocalMemo? existing,
     String? initialText,
+    ComposeDraftRecord? initialCreateDraft,
+    ComposeDraftRecord? initialEditDraft,
     List<String> initialAttachmentPaths = const <String>[],
     bool ignoreDraft = false,
     bool fullscreen = false,
@@ -780,8 +918,13 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         final editor = MemoEditorScreen(
           existing: existing,
           initialText: initialText,
+          initialCreateDraft: initialCreateDraft,
+          initialEditDraft: initialEditDraft,
           initialAttachmentPaths: initialAttachmentPaths,
           ignoreDraft: ignoreDraft,
+          presentation: fullscreen
+              ? MemoEditorPresentation.desktopFullscreen
+              : MemoEditorPresentation.desktopModal,
           onSaved: () => Navigator.of(dialogContext).pop(),
           onCloseRequested: () => Navigator.of(dialogContext).pop(),
         );
@@ -812,15 +955,15 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     List<String> initialAttachmentPaths = const <String>[],
     bool ignoreDraft = false,
   }) async {
-    final layoutSpec = _resolveCurrentDesktopLayout();
-    if (layoutSpec.tier != DesktopLayoutTier.narrow) {
-      _openDesktopComposeNew(
-        initialText: initialText,
-        initialAttachmentPaths: initialAttachmentPaths,
-        ignoreDraft: ignoreDraft,
-      );
+    final intent = DesktopMemoEditorIntent.create(
+      initialText: initialText,
+      initialAttachmentPaths: initialAttachmentPaths,
+      ignoreDraft: ignoreDraft,
+    );
+    if (_openDesktopMemoEditor(intent)) {
       return;
     }
+    final layoutSpec = _resolveCurrentDesktopLayout();
     await _showDesktopComposeDialog(
       initialText: initialText,
       initialAttachmentPaths: initialAttachmentPaths,
@@ -852,7 +995,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     final paneState = ref.read(desktopHomePaneStateProvider);
     if (!paneState.hasSelection &&
         paneState.secondaryPaneMode == DesktopHomeSecondaryPaneMode.none &&
-        !paneState.editorVisible) {
+        !paneState.editorVisible &&
+        !paneState.readerVisible) {
       return;
     }
     ref.read(desktopHomePaneStateProvider.notifier).clear();
@@ -1611,6 +1755,9 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       _openDrawerIfNeeded();
       _scheduleViewportDerivedMetricsSync();
       if (!mounted) return;
+      if (widget.initialDesktopCreateEditor) {
+        unawaited(_showDesktopComposeSurface(context));
+      }
       final message = widget.toastMessage;
       if (message == null || message.trim().isEmpty) return;
       showTopToast(context, message);
@@ -1648,6 +1795,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
     }
     _inlineComposeDraftTimer?.cancel();
     _desktopPreviewPressTimer?.cancel();
+    _desktopPreviewTapHistoryTimer?.cancel();
     _scrollController.removeListener(_handleViewportScrollChanged);
     _inlineComposer.removeListener(_handleInlineComposeStateChanged);
     _inlineComposer.textController.removeListener(_handleInlineComposeChanged);
@@ -2467,10 +2615,20 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         _resolveCurrentMemosListDesktopPresentation()
             .previewPanePolicy
             .defaultMemoClickOpensPreview;
+    final supportsDesktopReaderSurface =
+        !kIsWeb &&
+        _resolveCurrentMemosListDesktopPresentation()
+            .previewPanePolicy
+            .supportsPane;
     final primaryPressed = isPrimaryShortcutModifierPressed(pressed);
     final shiftPressed = isShiftModifierPressed(pressed);
     final altPressed = isAltModifierPressed(pressed);
     final textEditingKeyboardOwnerActive = _isTextEditingKeyboardOwnerActive();
+
+    if (event.logicalKey == LogicalKeyboardKey.escape &&
+        paneState.readerVisible) {
+      return false;
+    }
 
     if (event.logicalKey == LogicalKeyboardKey.escape &&
         paneState.secondaryPaneMode != DesktopHomeSecondaryPaneMode.none) {
@@ -2483,8 +2641,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           !shiftPressed &&
           !altPressed &&
           event.logicalKey == LogicalKeyboardKey.enter &&
-          usesDefaultDesktopPreviewLayout) {
-        _openMemoDetailRoute(
+          supportsDesktopReaderSurface) {
+        _openMemoReader(
           selectedMemo,
           heroTag: memoHeroTagForMemo(selectedMemo),
         );
@@ -2828,6 +2986,12 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           .read(composeDraftRepositoryProvider)
           .getByUid(selection.draftUid);
       if (!mounted || selectedDraft == null) return;
+      if (_openDesktopMemoEditor(
+        DesktopMemoEditorIntent.create(initialCreateDraft: selectedDraft),
+      )) {
+        _clearDesktopHomeUtilityView();
+        return;
+      }
       _restoreInlineComposeDraft(selectedDraft);
       _clearDesktopHomeUtilityView();
       _inlineComposeFocusNode.requestFocus();
@@ -2858,12 +3022,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       _showDraftBoxEditTargetUnavailable();
       return;
     }
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) =>
-            MemoEditorScreen(existing: memo, initialEditDraft: draft),
-      ),
-    );
+    await _openMemoEditor(memo, initialEditDraft: draft);
   }
 
   void _showDraftBoxEditTargetUnavailable() {
@@ -2901,16 +3060,24 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         false;
   }
 
-  Future<void> _openMemoEditor(LocalMemo memo) async {
+  Future<void> _openMemoEditor(
+    LocalMemo memo, {
+    ComposeDraftRecord? initialEditDraft,
+  }) async {
+    if (_openDesktopMemoEditor(
+      DesktopMemoEditorIntent.edit(
+        existing: memo,
+        initialEditDraft: initialEditDraft,
+      ),
+    )) {
+      return;
+    }
     final desktopPresentation = _resolveCurrentMemosListDesktopPresentation();
     if (!kIsWeb && desktopPresentation.usesDesktopComposeSurface) {
       final layoutSpec = _resolveCurrentDesktopLayout();
-      if (layoutSpec.tier != DesktopLayoutTier.narrow) {
-        _openDesktopComposeEdit(memo);
-        return;
-      }
       await _showDesktopComposeDialog(
         existing: memo,
+        initialEditDraft: initialEditDraft,
         fullscreen: layoutSpec.tier == DesktopLayoutTier.narrow,
       );
       ref.invalidate(memoRelationsProvider(memo.uid));
@@ -4165,6 +4332,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
       desktopPreviewPane = MemosListDesktopPreviewPane(
         selectedMemo: resolvedPreviewMemo,
         isVisible: desktopHomePaneState.previewVisible,
+        suspendAudio: desktopHomePaneState.readerVisible,
         onClose: _closeDesktopPreview,
         onEditMemo: () {
           final activeMemo =
@@ -4172,6 +4340,13 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
               resolvedPreviewMemo;
           if (activeMemo == null) return;
           unawaited(_openMemoEditor(activeMemo));
+        },
+        onOpenMemo: () {
+          final activeMemo =
+              ref.read(desktopMemoPreviewSessionProvider).data?.memo ??
+              resolvedPreviewMemo;
+          if (activeMemo == null) return;
+          _openMemoReader(activeMemo, heroTag: memoHeroTagForMemo(activeMemo));
         },
       );
     }
@@ -4190,6 +4365,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
             ),
             child: MemoEditorScreen(
               existing: composeMemo,
+              initialEditDraft: _desktopComposeInitialEditDraft,
               presentation: presentation,
               onSaved: _handleDesktopComposeSaved,
               onCloseRequested: _closeDesktopCompose,
@@ -4204,6 +4380,7 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
           ),
           child: MemoEditorScreen(
             initialText: _desktopComposeInitialText,
+            initialCreateDraft: _desktopComposeInitialCreateDraft,
             initialAttachmentPaths: _desktopComposeInitialAttachmentPaths,
             ignoreDraft: _desktopComposeIgnoreDraft,
             presentation: presentation,
@@ -4214,6 +4391,41 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
         );
       }
     }
+    Widget? desktopReaderModalSurface;
+    if (!desktopHomePaneState.editorVisible &&
+        desktopHomePaneState.readerVisible) {
+      final readerMemoUid = desktopHomePaneState.readerMemoUid;
+      final readerMemo = _findMemoByUid(visibleMemos, readerMemoUid);
+      if (readerMemo != null) {
+        final presentation = desktopHomePaneState.isReaderFullscreen
+            ? DesktopMemoReaderPresentation.fullscreen
+            : DesktopMemoReaderPresentation.centered;
+        desktopReaderModalSurface = KeyedSubtree(
+          key: ValueKey<String>(
+            'desktop-memo-reader-surface:${readerMemo.uid}',
+          ),
+          child: DesktopMemoReaderSurface(
+            memo: readerMemo,
+            presentation: presentation,
+            onClose: _closeDesktopReader,
+            onToggleFullscreen: _toggleDesktopReaderFullscreen,
+            onEdit: () => _editFromDesktopReader(readerMemo),
+          ),
+        );
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _closeDesktopReader();
+        });
+      }
+    }
+    final desktopModalSurface =
+        desktopEditorModalSurface ?? desktopReaderModalSurface;
+    final desktopModalVisible =
+        (desktopHomePaneState.editorVisible &&
+            desktopEditorModalSurface != null) ||
+        (desktopHomePaneState.readerVisible &&
+            desktopReaderModalSurface != null);
     final desktopSecondaryPaneVisible =
         !desktopUtilityActive &&
         desktopHomePaneState.previewVisible &&
@@ -4347,10 +4559,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
             : null,
         desktopPrimaryContentOverride: desktopPrimaryContentOverride,
         desktopPreviewPane: desktopPreviewPane,
-        desktopEditorModalSurface: desktopEditorModalSurface,
-        desktopEditorModalVisible:
-            desktopHomePaneState.editorVisible &&
-            desktopEditorModalSurface != null,
+        desktopEditorModalSurface: desktopModalSurface,
+        desktopEditorModalVisible: desktopModalVisible,
         desktopPreviewPaneWidth: desktopHomeLayoutPreference.secondaryPaneWidth,
         onDesktopPreviewPaneWidthChanged: _setDesktopPreviewPaneWidthPreference,
         floatingActionButton: floatingActionButton,
@@ -4456,8 +4666,8 @@ class _MemosListScreenState extends ConsumerState<MemosListScreen>
                 : null,
             onDoubleTapEdit: () {
               _markSceneGuideSeen(SceneMicroGuideId.memoListGestures);
-              if (enableDesktopPreviewInteraction) {
-                _openMemoDetailRoute(memo, heroTag: heroTag);
+              if (supportsDesktopSecondaryPane) {
+                _openMemoReader(memo, heroTag: heroTag);
                 return;
               }
               unawaited(

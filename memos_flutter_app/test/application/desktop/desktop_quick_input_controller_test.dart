@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:memos_flutter_app/application/desktop/desktop_quick_input_controller.dart';
 import 'package:memos_flutter_app/application/desktop/desktop_quick_record_hotkey_state.dart';
 import 'package:memos_flutter_app/application/quick_input/quick_input_service.dart';
+import 'package:memos_flutter_app/core/desktop/shortcuts.dart';
 import 'package:memos_flutter_app/data/logs/log_manager.dart';
 import 'package:memos_flutter_app/data/models/device_preferences.dart';
 import 'package:memos_flutter_app/state/memos/app_bootstrap_adapter_provider.dart';
@@ -191,4 +193,67 @@ void main() {
       expect(controller.quickRecordSystemHotKeyActive, isFalse);
     });
   });
+
+  testWidgets(
+    'quick record re-registers without using submit shortcut binding',
+    (tester) async {
+      await _withTargetPlatform(TargetPlatform.windows, () async {
+        final spy = _HotKeySpy();
+        final controller = await _pumpController(tester, spy);
+
+        await controller.registerHotKey(DevicePreferences.defaults);
+        final initialHotKey = spy.registeredHotKeys.single;
+
+        await controller.registerHotKey(
+          _preferencesWithBindings(
+            <DesktopShortcutAction, DesktopShortcutBinding>{
+              DesktopShortcutAction.publishMemo: DesktopShortcutBinding(
+                keyId: LogicalKeyboardKey.keyS.keyId,
+                primary: true,
+                shift: true,
+                alt: false,
+              ),
+            },
+          ),
+        );
+
+        expect(spy.unregisterCalls, 1);
+        expect(spy.registerCalls, 2);
+        expect(spy.registeredHotKeys.last.key, initialHotKey.key);
+        expect(spy.registeredHotKeys.last.modifiers, initialHotKey.modifiers);
+
+        await controller.registerHotKey(
+          _preferencesWithBindings(
+            <DesktopShortcutAction, DesktopShortcutBinding>{
+              DesktopShortcutAction.quickRecord: DesktopShortcutBinding(
+                keyId: LogicalKeyboardKey.keyR.keyId,
+                primary: true,
+                shift: true,
+                alt: false,
+              ),
+            },
+          ),
+        );
+
+        expect(spy.unregisterCalls, 2);
+        expect(spy.registerCalls, 3);
+        expect(spy.registeredHotKeys.last.key, LogicalKeyboardKey.keyR);
+        expect(spy.registeredHotKeys.last.modifiers, <HotKeyModifier>[
+          HotKeyModifier.control,
+          HotKeyModifier.shift,
+        ]);
+      });
+    },
+  );
+}
+
+DevicePreferences _preferencesWithBindings(
+  Map<DesktopShortcutAction, DesktopShortcutBinding> overrides,
+) {
+  return DevicePreferences.defaults.copyWith(
+    desktopShortcutBindings: <DesktopShortcutAction, DesktopShortcutBinding>{
+      ...desktopShortcutDefaultBindings,
+      ...overrides,
+    },
+  );
 }

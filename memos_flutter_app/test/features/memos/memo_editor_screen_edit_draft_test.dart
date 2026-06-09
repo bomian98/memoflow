@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,10 +13,13 @@ import 'package:memos_flutter_app/application/sync/sync_request.dart';
 import 'package:memos_flutter_app/application/sync/sync_types.dart';
 import 'package:memos_flutter_app/application/sync/webdav_backup_service.dart';
 import 'package:memos_flutter_app/application/sync/webdav_sync_service.dart';
+import 'package:memos_flutter_app/core/desktop/shortcuts.dart';
 import 'package:memos_flutter_app/core/storage_read.dart';
 import 'package:memos_flutter_app/data/models/account.dart';
+import 'package:memos_flutter_app/data/models/app_preferences.dart';
 import 'package:memos_flutter_app/data/models/attachment.dart';
 import 'package:memos_flutter_app/data/models/compose_draft.dart';
+import 'package:memos_flutter_app/data/models/device_preferences.dart';
 import 'package:memos_flutter_app/data/models/instance_profile.dart';
 import 'package:memos_flutter_app/data/models/local_library.dart';
 import 'package:memos_flutter_app/data/models/local_memo.dart';
@@ -41,6 +45,7 @@ import 'package:memos_flutter_app/state/memos/memo_editor_providers.dart';
 import 'package:memos_flutter_app/state/memos/memos_providers.dart';
 import 'package:memos_flutter_app/state/memos/note_draft_provider.dart';
 import 'package:memos_flutter_app/state/settings/location_settings_provider.dart';
+import 'package:memos_flutter_app/state/settings/device_preferences_provider.dart';
 import 'package:memos_flutter_app/state/settings/memo_template_settings_provider.dart';
 import 'package:memos_flutter_app/state/settings/preferences_migration_service.dart';
 import 'package:memos_flutter_app/state/settings/workspace_preferences_provider.dart';
@@ -239,6 +244,26 @@ void main() {
     expect(context.editorController.savedExistingUids, [null]);
   });
 
+  testWidgets('desktop editor restores create draft and deletes it on save', (
+    tester,
+  ) async {
+    final context = await _pumpEditor(
+      tester,
+      presentation: MemoEditorPresentation.desktopModal,
+      useExisting: false,
+      initialCreateDraft: _buildCreateDraft(content: 'Restored create draft'),
+    );
+
+    expect(find.text('Restored create draft'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Save'));
+    await _pumpRouteFrames(tester);
+
+    expect(context.editorController.savedContents, ['Restored create draft']);
+    expect(context.editorController.savedExistingUids, [null]);
+    expect(context.composeDrafts.deletedDraftUids, contains('create-draft'));
+  });
+
   testWidgets('desktop and embedded chrome do not duplicate save action', (
     tester,
   ) async {
@@ -312,6 +337,111 @@ void main() {
 
     expect(find.byType(MemoEditorScreen), findsNothing);
   });
+
+  testWidgets(
+    'desktop editor Enter does not save but default submit saves once',
+    (tester) async {
+      await _withDefaultTargetPlatform(TargetPlatform.windows, () async {
+        final context = await _pumpEditor(
+          tester,
+          presentation: MemoEditorPresentation.desktopModal,
+        );
+
+        final editor = find.byType(EditableText);
+        await tester.tap(editor);
+        await tester.enterText(editor, 'Editing body');
+        await tester.pump();
+
+        final editableText = tester.widget<EditableText>(editor);
+        expect(editableText.focusNode.hasFocus, isTrue);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await _pumpRouteFrames(tester);
+        expect(context.editorController.savedContents, isEmpty);
+        expect(
+          tester.widget<EditableText>(editor).controller.text,
+          'Editing body\r\n',
+        );
+        expect(find.byType(MemoEditorScreen), findsOneWidget);
+
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await _pumpRouteFrames(tester);
+
+        expect(context.editorController.savedContents, ['Editing body']);
+        expect(context.editorController.savedExistingUids, ['memo-1']);
+        expect(find.byType(MemoEditorScreen), findsNothing);
+      });
+    },
+  );
+
+  testWidgets('desktop editor uses custom publish memo binding', (
+    tester,
+  ) async {
+    await _withDefaultTargetPlatform(TargetPlatform.windows, () async {
+      final context = await _pumpEditor(
+        tester,
+        presentation: MemoEditorPresentation.desktopModal,
+        devicePreferences: _devicePreferencesWithPublishBinding(
+          DesktopShortcutBinding(
+            keyId: LogicalKeyboardKey.keyS.keyId,
+            primary: true,
+            shift: true,
+            alt: false,
+          ),
+        ),
+      );
+
+      final editor = find.byType(EditableText);
+      await tester.tap(editor);
+      await tester.enterText(editor, 'Custom submit binding');
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await _pumpRouteFrames(tester);
+      expect(context.editorController.savedContents, isEmpty);
+      expect(find.byType(MemoEditorScreen), findsOneWidget);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await _pumpRouteFrames(tester);
+
+      expect(context.editorController.savedContents, ['Custom submit binding']);
+      expect(context.editorController.savedExistingUids, ['memo-1']);
+      expect(find.byType(MemoEditorScreen), findsNothing);
+    });
+  });
+
+  testWidgets('desktop editor macOS default submit uses Cmd Return', (
+    tester,
+  ) async {
+    await _withDefaultTargetPlatform(TargetPlatform.macOS, () async {
+      final context = await _pumpEditor(
+        tester,
+        presentation: MemoEditorPresentation.desktopModal,
+      );
+
+      final editor = find.byType(EditableText);
+      await tester.tap(editor);
+      await tester.enterText(editor, 'macOS submit binding');
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await _pumpRouteFrames(tester);
+
+      expect(context.editorController.savedContents, ['macOS submit binding']);
+      expect(context.editorController.savedExistingUids, ['memo-1']);
+      expect(find.byType(MemoEditorScreen), findsNothing);
+    });
+  });
 }
 
 Finder get _pageFullscreenButton =>
@@ -326,13 +456,27 @@ Finder get _fullscreenSaveButton =>
 Finder get _fullscreenTextField =>
     find.byKey(const ValueKey<String>('memo-editor-fullscreen-text-field'));
 
+Future<void> _withDefaultTargetPlatform(
+  TargetPlatform platform,
+  Future<void> Function() body,
+) async {
+  debugDefaultTargetPlatformOverride = platform;
+  try {
+    await body();
+  } finally {
+    debugDefaultTargetPlatformOverride = null;
+  }
+}
+
 Future<_EditorTestContext> _pumpEditor(
   WidgetTester tester, {
   ComposeDraftRecord? initialEditDraft,
+  ComposeDraftRecord? initialCreateDraft,
   MemoEditorPresentation presentation = MemoEditorPresentation.embeddedPane,
   LocalMemo? existing,
   bool useExisting = true,
   String? initialText,
+  DevicePreferences? devicePreferences,
 }) async {
   final testContext = _EditorTestContext();
   await tester.pumpWidget(
@@ -359,6 +503,13 @@ Future<_EditorTestContext> _pumpEditor(
           (ref) => TagColorLookup(const <TagStat>[]),
         ),
         appSessionProvider.overrideWith((ref) => _TestSessionController()),
+        devicePreferencesProvider.overrideWith(
+          (ref) => _TestDevicePreferencesController(
+            ref,
+            devicePreferences ??
+                DevicePreferences.defaultsForLanguage(AppLanguage.en),
+          ),
+        ),
         syncCoordinatorProvider.overrideWith((ref) => _NoopSyncFacade()),
         memoTemplateSettingsProvider.overrideWith(
           (ref) => MemoTemplateSettingsController(
@@ -385,6 +536,7 @@ Future<_EditorTestContext> _pumpEditor(
             data: const MediaQueryData(size: Size(430, 900)),
             child: _EditorHost(
               initialEditDraft: initialEditDraft,
+              initialCreateDraft: initialCreateDraft,
               presentation: presentation,
               existing: useExisting ? (existing ?? _buildLocalMemo()) : null,
               initialText: initialText,
@@ -418,12 +570,14 @@ Future<void> _disposeHarness(WidgetTester tester) async {
 class _EditorHost extends StatefulWidget {
   const _EditorHost({
     this.initialEditDraft,
+    this.initialCreateDraft,
     required this.presentation,
     required this.existing,
     this.initialText,
   });
 
   final ComposeDraftRecord? initialEditDraft;
+  final ComposeDraftRecord? initialCreateDraft;
   final MemoEditorPresentation presentation;
   final LocalMemo? existing;
   final String? initialText;
@@ -443,6 +597,7 @@ class _EditorHostState extends State<_EditorHost> {
               existing: widget.existing,
               initialText: widget.initialText,
               initialEditDraft: widget.initialEditDraft,
+              initialCreateDraft: widget.initialCreateDraft,
               autoFocus: false,
               presentation: widget.presentation,
               onCloseRequested: () => setState(() => _open = false),
@@ -456,6 +611,45 @@ class _EditorTestContext {
   final composeDrafts = _FakeComposeDraftRepository();
   final hiddenDrafts = _FakeMemoEditorDraftRepository();
   final editorController = _FakeMemoEditorController();
+}
+
+DevicePreferences _devicePreferencesWithPublishBinding(
+  DesktopShortcutBinding binding,
+) {
+  final bindings = Map<DesktopShortcutAction, DesktopShortcutBinding>.from(
+    desktopShortcutDefaultBindings,
+  );
+  bindings[DesktopShortcutAction.publishMemo] = binding;
+  return DevicePreferences.defaultsForLanguage(
+    AppLanguage.en,
+  ).copyWith(desktopShortcutBindings: bindings);
+}
+
+class _TestDevicePreferencesRepository extends DevicePreferencesRepository {
+  _TestDevicePreferencesRepository(this._stored)
+    : super(PreferencesMigrationService(const FlutterSecureStorage()));
+
+  DevicePreferences _stored;
+
+  @override
+  Future<StorageReadResult<DevicePreferences>> readWithStatus() async {
+    return StorageReadResult.success(_stored);
+  }
+
+  @override
+  Future<DevicePreferences> read() async => _stored;
+
+  @override
+  Future<void> write(DevicePreferences prefs) async {
+    _stored = prefs;
+  }
+}
+
+class _TestDevicePreferencesController extends DevicePreferencesController {
+  _TestDevicePreferencesController(Ref ref, DevicePreferences initial)
+    : super(ref, _TestDevicePreferencesRepository(initial)) {
+    state = initial;
+  }
 }
 
 class _FakeComposeDraftRepository implements ComposeDraftRepository {
@@ -951,6 +1145,18 @@ ComposeDraftRecord _buildEditDraft({required String content}) {
     workspaceKey: 'workspace-1',
     kind: ComposeDraftKind.editMemo,
     targetMemoUid: 'memo-1',
+    snapshot: ComposeDraftSnapshot(content: content, visibility: 'PRIVATE'),
+    createdTime: now.subtract(const Duration(minutes: 1)),
+    updatedTime: now,
+  );
+}
+
+ComposeDraftRecord _buildCreateDraft({required String content}) {
+  final now = DateTime.utc(2025, 1, 2, 3, 4, 5);
+  return ComposeDraftRecord(
+    uid: 'create-draft',
+    workspaceKey: 'workspace-1',
+    kind: ComposeDraftKind.createMemo,
     snapshot: ComposeDraftSnapshot(content: content, visibility: 'PRIVATE'),
     createdTime: now.subtract(const Duration(minutes: 1)),
     updatedTime: now,

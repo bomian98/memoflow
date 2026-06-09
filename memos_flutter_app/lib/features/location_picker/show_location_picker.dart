@@ -10,7 +10,6 @@ import '../../data/location/location_provider_requirements_validator.dart';
 import '../../data/location/models/canonical_coordinate.dart';
 import '../../data/models/location_settings.dart';
 import '../../data/models/memo_location.dart';
-import '../../features/settings/location_settings_screen.dart';
 import '../../i18n/strings.g.dart';
 import '../../state/settings/location_settings_provider.dart';
 import 'embedded_map_host.dart';
@@ -27,9 +26,12 @@ const _fallbackPickerCenter = CanonicalCoordinate(
 const _fallbackPickerZoom = 11.0;
 const _defaultPickerZoom = 16.0;
 
+typedef LocationSettingsOpener = Future<void> Function(BuildContext context);
+
 Future<MemoLocation?> showLocationPickerSheetOrDialog({
   required BuildContext context,
   required WidgetRef ref,
+  required LocationSettingsOpener openLocationSettings,
   MemoLocation? initialLocation,
 }) async {
   LocationPickerLogger.info(
@@ -71,6 +73,7 @@ Future<MemoLocation?> showLocationPickerSheetOrDialog({
     await _showSettingsPrompt(
       context,
       localizeLocationProviderRequirement(context, result),
+      openLocationSettings,
     );
     return null;
   }
@@ -201,7 +204,11 @@ Future<LocationSettings> _resolveLocationSettings(WidgetRef ref) async {
   return stored;
 }
 
-Future<void> _showSettingsPrompt(BuildContext context, String message) async {
+Future<void> _showSettingsPrompt(
+  BuildContext context,
+  String message,
+  LocationSettingsOpener openLocationSettings,
+) async {
   await showDialog<void>(
     context: context,
     builder: (dialogContext) {
@@ -216,10 +223,8 @@ Future<void> _showSettingsPrompt(BuildContext context, String message) async {
           FilledButton(
             onPressed: () {
               Navigator.of(dialogContext).pop();
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const LocationSettingsScreen(),
-                ),
+              unawaited(
+                _openLocationSettingsAfterDialog(context, openLocationSettings),
               );
             },
             child: Text(dialogContext.t.strings.legacy.msg_open_settings),
@@ -228,4 +233,13 @@ Future<void> _showSettingsPrompt(BuildContext context, String message) async {
       );
     },
   );
+}
+
+Future<void> _openLocationSettingsAfterDialog(
+  BuildContext context,
+  LocationSettingsOpener openLocationSettings,
+) async {
+  await Future<void>.delayed(Duration.zero);
+  if (!context.mounted) return;
+  await openLocationSettings(context);
 }

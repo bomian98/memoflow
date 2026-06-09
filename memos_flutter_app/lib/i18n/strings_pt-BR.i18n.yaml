@@ -118,7 +118,7 @@ settings:
     loadFontsFailed: 'Falha ao carregar fontes: $error'
     collapseLongContent: Recolher conteúdo longo
     collapseReferences: Recolher referências
-    showEngagementInAllMemoDetails: Mostrar curtidas e comentários nos cartões iniciais e nos detalhes do memorando
+    showMemoEngagement: Mostrar curtidas e comentários
     launchAction: Ação de lançamento
     quickInputKeyboard: Teclado de abertura automática para entrada rápida
     confirmExitOnBack: Confirmar na saída

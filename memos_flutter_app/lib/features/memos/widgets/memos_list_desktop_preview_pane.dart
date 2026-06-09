@@ -13,6 +13,7 @@ import '../../../data/logs/log_manager.dart';
 import '../../../data/models/local_memo.dart';
 import '../../../i18n/strings.g.dart';
 import '../../../state/memos/desktop_memo_preview_session.dart';
+import '../../../state/settings/resolved_preferences_provider.dart';
 import '../memo_detail_screen.dart';
 
 enum _DesktopPreviewRevealStage {
@@ -30,14 +31,18 @@ class MemosListDesktopPreviewPane extends ConsumerStatefulWidget {
     super.key,
     required this.selectedMemo,
     required this.isVisible,
+    this.suspendAudio = false,
     required this.onClose,
     required this.onEditMemo,
+    required this.onOpenMemo,
   });
 
   final LocalMemo? selectedMemo;
   final bool isVisible;
+  final bool suspendAudio;
   final VoidCallback onClose;
   final VoidCallback onEditMemo;
+  final VoidCallback onOpenMemo;
 
   @override
   ConsumerState<MemosListDesktopPreviewPane> createState() =>
@@ -70,11 +75,20 @@ class _MemosListDesktopPreviewPaneState
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScrollChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.isVisible || widget.selectedMemo == null) return;
+      final session = ref.read(desktopMemoPreviewSessionProvider);
+      _beginInitialLoaderCycle(_resolvedRequestIdForSelection(session));
+      _handleSessionChanged(session);
+    });
   }
 
   @override
   void didUpdateWidget(covariant MemosListDesktopPreviewPane oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!oldWidget.suspendAudio && widget.suspendAudio) {
+      unawaited(_pauseAudio());
+    }
     _handlePaneInputsChanged(oldWidget);
   }
 
@@ -133,6 +147,7 @@ class _MemosListDesktopPreviewPaneState
     String url, {
     Map<String, String>? headers,
   }) async {
+    if (widget.suspendAudio) return;
     final player = _audioPlayer ??= AudioPlayer();
     if (_currentAudioUrl == url) {
       if (player.playing) {
@@ -155,6 +170,14 @@ class _MemosListDesktopPreviewPaneState
       if (!mounted) return;
       setState(() => _currentAudioUrl = null);
     }
+  }
+
+  Future<void> _pauseAudio() async {
+    final player = _audioPlayer;
+    if (player == null || !player.playing) return;
+    await player.pause();
+    if (!mounted) return;
+    setState(() {});
   }
 
   bool _sameMemoIdentity(LocalMemo? a, LocalMemo? b) {
@@ -636,6 +659,11 @@ class _MemosListDesktopPreviewPaneState
         _revealStage == _DesktopPreviewRevealStage.visible &&
         visibleResolvedData != null;
     final hasSelection = widget.selectedMemo != null;
+    final effectiveShowMemoEngagement = ref.watch(
+      resolvedAppSettingsProvider.select(
+        (settings) => settings.effectiveShowMemoEngagement,
+      ),
+    );
 
     Widget bodyChild;
     if (_revealStage == _DesktopPreviewRevealStage.error) {
@@ -667,7 +695,7 @@ class _MemosListDesktopPreviewPaneState
           ),
           scrollController: _scrollController,
           showSupplementarySections: showSupplementary,
-          shouldShowEngagement: true,
+          shouldShowEngagement: effectiveShowMemoEngagement,
           audioHandle: MemoDocumentAudioHandle(
             isPlayingForUrl: (url) =>
                 (_audioPlayer?.playing ?? false) && _currentAudioUrl == url,
@@ -720,6 +748,14 @@ class _MemosListDesktopPreviewPaneState
                     ),
                     _PreviewPaneActionButton(
                       buttonKey: const ValueKey<String>(
+                        'desktop-memo-preview-open',
+                      ),
+                      tooltip: context.t.strings.legacy.msg_open,
+                      onPressed: canOpenFullDetail ? widget.onOpenMemo : null,
+                      icon: Icons.open_in_full_rounded,
+                    ),
+                    _PreviewPaneActionButton(
+                      buttonKey: const ValueKey<String>(
                         'desktop-memo-preview-edit',
                       ),
                       tooltip: context.t.strings.legacy.msg_edit_memo,
@@ -769,8 +805,10 @@ class MemosListDesktopPreviewEmptyPane extends StatelessWidget {
     return MemosListDesktopPreviewPane(
       selectedMemo: null,
       isVisible: true,
+      suspendAudio: false,
       onClose: onClose,
       onEditMemo: () {},
+      onOpenMemo: () {},
     );
   }
 }
