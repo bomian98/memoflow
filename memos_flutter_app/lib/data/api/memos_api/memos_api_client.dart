@@ -130,7 +130,7 @@ abstract class _MemosApiBase {
   }
 
   Options _attachmentOptions() {
-    return Options();
+    return Options(receiveTimeout: null);
   }
 
   Future<void> _ensureServerHints() async {
@@ -420,7 +420,7 @@ class MemosApi extends _MemosApiBase
         BaseOptions(
           baseUrl: dioBaseUrlString(baseUrl),
           connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 120),
         ),
       ),
       useLegacyApi: useLegacyApi,
@@ -450,9 +450,9 @@ class MemosApi extends _MemosApiBase
       BaseOptions(
         baseUrl: dioBaseUrlString(baseUrl),
         connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 120),
         headers: <String, Object?>{
-          'Authorization': 'Bearer $personalAccessToken',
+        'Authorization': 'Bearer $personalAccessToken',
         },
       ),
     );
@@ -485,7 +485,7 @@ class MemosApi extends _MemosApiBase
       BaseOptions(
         baseUrl: dioBaseUrlString(baseUrl),
         connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 120),
         headers: <String, Object?>{'Cookie': sessionCookie},
       ),
     );
