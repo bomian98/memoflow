@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../core/url.dart';
+import '../../core/log_sanitizer.dart';
 import 'server_api_profile.dart';
 import 'server_route_adapter.dart';
 import '../logs/breadcrumb_store.dart';
