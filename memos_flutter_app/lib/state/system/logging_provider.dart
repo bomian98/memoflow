@@ -9,6 +9,7 @@ import '../../data/logs/network_log_buffer.dart';
 import '../../data/logs/sync_queue_progress_tracker.dart';
 import '../../data/logs/sync_status_tracker.dart';
 import 'database_provider.dart';
+import '../../data/db/app_database.dart';
 import 'debug_log_provider.dart';
 import 'network_log_provider.dart';
 import 'session_provider.dart';
