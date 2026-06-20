@@ -7,6 +7,10 @@ mixin _MemosApiAuth on _MemosApiBase {
     if (attempts.isEmpty) {
       throw StateError('No current user endpoint configured');
     }
+    _logManager?.info('Auth: getCurrentUser attempt', context: {
+      'endpoint': attempts.first.name,
+      'baseUrl': LogSanitizer.maskUrl(_dio.options.baseUrl),
+    });
     return _runCurrentUserAttempt(attempts.first);
   }
 
