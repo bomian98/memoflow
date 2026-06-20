@@ -1,7 +1,5 @@
 part of '../memos_api.dart';
 
-import '../../../core/log_sanitizer.dart';
-
 mixin _MemosApiAuth on _MemosApiBase {
   Future<User> getCurrentUser() async {
     await _ensureServerHints();
@@ -11,7 +9,7 @@ mixin _MemosApiAuth on _MemosApiBase {
     }
     _logManager?.info('Auth: getCurrentUser attempt', context: {
       'endpoint': attempts.first.name,
-      'baseUrl': LogSanitizer.maskUrl(_dio.options.baseUrl),
+      'baseUrl': _dio.options.baseUrl,
     });
     return _runCurrentUserAttempt(attempts.first);
   }
