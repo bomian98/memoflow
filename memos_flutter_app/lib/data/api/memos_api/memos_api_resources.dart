@@ -556,7 +556,7 @@ mixin _MemosApiResources on _MemosApiBase {
     _logManager?.info('Attachment upload: complete', context: {
       'attachmentId': attachmentId,
       'filename': filename,
-      'serverId': attachment.id,
+      'serverName': attachment.name,
       'serverSize': attachment.size,
     });
     return _normalizeAttachmentForServer(attachment);
