@@ -529,6 +529,15 @@ mixin _MemosApiResources on _MemosApiBase {
     String? memoUid,
     void Function(int sentBytes, int totalBytes)? onSendProgress,
   }) async {
+    _logManager?.info('Attachment upload: start', context: {
+      'attachmentId': attachmentId,
+      'filename': filename,
+      'mimeType': mimeType,
+      'byteSize': bytes.length,
+      'base64Size': base64Encode(bytes).length,
+      'memoUid': memoUid,
+    });
+
     final data = <String, Object?>{
       'filename': filename,
       'type': mimeType,
@@ -544,6 +553,12 @@ mixin _MemosApiResources on _MemosApiBase {
     );
     _attachmentMode = _AttachmentApiMode.attachments;
     final attachment = Attachment.fromJson(_expectJsonMap(response.data));
+    _logManager?.info('Attachment upload: complete', context: {
+      'attachmentId': attachmentId,
+      'filename': filename,
+      'serverId': attachment.id,
+      'serverSize': attachment.size,
+    });
     return _normalizeAttachmentForServer(attachment);
   }
 
