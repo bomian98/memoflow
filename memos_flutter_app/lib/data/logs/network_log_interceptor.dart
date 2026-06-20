@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 
@@ -7,6 +8,36 @@ import 'breadcrumb_store.dart';
 import 'log_manager.dart';
 import 'network_log_buffer.dart';
 import 'network_log_store.dart';
+
+/// DNS resolution helper — resolves a hostname and returns a list of IPs.
+/// Used by [NetworkLogInterceptor] to log connection metadata for debugging
+/// connection failures, GFW RSTs, and routing issues.
+Future<Map<String, Object?>> resolveAndLogDns(
+  String host,
+  LogManager? logManager,
+) async {
+  if (host.isEmpty) return {'host': host, 'resolved': false, 'reason': 'empty_host'};
+  try {
+    final addresses = await InternetAddress.lookup(host);
+    final ipList = addresses.map((a) => a.address).toList();
+    final result = <String, Object?>{
+      'host': host,
+      'resolved': true,
+      'addresses': ipList,
+      'type': addresses.firstOrNull?.type.name,
+    };
+    logManager?.info('DNS resolved', context: result);
+    return result;
+  } catch (e) {
+    final result = <String, Object?>{
+      'host': host,
+      'resolved': false,
+      'error': e.toString(),
+    };
+    logManager?.warn('DNS resolution failed', context: result);
+    return result;
+  }
+}
 
 class NetworkLogInterceptor extends Interceptor {
   NetworkLogInterceptor(
@@ -24,6 +55,7 @@ class NetworkLogInterceptor extends Interceptor {
   final BreadcrumbStore? _breadcrumbs;
   final LogManager? _logManager;
   final int maxBodyLength;
+  final Set<String> _localIpLogged = {};
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -39,6 +71,12 @@ class NetworkLogInterceptor extends Interceptor {
       body: _stringifyBody(_normalizeRequestData(options.data)),
     );
 
+    // Log local network interfaces once per session for connection diagnostics.
+    // Tagged by requestId so it can be correlated with failing requests.
+    if (_localIpLogged.add(requestId)) {
+      unawaited(_logLocalNetworkInfo(requestId));
+    }
+
     if (_store?.enabled ?? false) {
       final entry = NetworkLogEntry(
         timestamp: now,
@@ -52,6 +90,10 @@ class NetworkLogInterceptor extends Interceptor {
       unawaited(_store!.add(entry));
     }
     handler.next(options);
+
+    // Resolve DNS asynchronously — logs host→IP mapping for debugging
+    // connection failures (GFW RST, timeouts, unreachable hosts).
+    unawaited(resolveAndLogDns(options.uri.host, _logManager));
   }
 
   @override
@@ -324,6 +366,26 @@ class NetworkLogInterceptor extends Interceptor {
   static const _logStartKey = 'log_start';
   static const _logIdKey = 'log_id';
   static const _logMetaKey = 'log_meta';
+
+  Future<void> _logLocalNetworkInfo(String requestId) async {
+    try {
+      final interfaces = await NetworkInterface.list(
+        includeLoopback: false,
+      );
+      for (final iface in interfaces) {
+        for (final addr in iface.addresses) {
+          _logManager?.info('Local network interface', context: {
+            'name': iface.name,
+            'address': addr.address,
+            'type': addr.type.name,
+            'requestId': requestId,
+          });
+        }
+      }
+    } catch (e) {
+      // Non-critical — don't let diagnostics break the request.
+    }
+  }
 
   String _summarizeResponse(Object? data) {
     if (data == null) return 'null';
