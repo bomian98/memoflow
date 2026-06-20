@@ -49,8 +49,18 @@ final loggerServiceProvider = Provider<LoggerService>((ref) {
 
 final logReportGeneratorProvider = Provider<LogReportGenerator>((ref) {
   final account = ref.watch(appSessionProvider).valueOrNull?.currentAccount;
+
+  // Allow log export without authentication — database queries are optional
+  // and will be skipped gracefully when db is null.
+  AppDatabase? db;
+  try {
+    db = ref.read(databaseProvider);
+  } on StateError {
+    db = null;
+  }
+
   return LogReportGenerator(
-    db: ref.watch(databaseProvider),
+    db: db,
     loggerService: ref.watch(loggerServiceProvider),
     breadcrumbStore: ref.watch(breadcrumbStoreProvider),
     networkLogBuffer: ref.watch(networkLogBufferProvider),
