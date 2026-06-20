@@ -1,5 +1,7 @@
 part of '../memos_api.dart';
 
+import '../../../core/log_sanitizer.dart';
+
 mixin _MemosApiAuth on _MemosApiBase {
   Future<User> getCurrentUser() async {
     await _ensureServerHints();
