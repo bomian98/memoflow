@@ -19,7 +19,7 @@ import 'sync_status_tracker.dart';
 
 class LogReportGenerator {
   LogReportGenerator({
-    required AppDatabase db,
+    required AppDatabase? db,
     required LoggerService loggerService,
     required BreadcrumbStore breadcrumbStore,
     required NetworkLogBuffer networkLogBuffer,
@@ -34,7 +34,7 @@ class LogReportGenerator {
        _syncStatusTracker = syncStatusTracker,
        _currentAccount = currentAccount;
 
-  final AppDatabase _db;
+  final AppDatabase? _db;
   final LoggerService _loggerService;
   final BreadcrumbStore _breadcrumbStore;
   final NetworkLogBuffer _networkLogBuffer;
@@ -73,22 +73,32 @@ class LogReportGenerator {
       maxLength: _maxUserNoteChars,
     ).trim();
 
-    final sqlite = await _db.db;
-    final totalMemos = await _count(sqlite, 'SELECT COUNT(*) FROM memos;');
-    final pendingQueue = await _count(
-      sqlite,
-      'SELECT COUNT(*) FROM outbox WHERE state IN (${AppDatabase.outboxStatePending}, ${AppDatabase.outboxStateRunning}, ${AppDatabase.outboxStateRetry});',
-    );
-    final failedQueue = await _count(
-      sqlite,
-      'SELECT COUNT(*) FROM outbox WHERE state = ${AppDatabase.outboxStateError};',
-    );
-    final quarantinedQueue = await _count(
-      sqlite,
-      'SELECT COUNT(*) FROM outbox WHERE state = ${AppDatabase.outboxStateQuarantined};',
-    );
-    final outboxTypeCounts = await _loadOutboxTypeCounts(sqlite);
-    final pendingOutboxItems = includeOutbox
+    final sqlite = await _db?.db;
+    final totalMemos = sqlite != null
+        ? await _count(sqlite, 'SELECT COUNT(*) FROM memos;')
+        : 0;
+    final pendingQueue = sqlite != null
+        ? await _count(
+            sqlite,
+            'SELECT COUNT(*) FROM outbox WHERE state IN (${AppDatabase.outboxStatePending}, ${AppDatabase.outboxStateRunning}, ${AppDatabase.outboxStateRetry});',
+          )
+        : 0;
+    final failedQueue = sqlite != null
+        ? await _count(
+            sqlite,
+            'SELECT COUNT(*) FROM outbox WHERE state = ${AppDatabase.outboxStateError};',
+          )
+        : 0;
+    final quarantinedQueue = sqlite != null
+        ? await _count(
+            sqlite,
+            'SELECT COUNT(*) FROM outbox WHERE state = ${AppDatabase.outboxStateQuarantined};',
+          )
+        : 0;
+    final outboxTypeCounts = sqlite != null
+        ? await _loadOutboxTypeCounts(sqlite)
+        : const <String, _OutboxCounts>{};
+    final pendingOutboxItems = includeOutbox && sqlite != null
         ? await _loadOutboxItems(
             sqlite,
             states: const [
@@ -99,21 +109,21 @@ class LogReportGenerator {
             limit: outboxLimit,
           )
         : const <Map<String, dynamic>>[];
-    final failedOutboxItems = includeOutbox
+    final failedOutboxItems = includeOutbox && sqlite != null
         ? await _loadOutboxItems(
             sqlite,
             states: const [AppDatabase.outboxStateError],
             limit: outboxLimit,
           )
         : const <Map<String, dynamic>>[];
-    final quarantinedOutboxItems = includeOutbox
+    final quarantinedOutboxItems = includeOutbox && sqlite != null
         ? await _loadOutboxItems(
             sqlite,
             states: const [AppDatabase.outboxStateQuarantined],
             limit: outboxLimit,
           )
         : const <Map<String, dynamic>>[];
-    final memoSyncErrors = includeErrors
+    final memoSyncErrors = includeErrors && sqlite != null
         ? await _loadMemoSyncErrors(sqlite, limit: memoErrorLimit)
         : const <Map<String, dynamic>>[];
 
